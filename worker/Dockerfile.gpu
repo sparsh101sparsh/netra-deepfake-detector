@@ -1,0 +1,48 @@
+FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
+
+WORKDIR /app
+
+# Install system dependencies (FFmpeg, OpenCV, DLIB requirements)
+RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-pip \
+    python3.11-dev \
+    ffmpeg \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    cmake \
+    build-essential \
+    libboost-all-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Symlink python3.11 as python3
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python3 && \
+    ln -sf /usr/bin/pip3.11 /usr/bin/pip3
+
+# Install PyTorch with CUDA support first
+RUN pip3 install --no-cache-dir \
+    torch==2.3.0+cu121 \
+    torchvision==0.18.0+cu121 \
+    --index-url https://download.pytorch.org/whl/cu121
+
+# Install remaining dependencies
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Copy worker code and netra pipeline
+COPY worker.py .
+COPY netra/ ./netra/
+
+# Create model directory
+RUN mkdir -p /opt/netra/models/spatial /opt/netra/models/clip_probe /opt/netra/models/audio
+
+# Health check: verify CUDA is available
+HEALTHCHECK --interval=60s --timeout=30s --start-period=60s --retries=3 \
+    CMD python3 -c "import torch; assert torch.cuda.is_available(), 'CUDA not available'"
+
+# Run the SQS worker
+CMD ["python3", "worker.py"]

@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # Lightweight API server (mirrors EC2 t3.micro)
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - S3_BUCKET_MEDIA=${S3_BUCKET_MEDIA:-netra-media-uploads}
+      - SQS_QUEUE_URL=${SQS_QUEUE_URL}
+      - DYNAMO_TABLE_JOBS=${DYNAMO_TABLE_JOBS:-netra-jobs}
+      - BEDROCK_MODEL_ID=${BEDROCK_MODEL_ID:-anthropic.claude-3-5-sonnet-20241022-v2:0}
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # GPU Worker (mirrors EC2 g4dn.xlarge — use only if GPU available locally)
+  # Comment this out for non-GPU local dev
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile.gpu
+    runtime: nvidia
+    environment:
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - SQS_QUEUE_URL=${SQS_QUEUE_URL}
+      - S3_BUCKET_MEDIA=${S3_BUCKET_MEDIA:-netra-media-uploads}
+      - DYNAMO_TABLE_JOBS=${DYNAMO_TABLE_JOBS:-netra-jobs}
+      - SPATIAL_MODEL_PATH=/opt/netra/models/spatial/model.pth
+    env_file:
+      - .env
+    volumes:
+      - netra-models:/opt/netra/models
+    depends_on:
+      - api
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  netra-models:
+    driver: local

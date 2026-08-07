@@ -1,0 +1,169 @@
+"""
+backend/netra/bot_utils.py
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Shared utilities for Telegram + WhatsApp bots (Phase 8/9).
+
+Handles:
+  - Async video download from Telegram/WhatsApp CDN → temp file
+  - 100MB size enforcement (matches backend hard limit)
+  - Forwarding media to the NETRA backend API (POST /detect/full)
+  - Polling backend for results (GET /jobs/{job_id})
+  - Formatting forensic report as a bot-friendly message
+  - Markdown → plain text for WhatsApp (no Markdown support)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+import os
+import asyncio
+import tempfile
+from typing import Optional, Tuple
+import httpx
+
+API_URL        = os.getenv("NEXT_PUBLIC_API_URL", "http://localhost:8000")
+MAX_FILE_SIZE  = 100 * 1024 * 1024   # 100MB hard limit (matches detect.py)
+POLL_INTERVAL  = 4    # seconds between polls
+MAX_POLL_SECS  = 180  # 3 minutes max wait
+
+
+async def download_file(url: str, token: str = "") -> Tuple[Optional[bytes], str]:
+    """
+    Download a file from a URL with 100MB size guard.
+    Returns (file_bytes, error_message). If error, file_bytes is None.
+    """
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    try:
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            async with client.stream("GET", url, headers=headers) as resp:
+                if resp.status_code != 200:
+                    return None, f"Download failed (HTTP {resp.status_code})"
+
+                total = 0
+                chunks = []
+                async for chunk in resp.aiter_bytes(chunk_size=1024 * 1024):
+                    total += len(chunk)
+                    if total > MAX_FILE_SIZE:
+                        return None, f"❌ File exceeds 100MB limit — please send a shorter clip."
+                    chunks.append(chunk)
+
+                return b"".join(chunks), ""
+
+    except Exception as e:
+        return None, f"Download error: {e}"
+
+
+async def submit_to_api(video_bytes: bytes, filename: str = "video.mp4") -> Tuple[Optional[str], str]:
+    """
+    POST video to NETRA backend → returns (job_id, error).
+    """
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(
+                f"{API_URL}/api/v1/detect/full",
+                files={"file": (filename, video_bytes, "video/mp4")},
+            )
+            if r.status_code == 200:
+                return r.json().get("job_id"), ""
+            elif r.status_code == 413:
+                return None, "❌ File too large (max 100MB)"
+            elif r.status_code == 429:
+                return None, "⏳ Rate limit exceeded — try again in an hour"
+            else:
+                return None, f"API error: {r.status_code} — {r.text[:200]}"
+    except Exception as e:
+        return None, f"Could not reach NETRA API: {e}"
+
+
+async def poll_for_result(job_id: str) -> Tuple[Optional[dict], str]:
+    """
+    Poll GET /api/v1/jobs/{job_id} until complete or timeout.
+    Returns (result_dict, error).
+    """
+    elapsed = 0
+    async with httpx.AsyncClient(timeout=15) as client:
+        while elapsed < MAX_POLL_SECS:
+            await asyncio.sleep(POLL_INTERVAL)
+            elapsed += POLL_INTERVAL
+            try:
+                r = await client.get(f"{API_URL}/api/v1/jobs/{job_id}")
+                if r.status_code == 200:
+                    data = r.json()
+                    status = data.get("status", "unknown")
+                    if status == "complete":
+                        return data.get("result"), ""
+                    elif status == "error":
+                        stage = data.get("current_stage", "Unknown error")
+                        return None, f"Analysis failed: {stage}"
+            except Exception as e:
+                pass  # Network hiccup — keep polling
+
+    return None, f"Timed out after {MAX_POLL_SECS}s — try /status {job_id} later"
+
+
+def format_result_telegram(result: dict, job_id: str) -> str:
+    """Format result dict as Telegram Markdown message."""
+    verdict   = result.get("verdict", "UNKNOWN")
+    conf      = result.get("confidence", 0)
+    risk      = result.get("risk_level", "UNKNOWN")
+    manip     = result.get("manipulation_type", "N/A")
+    report    = result.get("forensic_report", "")
+    model     = result.get("model_used", "Amazon Bedrock")
+
+    verdict_emoji = {
+        "AUTHENTIC":  "✅",
+        "SUSPICIOUS": "⚠️",
+        "FACE_SWAP":  "🎭",
+        "VOICE_CLONE":"🎤",
+    }.get(verdict, "❓")
+
+    risk_emoji = {"HIGH": "🔴", "MEDIUM": "🟡", "LOW": "🟢"}.get(risk, "⚪")
+
+    # Extract first 800 chars of forensic report (Telegram 4096 char limit)
+    report_excerpt = report[:800].strip() + ("..." if len(report) > 800 else "")
+
+    return (
+        f"🔍 *NETRA Deepfake Analysis*\n\n"
+        f"{verdict_emoji} *Verdict:* `{verdict}`\n"
+        f"📊 *Confidence:* `{conf}%`\n"
+        f"{risk_emoji} *Risk Level:* `{risk}`\n"
+        f"🎬 *Type:* `{manip}`\n\n"
+        f"*Forensic Report:*\n{report_excerpt}\n\n"
+        f"━━━━━━━━━━━━━━━━━\n"
+        f"🤖 _{model}_\n"
+        f"📋 [Full report](https://netra-deepfake-detector.vercel.app/analyze/{job_id})"
+    )
+
+
+def format_result_whatsapp(result: dict, job_id: str) -> str:
+    """Format result dict as plain text for WhatsApp (no Markdown support)."""
+    verdict = result.get("verdict", "UNKNOWN")
+    conf    = result.get("confidence", 0)
+    risk    = result.get("risk_level", "UNKNOWN")
+    manip   = result.get("manipulation_type", "N/A")
+    model   = result.get("model_used", "Amazon Bedrock")
+
+    verdict_emoji = {
+        "AUTHENTIC":  "✅",
+        "SUSPICIOUS": "⚠️",
+        "FACE_SWAP":  "🎭",
+        "VOICE_CLONE":"🎤",
+    }.get(verdict, "❓")
+
+    return (
+        f"🔍 NETRA DEEPFAKE ANALYSIS\n\n"
+        f"{verdict_emoji} Verdict: {verdict}\n"
+        f"📊 Confidence: {conf}%\n"
+        f"🎬 Type: {manip}\n"
+        f"Risk: {risk}\n\n"
+        f"Full report:\n"
+        f"https://netra-deepfake-detector.vercel.app/analyze/{job_id}\n\n"
+        f"Generated by {model}"
+    )
+
+
+def format_progress_message(progress: int, stage: str) -> str:
+    """Simple progress message for polling updates."""
+    bar_filled = int(progress / 10)
+    bar        = "█" * bar_filled + "░" * (10 - bar_filled)
+    return f"⏳ Analysing... [{bar}] {progress}%\n_{stage}_"
