@@ -22,3 +22,4 @@ huggingface-hub==0.23.4
 wandb==0.17.3
 aiofiles==23.2.1
 httpx==0.27.0
+twilio==9.2.2
