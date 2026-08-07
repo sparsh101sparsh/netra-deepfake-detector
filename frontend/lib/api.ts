@@ -1,7 +1,8 @@
 // lib/api.ts — NETRA API client
 // Extend the existing Vercel app — do NOT replace
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const isBrowser = typeof window !== "undefined";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || (isBrowser ? "/api/backend" : "http://localhost:8000");
 
 export interface FrameEvidence {
   frame_number: number;
@@ -77,7 +78,9 @@ export function connectWebSocket(
   jobId: string,
   onUpdate: (data: Partial<JobStatus>) => void
 ): WebSocket {
-  const wsUrl = API_BASE.replace("https://", "wss://").replace("http://", "ws://");
+  const wsProtocol = isBrowser && window.location.protocol === "https:" ? "wss:" : "ws:";
+  const wsHost = isBrowser ? window.location.host : "localhost:8000";
+  const wsUrl = `${wsProtocol}//${wsHost}${API_BASE}`;
   const ws = new WebSocket(`${wsUrl}/api/v1/ws/${jobId}`);
   ws.onmessage = (e) => {
     try {
