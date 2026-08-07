@@ -22,6 +22,10 @@ app.add_middleware(
 app.include_router(detect.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 
+# Mount WhatsApp Twilio Webhook
+from .routes import whatsapp_webhook
+app.include_router(whatsapp_webhook.router, prefix="/api/whatsapp")
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "5.0", "timestamp": datetime.utcnow().isoformat()}
