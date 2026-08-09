@@ -5,7 +5,7 @@ const nextConfig = {
     return [
       {
         source: '/api/backend/:path*',
-        destination: 'http://16.146.57.220:8000/:path*' // Proxy to Backend
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://32.199.119.222:8000'}/:path*` // Proxy to Backend
       }
     ]
   }
