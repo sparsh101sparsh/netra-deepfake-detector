@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { ShieldAlert, CheckCircle2, AlertTriangle, Fingerprint, Clock, BrainCircuit, MessageSquare, Copy } from "lucide-react";
+import { ShieldAlert, CheckCircle2, AlertTriangle, Fingerprint, Clock, BrainCircuit, MessageSquare, Copy, Code, Activity } from "lucide-react";
 
 const API_URL = "/api/backend";
 
