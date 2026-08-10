@@ -25,8 +25,8 @@ export default function RootLayout({
           <div className="flex h-14 items-center px-4 md:px-6 max-w-7xl mx-auto w-full justify-between">
             <div className="flex items-center gap-6">
               <Link href="/" className="flex items-center gap-2 group">
-                <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center transition-transform group-active:scale-95">
-                  <ShieldCheck className="w-5 h-5 text-background" />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-active:scale-95 overflow-hidden border border-border">
+                  <img src="/logo.png" alt="NETRA Logo" className="w-full h-full object-cover" />
                 </div>
                 <span className="font-semibold tracking-tight text-lg">NETRA</span>
               </Link>
