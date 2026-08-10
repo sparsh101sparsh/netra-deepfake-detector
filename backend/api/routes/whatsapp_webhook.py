@@ -3,7 +3,7 @@ backend/api/routes/whatsapp_webhook.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Phase 9 — WhatsApp Bot (Twilio Sandbox)
 
-HUMAN MUST DO FIRST (agent cannot do these):
+Setup Instructions:
   1. Create a Twilio account → https://www.twilio.com/try-twilio
   2. Join the WhatsApp sandbox:
        https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn
@@ -20,7 +20,7 @@ Supported interactions:
   User sends:  YouTube URL      → yt-dlp download + analysis
   User sends:  "status <job_id>"→ job progress check
 
-WhatsApp vs Telegram differences (important for AI agent):
+WhatsApp vs Telegram differences:
   - WhatsApp does NOT support Markdown formatting → plain text only
   - All responses go through Twilio REST API (not Telegram Bot API)
   - Media downloads require Twilio Basic Auth (account_sid + auth_token)
@@ -35,7 +35,7 @@ from fastapi.responses import PlainTextResponse
 from typing import Optional
 import httpx
 
-from ...netra.bot_utils import (
+from netra.bot_utils import (
     download_file, submit_to_api, poll_for_result,
     format_result_whatsapp, format_progress_message
 )

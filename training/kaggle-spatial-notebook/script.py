@@ -1,14 +1,10 @@
 """
-NETRA EfficientNet-B4 + SBI Training Script (Kaggle — Full Run v5)
+NETRA EfficientNet-B4 + SBI Training Script (Kaggle — Full Run v6)
 
 Dataset: aryankashyapnaveen/indian-face-dataset (35k real Indian faces)
 Fakes: Generated via Self-Blended Images (SBI) — no upload needed
 
-FIX: Uses torchvision EfficientNet-B4 (no efficientnet_pytorch dependency)
-     Works on P100 (sm_60), T4 (sm_75) and V100 (sm_70)
-     Forces CUDA_VISIBLE_DEVICES='' if GPU not compatible, uses CPU as fallback
-
-GPU: P100 (16GB) or T4 — assigned automatically by Kaggle
+GPU: T4 (sm_75) preferred. P100 (sm_60) uses CPU path (still trains correctly).
 Output: /kaggle/working/spatial_model_best.pth
 """
 
@@ -16,10 +12,49 @@ import os
 import subprocess
 import sys
 
-# ── Install only what's needed (torchvision already installed on Kaggle) ──────
+# ── Step 1: Detect GPU BEFORE importing torch ─────────────────────────────────
+# We need to know compute capability BEFORE importing torch to decide whether
+# to swap to a P100-compatible torch build or use the default one.
+def _get_raw_gpu_info():
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,compute_cap", "--format=csv,noheader"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0:
+            line = result.stdout.strip().split("\n")[0]
+            parts = line.split(",")
+            name = parts[0].strip()
+            cap = parts[1].strip() if len(parts) > 1 else "0.0"
+            major = int(cap.split(".")[0])
+            return name, major
+    except Exception:
+        pass
+    return "Unknown", 0
+
+_GPU_NAME, _GPU_MAJOR = _get_raw_gpu_info()
+print(f"[Pre-import GPU scan] Detected: {_GPU_NAME} | SM capability: {_GPU_MAJOR}.x")
+
+if _GPU_MAJOR > 0 and _GPU_MAJOR < 7:
+    # P100 (sm_60) or older — not supported by PyTorch 2.x (requires sm_70+)
+    # Install PyTorch 1.13.1 with CUDA 11.6 which supports sm_60
+    print("P100/sm_60 detected — installing PyTorch 1.13.1+cu116 for compatibility...")
+    subprocess.run([
+        sys.executable, "-m", "pip", "install", "-q", "--force-reinstall",
+        "torch==1.13.1+cu116",
+        "torchvision==0.14.1+cu116",
+        "--extra-index-url", "https://download.pytorch.org/whl/cu116"
+    ], check=False)
+    print("PyTorch 1.13.1+cu116 installed for P100 compatibility.")
+    _FORCE_DEVICE = "cuda"  # P100 works fine with PyTorch 1.13
+else:
+    _FORCE_DEVICE = "cuda" if _GPU_MAJOR >= 7 else "cpu"
+
+# ── Step 2: Now install opencv ────────────────────────────────────────────────
 subprocess.run([sys.executable, "-m", "pip", "install", "-q",
     "opencv-python-headless",
 ], check=False)
+
 
 import random
 import numpy as np
@@ -37,9 +72,9 @@ from pathlib import Path
 # ─── GPU Compatibility Check ─────────────────────────────────────────────────
 def check_cuda_compatibility():
     """
-    Check GPU compute capability against PyTorch requirements.
-    Kaggle's PyTorch 2.x requires sm_70+ (Volta). P100=sm_60 (Pascal) will crash.
-    Forces CPU if incompatible rather than crashing mid-training.
+    Smart GPU detection. Returns 'cuda' if GPU is available and working,
+    otherwise 'cpu'. We've already handled the P100 PyTorch swap above,
+    so by the time we get here, CUDA should work on any assigned GPU.
     """
     if not torch.cuda.is_available():
         print("No CUDA device available — running on CPU")
@@ -49,26 +84,15 @@ def check_cuda_compatibility():
         device_name = torch.cuda.get_device_name(0)
         compute_cap = torch.cuda.get_device_capability(0)
         major, minor = compute_cap
-        print(f"GPU: {device_name}")
-        print(f"Compute Capability: {major}.{minor}")
+        print(f"✅ GPU: {device_name} | Compute Capability: {major}.{minor}")
 
-        # PyTorch >= 2.0 on Kaggle requires sm_70+ (Volta or newer)
-        # P100 is sm_60 (Pascal) — NOT compatible with pre-installed PyTorch build
-        if major < 7:
-            print(f"⚠️  GPU sm_{major}{minor} < sm_70 minimum for Kaggle's PyTorch build.")
-            print("   Forcing CPU mode to avoid 'no kernel image' CUDA error.")
-            print("   Training on CPU — slower but correct. ~5 epochs × 10k images ≈ 30 min.")
-            os.environ["CUDA_VISIBLE_DEVICES"] = ""
-            return "cpu"
-
-        # Test a simple CUDA operation to confirm full compatibility
+        # Smoke test
         x = torch.zeros(1).cuda()
         _ = x + x
-        print("✅ CUDA test passed — using GPU")
+        print("✅ CUDA smoke test passed — using GPU")
         return "cuda"
     except Exception as e:
-        print(f"⚠️  CUDA error: {e}")
-        print("Falling back to CPU (training will be slower but correct)")
+        print(f"⚠️  CUDA error: {e} — falling back to CPU")
         return "cpu"
 
 
@@ -81,14 +105,14 @@ DEVICE_STR = check_cuda_compatibility()
 device = torch.device(DEVICE_STR)
 print(f"\nUsing device: {device}")
 
-# Training config — balanced for both GPU and CPU runtime
+# Training config — 15 epochs on GPU, 5 on CPU fallback
 EPOCHS = 15 if DEVICE_STR == "cuda" else 5
 BATCH_SIZE = 32 if DEVICE_STR == "cuda" else 16
 LR = 1e-4
 WEIGHT_DECAY = 1e-5
 IMG_SIZE = 224
 VAL_SPLIT = 0.15
-NUM_WORKERS = 2 if DEVICE_STR == "cuda" else 0  # CPU: 0 workers avoids overhead
+NUM_WORKERS = 2
 MAX_IMAGES_PER_CLASS = 35000  # Use all 35k images from indian-face-dataset
 
 # ─── Reproducibility ─────────────────────────────────────────────────────────
@@ -294,14 +318,26 @@ def train():
 
     # 5. Model, loss, optimizer
     model = build_model()
-    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    criterion = nn.CrossEntropyLoss()
     optimizer = optim.AdamW(model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
+    
+    start_epoch = 1
+    best_val_acc = 0.0
+    
+    checkpoint_path = "/kaggle/input/spatial-checkpoint/spatial_model_best.pth"
+    if os.path.exists(checkpoint_path):
+        print(f"Loading checkpoint from {checkpoint_path}...")
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        start_epoch = checkpoint["epoch"] + 1
+        best_val_acc = checkpoint.get("val_acc", 0.0)
+        print(f"Resuming from epoch {start_epoch} with best_val_acc {best_val_acc:.2f}%")
+
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=EPOCHS, eta_min=1e-6)
 
-    best_val_acc = 0.0
     history = []
 
-    for epoch in range(1, EPOCHS + 1):
+    for epoch in range(start_epoch, EPOCHS + 1):
         # ── Train ──
         model.train()
         t_loss, t_correct, t_total = 0.0, 0, 0

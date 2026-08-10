@@ -1,13 +1,16 @@
 {
-  "id": "sparshsingh989/netra-spatial-training",
-  "title": "netra spatial training",
+  "id": "sudikshas47/netra-spatial-training",
+  "title": "netra-spatial-training",
   "code_file": "script.py",
   "language": "python",
   "kernel_type": "script",
   "is_private": "true",
   "enable_gpu": "true",
   "enable_internet": "true",
-  "dataset_sources": ["aryankashyapnaveen/indian-face-dataset"],
+  "dataset_sources": [
+    "aryankashyapnaveen/indian-face-dataset",
+    "sudikshas47/spatial-checkpoint"
+  ],
   "competition_sources": [],
   "kernel_sources": [],
   "model_sources": []

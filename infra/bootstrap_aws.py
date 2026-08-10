@@ -140,6 +140,7 @@ def bootstrap():
     print("\n🗄️  Creating DynamoDB Tables...")
     create_dynamodb_table("netra-jobs")
     create_dynamodb_table("netra-rate-limits")
+    create_dynamodb_table("netra-api-keys")
 
     # SQS
     print("\n📬 Creating SQS Queues...")

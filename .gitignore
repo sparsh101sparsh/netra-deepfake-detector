@@ -7,3 +7,13 @@ node_modules/
 .next/
 *.log
 .DS_Store
+
+*.pth
+venv/
+*.mp4
+*.mov
+*.pptx
+*.pkl
+data/
+kaggle_logs*/
+kaggle-clip-output/
