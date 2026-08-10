@@ -3,7 +3,7 @@ backend/api/routes/telegram_webhook.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Phase 8 — Telegram Bot Webhook
 
-HUMAN MUST DO FIRST (agent cannot do this):
+Setup Instructions:
   1. Create bot via https://t.me/BotFather → copy token to .env as TELEGRAM_BOT_TOKEN
   2. Set webhook URL:
      curl -X POST "https://api.telegram.org/bot<TOKEN>/setWebhook" \
@@ -24,7 +24,7 @@ import asyncio
 from fastapi import APIRouter, Request, HTTPException
 import httpx
 
-from ...netra.bot_utils import (
+from netra.bot_utils import (
     download_file, submit_to_api, poll_for_result,
     format_result_telegram, format_progress_message
 )

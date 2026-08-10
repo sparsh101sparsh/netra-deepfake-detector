@@ -2,7 +2,7 @@
 // Extend the existing Vercel app — do NOT replace
 
 const isBrowser = typeof window !== "undefined";
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || (isBrowser ? "/api/backend" : "http://localhost:8000");
+const API_BASE = "/api/backend";
 
 export interface FrameEvidence {
   frame_number: number;

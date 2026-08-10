@@ -1,99 +1,82 @@
-# NETRA v5.0 — Neural Evaluation & Tracking Research Architecture
-## Multi-Modal Deepfake Detection Platform for Indian Media
+# NETRA v5.1 — Neural Evaluation & Tracking Research Architecture
+
+## Multi-Modal Deepfake Detection & Scam Intelligence Platform
 
 [![Live Demo](https://img.shields.io/badge/Demo-netra--deepfake--detector.vercel.app-blue)](https://netra-deepfake-detector.vercel.app)
-[![GPU Training](https://img.shields.io/badge/Training-Kaggle%20GPU%20(P100%20FREE)-orange)](https://kaggle.com/code/sparshsingh989/netra-spatial-training)
-[![AWS Free Tier](https://img.shields.io/badge/Hosting-AWS%20Free%20Tier-yellow)](https://aws.amazon.com/free/)
+[![AWS Infrastructure](https://img.shields.io/badge/Hosting-AWS-yellow)](https://aws.amazon.com)
 
-> **NETRA** detects AI face swaps, voice clones, and video manipulations in Indian media.  
-> Multi-modal detection → structured evidence → Amazon Bedrock forensic report.
+**NETRA** is an enterprise-grade platform built to detect AI face swaps, voice clones, and digital scams in Indian media. Our system runs a highly optimized multi-modal ML pipeline to generate structured evidence, which is then synthesized by **Moonshot's Kimi Model** into professional forensic reports.
 
 ---
 
-## Architecture
+## Architecture Overview
+
+Our architecture utilizes a tiered, cloud-first approach ensuring rapid response times and high availability:
 
 ```
-User Upload (Vercel Frontend)
+User Upload (SpaceX SaaS Frontend)
         │
         ▼
-FastAPI API (EC2 t3.micro, FREE)
-  ├── Upload to S3 (24h lifecycle)
-  ├── Write to DynamoDB (job state)
-  └── Dispatch to SQS queue
+FastAPI Gateway (EC2 t3.micro)
+  ├── Uploads media to S3
+  ├── Writes job state to DynamoDB
+  └── Dispatches task to SQS queue
         │
         ▼
-SQS Worker (EC2 g4dn.xlarge Spot ~$0.16/hr)
-  ├── EfficientNet-B4 + SBI (visual detector)
-  ├── CLIP Probe (generalisation detector)
-  ├── Wav2Vec2 (audio detector)
-  ├── MediaPipe/DLIB (auxiliary signals)
-  └── Gated Fusion → EvidenceBundle
+GPU ML Worker (EC2 g4dn.xlarge)
+  ├── EfficientNet-B4 (Spatial/Visual artifacts)
+  ├── Wav2Vec2 (Audio/Voice clone detection)
+  ├── CLIP ViT-L/14 (Semantic MLP probe)
+  └── OCR / Transcription Extraction
         │
         ▼
-Amazon Bedrock (Claude 3.5 Sonnet)
-  └── Structured JSON evidence → Forensic Report
+Moonshot Kimi Model (Evidence Synthesis)
+  └── Gated fusion JSON → Forensic Markdown Report
         │
         ▼
-Frontend Results (Vercel)
-  ├── Confidence Meter
-  ├── Detector Scorecards
-  ├── Evidence Timeline (click-to-seek)
-  └── Forensic Report (markdown)
+Frontend Real-Time Updates (Vercel)
+  ├── Live Telemetry Geo-Map
+  ├── Top Scams Deduplication Leaderboard
+  ├── Evidence Timeline (temporal artifacts)
+  └── Forensic Report
 ```
-
-## Model Training (Kaggle — FREE GPU)
-Training runs on Kaggle free P100 GPU (16GB) instead of AWS SageMaker.
-
-| Notebook | Status | URL |
-|----------|--------|-----|
-| EfficientNet-B4 Spatial | 🟢 Running | https://kaggle.com/code/sparshsingh989/netra-spatial-training |
-| CLIP Probe | ⏳ Queued | https://kaggle.com/code/sparshsingh989/netra-clip-training |
-
-**After training completes:**
-1. Download `spatial_model_best.pth` from Kaggle notebook output
-2. Upload to HuggingFace: `netra-ai/spatial-detector-v1`
-3. Set `SPATIAL_HF_MODEL_ID=netra-ai/spatial-detector-v1` in EC2 worker `.env`
 
 ## Quick Start
 
-### 1. Set up environment
+### 1. Environment Setup
+Create a `.env` file from the example template and fill in your AWS credentials, Moonshot API key, and Hugging Face token.
 ```bash
 cp .env.example .env
-# Fill in AWS credentials and other keys
 ```
 
-### 2. Bootstrap AWS infrastructure (free tier only)
+### 2. Bootstrap AWS Infrastructure
+Run the bootstrap script to provision S3 buckets, DynamoDB tables, and SQS queues.
 ```bash
 cd infra
 python3 bootstrap_aws.py
 ```
 
-### 3. Download pretrained baseline models (Day 1 - immediate)
+### 3. Model Preparation
+Download the pre-trained weights for our spatial and audio models.
 ```bash
 python3 scripts/fetch_pretrained_models.py ./models
 ```
+*Note: To upload your locally fine-tuned models to Hugging Face Hub, use our provided script `python3 scripts/upload_model_to_hf.py`.*
 
-### 4. Run locally (no GPU needed for API)
+### 4. Run the API Locally
 ```bash
 docker-compose up api
 ```
 
-### 5. Deploy to EC2
+### 5. Deploy the Worker Node
+Build and push the worker container to Amazon ECR, then deploy to your `g4dn.xlarge` instance.
 ```bash
-# Build and push to ECR
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account>.dkr.ecr.us-east-1.amazonaws.com
-docker build -t netra-api backend/
-docker tag netra-api:latest <account>.dkr.ecr.us-east-1.amazonaws.com/netra-api:latest
-docker push <account>.dkr.ecr.us-east-1.amazonaws.com/netra-api:latest
+docker build -t netra-worker -f worker/Dockerfile.gpu .
+docker tag netra-worker:latest <account>.dkr.ecr.us-east-1.amazonaws.com/netra-worker:latest
+docker push <account>.dkr.ecr.us-east-1.amazonaws.com/netra-worker:latest
 ```
 
-## Budget
-| Component | Cost |
-|-----------|------|
-| Model training (Kaggle) | **$0** |
-| S3 / DynamoDB / SQS | **$0** (always-free) |
-| Bedrock (700 analyses) | ~$13.27 |
-| **Total** | **~$13.27 / $100 credit** |
-
-## Team
-Sparsh (ML Lead) · Sudiksha · Sumit · Shashwat · Ranjan
+## Community & Team
+Built by Sparsh, Sudiksha, Sumit, Shashwat, and Ranjan. 
+We aim to protect the Indian digital ecosystem from sophisticated AI-generated scams.

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 import uuid, boto3, json, asyncio, os, time
 from datetime import datetime
 from .models.schemas import JobStatus, DetectResponse
-from .routes import detect, jobs
+from .routes import detect, jobs, scam, public_api
 
 app = FastAPI(title="NETRA API", version="5.0", description="Multi-Modal Deepfake Detection Platform")
 
@@ -21,6 +21,8 @@ app.add_middleware(
 
 app.include_router(detect.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
+app.include_router(scam.router, prefix="/api/v1")
+app.include_router(public_api.router, prefix="/api/v1/public")
 
 # Mount WhatsApp Twilio Webhook
 from .routes import whatsapp_webhook
