@@ -26,7 +26,7 @@ export default function UnifiedHub() {
       id: 'scam-001', 
       name: 'modiji_swapped_video.mov', 
       type: 'Deepfake', 
-      reports: 12450, 
+      reports: 14, 
       status: 'Verified',
       mediaType: 'video'
     },
@@ -34,7 +34,7 @@ export default function UnifiedHub() {
       id: 'scam-002', 
       name: 'SBI_KYC_Update_Link.jpg', 
       type: 'Phishing', 
-      reports: 8320, 
+      reports: 8, 
       status: 'Verified',
       mediaType: 'image'
     },
@@ -42,7 +42,7 @@ export default function UnifiedHub() {
       id: 'scam-003', 
       name: 'TRAI_Disconnection_Notice.mp4', 
       type: 'Scam', 
-      reports: 4105, 
+      reports: 3, 
       status: 'Analyzing',
       mediaType: 'video'
     }
