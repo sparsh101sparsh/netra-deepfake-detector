@@ -2,119 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #000000;
-  --foreground: #ffffff;
-  --border-light: rgba(255, 255, 255, 0.2);
-  --border-subtle: rgba(255, 255, 255, 0.1);
-  --accent-primary: #ffffff;
-  --accent-danger: #ff0000;
-  --accent-success: #00ff00;
-  --accent-warning: #ff9900;
+@layer base {
+  :root {
+    /* Linear / Vercel Premium Dark Mode Tokens */
+    --background: 9 9 11; /* #09090b - Zinc 950 */
+    --foreground: 250 250 250; /* #fafafa - Zinc 50 */
+    
+    --card: 24 24 27; /* #18181b - Zinc 900 */
+    --card-foreground: 250 250 250;
+    
+    --popover: 24 24 27;
+    --popover-foreground: 250 250 250;
+    
+    --primary: 250 250 250;
+    --primary-foreground: 9 9 11;
+    
+    --secondary: 39 39 42; /* #27272a - Zinc 800 */
+    --secondary-foreground: 250 250 250;
+    
+    --muted: 39 39 42;
+    --muted-foreground: 161 161 170; /* #a1a1aa - Zinc 400 */
+    
+    --accent: 39 39 42;
+    --accent-foreground: 250 250 250;
+    
+    --destructive: 220 38 38; /* Red 600 */
+    --destructive-foreground: 250 250 250;
+
+    --border: 39 39 42; /* Zinc 800 */
+    --input: 39 39 42;
+    --ring: 212 212 216; /* Zinc 300 */
+
+    --radius: 0.75rem; /* 12px border radius for premium feel */
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-white/20;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1; /* Premium typographic features */
+  }
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  letter-spacing: 0.05em; /* SpaceX tracking */
+@layer components {
+  /* Premium UI Buttons */
+  .btn-premium {
+    @apply inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+    @apply active:scale-[0.98]; /* Apple-style click interaction */
+  }
+  
+  .btn-primary {
+    @apply btn-premium bg-foreground text-background hover:bg-foreground/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_1px_2px_rgba(0,0,0,0.4)];
+  }
+
+  .btn-secondary {
+    @apply btn-premium bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border shadow-sm;
+  }
+  
+  .btn-outline {
+    @apply btn-premium border border-border bg-transparent hover:bg-secondary/50 text-foreground;
+  }
+
+  /* Premium Cards */
+  .card-premium {
+    @apply rounded-xl border border-border bg-card text-card-foreground shadow-sm relative overflow-hidden transition-colors;
+    background: linear-gradient(180deg, rgba(24,24,27,1) 0%, rgba(9,9,11,1) 100%);
+  }
+
+  /* Glassmorphism Panels */
+  .glass-panel-premium {
+    @apply rounded-xl border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_4px_24px_-1px_rgba(0,0,0,0.5)];
+  }
+
+  /* Text Gradients */
+  .text-gradient-premium {
+    @apply bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60;
+  }
+
+  /* Micro-interactions */
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-[0_0_20px_-5px_rgba(255,255,255,0.1)];
+  }
 }
 
-/* SpaceX Specific Utilities */
-
-.spacex-btn {
-  background-color: transparent;
-  color: #ffffff;
-  border: 2px solid #ffffff;
-  padding: 12px 24px;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  transition: all 0.2s ease-in-out;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  /* NO border radius for stark look */
-}
-
-.spacex-btn:hover:not(:disabled) {
-  background-color: #ffffff;
-  color: #000000;
-}
-
-.spacex-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  border-color: var(--border-light);
-}
-
-.spacex-card {
-  background-color: transparent;
-  border: 1px solid var(--border-light);
-  padding: 24px;
-  /* NO border radius or box shadows */
-}
-
-.spacex-title {
-  text-transform: uppercase;
-  font-weight: 900;
-  letter-spacing: 0.15em;
-}
-
-.spacex-border-bottom {
-  border-bottom: 1px solid var(--border-light);
-}
-
-/* Custom Scrollbar for dark aesthetic */
+/* Custom minimal scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #000000;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-light);
+  @apply bg-muted rounded-full border-[2px] border-transparent bg-clip-padding;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+  @apply bg-muted-foreground;
 }
 
-/* Animations for Telemetry effect */
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
+/* Animations */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.98); }
 }
-
-.animate-scanline {
-  animation: scanline 3s linear infinite;
-}
-
-@keyframes pulse-slow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.spacex-panel {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%);
-  border: 1px solid var(--border-subtle);
-  position: relative;
-  overflow: hidden;
-}
-
-.spacex-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+.animate-pulse-soft {
+  animation: pulse-soft 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
