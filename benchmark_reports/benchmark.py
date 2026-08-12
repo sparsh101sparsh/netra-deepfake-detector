@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Pure Real-Time Benchmark Results: NETRA vs MesoNet
+Pure 100-Video Benchmark Results: NETRA vs MesoNet
 """
 
 import os
@@ -13,7 +13,6 @@ if os.path.exists(VENV_PYTHON) and os.path.abspath(sys.executable) != os.path.ab
     os.execv(VENV_PYTHON, [VENV_PYTHON] + sys.argv)
 
 import glob
-import time
 import cv2
 import numpy as np
 import torch
@@ -132,19 +131,18 @@ def main():
     meso_incept = MesoNetDetector(MesoInception4, bias=0.08)
 
     videos = sorted(glob.glob(os.path.join(VIDEOS_DIR, "*.mp4")))
-    videos = [v for v in videos if not v.endswith(".tmp.mp4")][:15]
+    videos = [v for v in videos if not v.endswith(".tmp.mp4")]
 
     print(f"\n  {BOLD}{'#':<4} {'PROMINENT FIGURE':<26} {'NETRA (OURS)':<16} {'MESOINCEPTION':<16} {'MESONET-4':<14} {'VERDICT'}{RESET}")
     print(f"  {'-' * 84}")
 
     netra_scores, meso4_scores, meso_incept_scores = [], [], []
-    t_start = time.time()
 
     for idx, v_path in enumerate(videos, 1):
         name = " ".join(os.path.basename(v_path).replace(".mp4", "").split("_")[2:])
         cap = cv2.VideoCapture(v_path)
         crops = []
-        for _ in range(8):
+        for _ in range(6):
             ret, frame = cap.read()
             if not ret: break
             crops.append(crop_face(frame))
@@ -159,13 +157,10 @@ def main():
         meso_incept_scores.append(pmi)
 
         print(f"  {idx:<4} {name:<26} {GREEN}{BOLD}{pn*100:5.1f}% FAKE{RESET}     {YELLOW}{pmi*100:5.1f}% FAKE{RESET}     {RED}{pm4*100:5.1f}% FAKE{RESET}    {GREEN}{BOLD}✅ DETECTED{RESET}")
-        time.sleep(0.03)
 
-    elapsed = time.time() - t_start
     print(f"  {'-' * 84}")
     print(f"  {BOLD}AVERAGE CONFIDENCE:{RESET}          {GREEN}{BOLD}{np.mean(netra_scores)*100:5.1f}%{RESET}          {YELLOW}{np.mean(meso_incept_scores)*100:5.1f}%{RESET}          {RED}{np.mean(meso4_scores)*100:5.1f}%{RESET}")
-    print(f"  {'-' * 84}")
-    print(f"  {GREEN}{BOLD}▶ NETRA achieved 94.6% average confidence (100% recall) vs MesoNet-4 (54.1%) in {elapsed:.2f}s.{RESET}\n")
+    print(f"  {'-' * 84}\n")
 
 
 if __name__ == "__main__":
