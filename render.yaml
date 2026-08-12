@@ -6,7 +6,7 @@ services:
     region: oregon
     plan: starter
     buildCommand: "pip install --upgrade pip && pip install -r backend/requirements.txt"
-    startCommand: "cd backend && PYTHONPATH=. uvicorn api.server:app --host 0.0.0.0 --port $PORT"
+    startCommand: "python backend/main.py"
     healthCheckPath: /health
     autoDeploy: true
     envVars:

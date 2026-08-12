@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from netra.pipeline.scam_detector import scam_detector_engine
 from netra.services.ocr_scam_pipeline import extract_iocs_from_text, run_image_ocr_and_scam_detection
-from api.db import insert_threat_item
+from ..db import insert_threat_item
 
 router = APIRouter()
 

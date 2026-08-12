@@ -135,6 +135,16 @@ async def upvote_threat(threat_id: str):
         "upvotes_count": new_count
     }
 
+@router.post("/threat-intelligence/report")
+async def report_new_threat(payload: ReportThreatRequest):
+    """Submit a verified scam or deepfake to the public catalog."""
+    item_id = insert_threat_item(payload.dict())
+    return {
+        "status": "success",
+        "message": "Threat successfully indexed in NETRA Global Catalog.",
+        "id": item_id
+    }
+
 @router.get("/threat-intelligence/{threat_id}/media")
 async def stream_threat_media(threat_id: str):
     """

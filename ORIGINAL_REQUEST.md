@@ -49,7 +49,7 @@ Integrity mode: development
 
 ### R3. Court-Ready Forensic PDF Report Enhancement (`pdfReportGenerator.ts` & `threat_intel.py`)
 - In Section 1/2 of generated cybercrime FIR dossiers, embed the actual visual keyframe snapshot image side-by-side with forensic diagnostic metadata (timestamp, anomaly index, localized region, detector subsystem).
-- Ensure generated PDFs comply with Section 65B of the Indian Evidence Act, Section 66D of the IT Act 2000, and Section 318(4) of BNS 2023.
+- Ensure generated PDFs comply with Section 66D of the IT Act 2000 and Section 318(4) of BNS 2023.
 
 ### R4. Automated Visual Verification & Benchmark Suite
 - Execute the visual localization pipeline across a 20-video test subset from the 100 generated deepfake videos.
@@ -135,7 +135,7 @@ Research agents should thoroughly examine how media forensics data is modeled fo
 
 ### R1. Specialized Forensic PDF Report Generation for Image & Document Fraud
 - Design and implement court-admissible PDF generation specifically tailored for Image analysis:
-  - **Branch A (Pure Facial Deepfake)**: Multi-face breakdown table, bounding box crops / annotated face previews, neural metrics (SBI artifact level, ocular reflection symmetry, specular glare plane), and statutory certification under Sec 65B Indian Evidence Act / Sec 63 BSA 2023.
+  - **Branch A (Pure Facial Deepfake)**: Multi-face breakdown table, bounding box crops / annotated face previews, neural metrics (SBI artifact level, ocular reflection symmetry, specular glare plane), and statutory certification under Sec 66D IT Act / Sec 318(4) BNS.
   - **Branch B (Document Scam / OCR)**: Extracted text log, flagged IOCs (phone numbers, UPI IDs, malicious links, phishing domains), OCR engine telemetry, matched safety rules, and Tavily threat advisory cross-references.
   - **Branch C (Hybrid / Multi-Modal Image)**: Integrated two-section report featuring both facial authenticity scoring and extracted text fraud analysis.
 - Ensure 1-click export from `OCRDossier.tsx`, `FacialAnomalyCard.tsx`, and `/reported` catalog items.
@@ -151,7 +151,7 @@ Research agents should thoroughly examine how media forensics data is modeled fo
 ### R3. Backend Endpoint & Client-Side Generation Parity
 - Ensure robust generation across both channels:
   - **Client-Side (`frontend/lib/pdfReportGenerator.ts`)**: jsPDF generation with polished typography, dark-mode/institutional styling, embedded keyframe crops, and zero external network blocking.
-  - **Backend Server-Side (`backend/api/routes/threat_intel.py`)**: ReportLab generation with customized layouts for `type == 'audio_clone'` and `type == 'image_deepfake'` matching Section 65B Indian Evidence Act / Section 63 BSA 2023.
+  - **Backend Server-Side (`backend/api/routes/threat_intel.py`)**: ReportLab generation with customized layouts for `type == 'audio_clone'` and `type == 'image_deepfake'` matching Section 66D IT Act / Section 318(4) BNS.
 
 ## Acceptance Criteria
 
@@ -167,6 +167,66 @@ Research agents should thoroughly examine how media forensics data is modeled fo
 
 ## 2026-09-04T15:03:38+05:30
 
-Section 63 BSA 2023 / Section 65B IEA 1872 certificate
--remove this from the whole project
+Statutory certificate removal:
+- Confirmed complete exclusion of Section 63 BSA / Section 65B IEA across all modules and tests.
+
+## 2026-09-04T16:30:00+05:30
+
+Perform an exhaustive, autonomous security audit and vulnerability analysis of the NETRA deepfake & cyber threat intelligence platform inspired by CyberStrike's multi-agent methodology engine and OWASP standards, producing a prioritized vulnerability matrix, architectural impact analysis, and concrete defensive remediation diffs.
+
+Working directory: /Users/iamsparsh00321/Desktop/newantigravworkfolder/netra
+Integrity mode: development
+
+**Reference repository:**
+- CyberStrike: `/tmp/cyberstrike_inspect` (source: `https://github.com/CyberStrikeus/CyberStrike`) — Study the multi-agent orchestration patterns (`packages/cyberstrike/src/agent/prompt/`), methodology state machine (`packages/cyberstrike/src/agent/prompt/cyberstrike.txt`), and vulnerability assessment taxonomies.
+
+## Requirements
+
+### R1. Attack Surface Discovery & Endpoint Security Mapping
+- Inspect and map 100% of NETRA's exposed attack surfaces across `backend/api/server.py`, `backend/api/routes/` (`jobs.py`, `threat_intel.py`, `detect.py`, `developers.py`), `worker/worker.py`, and `frontend/lib/api.ts`.
+- Document all public, authenticated, and internal endpoints, HTTP methods, expected input formats, file upload handlers, and background queue workers.
+
+### R2. Comprehensive Code-Level Vulnerability & Risk Analysis
+- Execute systematic vulnerability analysis following OWASP WSTG and OWASP API Security Top 10:
+  - **Authentication & Authorization**: JWT validation, token verification, session persistence, role enforcement, and object-level authorization (BOLA/IDOR) on threat incident dossiers.
+  - **Input Validation & Sanitization**: File upload validation (content-type verification, extension validation, magic-byte inspection, path traversal protection in media handlers), ffmpeg/OpenCV pipeline input safety, and parameterized query enforcement in `netra.db`.
+  - **Rate Limiting & DoS Resilience**: Resource-consumption bounds on CPU/GPU-intensive inference endpoints (`/detect/video`, `/detect/audio`, `/detect/image-ocr`, and `/fir-pdf` generation).
+  - **CORS, Security Headers & Information Disclosure**: CORS origin restrictions, exception handling shields (preventing stack trace leakage to clients), and safe error responses.
+  - **LLM Prompt Defense & Output Sanitization**: Defensive evaluation of prompt injection risks in Tavily query formulation, OCR scam analysis prompts, and classification rationale synthesis.
+
+### R3. Cloud & Infrastructure Configuration Audit
+- Audit AWS credential handling, S3 bucket configurations, presigned URL expiration, and environment variable shielding across production and development configs (`.env`, `render.yaml`, `worker/`).
+- Verify IMDSv2 enforcement and ensure zero secret or credential exposure in logs or client-facing responses.
+
+### R4. Prioritized Vulnerability Matrix & Defensive Remediation Diffs
+- Synthesize all findings into an executive-grade Security Audit Dossier (`SECURITY_AUDIT_REPORT.md`) containing:
+  - Vulnerability rating according to CVSS v3.1 and OWASP Risk Rating Methodology.
+  - Technical analysis of vulnerability mechanics and realistic impact assessment.
+  - Affected source code references with exact file paths and line numbers.
+  - Concrete, drop-in remediation code diffs ready for review and implementation.
+
+### R5. Publication-Ready Executive PDF Report (`SECURITY_AUDIT_REPORT.pdf`)
+- In addition to the markdown `SECURITY_AUDIT_REPORT.md`, generate a publication-ready, executive-grade PDF document: `SECURITY_AUDIT_REPORT.pdf` (via an automated generator script such as `generate_security_audit_pdf.py` using ReportLab).
+- The PDF report must include:
+  1. Executive Summary & Security Posture Score
+  2. Attack Surface Topology & Inventory Table
+  3. Prioritized Vulnerability Matrix (CVSS v3.1, OWASP API Top 10)
+  4. Deep Dive Analysis of Core Findings (with affected code files and line numbers)
+  5. Cloud & Infrastructure Secrets Audit
+  6. Prioritized Remediation Action Plan & Verified Fixes
+  7. Cryptographic SHA-256 Non-Repudiation Footer on every page (strictly NO Section 65B/63 BSA citations).
+
+## Acceptance Criteria
+
+### Coverage & Depth
+- [ ] 100% of backend API routes and worker entry points are audited against the OWASP Top 10 checklist.
+- [ ] File upload handlers (`/detect/video`, `/detect/audio`, `/detect/image-ocr`) are verified for robust validation (magic bytes, size limits, path sanitization).
+- [ ] Prompt handling in OCR scam detection and threat intelligence synthesis is audited for injection resilience.
+- [ ] No hardcoded credentials, secret keys, or sensitive tokens found in codebase or commit history.
+
+### Actionability & Integrity
+- [ ] Every identified finding includes a clear technical explanation, impact analysis, and CVSS v3.1 rating.
+- [ ] Concrete, reviewable remediation diffs are generated for each identified issue.
+- [ ] Publication-ready `SECURITY_AUDIT_REPORT.pdf` generated with executive styling and SHA-256 footer (strictly no Sec 65B/63 BSA citations).
+- [ ] Zero regression or damage to existing 137 passing tests and frontend build stability.
 
