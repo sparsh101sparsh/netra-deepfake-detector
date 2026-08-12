@@ -1,0 +1,359 @@
+[
+  {
+    "video_name": "modiji_swapped_video.mov",
+    "video_path": "/Users/iamsparsh00321/Desktop/newantigravworkfolder/netra/modiji_swapped_video.mov",
+    "total_frames": 130,
+    "duration_sec": 4.333333333333333,
+    "verdict": "FACE_SWAP",
+    "confidence": 98.7,
+    "risk_level": "HIGH",
+    "effective_visual_score": 0.9869,
+    "mean_calibrated_score": 0.5406,
+    "peak_calibrated_score": 1.0,
+    "manipulated_frames_ratio": 50.8,
+    "detected_artifacts": [
+      "high_confidence_face_swap_detected",
+      "moderate_compression_artifact",
+      "natural_facial_texture"
+    ],
+    "frame_sample_preview": [
+      {
+        "frame": 0,
+        "timestamp": "00:00.00",
+        "timestamp_sec": 0.0,
+        "spatial_raw_score": 0.7319,
+        "calibrated_score": 0.0478,
+        "face_found": true,
+        "flags": [
+          "moderate_compression_artifact"
+        ]
+      },
+      {
+        "frame": 16,
+        "timestamp": "00:00.53",
+        "timestamp_sec": 0.5333333333333333,
+        "spatial_raw_score": 0.9998,
+        "calibrated_score": 0.9996,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 32,
+        "timestamp": "00:01.07",
+        "timestamp_sec": 1.0666666666666667,
+        "spatial_raw_score": 0.9979,
+        "calibrated_score": 0.9959,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 48,
+        "timestamp": "00:01.60",
+        "timestamp_sec": 1.6,
+        "spatial_raw_score": 1.0,
+        "calibrated_score": 1.0,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 64,
+        "timestamp": "00:02.13",
+        "timestamp_sec": 2.1333333333333333,
+        "spatial_raw_score": 0.6614,
+        "calibrated_score": 0.05,
+        "face_found": true,
+        "flags": [
+          "natural_facial_texture"
+        ]
+      },
+      {
+        "frame": 80,
+        "timestamp": "00:02.67",
+        "timestamp_sec": 2.6666666666666665,
+        "spatial_raw_score": 0.9369,
+        "calibrated_score": 0.8738,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 96,
+        "timestamp": "00:03.20",
+        "timestamp_sec": 3.2,
+        "spatial_raw_score": 0.8744,
+        "calibrated_score": 0.2615,
+        "face_found": true,
+        "flags": [
+          "moderate_compression_artifact"
+        ]
+      },
+      {
+        "frame": 112,
+        "timestamp": "00:03.73",
+        "timestamp_sec": 3.7333333333333334,
+        "spatial_raw_score": 0.958,
+        "calibrated_score": 0.916,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 128,
+        "timestamp": "00:04.27",
+        "timestamp_sec": 4.266666666666667,
+        "spatial_raw_score": 1.0,
+        "calibrated_score": 1.0,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      }
+    ]
+  },
+  {
+    "video_name": "Movie on 04-08-26 at 10.52\u202fPM.mov",
+    "video_path": "/Users/iamsparsh00321/Downloads/Movie on 04-08-26 at 10.52\u202fPM.mov",
+    "total_frames": 126,
+    "duration_sec": 4.2,
+    "verdict": "FACE_SWAP",
+    "confidence": 99.7,
+    "risk_level": "HIGH",
+    "effective_visual_score": 0.997,
+    "mean_calibrated_score": 0.5663,
+    "peak_calibrated_score": 1.0,
+    "manipulated_frames_ratio": 54.0,
+    "detected_artifacts": [
+      "high_confidence_face_swap_detected",
+      "moderate_compression_artifact",
+      "natural_facial_texture"
+    ],
+    "frame_sample_preview": [
+      {
+        "frame": 0,
+        "timestamp": "00:00.00",
+        "timestamp_sec": 0.0,
+        "spatial_raw_score": 0.9999,
+        "calibrated_score": 0.9999,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 15,
+        "timestamp": "00:00.50",
+        "timestamp_sec": 0.5,
+        "spatial_raw_score": 1.0,
+        "calibrated_score": 1.0,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 30,
+        "timestamp": "00:01.00",
+        "timestamp_sec": 1.0,
+        "spatial_raw_score": 1.0,
+        "calibrated_score": 1.0,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 45,
+        "timestamp": "00:01.50",
+        "timestamp_sec": 1.5,
+        "spatial_raw_score": 0.5129,
+        "calibrated_score": 0.05,
+        "face_found": true,
+        "flags": [
+          "natural_facial_texture"
+        ]
+      },
+      {
+        "frame": 60,
+        "timestamp": "00:02.00",
+        "timestamp_sec": 2.0,
+        "spatial_raw_score": 0.7325,
+        "calibrated_score": 0.0487,
+        "face_found": true,
+        "flags": [
+          "moderate_compression_artifact"
+        ]
+      },
+      {
+        "frame": 75,
+        "timestamp": "00:02.50",
+        "timestamp_sec": 2.5,
+        "spatial_raw_score": 0.6732,
+        "calibrated_score": 0.05,
+        "face_found": true,
+        "flags": [
+          "natural_facial_texture"
+        ]
+      },
+      {
+        "frame": 90,
+        "timestamp": "00:03.00",
+        "timestamp_sec": 3.0,
+        "spatial_raw_score": 0.7169,
+        "calibrated_score": 0.0254,
+        "face_found": true,
+        "flags": [
+          "moderate_compression_artifact"
+        ]
+      },
+      {
+        "frame": 105,
+        "timestamp": "00:03.50",
+        "timestamp_sec": 3.5,
+        "spatial_raw_score": 0.9999,
+        "calibrated_score": 0.9998,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 120,
+        "timestamp": "00:04.00",
+        "timestamp_sec": 4.0,
+        "spatial_raw_score": 0.5358,
+        "calibrated_score": 0.05,
+        "face_found": true,
+        "flags": [
+          "natural_facial_texture"
+        ]
+      }
+    ]
+  },
+  {
+    "video_name": "nahtscrazy.mov",
+    "video_path": "/Users/iamsparsh00321/Downloads/nahtscrazy.mov",
+    "total_frames": 164,
+    "duration_sec": 5.466666666666667,
+    "verdict": "FACE_SWAP",
+    "confidence": 98.4,
+    "risk_level": "HIGH",
+    "effective_visual_score": 0.9838,
+    "mean_calibrated_score": 0.428,
+    "peak_calibrated_score": 1.0,
+    "manipulated_frames_ratio": 39.6,
+    "detected_artifacts": [
+      "high_confidence_face_swap_detected",
+      "moderate_compression_artifact",
+      "natural_facial_texture"
+    ],
+    "frame_sample_preview": [
+      {
+        "frame": 0,
+        "timestamp": "00:00.00",
+        "timestamp_sec": 0.0,
+        "spatial_raw_score": 0.9999,
+        "calibrated_score": 0.9999,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 20,
+        "timestamp": "00:00.67",
+        "timestamp_sec": 0.6666666666666666,
+        "spatial_raw_score": 0.5479,
+        "calibrated_score": 0.05,
+        "face_found": true,
+        "flags": [
+          "natural_facial_texture"
+        ]
+      },
+      {
+        "frame": 40,
+        "timestamp": "00:01.33",
+        "timestamp_sec": 1.3333333333333333,
+        "spatial_raw_score": 0.6419,
+        "calibrated_score": 0.05,
+        "face_found": true,
+        "flags": [
+          "natural_facial_texture"
+        ]
+      },
+      {
+        "frame": 60,
+        "timestamp": "00:02.00",
+        "timestamp_sec": 2.0,
+        "spatial_raw_score": 0.9939,
+        "calibrated_score": 0.9879,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 80,
+        "timestamp": "00:02.67",
+        "timestamp_sec": 2.6666666666666665,
+        "spatial_raw_score": 0.9987,
+        "calibrated_score": 0.9973,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      },
+      {
+        "frame": 100,
+        "timestamp": "00:03.33",
+        "timestamp_sec": 3.3333333333333335,
+        "spatial_raw_score": 0.7622,
+        "calibrated_score": 0.0933,
+        "face_found": true,
+        "flags": [
+          "moderate_compression_artifact"
+        ]
+      },
+      {
+        "frame": 120,
+        "timestamp": "00:04.00",
+        "timestamp_sec": 4.0,
+        "spatial_raw_score": 0.22,
+        "calibrated_score": 0.05,
+        "face_found": true,
+        "flags": [
+          "natural_facial_texture"
+        ]
+      },
+      {
+        "frame": 140,
+        "timestamp": "00:04.67",
+        "timestamp_sec": 4.666666666666667,
+        "spatial_raw_score": 0.8129,
+        "calibrated_score": 0.1694,
+        "face_found": true,
+        "flags": [
+          "moderate_compression_artifact"
+        ]
+      },
+      {
+        "frame": 160,
+        "timestamp": "00:05.33",
+        "timestamp_sec": 5.333333333333333,
+        "spatial_raw_score": 0.9817,
+        "calibrated_score": 0.9634,
+        "face_found": true,
+        "flags": [
+          "high_confidence_face_swap_detected"
+        ]
+      }
+    ]
+  }
+]
