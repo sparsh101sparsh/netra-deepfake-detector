@@ -659,8 +659,25 @@ On standard burstable instances (such as `t3.micro` with 1 GB RAM), loading thes
 
 ## 🤝 Team & License
 
-Developed as an institutional-grade cyber defense initiative for protecting digital communications and financial ecosystems.
+> *मायातीतं सत्यस्य चक्षुः* — *Eye of truth beyond illusion.*
+
+Developed as an institutional-grade forensic cyber defense initiative for protecting digital communications, legal integrity, and national financial ecosystems.
+
+### Core Team & Contributions
+
+| Member | Core Role | Key Contributions |
+| :--- | :--- | :--- |
+| **Sparsh** | Lead Architect & Full-Stack Systems | Cloud Infrastructure (AWS S3, SQS, DynamoDB), Backend FastAPIs, Asynchronous Forensic Workers, Pipeline Orchestration |
+| **Sudiksha** | UI/UX & Frontend Architect | Next.js 14 Web Command Center, Responsive Design System, Live Threat Radar UI, Interactive Visualization Modules |
+| **Ranjan** | ML & Forensic AI Researcher | Neural Network Ensembles, Vision Transformers (ViT), Audio Vocoder Artifact Detection, Spatial-Frequency Localizer |
+| **Swastika** | Threat Research & Cybercrime Lead | Indian Cybercrime Typology Matrix, Threat Intelligence Taxonomies, Heuristic Rules Engine, Evidence Structuring |
+| **Sumit** | ML Training & Data Pipeline Engineer | Deepfake Training Pipelines, Synthetic Media Benchmark Datasets, Data Augmentation & Optimization |
+
+---
+
+### Repositories & Deployment
 
 - **Primary Repository**: [https://github.com/sparsh101sparsh/netra_ai2](https://github.com/sparsh101sparsh/netra_ai2)
-- **Production URL**: [https://netraai-i1pl.onrender.com](https://netraai-i1pl.onrender.com)
+- **Production Web Deployment**: [https://netraai-i1pl.onrender.com](https://netraai-i1pl.onrender.com)
 - **License**: MIT License
+

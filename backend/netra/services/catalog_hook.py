@@ -13,11 +13,18 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from pathlib import Path
 
-from backend.netra.pipeline.indian_gazetteer import (
-    extract_indian_location_from_text,
-    extract_media_exif_geolocation
-)
-from backend.api.db import insert_threat_item
+try:
+    from backend.netra.pipeline.indian_gazetteer import (
+        extract_indian_location_from_text,
+        extract_media_exif_geolocation
+    )
+    from backend.api.db import insert_threat_item
+except ImportError:
+    from netra.pipeline.indian_gazetteer import (
+        extract_indian_location_from_text,
+        extract_media_exif_geolocation
+    )
+    from api.db import insert_threat_item
 
 logger = logging.getLogger("netra.catalog_hook")
 

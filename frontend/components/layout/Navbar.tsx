@@ -188,9 +188,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   title={
                     sloganTranslation
                       ? "Click to switch to Sanskrit (मायातीतं सत्यस्य चक्षुः)"
-                      : "Click to switch to English (The Eye of Truth Beyond Illusion)"
+                      : "Click to switch to English (BEYOND ILLUSION. THE ARCHITECTURE OF TRUTH.)"
                   }
-                  className="hidden sm:inline-block text-[12.5px] sm:text-[13px] font-medium font-sans text-zinc-400 hover:text-white transition-colors -mt-0.5 tracking-wide text-left focus-visible:outline-none cursor-pointer select-none"
+                  className="hidden sm:inline-block text-[12px] sm:text-[12.5px] font-medium font-sans text-zinc-400 hover:text-white transition-colors -mt-0.5 tracking-wide text-left focus-visible:outline-none cursor-pointer select-none"
                 >
                   <span
                     className={cn(
@@ -198,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       sloganFading ? "opacity-0 translate-y-1 blur-[3px]" : "opacity-100 translate-y-0 blur-0"
                     )}
                   >
-                    {sloganTranslation ? "The Eye of Truth Beyond Illusion" : "मायातीतं सत्यस्य चक्षुः"}
+                    {sloganTranslation ? "BEYOND ILLUSION. THE ARCHITECTURE OF TRUTH." : "मायातीतं सत्यस्य चक्षुः"}
                   </span>
                 </button>
               </div>

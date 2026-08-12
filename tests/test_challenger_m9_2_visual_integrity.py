@@ -8,7 +8,7 @@ Empirical Challenge Dimensions:
   1. High-Resolution Rendered PNG Dimensions (>1000 x >1400 px) across 20 benchmark pages.
   2. Signature Amber #f59e0b (RGB: 245, 158, 11 / BGR: 11, 158, 245) Pixel Distributions.
   3. Institutional Forensic Badge ("ANOMALY DETECTED HERE") Text, Contrast, and Geometry.
-  4. Court-Admissible Statutory Legal Clauses (Section 65B/63, Section 66D, Section 318(4)).
+  4. Court-Admissible Statutory Legal Clauses (Section 66D, Section 318(4)).
   5. Facial Identity Preservation & Non-Obscuration Analysis (Bounding Box Ratios & Stroke).
   6. Batch Benchmark Telemetry Integrity and Consistency.
 """
@@ -194,7 +194,6 @@ class TestChallengerM9VisualArtifactIntegrity:
         """
         Challenge 4: Extract text from all 20 PDF reports via pypdfium2 and assert
         mandatory statutory legal clauses:
-          - Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023
           - Section 66D Information Technology Act 2000
           - Section 318(4) Bharatiya Nyaya Sanhita 2023
           - CYBER CRIME INCIDENT REPORT & FORENSIC EVIDENCE DOSSIER

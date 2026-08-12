@@ -66,12 +66,12 @@
     {
       "name": "4.1 Completely empty OCR result (data = {})",
       "status": "PASS",
-      "details": "Empty data rendered cleanly: 11457 chars"
+      "details": "Empty data rendered cleanly: 12318 chars"
     },
     {
       "name": "4.2 Missing or null extracted_iocs (no crashes, 0 details found)",
       "status": "PASS",
-      "details": "Rendered cleanly: 11297 chars"
+      "details": "Rendered cleanly: 12158 chars"
     },
     {
       "name": "4.3 Empty IOC lists (phones: [], upis: [], urls: [], apks: [])",

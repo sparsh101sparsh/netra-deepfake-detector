@@ -9,7 +9,7 @@ Verifies:
   - High-resolution rasterization via pypdfium2 (scale=2, >1000px width, >1400px height)
   - Side-by-side keyframe snapshot image embedding (left) and diagnostic metadata (right)
   - Amber #f59e0b (RGB 245, 158, 11) border and forensic badge pixel verification
-  - Statutory compliance citations (Section 65B IEA / Section 63 BSA, Section 66D IT Act, Section 318(4) BNS)
+  - Statutory compliance citations (Section 66D IT Act, Section 318(4) BNS)
   - Detector subsystem attribution and neural anomaly telemetry
   - Robustness against corrupt images, missing files, URL basenames, boundary strings, and concurrency
 """

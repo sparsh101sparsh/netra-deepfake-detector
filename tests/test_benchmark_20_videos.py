@@ -10,8 +10,8 @@ Verifies:
   3. Keyframe snapshot generation with signature amber #f59e0b (RGB 245, 158, 11 /
      BGR 11, 158, 245) tamper-evident border and 'ANOMALY DETECTED HERE' badge,
      persisted to backend/media/keyframes/.
-  4. Court-ready forensic PDF report generation complying with Section 65B Indian
-     Evidence Act / Section 63 BSA 2023, Section 66D IT Act 2000, Section 318(4) BNS 2023,
+  4. Court-ready forensic PDF report generation complying with Section 66D IT Act 2000,
+     Section 318(4) BNS 2023, Section 66E IT Act,
      featuring Section 2 side-by-side keyframe evidence tables.
   5. High-resolution PDF page rasterization using pypdfium2 (scale >= 2, assuring
      dimensions >1000 x >1400 px), saved to tests/artifacts/benchmark_rendered_pages/.
@@ -129,7 +129,6 @@ def build_court_ready_forensic_pdf(
 ) -> None:
     """
     Builds a court-ready forensic PDF evidence dossier with ReportLab complying with:
-      - Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023
       - Section 66D Information Technology Act 2000
       - Section 318(4) Bharatiya Nyaya Sanhita 2023
     Embeds Section 2 side-by-side keyframe table (snapshot image left, diagnostic table right).
@@ -388,7 +387,7 @@ class TestBenchmark20Videos:
                 "anomaly_score": float(meta.get("anomaly_score", 0.965)),
                 "image_path": snap_path,
                 "detector_subsystem": meta.get("detector_subsystem", "GenD Foundation Model ViT-L/14 + Spatial SBI"),
-                "statutory_act": meta.get("statutory_act", "Section 65B Indian Evidence Act"),
+                "statutory_act": meta.get("statutory_act", "Section 66D IT Act"),
                 "bounding_box": meta["bounding_box"]
             })
 

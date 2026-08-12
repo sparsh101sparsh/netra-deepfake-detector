@@ -69,6 +69,15 @@ export interface DualBranchResult {
     lines_count?: number;
     processing_time_ms?: number;
   };
+  translation_analysis?: {
+    has_indic_script?: boolean;
+    detected_script?: string;
+    detected_lang_code?: string;
+    original_text?: string;
+    translated_text?: string;
+    translation_engine?: string;
+    scam_terms_identified?: string[];
+  };
   scam_analysis?: {
     is_scam?: boolean;
     risk_score?: number;

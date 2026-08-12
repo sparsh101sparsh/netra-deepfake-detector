@@ -414,7 +414,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
               {/* Sign Out Button */}
               <div className="pt-2 border-t border-line flex items-center justify-between">
                 <div className="text-[11px] font-mono text-ink-3">
-                  Sec 65B IT Act Forensic Audit Active
+                  Forensic Audit Trail Active
                 </div>
                 <Button
                   variant="outline"
