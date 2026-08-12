@@ -14,6 +14,10 @@ venv/
 *.mov
 *.pptx
 *.pkl
-data/
 kaggle_logs*/
 kaggle-clip-output/
+extracted_frames/
+scratch_frames/
+*.ses
+training/kaggle-clip-notebook/output_logs/
+data/

@@ -1,0 +1,132 @@
+{
+  "target_file": "/Users/iamsparsh00321/Downloads/Movie on 04-08-26 at 10.52\u202fPM.mov",
+  "video_metadata": {
+    "total_frames": 126,
+    "fps": 30.0,
+    "duration_sec": 4.2,
+    "sampled_frames": 11
+  },
+  "fusion_result": {
+    "final_fake_probability": 1.0,
+    "verdict": "FACE_SWAP",
+    "confidence": 100.0,
+    "risk_level": "HIGH",
+    "visual_score": 0.9882,
+    "audio_score": null,
+    "clip_score": null,
+    "audio_gated": true
+  },
+  "frame_breakdown": [
+    {
+      "frame": 0,
+      "timestamp": "00:00.00",
+      "fake_probability": 0.9217,
+      "face_found": false,
+      "flags": [
+        "facial_boundary_artifacts",
+        "texture_inconsistency",
+        "sbi_blending_anomaly"
+      ]
+    },
+    {
+      "frame": 12,
+      "timestamp": "00:00.40",
+      "fake_probability": 0.9446,
+      "face_found": false,
+      "flags": [
+        "facial_boundary_artifacts",
+        "texture_inconsistency",
+        "sbi_blending_anomaly"
+      ]
+    },
+    {
+      "frame": 24,
+      "timestamp": "00:00.80",
+      "fake_probability": 0.9755,
+      "face_found": false,
+      "flags": [
+        "facial_boundary_artifacts",
+        "texture_inconsistency",
+        "sbi_blending_anomaly"
+      ]
+    },
+    {
+      "frame": 36,
+      "timestamp": "00:01.20",
+      "fake_probability": 0.0051,
+      "face_found": false,
+      "flags": []
+    },
+    {
+      "frame": 48,
+      "timestamp": "00:01.60",
+      "fake_probability": 0.9561,
+      "face_found": false,
+      "flags": [
+        "facial_boundary_artifacts",
+        "texture_inconsistency",
+        "sbi_blending_anomaly"
+      ]
+    },
+    {
+      "frame": 60,
+      "timestamp": "00:02.00",
+      "fake_probability": 0.9406,
+      "face_found": false,
+      "flags": [
+        "facial_boundary_artifacts",
+        "texture_inconsistency",
+        "sbi_blending_anomaly"
+      ]
+    },
+    {
+      "frame": 72,
+      "timestamp": "00:02.40",
+      "fake_probability": 0.5896,
+      "face_found": false,
+      "flags": [
+        "subtle_pixel_irregularity"
+      ]
+    },
+    {
+      "frame": 84,
+      "timestamp": "00:02.80",
+      "fake_probability": 0.5502,
+      "face_found": false,
+      "flags": [
+        "subtle_pixel_irregularity"
+      ]
+    },
+    {
+      "frame": 96,
+      "timestamp": "00:03.20",
+      "fake_probability": 0.9998,
+      "face_found": false,
+      "flags": [
+        "facial_boundary_artifacts",
+        "texture_inconsistency",
+        "sbi_blending_anomaly"
+      ]
+    },
+    {
+      "frame": 108,
+      "timestamp": "00:03.60",
+      "fake_probability": 0.9892,
+      "face_found": false,
+      "flags": [
+        "facial_boundary_artifacts",
+        "texture_inconsistency",
+        "sbi_blending_anomaly"
+      ]
+    },
+    {
+      "frame": 120,
+      "timestamp": "00:04.00",
+      "fake_probability": 0.5928,
+      "face_found": false,
+      "flags": [
+        "subtle_pixel_irregularity"
+      ]
+    }
+  ]
+}

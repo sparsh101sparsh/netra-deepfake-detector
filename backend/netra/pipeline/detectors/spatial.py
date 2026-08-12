@@ -61,26 +61,19 @@ class SpatialSBIDetector:
 
     def _load_model(self, model_path: Optional[str]) -> nn.Module:
         """Load EfficientNet-B4 — fine-tuned weights or pretrained baseline."""
-        try:
-            from efficientnet_pytorch import EfficientNet
-            model = EfficientNet.from_pretrained("efficientnet-b4")
-            model._fc = nn.Linear(1792, 2)  # Binary: real/fake
+        import torchvision.models as models
+        model = models.efficientnet_b4(weights=None)
+        model.classifier[1] = nn.Linear(model.classifier[1].in_features, 2)  # Binary: real/fake
 
-            if model_path and os.path.exists(model_path):
-                logger.info(f"Loading fine-tuned weights from {model_path}")
-                state_dict = torch.load(model_path, map_location=self.device)
-                model.load_state_dict(state_dict)
-            else:
-                logger.info("Using pretrained EfficientNet-B4 baseline (no fine-tuned weights found)")
+        if model_path and os.path.exists(model_path):
+            logger.info(f"Loading fine-tuned weights from {model_path}")
+            checkpoint = torch.load(model_path, map_location=self.device)
+            state_dict = checkpoint.get("model_state_dict", checkpoint)
+            model.load_state_dict(state_dict)
+        else:
+            logger.info("Using pretrained EfficientNet-B4 baseline")
 
-            return model.to(self.device)
-        except ImportError:
-            # Fallback: lightweight MobileNet if efficientnet_pytorch not available
-            logger.warning("efficientnet_pytorch not installed, using torchvision MobileNetV3")
-            import torchvision.models as models
-            model = models.mobilenet_v3_large(weights="IMAGENET1K_V1")
-            model.classifier[-1] = nn.Linear(model.classifier[-1].in_features, 2)
-            return model.to(self.device)
+        return model.to(self.device)
 
     def _detect_and_crop_face(self, frame_bgr: np.ndarray):
         """Detect largest face and return cropped region, or full frame."""
