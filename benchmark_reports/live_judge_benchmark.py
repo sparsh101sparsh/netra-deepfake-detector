@@ -11,6 +11,13 @@ Run Command:
 
 import os
 import sys
+
+# Auto-detect and switch to the project's virtualenv if run from system Python
+WORKSPACE = os.path.dirname(os.path.abspath(__file__))
+VENV_PYTHON = os.path.join(WORKSPACE, "face_morph_env", "bin", "python")
+if os.path.exists(VENV_PYTHON) and os.path.abspath(sys.executable) != os.path.abspath(VENV_PYTHON):
+    os.execv(VENV_PYTHON, [VENV_PYTHON] + sys.argv)
+
 import glob
 import time
 import cv2
