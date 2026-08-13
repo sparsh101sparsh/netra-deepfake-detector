@@ -25,10 +25,12 @@ class GatedFusionEngine:
         visual_score: float,
         audio_score: Optional[float],
         clip_score: Optional[float] = None,
+        gend_score: Optional[float] = None,
         aux_flags: list = None,
     ) -> Dict:
         """
         Fuse all detector scores into a final verdict.
+        Prioritizes GenD WACV 2026 ViT-L/14 Foundation Backbone for cross-dataset generalization.
 
         Returns:
             verdict: one of FACE_SWAP | FACE_SWAP_WITH_VOICE_CLONE |
@@ -40,11 +42,16 @@ class GatedFusionEngine:
         """
         aux_flags = aux_flags or []
 
-        # Apply CLIP boost if available and confident
+        # Tier 1: GenD Foundation Visual Fusion
         effective_visual = visual_score
-        if clip_score is not None:
-            # Weighted average: 70% EfficientNet, 30% CLIP
-            effective_visual = 0.7 * visual_score + 0.3 * clip_score
+        if gend_score is not None and clip_score is not None:
+            # 60% GenD ViT-L/14 Foundation + 25% Spatial SBI + 15% CLIP
+            effective_visual = 0.60 * gend_score + 0.25 * visual_score + 0.15 * clip_score
+        elif gend_score is not None:
+            # 70% GenD ViT-L/14 Foundation + 30% Spatial SBI
+            effective_visual = 0.70 * gend_score + 0.30 * visual_score
+        elif clip_score is not None:
+            effective_visual = 0.70 * visual_score + 0.30 * clip_score
 
         # Audio gate: if audio unavailable or very low, downweight heavily
         audio_available = audio_score is not None

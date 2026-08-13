@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Squircle / App Background -->
+    <radialGradient id="iconBgGrad" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#0c1d38" />
+      <stop offset="50%" stop-color="#050b16" />
+      <stop offset="100%" stop-color="#010307" />
+    </radialGradient>
+
+    <!-- Glass Rim Glow -->
+    <linearGradient id="iconRimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.8" />
+      <stop offset="30%" stop-color="#38bdf8" stop-opacity="0.3" />
+      <stop offset="70%" stop-color="#00f0ff" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.6" />
+    </linearGradient>
+
+    <!-- Glowing Eye Border Gradient -->
+    <linearGradient id="iconEyeBorderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#00f0ff" />
+    </linearGradient>
+
+    <!-- Iris Donut Gradient -->
+    <linearGradient id="iconDonutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Badge Gradient -->
+    <linearGradient id="iconBadgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="100%" stop-color="#1b5ce4" />
+    </linearGradient>
+
+    <!-- Clip Path for App Squircle -->
+    <clipPath id="squircleClip">
+      <rect x="0" y="0" width="512" height="512" rx="115" ry="115" />
+    </clipPath>
+
+    <!-- Inner Eye Clip Path -->
+    <clipPath id="iconEyeClip">
+      <path d="M 102 256 C 153 145, 359 145, 410 256 C 359 367, 153 367, 102 256 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Base Squircle Container -->
+  <g clip-path="url(#squircleClip)">
+    <!-- Obsidian Dark Background -->
+    <rect x="0" y="0" width="512" height="512" fill="url(#iconBgGrad)" />
+
+    <!-- Ambient Center Bloom -->
+    <circle cx="256" cy="256" r="180" fill="#00f0ff" fill-opacity="0.08" filter="blur(30px)" />
+
+    <!-- Outer Orbital Dashed Circle -->
+    <circle cx="256" cy="256" r="168" fill="none" stroke="#00f0ff" stroke-width="4.8"
+            stroke-dasharray="14 26" stroke-linecap="round" opacity="0.85" />
+
+    <!-- Eye Core Body -->
+    <g id="icon-eye-body">
+      <!-- Sclera Solid Dark Obsidian Fill + Outline -->
+      <path d="M 102 256 C 153 145, 359 145, 410 256 C 359 367, 153 367, 102 256 Z"
+            fill="#050c18" stroke="url(#iconEyeBorderGrad)" stroke-width="6.0" stroke-linecap="round" stroke-linejoin="round" />
+
+      <!-- Clipped Interior Iris -->
+      <g clip-path="url(#iconEyeClip)">
+        <!-- Clean Iris Donut (Cyan Outer Ring) -->
+        <circle cx="256" cy="256" r="48" fill="url(#iconDonutGrad)" />
+        
+        <!-- Dark Cavity Center Hole -->
+        <circle cx="256" cy="256" r="27" fill="#02050c" />
+
+        <!-- White Pupil Core Glowing in Middle Center -->
+        <circle cx="256" cy="256" r="13.5" fill="#00f0ff" opacity="0.9" />
+        <circle cx="256" cy="256" r="10" fill="#ffffff" />
+      </g>
+    </g>
+
+    <!-- Verification Badge (Bottom-Right Anchor) -->
+    <g id="icon-badge">
+      <circle cx="365" cy="375" r="28" fill="#00f0ff" opacity="0.25" />
+      <circle cx="365" cy="375" r="24" fill="#020610" />
+      <circle cx="365" cy="375" r="20" fill="url(#iconBadgeGrad)" />
+      <path d="M 357 375 L 363 381 L 374 369" fill="none" stroke="#ffffff" stroke-width="4.0" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+
+    <!-- App Icon Glass Bevel Outline -->
+    <rect x="2" y="2" width="508" height="508" rx="113" ry="113" fill="none" stroke="url(#iconRimGrad)" stroke-width="3.5" />
+  </g>
+</svg>

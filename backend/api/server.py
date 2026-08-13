@@ -1,32 +1,30 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import uuid, boto3, json, asyncio, os, time
 from datetime import datetime
-from .models.schemas import JobStatus, DetectResponse
-from .routes import detect, jobs, scam, public_api
 
-app = FastAPI(title="NETRA API", version="5.0", description="Multi-Modal Deepfake Detection Platform")
+from .routes import detect, jobs, scam, public_api, threat_intel, news_routes
+from netra.services.tavily_crawler import start_24h_background_worker
+
+app = FastAPI(title="NETRA API", version="5.1", description="Multi-Modal Deepfake Detection & Threat Intelligence Platform")
+
+@app.on_event("startup")
+async def startup_event():
+    start_24h_background_worker()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://netra-deepfake-detector.vercel.app",
-        "http://localhost:3000",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
+    )
 
 app.include_router(detect.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(scam.router, prefix="/api/v1")
+app.include_router(threat_intel.router, prefix="/api/v1")
 app.include_router(public_api.router, prefix="/api/v1/public")
-
-# Mount WhatsApp Twilio Webhook
-from .routes import whatsapp_webhook
-app.include_router(whatsapp_webhook.router, prefix="/api/whatsapp")
+app.include_router(news_routes.router, prefix="/api/v1")
 
 @app.get("/health")
 async def health():
@@ -34,4 +32,14 @@ async def health():
 
 @app.get("/")
 async def root():
-    return {"service": "NETRA API", "version": "5.0", "docs": "/docs"}
+    return {
+        "service": "NETRA Global Threat Intelligence & Deepfake API",
+        "version": "5.0",
+        "docs": "/docs",
+        "endpoints": [
+            "/api/v1/threat-intelligence/radar",
+            "/api/v1/threat-intelligence/catalog",
+            "/api/v1/public/detect/scam-text",
+            "/api/v1/public/detect/image"
+        ]
+    }
