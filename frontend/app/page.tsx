@@ -4,11 +4,15 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Shield, AlertCircle, Activity, Video, Scan, Eye, 
-  ArrowRight, CheckCircle2, FileText, Code2, Database, Sparkles, Terminal 
+  ArrowRight, CheckCircle2, FileText, Code2, Database, Sparkles, Terminal, Radio, Globe, Key 
 } from "lucide-react";
 import { NetraEyeScanner } from "@/components/NetraEyeScanner";
 import { NetraBrandLogo } from "@/components/NetraBrandLogo";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
+import { LiveThreatRadar } from "@/components/LiveThreatRadar";
+import { ThreatCatalogSection } from "@/components/ThreatCatalogSection";
+import { TechnologySection } from "@/components/TechnologySection";
+import { DevelopersSection } from "@/components/DevelopersSection";
 
 const API_URL = "/api/backend";
 const MAX_FILE_SIZE_MB = 100;
@@ -25,6 +29,7 @@ export default function ForensicHub() {
   // High frame rate GPU morphing state: 'intro' -> 'morphing' -> 'ready'
   const [introStage, setIntroStage] = useState<'intro' | 'morphing' | 'ready'>('intro');
   const [introProgress, setIntroProgress] = useState(0);
+  const [activeNavSection, setActiveNavSection] = useState<string>("analyzer");
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -80,6 +85,37 @@ export default function ForensicHub() {
       clearTimeout(tMorph);
     };
   }, []);
+
+  // ScrollSpy to track active section in single-page view
+  useEffect(() => {
+    const sectionIds = ["analyzer", "radar", "reported", "technology", "developers"];
+    
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 250;
+      for (const id of sectionIds) {
+        const el = document.getElementById(id);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveNavSection(id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    setActiveNavSection(id);
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   const runSampleScan = (name: string, verdict: string, confidence: string) => {
     setSampleScan({
@@ -164,7 +200,7 @@ export default function ForensicHub() {
   const isMorphing = introStage === 'morphing';
 
   return (
-    <div className="min-h-screen bg-[#030712] text-neutral-100 selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#030712] text-neutral-100 selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-x-hidden font-mono">
       
       {/* 1. Fullscreen Intro Eye Overlay with Hardware-Accelerated 120fps Morphing */}
       {introStage !== 'ready' && (
@@ -223,7 +259,7 @@ export default function ForensicHub() {
         </div>
       )}
 
-      {/* 2. Top Navigation Bar (Full Width) */}
+      {/* 2. Top Navigation Bar (Single-Page ScrollSpy Header) */}
       <header 
         className={`sticky top-0 z-40 border-b border-neutral-800/80 bg-[#030712]/90 backdrop-blur-xl transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] ${
           isIntroActive ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'
@@ -233,21 +269,42 @@ export default function ForensicHub() {
         <div className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <NetraBrandLogo size={40} />
-            <a href="/" className="flex items-center gap-2 text-2xl font-bold tracking-tight text-white hover:text-cyan-400 transition-colors">
+            <button 
+              onClick={() => scrollToSection("analyzer")} 
+              className="flex items-center gap-2 text-2xl font-bold tracking-tight text-white hover:text-cyan-400 transition-colors"
+            >
               NETRA
               <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded bg-neutral-900 border border-neutral-800 text-cyan-400">v5.1</span>
-            </a>
+            </button>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-xs font-mono font-medium text-neutral-400">
-            <a href="/#analyzer" className="text-white font-bold transition-colors flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-              Analyzer
-            </a>
-            <a href="/radar" className="hover:text-white transition-colors">Threat Radar</a>
-            <a href="/reported" className="hover:text-white transition-colors">Threat Catalog</a>
-            <a href="/technology" className="hover:text-white transition-colors">Technology</a>
-            <a href="/developers" className="hover:text-white transition-colors">Developer API</a>
+          {/* Smooth Scroll Navigation Links */}
+          <nav className="hidden md:flex items-center gap-2 text-xs font-mono font-medium text-neutral-400 bg-neutral-950/70 p-1.5 rounded-2xl border border-neutral-850">
+            {[
+              { id: "analyzer", label: "Analyzer", icon: Scan },
+              { id: "radar", label: "Threat Radar", icon: Radio },
+              { id: "reported", label: "Threat Catalog", icon: Database },
+              { id: "technology", label: "Technology", icon: Cpu },
+              { id: "developers", label: "Developer API", icon: Terminal },
+            ].map((nav) => {
+              const isActive = activeNavSection === nav.id;
+              const IconComp = nav.icon;
+              return (
+                <button
+                  key={nav.id}
+                  onClick={() => scrollToSection(nav.id)}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? "bg-neutral-850 text-white font-bold shadow-[0_0_12px_rgba(0,240,255,0.15)] border border-cyan-500/30"
+                      : "text-neutral-400 hover:text-white"
+                  }`}
+                >
+                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>}
+                  <IconComp className={`w-3.5 h-3.5 ${isActive ? "text-cyan-400" : "text-neutral-500"}`} />
+                  <span>{nav.label}</span>
+                </button>
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -256,191 +313,190 @@ export default function ForensicHub() {
         </div>
       </header>
 
-      {/* 3. Hero Section: Left Product Story + Right Live Analyzer Dropzone */}
-      <section 
-        className={`w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 pt-12 pb-16 transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] ${
-          isIntroActive ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-        }`}
-        style={{ willChange: 'transform, opacity' }}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-          
-          {/* Left Column (5 Cols): Product Headline & Architecture Highlights */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="inline-flex items-center gap-2 text-xs font-mono font-semibold text-cyan-400 uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-              Multi-Modal AI Forensic Engine
+      {/* Main Single-Page Container */}
+      <div className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 space-y-24 py-12">
+        
+        {/* ================= SECTION 1: ANALYZER & HERO ================= */}
+        <section 
+          id="analyzer"
+          className={`pt-4 pb-8 transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] scroll-mt-28 ${
+            isIntroActive ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+          }`}
+          style={{ willChange: 'transform, opacity' }}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+            
+            {/* Left Column (5 Cols): Product Headline & Architecture Highlights */}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="inline-flex items-center gap-2 text-xs font-mono font-semibold text-cyan-400 uppercase tracking-widest">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                Multi-Modal AI Forensic Engine
+              </div>
+
+              <h1 className="font-serif text-5xl sm:text-6xl xl:text-7xl font-normal tracking-tight text-white leading-[1.05]">
+                Eyes that<br />
+                see through.
+              </h1>
+
+              <p className="text-neutral-300 text-sm sm:text-base leading-relaxed font-sans max-w-xl">
+                NETRA is an institutional-grade forensic engine that analyzes digital media for synthetic face-swaps, AI voice clones, and manipulated audio-visual signals.
+              </p>
+
+              {/* Core Architecture Capabilities */}
+              <div className="space-y-2.5 pt-2 font-mono text-xs text-neutral-300">
+                <div className="flex items-center gap-2">
+                  <span className="text-cyan-400 font-bold">✓</span>
+                  <span><strong>Multi-Modal Fusion:</strong> GenD ViT-L/14 Backbone + 2D-DCT Spectral + Whisper V3 Vocoder</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-cyan-400 font-bold">✓</span>
+                  <span><strong>Metadata Forensics:</strong> Camera optics, CapCut/Premiere editor tags & EXIF</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-cyan-400 font-bold">✓</span>
+                  <span><strong>Developer API:</strong> Sub-150ms synchronous endpoints for platforms</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 pt-4 font-mono">
+                <button 
+                  onClick={() => scrollToSection("reported")}
+                  className="px-5 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs border border-neutral-700 transition-all flex items-center gap-2"
+                >
+                  <Database className="w-4 h-4 text-cyan-400" /> Browse Threat Catalog &rarr;
+                </button>
+                <button 
+                  onClick={() => scrollToSection("radar")}
+                  className="px-5 py-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:bg-neutral-900 text-neutral-300 hover:text-white text-xs font-semibold transition-all flex items-center gap-2"
+                >
+                  <Radio className="w-4 h-4 text-cyan-400" /> Live Threat Radar &rarr;
+                </button>
+              </div>
             </div>
 
-            <h1 className="font-serif text-5xl sm:text-6xl xl:text-7xl font-normal tracking-tight text-white leading-[1.05]">
-              Eyes that<br />
-              see through.
-            </h1>
+            {/* Right Column (7 Cols): The Live Media Analyzer Sandbox Dropzone */}
+            <div className="lg:col-span-7">
+              <div className="bg-neutral-950/90 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden transition-all duration-700 hover:border-cyan-500/40">
+                
+                <div className="flex items-center justify-between border-b border-neutral-800/80 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                      <Scan className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h2 className="font-bold text-base text-white">Live Media Forensic Sandbox</h2>
+                      <p className="text-xs text-neutral-400 font-mono">Upload media or select a sample file for multi-modal analysis</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400">
+                    Max 100MB
+                  </span>
+                </div>
 
-            <p className="text-neutral-300 text-sm sm:text-base leading-relaxed font-sans max-w-xl">
-              NETRA is an institutional-grade forensic engine that analyzes digital media for synthetic face-swaps, AI voice clones, and manipulated audio-visual signals.
-            </p>
+                {/* Upload Dropzone */}
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="video/*,image/*,audio/*"
+                  onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                />
 
-            {/* Core Architecture Capabilities */}
-            <div className="space-y-2.5 pt-2 font-mono text-xs text-neutral-300">
-              <div className="flex items-center gap-2">
-                <span className="text-cyan-400 font-bold">✓</span>
-                <span><strong>Multi-Modal Fusion:</strong> GenD ViT-L/14 Backbone + 2D-DCT Spectral + Whisper V3 Vocoder</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-cyan-400 font-bold">✓</span>
-                <span><strong>Metadata Forensics:</strong> Camera optics, CapCut/Premiere editor tags & EXIF</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-cyan-400 font-bold">✓</span>
-                <span><strong>Developer API:</strong> Sub-150ms synchronous endpoints for platforms</span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 pt-4 font-mono">
-              <a href="/reported" className="px-5 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs border border-neutral-700 transition-all flex items-center gap-2">
-                <Database className="w-4 h-4 text-cyan-400" /> Browse Threat Catalog &rarr;
-              </a>
-              <a href="/developers" className="px-5 py-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:bg-neutral-900 text-neutral-300 hover:text-white text-xs font-semibold transition-all flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-cyan-400" /> Developer API &rarr;
-              </a>
-            </div>
-          </div>
-
-          {/* Right Column (7 Cols): The Live Media Analyzer Sandbox Dropzone (Destination of the Morph!) */}
-          <div id="analyzer" className="lg:col-span-7">
-            <div className="bg-neutral-950/90 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden transition-all duration-700 hover:border-cyan-500/40">
-              
-              <div className="flex items-center justify-between border-b border-neutral-800/80 pb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                    <Scan className="w-4 h-4" />
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-neutral-800 hover:border-cyan-500/50 bg-neutral-900/30 hover:bg-neutral-900/50 rounded-2xl p-8 text-center cursor-pointer transition-all space-y-3 relative group"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mx-auto shadow-[0_0_20px_rgba(0,240,255,0.15)] group-hover:scale-105 transition-transform duration-300">
+                    <Scan className="w-7 h-7" />
                   </div>
                   <div>
-                    <h2 className="font-bold text-base text-white">Live Media Forensic Sandbox</h2>
-                    <p className="text-xs text-neutral-400 font-mono">Upload media or select a sample file for multi-modal analysis</p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400">
-                  Max 100MB
-                </span>
-              </div>
-
-              {/* Upload Dropzone */}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="video/*,image/*,audio/*"
-                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-              />
-
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-neutral-800 hover:border-cyan-500/50 bg-neutral-900/30 hover:bg-neutral-900/50 rounded-2xl p-8 text-center cursor-pointer transition-all space-y-3 relative group"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mx-auto shadow-[0_0_20px_rgba(0,240,255,0.15)] group-hover:scale-105 transition-transform duration-300">
-                  <Scan className="w-7 h-7" />
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">
-                    Click to browse files or drag and drop
-                  </div>
-                  <div className="text-xs font-mono text-neutral-400 mt-1">
-                    MP4, MOV, WEBM, WAV, MP3, JPG, PNG
-                  </div>
-                </div>
-
-                {isUploading && (
-                  <div className="w-full max-w-xs mx-auto space-y-1.5 pt-2">
-                    <div className="flex justify-between text-xs font-mono text-neutral-400">
-                      <span>Uploading media...</span>
-                      <span>{uploadProgress}%</span>
+                    <div className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">
+                      Click to browse files or drag and drop
                     </div>
-                    <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-cyan-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                    <div className="text-xs font-mono text-neutral-400 mt-1">
+                      MP4, MOV, WEBM, WAV, MP3, JPG, PNG
                     </div>
+                  </div>
+
+                  {isUploading && (
+                    <div className="w-full max-w-xs mx-auto space-y-1.5 pt-2">
+                      <div className="flex justify-between text-xs font-mono text-neutral-400">
+                        <span>Uploading media...</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-cyan-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="text-xs font-mono text-red-400 bg-red-950/60 border border-red-500/30 p-3 rounded-xl flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{error}</span>
                   </div>
                 )}
+
               </div>
-
-              {error && (
-                <div className="text-xs font-mono text-red-400 bg-red-950/60 border border-red-500/30 p-3 rounded-xl flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
             </div>
+
           </div>
+        </section>
 
-        </div>
-      </section>
-
-      {/* 4. Technology & Architecture Breakdown (Wide & Honest) */}
-      <section id="technology" className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 py-12 border-t border-neutral-800/80">
-        <div className="space-y-2 mb-8 font-mono">
-          <div className="text-xs font-semibold text-cyan-400 uppercase tracking-widest">
-            Architecture
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            How NETRA Detects Synthetic Manipulations
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono">
-          
-          {/* Card 1: Spatial */}
-          <div className="bg-neutral-950/70 border border-neutral-800 p-6 rounded-3xl space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold">
-              01
+        {/* ================= SECTION 2: LIVE THREAT RADAR ================= */}
+        <section id="radar" className="pt-16 border-t border-neutral-800/80 scroll-mt-28 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-cyan-400 uppercase tracking-widest mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                Real-Time Geographic Defense
+              </div>
+              <h2 className="font-serif text-3xl sm:text-5xl text-white font-normal tracking-tight">
+                Live National Threat Radar
+              </h2>
             </div>
-            <h3 className="font-bold text-base text-white">Spatial Boundary Inconsistency</h3>
-            <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-              Analyzes pixel blending boundaries (Synthetic Boundary Inconsistency) where source faces are warped and blended onto target video frames.
+            <p className="text-neutral-400 text-xs font-sans max-w-md">
+              Real-time spatial telemetry of reported cyber incidents, digital arrests, and AI impersonation attacks across India.
             </p>
           </div>
 
-          {/* Card 2: Spectral */}
-          <div className="bg-neutral-950/70 border border-neutral-800 p-6 rounded-3xl space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-950/80 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold">
-              02
-            </div>
-            <h3 className="font-bold text-base text-white">2D-DCT Frequency Forensics</h3>
-            <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-              Computes discrete cosine transform spectra to detect high-frequency noise drops and neural vocoder artifacts invisible to the human eye.
-            </p>
-          </div>
+          <LiveThreatRadar />
+        </section>
 
-          {/* Card 3: Metadata */}
-          <div className="bg-neutral-950/70 border border-neutral-800 p-6 rounded-3xl space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
-              03
-            </div>
-            <h3 className="font-bold text-base text-white">Container & EXIF Verification</h3>
-            <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-              Inspects video container atoms, codec chains, re-encoding counts, and hardware EXIF tags to identify CapCut, Premiere, or FFmpeg synthesis.
-            </p>
-          </div>
+        {/* ================= SECTION 3: THREAT CATALOG & SCAM NEWS ================= */}
+        <section id="reported" className="pt-16 border-t border-neutral-800/80 scroll-mt-28">
+          <ThreatCatalogSection />
+        </section>
 
-        </div>
-      </section>
+        {/* ================= SECTION 4: FORENSIC TECHNOLOGY & BENCHMARK ================= */}
+        <section id="technology" className="pt-16 border-t border-neutral-800/80 scroll-mt-28">
+          <TechnologySection />
+        </section>
 
-      {/* 5. Footer (Wide & Clean) */}
-      <footer className="border-t border-neutral-800/80 bg-[#02050c] py-10 text-xs font-mono text-neutral-400">
-        <div className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* ================= SECTION 5: DEVELOPER PLATFORM & API SANDBOX ================= */}
+        <section id="developers" className="pt-16 border-t border-neutral-800/80 scroll-mt-28">
+          <DevelopersSection />
+        </section>
+
+      </div>
+
+      {/* 5. Footer (Single-Page Clean Footer) */}
+      <footer className="border-t border-neutral-800/80 bg-[#02050c] py-12 text-xs font-mono text-neutral-400 mt-20">
+        <div className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <NetraBrandLogo size={28} />
-            <span className="font-bold text-white tracking-wider">NETRA FORENSIC AI</span>
+            <div>
+              <span className="font-bold text-white tracking-wider">NETRA FORENSIC AI</span>
+              <div className="text-[10px] text-neutral-500">Truth Beyond the Surface • Institutional Forensic Suite</div>
+            </div>
           </div>
-          <div>
-            Multi-Modal Deepfake & Threat Intelligence Engine
-          </div>
-          <div className="flex gap-6">
-            <a href="/radar" className="hover:text-white transition-colors">Threat Radar</a>
-            <a href="/reported" className="hover:text-white transition-colors">Threat Catalog</a>
-            <a href="/technology" className="hover:text-white transition-colors">Technology</a>
-            <a href="/developers" className="hover:text-white transition-colors">Developer API</a>
+          <div className="flex flex-wrap items-center gap-6 text-xs">
+            <button onClick={() => scrollToSection("analyzer")} className="hover:text-white transition-colors">Analyzer</button>
+            <button onClick={() => scrollToSection("radar")} className="hover:text-white transition-colors">Threat Radar</button>
+            <button onClick={() => scrollToSection("reported")} className="hover:text-white transition-colors">Threat Catalog</button>
+            <button onClick={() => scrollToSection("technology")} className="hover:text-white transition-colors">Technology</button>
+            <button onClick={() => scrollToSection("developers")} className="hover:text-white transition-colors">Developer API</button>
           </div>
         </div>
       </footer>
