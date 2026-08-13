@@ -73,7 +73,7 @@ def run_tests():
         print()
 
     # 4. Test Authentic Video
-    real_vid_path = os.path.join(WORKSPACE, "rahulgandhiowner.mov")
+    real_vid_path = os.path.join(WORKSPACE, "sparsh.mov")
     if os.path.exists(real_vid_path):
         frames = read_video_frames(real_vid_path, max_frames=60)
         res_real_vid = arbiter.analyze_media(frames, is_single_image=False)
