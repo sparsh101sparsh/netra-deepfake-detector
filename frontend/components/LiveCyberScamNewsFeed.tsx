@@ -32,7 +32,11 @@ const DEFAULT_THUMBNAILS: Record<string, string> = {
   DEFAULT: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80" // High-Tech Cyber Grid
 };
 
-export function LiveCyberScamNewsFeed() {
+interface LiveCyberScamNewsFeedProps {
+  compact?: boolean;
+}
+
+export function LiveCyberScamNewsFeed({ compact = false }: LiveCyberScamNewsFeedProps) {
   const [news, setNews] = useState<ScamNewsItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -165,11 +169,138 @@ export function LiveCyberScamNewsFeed() {
     { id: "ALL", label: "Top Stories" },
     { id: "DIGITAL_ARREST", label: "Digital Arrest" },
     { id: "DEEPFAKE_IMPERSONATION", label: "Deepfakes" },
-    { id: "INVESTMENT_FRAUD", label: "Investment Fraud" },
+    { id: "INVESTMENT_FRAUD", label: "Investment" },
     { id: "APK_TROJAN", label: "APK Malware" },
-    { id: "ELECTRICITY_KYC", label: "Electricity & KYC" },
+    { id: "ELECTRICITY_KYC", label: "Electricity KYC" },
     { id: "VOICE_CLONE", label: "Voice Clones" },
   ];
+
+  if (compact) {
+    return (
+      <div className="w-full h-full rounded-3xl bg-neutral-950/80 border border-neutral-800 shadow-2xl p-5 sm:p-6 flex flex-col justify-between font-mono">
+        {/* Header */}
+        <div className="space-y-4 pb-4 border-b border-neutral-850">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                <Newspaper className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-white text-sm sm:text-base tracking-tight">
+                    Live Cyber Scam Feed
+                  </h3>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-cyan-950 text-cyan-400 border border-cyan-500/40 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                    TAVILY CRAWLER
+                  </span>
+                </div>
+                <p className="text-[11px] text-neutral-400 font-sans">
+                  Real-time intelligence feed aggregated from national cybercrime advisories.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-[11px] font-bold text-neutral-300 hover:text-white flex items-center gap-1.5 transition-all shrink-0"
+              title="Sync Live News"
+            >
+              <RefreshCw className={`w-3 h-3 text-cyan-400 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">{isRefreshing ? "Crawling..." : "Sync"}</span>
+            </button>
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] no-scrollbar">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-2.5 py-1 rounded-lg border whitespace-nowrap transition-all ${
+                  activeCategory === cat.id
+                    ? "bg-cyan-600 border-cyan-500 text-white font-bold shadow-[0_0_10px_rgba(0,240,255,0.2)]"
+                    : "bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:text-white"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Scrollable News Items Stream */}
+        <div className="flex-1 overflow-y-auto mt-4 pr-1 space-y-3 max-h-[500px] min-h-[420px] custom-scrollbar">
+          {isLoading ? (
+            <div className="h-64 flex flex-col items-center justify-center space-y-2 text-neutral-400">
+              <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
+              <span className="text-xs">Streaming Tavily intelligence...</span>
+            </div>
+          ) : (
+            news.map((item) => {
+              const thumb = item.thumbnail_url || DEFAULT_THUMBNAILS[item.category] || DEFAULT_THUMBNAILS.DEFAULT;
+              const isCrit = item.risk_level === "CRITICAL";
+
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-2xl bg-neutral-900/70 hover:bg-neutral-900 border border-neutral-800 hover:border-cyan-500/40 p-3.5 transition-all group flex flex-col gap-2.5"
+                >
+                  <div className="flex gap-3 items-start">
+                    <img
+                      src={thumb}
+                      alt={item.title}
+                      className="w-20 h-20 rounded-xl object-cover shrink-0 border border-neutral-800 group-hover:border-cyan-500/30"
+                      loading="lazy"
+                    />
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 text-[10px]">
+                        <span className="text-cyan-400 font-bold truncate">{item.source_name}</span>
+                        <span className="text-neutral-500 shrink-0">{item.published_at}</span>
+                      </div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors line-clamp-2 leading-snug">
+                        {item.title}
+                      </h4>
+                      <p className="text-[11px] text-neutral-400 font-sans line-clamp-2 leading-tight">
+                        {item.summary}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-neutral-850/80 text-[10px]">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <span className={`px-2 py-0.5 rounded-full uppercase font-bold border ${
+                        isCrit 
+                          ? "bg-red-950/80 text-red-300 border-red-500/40" 
+                          : "bg-amber-950/80 text-amber-300 border-amber-500/40"
+                      }`}>
+                        {item.risk_level}
+                      </span>
+                      {item.financial_loss && (
+                        <span className="text-red-400 font-bold truncate">
+                          {item.financial_loss}
+                        </span>
+                      )}
+                    </div>
+                    <a
+                      href={item.source_url || "https://cybercrime.gov.in"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-neutral-300 hover:text-cyan-400 font-bold flex items-center gap-1 shrink-0 ml-2"
+                    >
+                      <span>Read</span>
+                      <ArrowUpRight className="w-3 h-3 text-cyan-400" />
+                    </a>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-6 font-mono">
