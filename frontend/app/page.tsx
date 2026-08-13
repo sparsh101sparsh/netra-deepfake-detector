@@ -21,29 +21,43 @@ export default function ForensicHub() {
   const router = useRouter();
   
   // High frame rate GPU morphing state: 'intro' -> 'morphing' -> 'ready'
-  const [introStage, setIntroStage] = useState<'intro' | 'morphing' | 'ready'>('intro');
+  const [introStage, setIntroStage] = useState<'intro' | 'morphing' | 'ready'>(() => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('netra_intro_seen')) {
+      return 'ready';
+    }
+    return 'intro';
+  });
   const [introProgress, setIntroProgress] = useState(0);
 
-  // Run Intro Timeline once on session load
+  // Run Intro Timeline once per session
   useEffect(() => {
-    // Start sub-pixel progress fill from 0% to 100%
+    if (typeof window !== 'undefined') {
+      const hasSeenIntro = sessionStorage.getItem('netra_intro_seen');
+      if (hasSeenIntro) {
+        setIntroStage('ready');
+        return;
+      }
+      sessionStorage.setItem('netra_intro_seen', 'true');
+    }
+
+    // Start progress bar filling immediately
     const raf = setTimeout(() => {
       setIntroProgress(100);
     }, 100);
 
-    // Full cinematic duration: 4.8s scan, then 1.2s morph into logo
+    // After 3.2s (when progress bar hits 100%), trigger smooth morph
     const tMorph = setTimeout(() => {
       setIntroStage('morphing');
       setTimeout(() => {
         setIntroStage('ready');
-      }, 1200);
-    }, 4800);
+      }, 700);
+    }, 3200);
 
     // Keyboard shortcut (ESC) to fast-forward morph immediately
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIntroStage('morphing');
-        setTimeout(() => setIntroStage('ready'), 400);
+        setTimeout(() => setIntroStage('ready'), 300);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -55,12 +69,7 @@ export default function ForensicHub() {
     };
   }, []);
 
-  const handleSkipIntro = () => {
-    setIntroStage('morphing');
-    setTimeout(() => setIntroStage('ready'), 300);
-  };
-
-  const isIntroActive = introStage === 'intro';
+  const isIntroActive = introStage !== 'ready';
   const isMorphing = introStage === 'morphing';
 
   return (
@@ -69,14 +78,13 @@ export default function ForensicHub() {
       {/* 1. Fullscreen Intro Eye Overlay with Hardware-Accelerated 120fps Morphing */}
       {introStage !== 'ready' && (
         <div
-          onClick={handleSkipIntro}
-          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#000000] select-none cursor-pointer ${
+          className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#030712] select-none pointer-events-none ${
             isMorphing
-              ? 'opacity-0 scale-[0.22] translate-x-[26vw] -translate-y-[8vh] pointer-events-none'
+              ? 'opacity-0 scale-[0.22] translate-x-[26vw] -translate-y-[8vh]'
               : 'opacity-100 scale-100 translate-x-0 translate-y-0'
           }`}
           style={{
-            transition: 'transform 1200ms cubic-bezier(0.19, 1, 0.22, 1), opacity 1000ms cubic-bezier(0.19, 1, 0.22, 1)',
+            transition: 'transform 800ms cubic-bezier(0.19, 1, 0.22, 1), opacity 700ms cubic-bezier(0.19, 1, 0.22, 1)',
             willChange: 'transform, opacity',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
@@ -108,7 +116,7 @@ export default function ForensicHub() {
 
             {/* Silky Horizontal Progress Bar */}
             <div 
-              className={`-mt-6 sm:-mt-10 w-44 sm:w-60 h-[2.5px] bg-neutral-950 rounded-full overflow-hidden border border-cyan-500/20 shadow-[0_0_15px_rgba(0,240,255,0.15)] relative transition-opacity duration-300 ${
+              className={`-mt-6 sm:-mt-10 w-44 sm:w-60 h-[3px] bg-neutral-950 rounded-full overflow-hidden border border-cyan-500/20 shadow-[0_0_15px_rgba(0,240,255,0.15)] relative transition-opacity duration-300 ${
                 isMorphing ? 'opacity-0' : 'opacity-100'
               }`}
             >
@@ -116,14 +124,9 @@ export default function ForensicHub() {
                 className="h-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-sky-300 shadow-[0_0_10px_#00f0ff] rounded-full"
                 style={{
                   width: `${introProgress}%`,
-                  transition: `width 4800ms cubic-bezier(0.16, 1, 0.3, 1)`,
+                  transition: `width 3000ms cubic-bezier(0.22, 1, 0.36, 1)`,
                 }}
               />
-            </div>
-
-            {/* Skip hint */}
-            <div className={`mt-4 text-[10px] text-neutral-500 transition-opacity duration-500 ${isMorphing ? 'opacity-0' : 'opacity-60 hover:opacity-100'}`}>
-              Click or press ESC to enter
             </div>
           </div>
         </div>
@@ -131,8 +134,8 @@ export default function ForensicHub() {
 
       {/* 2. Top Navigation Bar */}
       <header 
-        className={`sticky top-0 z-40 border-b border-neutral-800/80 bg-[#030712]/90 backdrop-blur-xl transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] ${
-          isIntroActive ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'
+        className={`sticky top-0 z-40 border-b border-neutral-800/80 bg-[#030712]/90 backdrop-blur-xl transition-all duration-700 ease-out ${
+          isIntroActive ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'
         }`}
         style={{ willChange: 'transform, opacity' }}
       >
@@ -191,8 +194,8 @@ export default function ForensicHub() {
       {/* Main Single Command Center (Split Grid: Live Feed on Left, Multi-Modal Scanner on Right) */}
       <main className="w-full max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8 flex-1">
         <div 
-          className={`transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] ${
-            isIntroActive ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+          className={`transition-all duration-700 ease-out ${
+            isIntroActive ? 'opacity-0 scale-98 pointer-events-none' : 'opacity-100 scale-100 pointer-events-auto'
           }`}
           style={{ willChange: 'transform, opacity' }}
         >
@@ -213,7 +216,9 @@ export default function ForensicHub() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-800/80 bg-[#02050c] py-10 text-xs font-mono text-neutral-400 mt-16">
+      <footer className={`border-t border-neutral-800/80 bg-[#02050c] py-10 text-xs font-mono text-neutral-400 mt-16 transition-opacity duration-700 ${
+        isIntroActive ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
+      }`}>
         <div className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <NetraBrandLogo size={28} />
@@ -223,11 +228,11 @@ export default function ForensicHub() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-6 text-xs">
-            <a href="/" className="text-white font-bold transition-colors">Scanner & Feed</a>
-            <a href="/radar" className="hover:text-white transition-colors">Threat Mapping</a>
-            <a href="/reported" className="hover:text-white transition-colors">Threat Catalog</a>
-            <a href="/technology" className="hover:text-white transition-colors">Technology</a>
-            <a href="/developers" className="hover:text-white transition-colors">Developer API</a>
+            <Link href="/" className="text-white font-bold transition-colors">Scanner & Feed</Link>
+            <Link href="/radar" className="hover:text-white transition-colors">Threat Mapping</Link>
+            <Link href="/reported" className="hover:text-white transition-colors">Threat Catalog</Link>
+            <Link href="/technology" className="hover:text-white transition-colors">Technology</Link>
+            <Link href="/developers" className="hover:text-white transition-colors">Developer API</Link>
           </div>
         </div>
       </footer>

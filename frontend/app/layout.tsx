@@ -7,6 +7,8 @@ const lexend = Lexend({
   display: 'swap',
   variable: '--font-lexend',
   weight: ['300', '400', '500', '600', '700', '800'],
+  preload: false,
+  fallback: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
 })
 
 const jetbrainsMono = JetBrains_Mono({
@@ -14,6 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
   variable: '--font-mono',
   weight: ['400', '500', '600', '700'],
+  preload: false,
+  fallback: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'monospace'],
 })
 
 export const metadata: Metadata = {
