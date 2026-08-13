@@ -13,7 +13,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 982.15
+    "inference_latency_ms": 1438.59
   },
   {
     "index": 2,
@@ -29,7 +29,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 771.81
+    "inference_latency_ms": 743.66
   },
   {
     "index": 3,
@@ -45,7 +45,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 737.42
+    "inference_latency_ms": 734.75
   },
   {
     "index": 4,
@@ -61,7 +61,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 733.93
+    "inference_latency_ms": 710.59
   },
   {
     "index": 5,
@@ -77,7 +77,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 837.76
+    "inference_latency_ms": 724.74
   },
   {
     "index": 6,
@@ -93,7 +93,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 744.79
+    "inference_latency_ms": 712.85
   },
   {
     "index": 7,
@@ -109,7 +109,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 731.37
+    "inference_latency_ms": 713.11
   },
   {
     "index": 8,
@@ -125,7 +125,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 730.37
+    "inference_latency_ms": 726.57
   },
   {
     "index": 9,
@@ -141,7 +141,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 739.23
+    "inference_latency_ms": 714.78
   },
   {
     "index": 10,
@@ -157,7 +157,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 749.87
+    "inference_latency_ms": 720.58
   },
   {
     "index": 11,
@@ -173,7 +173,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 775.41
+    "inference_latency_ms": 767.92
   },
   {
     "index": 12,
@@ -189,7 +189,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 776.44
+    "inference_latency_ms": 749.19
   },
   {
     "index": 13,
@@ -205,7 +205,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 872.43
+    "inference_latency_ms": 751.15
   },
   {
     "index": 14,
@@ -221,7 +221,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 812.21
+    "inference_latency_ms": 730.15
   },
   {
     "index": 15,
@@ -237,7 +237,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1024.96
+    "inference_latency_ms": 712.97
   },
   {
     "index": 16,
@@ -253,7 +253,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 945.22
+    "inference_latency_ms": 740.95
   },
   {
     "index": 17,
@@ -269,7 +269,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1041.63
+    "inference_latency_ms": 1563.89
   },
   {
     "index": 18,
@@ -285,7 +285,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 3758.0
+    "inference_latency_ms": 2380.96
   },
   {
     "index": 19,
@@ -301,7 +301,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 3062.97
+    "inference_latency_ms": 2296.17
   },
   {
     "index": 20,
@@ -317,7 +317,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 4660.01
+    "inference_latency_ms": 887.53
   },
   {
     "index": 21,
@@ -333,7 +333,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 2817.87
+    "inference_latency_ms": 808.95
   },
   {
     "index": 22,
@@ -349,7 +349,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1095.98
+    "inference_latency_ms": 819.85
   },
   {
     "index": 23,
@@ -365,7 +365,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1099.44
+    "inference_latency_ms": 832.83
   },
   {
     "index": 24,
@@ -381,7 +381,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1643.06
+    "inference_latency_ms": 879.13
   },
   {
     "index": 25,
@@ -397,7 +397,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1615.3
+    "inference_latency_ms": 729.82
   },
   {
     "index": 26,
@@ -413,7 +413,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 3502.76
+    "inference_latency_ms": 742.27
   },
   {
     "index": 27,
@@ -429,7 +429,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 3149.36
+    "inference_latency_ms": 727.89
   },
   {
     "index": 28,
@@ -445,7 +445,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1171.71
+    "inference_latency_ms": 2088.19
   },
   {
     "index": 29,
@@ -461,7 +461,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 761.27
+    "inference_latency_ms": 1197.64
   },
   {
     "index": 30,
@@ -477,7 +477,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 761.24
+    "inference_latency_ms": 882.89
   },
   {
     "index": 31,
@@ -493,7 +493,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 723.43
+    "inference_latency_ms": 738.69
   },
   {
     "index": 32,
@@ -509,7 +509,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 729.56
+    "inference_latency_ms": 880.16
   },
   {
     "index": 33,
@@ -525,7 +525,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 724.35
+    "inference_latency_ms": 756.01
   },
   {
     "index": 34,
@@ -541,7 +541,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 847.37
+    "inference_latency_ms": 740.51
   },
   {
     "index": 35,
@@ -557,7 +557,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 728.41
+    "inference_latency_ms": 861.93
   },
   {
     "index": 36,
@@ -573,7 +573,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 739.71
+    "inference_latency_ms": 747.95
   },
   {
     "index": 37,
@@ -589,7 +589,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 717.77
+    "inference_latency_ms": 726.43
   },
   {
     "index": 38,
@@ -605,7 +605,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 727.23
+    "inference_latency_ms": 747.7
   },
   {
     "index": 39,
@@ -621,7 +621,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 792.97
+    "inference_latency_ms": 726.8
   },
   {
     "index": 40,
@@ -637,7 +637,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 769.0
+    "inference_latency_ms": 740.58
   },
   {
     "index": 41,
@@ -653,7 +653,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 864.23
+    "inference_latency_ms": 744.58
   },
   {
     "index": 42,
@@ -669,7 +669,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 726.08
+    "inference_latency_ms": 744.48
   },
   {
     "index": 43,
@@ -685,7 +685,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 725.23
+    "inference_latency_ms": 797.51
   },
   {
     "index": 44,
@@ -701,7 +701,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 725.07
+    "inference_latency_ms": 726.46
   },
   {
     "index": 45,
@@ -717,7 +717,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 726.72
+    "inference_latency_ms": 727.66
   },
   {
     "index": 46,
@@ -733,7 +733,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 743.37
+    "inference_latency_ms": 763.6
   },
   {
     "index": 47,
@@ -749,7 +749,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 723.38
+    "inference_latency_ms": 722.87
   },
   {
     "index": 48,
@@ -765,7 +765,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 741.17
+    "inference_latency_ms": 720.95
   },
   {
     "index": 49,
@@ -781,7 +781,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 727.76
+    "inference_latency_ms": 723.95
   },
   {
     "index": 50,
@@ -797,7 +797,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 727.8
+    "inference_latency_ms": 1538.33
   },
   {
     "index": 51,
@@ -813,7 +813,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 769.87
+    "inference_latency_ms": 1115.77
   },
   {
     "index": 52,
@@ -829,7 +829,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 768.19
+    "inference_latency_ms": 1096.74
   },
   {
     "index": 53,
@@ -845,7 +845,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 794.88
+    "inference_latency_ms": 1036.5
   },
   {
     "index": 54,
@@ -861,7 +861,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 902.87
+    "inference_latency_ms": 791.86
   },
   {
     "index": 55,
@@ -877,7 +877,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 885.42
+    "inference_latency_ms": 753.14
   },
   {
     "index": 56,
@@ -893,7 +893,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 761.92
+    "inference_latency_ms": 737.81
   },
   {
     "index": 57,
@@ -909,7 +909,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 846.05
+    "inference_latency_ms": 738.2
   },
   {
     "index": 58,
@@ -925,7 +925,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 775.31
+    "inference_latency_ms": 767.34
   },
   {
     "index": 59,
@@ -941,7 +941,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 919.52
+    "inference_latency_ms": 728.58
   },
   {
     "index": 60,
@@ -957,7 +957,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 759.58
+    "inference_latency_ms": 850.86
   },
   {
     "index": 61,
@@ -973,7 +973,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 748.22
+    "inference_latency_ms": 799.1
   },
   {
     "index": 62,
@@ -989,7 +989,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 874.4
+    "inference_latency_ms": 723.11
   },
   {
     "index": 63,
@@ -1005,7 +1005,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1195.08
+    "inference_latency_ms": 791.38
   },
   {
     "index": 64,
@@ -1021,7 +1021,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 920.32
+    "inference_latency_ms": 754.96
   },
   {
     "index": 65,
@@ -1037,7 +1037,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1103.04
+    "inference_latency_ms": 1072.94
   },
   {
     "index": 66,
@@ -1053,7 +1053,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1021.55
+    "inference_latency_ms": 743.87
   },
   {
     "index": 67,
@@ -1069,7 +1069,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 857.72
+    "inference_latency_ms": 766.89
   },
   {
     "index": 68,
@@ -1085,7 +1085,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 733.53
+    "inference_latency_ms": 707.9
   },
   {
     "index": 69,
@@ -1101,7 +1101,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 764.03
+    "inference_latency_ms": 769.19
   },
   {
     "index": 70,
@@ -1117,7 +1117,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 3043.33
+    "inference_latency_ms": 844.03
   },
   {
     "index": 71,
@@ -1133,7 +1133,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 906.25
+    "inference_latency_ms": 847.45
   },
   {
     "index": 72,
@@ -1149,7 +1149,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 741.57
+    "inference_latency_ms": 786.55
   },
   {
     "index": 73,
@@ -1165,7 +1165,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 774.93
+    "inference_latency_ms": 781.24
   },
   {
     "index": 74,
@@ -1181,7 +1181,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 785.87
+    "inference_latency_ms": 775.38
   },
   {
     "index": 75,
@@ -1197,7 +1197,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 727.72
+    "inference_latency_ms": 733.17
   },
   {
     "index": 76,
@@ -1213,7 +1213,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 727.58
+    "inference_latency_ms": 838.01
   },
   {
     "index": 77,
@@ -1229,7 +1229,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 824.56
+    "inference_latency_ms": 805.36
   },
   {
     "index": 78,
@@ -1245,7 +1245,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 760.28
+    "inference_latency_ms": 726.24
   },
   {
     "index": 79,
@@ -1261,7 +1261,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 757.82
+    "inference_latency_ms": 771.45
   },
   {
     "index": 80,
@@ -1277,7 +1277,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 754.59
+    "inference_latency_ms": 712.75
   },
   {
     "index": 81,
@@ -1293,7 +1293,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 794.07
+    "inference_latency_ms": 788.18
   },
   {
     "index": 82,
@@ -1309,7 +1309,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 736.59
+    "inference_latency_ms": 711.18
   },
   {
     "index": 83,
@@ -1325,7 +1325,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 925.39
+    "inference_latency_ms": 732.98
   },
   {
     "index": 84,
@@ -1341,7 +1341,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 766.08
+    "inference_latency_ms": 769.85
   },
   {
     "index": 85,
@@ -1357,7 +1357,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 781.24
+    "inference_latency_ms": 750.84
   },
   {
     "index": 86,
@@ -1373,7 +1373,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 780.38
+    "inference_latency_ms": 738.7
   },
   {
     "index": 87,
@@ -1389,7 +1389,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 973.23
+    "inference_latency_ms": 781.8
   },
   {
     "index": 88,
@@ -1405,7 +1405,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 795.19
+    "inference_latency_ms": 1295.6
   },
   {
     "index": 89,
@@ -1421,7 +1421,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 768.02
+    "inference_latency_ms": 732.25
   },
   {
     "index": 90,
@@ -1437,7 +1437,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 749.67
+    "inference_latency_ms": 808.64
   },
   {
     "index": 91,
@@ -1453,7 +1453,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 741.52
+    "inference_latency_ms": 802.79
   },
   {
     "index": 92,
@@ -1469,7 +1469,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 831.29
+    "inference_latency_ms": 731.78
   },
   {
     "index": 93,
@@ -1485,7 +1485,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 951.63
+    "inference_latency_ms": 723.18
   },
   {
     "index": 94,
@@ -1501,7 +1501,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.52,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 748.37
+    "inference_latency_ms": 728.17
   },
   {
     "index": 95,
@@ -1517,7 +1517,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 737.2
+    "inference_latency_ms": 723.4
   },
   {
     "index": 96,
@@ -1533,7 +1533,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 899.03
+    "inference_latency_ms": 712.84
   },
   {
     "index": 97,
@@ -1549,7 +1549,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1356.39
+    "inference_latency_ms": 723.15
   },
   {
     "index": 98,
@@ -1565,7 +1565,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1267.85
+    "inference_latency_ms": 768.64
   },
   {
     "index": 99,
@@ -1581,7 +1581,7 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.268,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1182.32
+    "inference_latency_ms": 735.59
   },
   {
     "index": 100,
@@ -1597,6 +1597,6 @@
     "exif_container_software": "Lavf59.27.100",
     "fused_ensemble_prob": 0.521,
     "final_verdict": "AUTHENTIC",
-    "inference_latency_ms": 1011.97
+    "inference_latency_ms": 717.23
   }
 ]
