@@ -223,7 +223,7 @@ export function LiveThreatRadar() {
       </div>
 
       {/* Real Interactive Leaflet Map Container */}
-      <div className="w-full h-[620px] relative bg-[#090d16]">
+      <div className="w-full h-[520px] relative bg-[#090d16]">
         
         {/* Leaflet Map DOM Target */}
         <div ref={mapContainerRef} className="w-full h-full z-0" />
