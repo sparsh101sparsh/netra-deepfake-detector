@@ -195,22 +195,22 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
   const CurrentIcon = current.icon;
 
   return (
-    <div className="bg-neutral-950/90 border border-neutral-800 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 font-mono">
+    <div className="bg-neutral-950/90 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 font-mono h-full flex flex-col justify-between">
       
       {/* 1. Header with Mode Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800/80 pb-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-            <Scan className="w-4 h-4" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800/80 pb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+            <Scan className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-sm sm:text-base text-white">Forensic Detection Sandbox</h3>
-            <p className="text-[11px] text-neutral-400 font-sans">Multi-modal deepfake & threat analysis engine</p>
+            <h3 className="font-bold text-base sm:text-lg text-white">Forensic Detection Sandbox</h3>
+            <p className="text-xs text-neutral-400 font-sans">Multi-modal deepfake & threat verification suite</p>
           </div>
         </div>
 
         {/* 4-Tab Switcher: VIDEO | IMAGE | AUDIO | TEXT */}
-        <div className="flex items-center gap-1 bg-neutral-900/90 p-1 rounded-xl border border-neutral-800 text-xs">
+        <div className="flex items-center gap-1.5 bg-neutral-900/90 p-1.5 rounded-2xl border border-neutral-800 text-xs self-start sm:self-auto">
           {(["video", "image", "audio", "text"] as const).map((tab) => {
             const Icon = tabConfig[tab].icon;
             const isActive = activeTab === tab;
@@ -223,9 +223,9 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
                   setSampleScan(null);
                   setTextResult(null);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg uppercase font-bold text-[11px] transition-all ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl uppercase font-bold text-xs transition-all ${
                   isActive
-                    ? "bg-cyan-600 text-white shadow-[0_0_12px_rgba(0,240,255,0.25)] border border-cyan-400/50"
+                    ? "bg-cyan-600 text-white shadow-[0_0_15px_rgba(0,240,255,0.25)] border border-cyan-400/60"
                     : "text-neutral-400 hover:text-white"
                 }`}
               >
@@ -240,38 +240,38 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
       {/* 2. Main Dropzone or Text Area */}
       {activeTab === "text" ? (
         /* Text / Scam Phishing Triage Area */
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-[11px] uppercase font-bold text-neutral-400 flex items-center justify-between">
+        <div className="space-y-4 flex-1 flex flex-col justify-center">
+          <div className="space-y-2">
+            <label className="text-xs uppercase font-bold text-neutral-300 flex items-center justify-between">
               <span>Paste Suspect Scam Message / WhatsApp / SMS Payload</span>
-              <span className="text-cyan-400 text-[10px]">AI IOC Extraction</span>
+              <span className="text-cyan-400 text-[10px]">AI IOC Extraction Active</span>
             </label>
             <textarea
-              rows={3}
+              rows={4}
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
-              placeholder="Paste suspicious text here..."
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-3.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-400"
+              placeholder="Paste suspicious message text here..."
+              className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-4 text-xs sm:text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-400 leading-relaxed font-sans"
             />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-neutral-400">Incident City:</span>
+              <span className="text-xs text-neutral-400">Incident City:</span>
               <input
                 type="text"
                 value={textCity}
                 onChange={(e) => setTextCity(e.target.value)}
-                className="bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 w-36"
+                className="bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400 w-40"
               />
             </div>
 
             <button
               onClick={handleTextTriage}
               disabled={isAnalyzingText}
-              className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50"
             >
-              {isAnalyzingText ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              {isAnalyzingText ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               <span>Triage Threat & Extract IOCs</span>
             </button>
           </div>
@@ -283,7 +283,7 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
                 <span className="text-red-400 font-bold uppercase tracking-wider text-[10px]">
                   {textResult.category || "CYBER_THREAT"} • {textResult.threat_level || "HIGH RISK"}
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-500/40 text-[10px] font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-500/40 text-[10px] font-bold">
                   {Math.round(textResult.risk_score || 98)}% Threat Score
                 </span>
               </div>
@@ -308,7 +308,7 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
         </div>
       ) : (
         /* Video / Image / Audio Drag and Drop Zone */
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1 flex flex-col justify-center">
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -319,28 +319,31 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
 
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-neutral-800 hover:border-cyan-500/50 bg-neutral-900/30 hover:bg-neutral-900/50 rounded-2xl p-7 text-center cursor-pointer transition-all space-y-2.5 relative group"
+            className="border-2 border-dashed border-neutral-800 hover:border-cyan-500/50 bg-neutral-900/30 hover:bg-neutral-900/50 rounded-3xl p-10 sm:p-14 text-center cursor-pointer transition-all space-y-3 relative group"
           >
-            <div className="w-12 h-12 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mx-auto shadow-[0_0_15px_rgba(0,240,255,0.15)] group-hover:scale-105 transition-transform duration-300">
-              <CurrentIcon className="w-6 h-6" />
+            <div className="w-16 h-16 rounded-3xl bg-cyan-950/60 border border-cyan-500/40 flex items-center justify-center text-cyan-400 mx-auto shadow-[0_0_20px_rgba(0,240,255,0.2)] group-hover:scale-105 transition-transform duration-300">
+              <CurrentIcon className="w-8 h-8" />
             </div>
 
             <div>
-              <div className="text-xs sm:text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">
-                Drop your {activeTab} file here or click to browse
+              <div className="text-base sm:text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">
+                Drop your {activeTab.toUpperCase()} file here or click to browse
               </div>
-              <div className="text-[10px] text-neutral-400 mt-0.5 font-mono">
-                Supported: {current.formats}
+              <div className="text-xs text-neutral-400 mt-1 font-mono">
+                Supported formats: {current.formats}
+              </div>
+              <div className="text-[11px] text-neutral-500 font-sans mt-1">
+                {current.description}
               </div>
             </div>
 
             {isUploading && (
-              <div className="w-full max-w-xs mx-auto space-y-1.5 pt-2">
-                <div className="flex justify-between text-[11px] text-neutral-400 font-mono">
-                  <span>Uploading to forensic pipeline...</span>
+              <div className="w-full max-w-sm mx-auto space-y-2 pt-3">
+                <div className="flex justify-between text-xs text-neutral-400 font-mono">
+                  <span>Uploading to neural pipeline...</span>
                   <span>{uploadProgress}%</span>
                 </div>
-                <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-neutral-800 rounded-full overflow-hidden">
                   <div className="h-full bg-cyan-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
                 </div>
               </div>
@@ -350,16 +353,16 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
       )}
 
       {/* 3. Preset One-Click Forensic Tests */}
-      <div className="pt-2 border-t border-neutral-850 space-y-2">
-        <div className="flex items-center justify-between text-[10px]">
-          <span className="text-neutral-400 font-bold uppercase tracking-wider flex items-center gap-1">
-            <Play className="w-3 h-3 text-cyan-400" />
-            1-Click Benchmark Presets ({activeTab.toUpperCase()})
+      <div className="pt-4 border-t border-neutral-850 space-y-3">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-neutral-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <Play className="w-3.5 h-3.5 text-cyan-400" />
+            1-Click Forensic Benchmark Presets ({activeTab.toUpperCase()})
           </span>
-          <span className="text-neutral-500 text-[10px]">Pre-analyzed cases</span>
+          <span className="text-neutral-500 text-[11px]">Instant GPU Verification</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           {tabConfig[activeTab].presets.map((preset: any) => (
             <button
               key={preset.name}
@@ -372,13 +375,13 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
                   runPresetScan(preset.name, preset.verdict, preset.confidence);
                 }
               }}
-              className="p-2 rounded-xl bg-neutral-900/60 hover:bg-neutral-850 border border-neutral-800 hover:border-cyan-500/40 text-left transition-all flex items-center justify-between gap-2 text-[11px] group"
+              className="p-3 rounded-2xl bg-neutral-900/60 hover:bg-neutral-850 border border-neutral-800 hover:border-cyan-500/40 text-left transition-all flex flex-col justify-between gap-2 text-xs group"
             >
-              <div className="truncate">
-                <div className="font-bold text-white group-hover:text-cyan-300 truncate">{preset.name}</div>
-                <div className="text-[9px] text-neutral-400">{preset.verdict || preset.city}</div>
+              <div className="truncate w-full">
+                <div className="font-bold text-white group-hover:text-cyan-300 truncate text-[11px]">{preset.name}</div>
+                <div className="text-[10px] text-neutral-400 mt-0.5">{preset.verdict || preset.city}</div>
               </div>
-              <span className="text-cyan-400 font-bold text-[10px] shrink-0">Test &rarr;</span>
+              <span className="text-cyan-400 font-bold text-[10px] self-end">Run Test &rarr;</span>
             </button>
           ))}
         </div>
@@ -389,15 +392,15 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
         <div className="p-4 rounded-2xl bg-neutral-900/90 border border-cyan-500/40 space-y-2 text-xs animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
             <span className="font-bold text-white flex items-center gap-1.5">
-              {sampleScan.isScanning ? <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-400" /> : <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />}
+              {sampleScan.isScanning ? <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" /> : <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
               {sampleScan.fileName}
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-bold text-[10px]">
+            <span className="px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-bold text-[10px]">
               {sampleScan.confidence}
             </span>
           </div>
           <div className="font-bold text-cyan-400 text-xs">{sampleScan.verdict}</div>
-          <p className="text-[11px] text-neutral-300 font-sans leading-relaxed">{sampleScan.details}</p>
+          <p className="text-xs text-neutral-300 font-sans leading-relaxed">{sampleScan.details}</p>
         </div>
       )}
 

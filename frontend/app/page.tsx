@@ -217,26 +217,12 @@ export default function ForensicHub() {
       </header>
 
       {/* Main Single-Page Container */}
-      <div className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 space-y-24 py-10">
+      <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-12 space-y-20 py-6 sm:py-8">
         
-        {/* ================= HERO INTRO BANNER ================= */}
-        <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 text-xs font-semibold text-cyan-400 uppercase tracking-widest">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-            Next-Generation Multi-Modal AI Forensic Suite
-          </div>
-          <h1 className="font-serif text-4xl sm:text-6xl text-white font-normal tracking-tight">
-            Eyes that see through.
-          </h1>
-          <p className="text-neutral-300 text-sm sm:text-base font-sans max-w-3xl leading-relaxed">
-            Autonomous multi-modal AI engine that detects synthetic face-swaps, voice clones, and malicious phishing IOCs across India in sub-150ms.
-          </p>
-        </div>
-
         {/* ================= TOP ROW: SPLIT GRID [MAP (LEFT) | DRAG & DROP MULTI-MODAL (RIGHT)] ================= */}
         <section 
           id="analyzer"
-          className={`pt-2 scroll-mt-28 transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] ${
+          className={`scroll-mt-24 transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] ${
             isIntroActive ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
           }`}
           style={{ willChange: 'transform, opacity' }}
