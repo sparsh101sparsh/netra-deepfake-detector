@@ -21,43 +21,29 @@ export default function ForensicHub() {
   const router = useRouter();
   
   // High frame rate GPU morphing state: 'intro' -> 'morphing' -> 'ready'
-  const [introStage, setIntroStage] = useState<'intro' | 'morphing' | 'ready'>(() => {
-    if (typeof window !== 'undefined' && sessionStorage.getItem('netra_intro_seen')) {
-      return 'ready';
-    }
-    return 'intro';
-  });
+  const [introStage, setIntroStage] = useState<'intro' | 'morphing' | 'ready'>('intro');
   const [introProgress, setIntroProgress] = useState(0);
 
-  // Run Intro Timeline once per session
+  // Run Intro Timeline once on session load
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const hasSeenIntro = sessionStorage.getItem('netra_intro_seen');
-      if (hasSeenIntro) {
-        setIntroStage('ready');
-        return;
-      }
-      sessionStorage.setItem('netra_intro_seen', 'true');
-    }
-
-    // Start sub-pixel progress fill
+    // Start sub-pixel progress fill from 0% to 100%
     const raf = setTimeout(() => {
       setIntroProgress(100);
-    }, 50);
+    }, 100);
 
-    // After 5s (or ESC), trigger GPU morph
+    // Full cinematic duration: 4.8s scan, then 1.2s morph into logo
     const tMorph = setTimeout(() => {
       setIntroStage('morphing');
       setTimeout(() => {
         setIntroStage('ready');
-      }, 800);
-    }, 5000);
+      }, 1200);
+    }, 4800);
 
     // Keyboard shortcut (ESC) to fast-forward morph immediately
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIntroStage('morphing');
-        setTimeout(() => setIntroStage('ready'), 300);
+        setTimeout(() => setIntroStage('ready'), 400);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -69,35 +55,9 @@ export default function ForensicHub() {
     };
   }, []);
 
-  // ScrollSpy to track active section in single-page view
-  useEffect(() => {
-    const sectionIds = ["analyzer", "mapping", "reported", "technology", "developers"];
-    
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 250;
-      for (const id of sectionIds) {
-        const el = document.getElementById(id);
-        if (el) {
-          const top = el.offsetTop;
-          const height = el.offsetHeight;
-          if (scrollPosition >= top && scrollPosition < top + height) {
-            setActiveNavSection(id);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToSection = (id: string) => {
-    setActiveNavSection(id);
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+  const handleSkipIntro = () => {
+    setIntroStage('morphing');
+    setTimeout(() => setIntroStage('ready'), 300);
   };
 
   const isIntroActive = introStage === 'intro';
@@ -109,13 +69,14 @@ export default function ForensicHub() {
       {/* 1. Fullscreen Intro Eye Overlay with Hardware-Accelerated 120fps Morphing */}
       {introStage !== 'ready' && (
         <div
-          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#000000] select-none pointer-events-none ${
+          onClick={handleSkipIntro}
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#000000] select-none cursor-pointer ${
             isMorphing
-              ? 'opacity-0 scale-[0.22] translate-x-[26vw] -translate-y-[8vh]'
+              ? 'opacity-0 scale-[0.22] translate-x-[26vw] -translate-y-[8vh] pointer-events-none'
               : 'opacity-100 scale-100 translate-x-0 translate-y-0'
           }`}
           style={{
-            transition: 'transform 1200ms cubic-bezier(0.19, 1, 0.22, 1), opacity 900ms cubic-bezier(0.19, 1, 0.22, 1)',
+            transition: 'transform 1200ms cubic-bezier(0.19, 1, 0.22, 1), opacity 1000ms cubic-bezier(0.19, 1, 0.22, 1)',
             willChange: 'transform, opacity',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
@@ -155,9 +116,14 @@ export default function ForensicHub() {
                 className="h-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-sky-300 shadow-[0_0_10px_#00f0ff] rounded-full"
                 style={{
                   width: `${introProgress}%`,
-                  transition: `width 6000ms cubic-bezier(0.16, 1, 0.3, 1)`,
+                  transition: `width 4800ms cubic-bezier(0.16, 1, 0.3, 1)`,
                 }}
               />
+            </div>
+
+            {/* Skip hint */}
+            <div className={`mt-4 text-[10px] text-neutral-500 transition-opacity duration-500 ${isMorphing ? 'opacity-0' : 'opacity-60 hover:opacity-100'}`}>
+              Click or press ESC to enter
             </div>
           </div>
         </div>
