@@ -83,6 +83,32 @@ async def detect_full(file: UploadFile = File(...)):
     }
 
 
+@router.post("/detect/image-ocr")
+async def detect_image_ocr(file: UploadFile = File(...)):
+    """
+    Accepts an uploaded image / screenshot, runs it through PaddleOCR / EasyOCR,
+    and analyzes the extracted text with NETRA's Scam & Threat Detection engine.
+    """
+    allowed_image_types = {"image/jpeg", "image/png", "image/webp", "image/jpg", "image/bmp"}
+    if file.content_type and file.content_type not in allowed_image_types:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported image type: {file.content_type}. Allowed: jpeg, png, webp"
+        )
+
+    contents = await file.read()
+    if len(contents) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Image exceeds maximum size of 50MB.")
+
+    from netra.services.ocr_scam_pipeline import run_image_ocr_and_scam_detection
+    try:
+        result = run_image_ocr_and_scam_detection(contents, filename=file.filename or "uploaded_image.png")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Image OCR scam analysis failed: {str(e)}")
+
+
 @router.get("/detect/health")
 async def detect_health():
     return {"status": "ok", "service": "detect"}
+
