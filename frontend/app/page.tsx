@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
@@ -20,22 +21,22 @@ export default function ForensicHub() {
   const router = useRouter();
   
   // High frame rate GPU morphing state: 'intro' -> 'morphing' -> 'ready'
-  const [introStage, setIntroStage] = useState<'intro' | 'morphing' | 'ready'>('intro');
-  const [introProgress, setIntroProgress] = useState(0);
-  const [activeNavSection, setActiveNavSection] = useState<string>("analyzer");
-
-  // Run Butter-Smooth 120fps Intro Timeline (Only once per session, re-plays on page refresh)
-  useEffect(() => {
-    const navEntries = typeof window !== 'undefined' && window.performance?.getEntriesByType?.('navigation');
-    const isReload = navEntries && (navEntries[0] as any)?.type === 'reload';
-    const hasSeenIntro = typeof window !== 'undefined' && sessionStorage.getItem('netra_intro_seen');
-
-    if (hasSeenIntro && !isReload) {
-      setIntroStage('ready');
-      return;
+  const [introStage, setIntroStage] = useState<'intro' | 'morphing' | 'ready'>(() => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('netra_intro_seen')) {
+      return 'ready';
     }
+    return 'intro';
+  });
+  const [introProgress, setIntroProgress] = useState(0);
 
+  // Run Intro Timeline once per session
+  useEffect(() => {
     if (typeof window !== 'undefined') {
+      const hasSeenIntro = sessionStorage.getItem('netra_intro_seen');
+      if (hasSeenIntro) {
+        setIntroStage('ready');
+        return;
+      }
       sessionStorage.setItem('netra_intro_seen', 'true');
     }
 
@@ -44,19 +45,19 @@ export default function ForensicHub() {
       setIntroProgress(100);
     }, 50);
 
-    // After 6.5s (or ESC), trigger GPU morph
+    // After 5s (or ESC), trigger GPU morph
     const tMorph = setTimeout(() => {
       setIntroStage('morphing');
       setTimeout(() => {
         setIntroStage('ready');
-      }, 1000);
-    }, 6500);
+      }, 800);
+    }, 5000);
 
     // Keyboard shortcut (ESC) to fast-forward morph immediately
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIntroStage('morphing');
-        setTimeout(() => setIntroStage('ready'), 500);
+        setTimeout(() => setIntroStage('ready'), 300);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -192,9 +193,15 @@ export default function ForensicHub() {
             ].map((nav) => {
               const IconComp = nav.icon;
               return (
-                <a
+                <Link
                   key={nav.href}
                   href={nav.href}
+                  onClick={(e) => {
+                    if (nav.href === "/") {
+                      e.preventDefault();
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }
+                  }}
                   className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-all duration-200 ${
                     nav.active
                       ? "bg-neutral-850 text-white font-bold shadow-[0_0_12px_rgba(0,240,255,0.15)] border border-cyan-500/30"
@@ -204,7 +211,7 @@ export default function ForensicHub() {
                   {nav.active && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>}
                   <IconComp className={`w-3.5 h-3.5 ${nav.active ? "text-cyan-400" : "text-neutral-500"}`} />
                   <span>{nav.label}</span>
-                </a>
+                </Link>
               );
             })}
           </nav>
