@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  Shield, AlertCircle, Activity, Video, Scan, Eye, 
+  Shield, AlertCircle, Activity, Video, Scan, Eye, Cpu,
   ArrowRight, CheckCircle2, FileText, Code2, Database, Sparkles, Terminal, Radio, Globe, Key 
 } from "lucide-react";
 import { NetraEyeScanner } from "@/components/NetraEyeScanner";
