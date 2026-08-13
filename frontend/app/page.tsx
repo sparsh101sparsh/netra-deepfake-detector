@@ -103,7 +103,7 @@ export default function ForensicHub() {
   const isMorphing = introStage === 'morphing';
 
   return (
-    <div className="min-h-screen bg-[#030712] text-neutral-100 selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-x-hidden font-mono">
+    <div className="min-h-screen bg-[#030712] text-neutral-100 selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-x-hidden font-mono flex flex-col justify-between">
       
       {/* 1. Fullscreen Intro Eye Overlay with Hardware-Accelerated 120fps Morphing */}
       {introStage !== 'ready' && (
@@ -162,7 +162,7 @@ export default function ForensicHub() {
         </div>
       )}
 
-      {/* 2. Top Navigation Bar (Single-Page ScrollSpy Header) */}
+      {/* 2. Top Navigation Bar */}
       <header 
         className={`sticky top-0 z-40 border-b border-neutral-800/80 bg-[#030712]/90 backdrop-blur-xl transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] ${
           isIntroActive ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'
@@ -172,40 +172,39 @@ export default function ForensicHub() {
         <div className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <NetraBrandLogo size={40} />
-            <button 
-              onClick={() => scrollToSection("analyzer")} 
+            <a 
+              href="/" 
               className="flex items-center gap-2 text-2xl font-bold tracking-tight text-white hover:text-cyan-400 transition-colors"
             >
               NETRA
               <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded bg-neutral-900 border border-neutral-800 text-cyan-400">v5.1</span>
-            </button>
+            </a>
           </div>
 
-          {/* Smooth Scroll Navigation Links */}
+          {/* Navigation Links to Separate Pages */}
           <nav className="hidden md:flex items-center gap-2 text-xs font-mono font-medium text-neutral-400 bg-neutral-950/70 p-1.5 rounded-2xl border border-neutral-850">
             {[
-              { id: "analyzer", label: "Scanner & Feed", icon: Scan },
-              { id: "mapping", label: "Threat Mapping", icon: Globe },
-              { id: "reported", label: "Threat Catalog", icon: Database },
-              { id: "technology", label: "Technology", icon: Cpu },
-              { id: "developers", label: "Developer API", icon: Terminal },
+              { href: "/", label: "Scanner & Feed", icon: Scan, active: true },
+              { href: "/radar", label: "Threat Mapping", icon: Globe, active: false },
+              { href: "/reported", label: "Threat Catalog", icon: Database, active: false },
+              { href: "/technology", label: "Technology", icon: Cpu, active: false },
+              { href: "/developers", label: "Developer API", icon: Terminal, active: false },
             ].map((nav) => {
-              const isActive = activeNavSection === nav.id;
               const IconComp = nav.icon;
               return (
-                <button
-                  key={nav.id}
-                  onClick={() => scrollToSection(nav.id)}
+                <a
+                  key={nav.href}
+                  href={nav.href}
                   className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-all duration-200 ${
-                    isActive
+                    nav.active
                       ? "bg-neutral-850 text-white font-bold shadow-[0_0_12px_rgba(0,240,255,0.15)] border border-cyan-500/30"
                       : "text-neutral-400 hover:text-white"
                   }`}
                 >
-                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>}
-                  <IconComp className={`w-3.5 h-3.5 ${isActive ? "text-cyan-400" : "text-neutral-500"}`} />
+                  {nav.active && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>}
+                  <IconComp className={`w-3.5 h-3.5 ${nav.active ? "text-cyan-400" : "text-neutral-500"}`} />
                   <span>{nav.label}</span>
-                </button>
+                </a>
               );
             })}
           </nav>
@@ -216,13 +215,10 @@ export default function ForensicHub() {
         </div>
       </header>
 
-      {/* Main Single-Page Container */}
-      <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-12 space-y-20 py-6 sm:py-8">
-        
-        {/* ================= TOP ROW: SPLIT GRID [TAVILY FEED (LEFT) | DRAG & DROP MULTI-MODAL (RIGHT)] ================= */}
-        <section 
-          id="analyzer"
-          className={`scroll-mt-24 transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] ${
+      {/* Main Single Command Center (Split Grid: Live Feed on Left, Multi-Modal Scanner on Right) */}
+      <main className="w-full max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8 flex-1">
+        <div 
+          className={`transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] ${
             isIntroActive ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
           }`}
           style={{ willChange: 'transform, opacity' }}
@@ -240,58 +236,11 @@ export default function ForensicHub() {
             </div>
 
           </div>
-        </section>
+        </div>
+      </main>
 
-        {/* ================= SECTION 2: NATIONAL CYBER THREAT RADAR & GEOSPATIAL MAPPING ================= */}
-        <section id="mapping" className="pt-16 border-t border-neutral-800/80 scroll-mt-28">
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
-                  <Globe className="w-5 h-5 animate-pulse" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-white tracking-tight text-base sm:text-xl">
-                      National Cyber Threat Radar & Geospatial Mapping
-                    </h3>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                      LIVE GPS & TELECOM PINS
-                    </span>
-                  </div>
-                  <p className="text-xs text-neutral-400 font-sans mt-0.5">
-                    Live geographic telemetry mapping deepfake video uploads, voice clone extortion, and scam campaigns across Indian cities.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full h-[620px] rounded-3xl overflow-hidden border border-neutral-800 shadow-2xl bg-neutral-950/80">
-              <LiveThreatRadar />
-            </div>
-          </div>
-        </section>
-
-        {/* ================= SECTION 3: THREAT CATALOG & VERIFIED IOC REGISTRY ================= */}
-        <section id="reported" className="pt-16 border-t border-neutral-800/80 scroll-mt-28">
-          <ThreatCatalogSection />
-        </section>
-
-        {/* ================= SECTION 4: FORENSIC TECHNOLOGY & BENCHMARK ================= */}
-        <section id="technology" className="pt-16 border-t border-neutral-800/80 scroll-mt-28">
-          <TechnologySection />
-        </section>
-
-        {/* ================= SECTION 5: DEVELOPER PLATFORM & API SANDBOX ================= */}
-        <section id="developers" className="pt-16 border-t border-neutral-800/80 scroll-mt-28">
-          <DevelopersSection />
-        </section>
-
-      </div>
-
-      {/* 5. Footer */}
-      <footer className="border-t border-neutral-800/80 bg-[#02050c] py-12 text-xs font-mono text-neutral-400 mt-20">
+      {/* Footer */}
+      <footer className="border-t border-neutral-800/80 bg-[#02050c] py-10 text-xs font-mono text-neutral-400 mt-16">
         <div className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <NetraBrandLogo size={28} />
@@ -301,11 +250,11 @@ export default function ForensicHub() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-6 text-xs">
-            <button onClick={() => scrollToSection("analyzer")} className="hover:text-white transition-colors">Scanner & Feed</button>
-            <button onClick={() => scrollToSection("mapping")} className="hover:text-white transition-colors">Threat Mapping</button>
-            <button onClick={() => scrollToSection("reported")} className="hover:text-white transition-colors">Threat Catalog</button>
-            <button onClick={() => scrollToSection("technology")} className="hover:text-white transition-colors">Technology</button>
-            <button onClick={() => scrollToSection("developers")} className="hover:text-white transition-colors">Developer API</button>
+            <a href="/" className="text-white font-bold transition-colors">Scanner & Feed</a>
+            <a href="/radar" className="hover:text-white transition-colors">Threat Mapping</a>
+            <a href="/reported" className="hover:text-white transition-colors">Threat Catalog</a>
+            <a href="/technology" className="hover:text-white transition-colors">Technology</a>
+            <a href="/developers" className="hover:text-white transition-colors">Developer API</a>
           </div>
         </div>
       </footer>

@@ -32,14 +32,101 @@ const DEFAULT_THUMBNAILS: Record<string, string> = {
   DEFAULT: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80" // High-Tech Cyber Grid
 };
 
+const DEFAULT_NEWS_ITEMS: ScamNewsItem[] = [
+  {
+    id: "NEWS-2026-001",
+    title: "Supreme Court Directs CBI Nationwide Probe into Transnational 'Digital Arrest' Extortion Syndicates",
+    summary: "A Supreme Court bench has ordered an urgent CBI & I4C crackdown on organized crime syndicates running fake video calls in police uniform to extort senior citizens.",
+    category: "DIGITAL_ARREST",
+    risk_level: "CRITICAL",
+    source_name: "The Hindu & PTI",
+    source_url: "https://www.thehindu.com/news/national",
+    financial_loss: "₹150+ Crore Nationwide",
+    affected_region: "Pan-India (NCR, Mumbai, Bengaluru)",
+    modus_operandi: "Fake Skype video calls with police backdrop claiming illegal narcotics parcels.",
+    published_at: "2 hours ago",
+    thumbnail_url: DEFAULT_THUMBNAILS.DIGITAL_ARREST
+  },
+  {
+    id: "NEWS-2026-002",
+    title: "AI Deepfake Video of Top Industrialists Used in Guaranteed Stock Trading Scheme",
+    summary: "Fraudulent social media campaigns deployed real-time lip-synced deepfakes of high-profile executives promising 500% weekly investment returns.",
+    category: "DEEPFAKE_IMPERSONATION",
+    risk_level: "HIGH",
+    source_name: "Financial Express",
+    source_url: "https://www.financialexpress.com/about/online-scam",
+    financial_loss: "₹32+ Crore across victims",
+    affected_region: "Bengaluru, Mumbai, Delhi",
+    modus_operandi: "InSwapper & SadTalker video synthesis running on sponsored ad feeds.",
+    published_at: "4 hours ago",
+    thumbnail_url: DEFAULT_THUMBNAILS.DEEPFAKE_IMPERSONATION
+  },
+  {
+    id: "NEWS-2026-003",
+    title: "Maharashtra Cyber Cell Busts Fake Electricity KYC Malware Distribution Wave",
+    summary: "Cyber fraudsters circulated malicious APK files claiming power disconnection at 9:30 PM, harvesting net banking OTPs via background Accessibility Services.",
+    category: "ELECTRICITY_KYC",
+    risk_level: "CRITICAL",
+    source_name: "NDTV Cyber Crime Unit",
+    source_url: "https://ndtv.com/india-news",
+    financial_loss: "₹6,00,000 avg / target",
+    affected_region: "Maharashtra, Gujarat, Rajasthan",
+    modus_operandi: "SMS phishing with spoofed official sender headers urging APK download.",
+    published_at: "6 hours ago",
+    thumbnail_url: DEFAULT_THUMBNAILS.ELECTRICITY_KYC
+  },
+  {
+    id: "NEWS-2026-004",
+    title: "MHA Issues Emergency Advisory on 3-Second AI Voice Cloning Bail Scams",
+    summary: "Law enforcement warns parents against calls using AI clones of their children's voices fabricated from short social media reels to demand urgent ransom bail.",
+    category: "VOICE_CLONE",
+    risk_level: "CRITICAL",
+    source_name: "Cyber Crime Intelligence Unit",
+    source_url: "https://cybercrime.gov.in",
+    financial_loss: "₹5,00,000 per victim",
+    affected_region: "Hyderabad, Chennai, Delhi NCR",
+    modus_operandi: "ElevenLabs/RVC voice clone synthesis with simulated crying background audio.",
+    published_at: "8 hours ago",
+    thumbnail_url: DEFAULT_THUMBNAILS.VOICE_CLONE
+  },
+  {
+    id: "NEWS-2026-005",
+    title: "Pune Police Cyber Wing Dismantles ₹11 Crore Fictitious Crypto Trading Portal",
+    summary: "Special cyber crime investigation unit arrested an interstate network operating cloned investment dashboards showing false crypto asset balances.",
+    category: "INVESTMENT_FRAUD",
+    risk_level: "HIGH",
+    source_name: "Times of India",
+    source_url: "https://timesofindia.indiatimes.com/city/pune",
+    financial_loss: "₹11,00,00,000",
+    affected_region: "Pune, Thane, Mumbai",
+    modus_operandi: "Manipulated web socket charts showing fake high returns to extract security deposits.",
+    published_at: "12 hours ago",
+    thumbnail_url: DEFAULT_THUMBNAILS.INVESTMENT_FRAUD
+  },
+  {
+    id: "NEWS-2026-006",
+    title: "Malicious APK 'e-Challan' Traffic Fine Phishing Campaign Detected in Delhi NCR",
+    summary: "Over 40,000 SMS sent impersonating Delhi Traffic Police with shortened links to download a Trojanized APK that drains UPI bank balances.",
+    category: "APK_TROJAN",
+    risk_level: "CRITICAL",
+    source_name: "Indian Express / Tech Desk",
+    source_url: "https://indianexpress.com/technology",
+    financial_loss: "₹45,000 - ₹2,50,000 per victim",
+    affected_region: "Delhi, Noida, Gurugram",
+    modus_operandi: "Sideloaded APK steals SMS OTPs and auto-initiates UPI transfers.",
+    published_at: "14 hours ago",
+    thumbnail_url: DEFAULT_THUMBNAILS.APK_TROJAN
+  }
+];
+
 interface LiveCyberScamNewsFeedProps {
   compact?: boolean;
 }
 
 export function LiveCyberScamNewsFeed({ compact = false }: LiveCyberScamNewsFeedProps) {
-  const [news, setNews] = useState<ScamNewsItem[]>([]);
+  const [news, setNews] = useState<ScamNewsItem[]>(DEFAULT_NEWS_ITEMS);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   const fetchNews = (category: string = "ALL") => {
@@ -54,97 +141,12 @@ export function LiveCyberScamNewsFeed({ compact = false }: LiveCyberScamNewsFeed
         if (data && data.feed && data.feed.length > 0) {
           setNews(data.feed);
         } else {
-          // Curated fallback news
-          setNews([
-            {
-              id: "NEWS-2026-001",
-              title: "Supreme Court Directs CBI Nationwide Probe into Transnational 'Digital Arrest' Extortion Syndicates",
-              summary: "A Supreme Court bench has ordered an urgent CBI & I4C crackdown on organized crime syndicates running fake video calls in police uniform to extort senior citizens.",
-              category: "DIGITAL_ARREST",
-              risk_level: "CRITICAL",
-              source_name: "The Hindu & PTI",
-              source_url: "https://www.thehindu.com/news/national",
-              financial_loss: "₹150+ Crore Nationwide",
-              affected_region: "Pan-India (NCR, Mumbai, Bengaluru)",
-              modus_operandi: "Fake Skype video calls with police backdrop claiming illegal narcotics parcels.",
-              published_at: "2 hours ago",
-              thumbnail_url: DEFAULT_THUMBNAILS.DIGITAL_ARREST
-            },
-            {
-              id: "NEWS-2026-002",
-              title: "AI Deepfake Video of Top Industrialists Used in Guaranteed Stock Trading Scheme",
-              summary: "Fraudulent social media campaigns deployed real-time lip-synced deepfakes of high-profile executives promising 500% weekly investment returns.",
-              category: "DEEPFAKE_IMPERSONATION",
-              risk_level: "HIGH",
-              source_name: "Financial Express",
-              source_url: "https://www.financialexpress.com/about/online-scam",
-              financial_loss: "₹32+ Crore across victims",
-              affected_region: "Bengaluru, Mumbai, Delhi",
-              modus_operandi: "InSwapper & SadTalker video synthesis running on sponsored ad feeds.",
-              published_at: "4 hours ago",
-              thumbnail_url: DEFAULT_THUMBNAILS.DEEPFAKE_IMPERSONATION
-            },
-            {
-              id: "NEWS-2026-003",
-              title: "Maharashtra Cyber Cell Busts Fake Electricity KYC Malware Distribution Wave",
-              summary: "Cyber fraudsters circulated malicious APK files claiming power disconnection at 9:30 PM, harvesting net banking OTPs via background Accessibility Services.",
-              category: "ELECTRICITY_KYC",
-              risk_level: "CRITICAL",
-              source_name: "NDTV Cyber Crime Unit",
-              source_url: "https://ndtv.com/india-news",
-              financial_loss: "₹6,00,000 avg / target",
-              affected_region: "Maharashtra, Gujarat, Rajasthan",
-              modus_operandi: "SMS phishing with spoofed official sender headers urging APK download.",
-              published_at: "6 hours ago",
-              thumbnail_url: DEFAULT_THUMBNAILS.ELECTRICITY_KYC
-            },
-            {
-              id: "NEWS-2026-004",
-              title: "MHA Issues Emergency Advisory on 3-Second AI Voice Cloning Bail Scams",
-              summary: "Law enforcement warns parents against calls using AI clones of their children's voices fabricated from short social media reels to demand urgent ransom bail.",
-              category: "VOICE_CLONE",
-              risk_level: "CRITICAL",
-              source_name: "Cyber Crime Intelligence Unit",
-              source_url: "https://cybercrime.gov.in",
-              financial_loss: "₹5,00,000 per victim",
-              affected_region: "Hyderabad, Chennai, Delhi NCR",
-              modus_operandi: "ElevenLabs/RVC voice clone synthesis with simulated crying background audio.",
-              published_at: "8 hours ago",
-              thumbnail_url: DEFAULT_THUMBNAILS.VOICE_CLONE
-            },
-            {
-              id: "NEWS-2026-005",
-              title: "Pune Police Cyber Wing Dismantles ₹11 Crore Fictitious Crypto Trading Portal",
-              summary: "Special cyber crime investigation unit arrested an interstate network operating cloned investment dashboards showing false crypto asset balances.",
-              category: "INVESTMENT_FRAUD",
-              risk_level: "HIGH",
-              source_name: "Times of India",
-              source_url: "https://timesofindia.indiatimes.com/city/pune",
-              financial_loss: "₹11,00,00,000",
-              affected_region: "Pune, Thane, Mumbai",
-              modus_operandi: "Manipulated web socket charts showing fake high returns to extract security deposits.",
-              published_at: "12 hours ago",
-              thumbnail_url: DEFAULT_THUMBNAILS.INVESTMENT_FRAUD
-            },
-            {
-              id: "NEWS-2026-006",
-              title: "Malicious APK 'e-Challan' Traffic Fine Phishing Campaign Detected in Delhi NCR",
-              summary: "Over 40,000 SMS sent impersonating Delhi Traffic Police with shortened links to download a Trojanized APK that drains UPI bank balances.",
-              category: "APK_TROJAN",
-              risk_level: "CRITICAL",
-              source_name: "Indian Express / Tech Desk",
-              source_url: "https://indianexpress.com/technology",
-              financial_loss: "₹45,000 - ₹2,50,000 per victim",
-              affected_region: "Delhi, Noida, Gurugram",
-              modus_operandi: "Sideloaded APK steals SMS OTPs and auto-initiates UPI transfers.",
-              published_at: "14 hours ago",
-              thumbnail_url: DEFAULT_THUMBNAILS.APK_TROJAN
-            }
-          ]);
+          setNews(DEFAULT_NEWS_ITEMS);
         }
       })
       .catch((err) => {
         console.error("News feed fetch error:", err);
+        setNews(DEFAULT_NEWS_ITEMS);
       })
       .finally(() => {
         setIsLoading(false);
