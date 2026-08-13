@@ -3,9 +3,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import { 
-  Radio, MapPin, ShieldAlert, Sparkles, X, 
+  MapPin, ShieldAlert, Sparkles, X, 
   ChevronRight, Layers, FileText, CheckCircle2, Globe 
 } from "lucide-react";
+import { CyberIcon } from "@/components/CyberIcons";
 
 interface ThreatMarker {
   id: string;
@@ -170,7 +171,7 @@ export function LiveThreatRadar() {
       <div className="p-5 border-b border-neutral-800/80 bg-neutral-900/50 backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
-            <Radio className="w-5 h-5 animate-pulse" />
+            <CyberIcon name="radar" size={20} glow />
           </div>
           <div>
             <div className="flex items-center gap-2">
