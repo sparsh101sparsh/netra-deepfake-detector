@@ -37,26 +37,39 @@ export default function ForensicHub() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Run Butter-Smooth 120fps Intro Timeline
+  // Run Butter-Smooth 120fps Intro Timeline (Only once per session, re-plays on page refresh)
   useEffect(() => {
+    const navEntries = typeof window !== 'undefined' && window.performance?.getEntriesByType?.('navigation');
+    const isReload = navEntries && (navEntries[0] as any)?.type === 'reload';
+    const hasSeenIntro = typeof window !== 'undefined' && sessionStorage.getItem('netra_intro_seen');
+
+    if (hasSeenIntro && !isReload) {
+      setIntroStage('ready');
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('netra_intro_seen', 'true');
+    }
+
     // Start sub-pixel progress fill
     const raf = setTimeout(() => {
       setIntroProgress(100);
     }, 50);
 
-    // After 10.4s (or ESC), trigger GPU morph
+    // After 6.5s (or ESC), trigger GPU morph
     const tMorph = setTimeout(() => {
       setIntroStage('morphing');
       setTimeout(() => {
         setIntroStage('ready');
-      }, 1200); // 1200ms silky GPU spring morph
-    }, 10400);
+      }, 1000); // 1000ms silky GPU spring morph
+    }, 6500);
 
     // Keyboard shortcut (ESC) to fast-forward morph immediately
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIntroStage('morphing');
-        setTimeout(() => setIntroStage('ready'), 800);
+        setTimeout(() => setIntroStage('ready'), 500);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -175,8 +188,20 @@ export default function ForensicHub() {
           </div>
 
           <div className="flex flex-col items-center justify-center relative z-20">
+            {/* Top Motto Header: NETRA — Eyes that see through */}
+            <div className={`mb-3 sm:mb-6 text-center transition-all duration-700 ${
+              isMorphing ? 'opacity-0 -translate-y-6 scale-90' : 'opacity-100 translate-y-0 scale-100'
+            }`}>
+              <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-neutral-950/90 border border-cyan-500/40 shadow-[0_0_25px_rgba(0,240,255,0.25)] backdrop-blur-md">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                <span className="text-xs sm:text-sm font-mono font-bold tracking-widest uppercase text-white">
+                  NETRA — <span className="text-cyan-400">Eyes that see through</span>
+                </span>
+              </div>
+            </div>
+
             {/* Master Eye Vector */}
-            <div className="w-[min(80vw,80vh)] h-[min(80vw,80vh)] max-w-[560px] max-h-[560px] flex items-center justify-center">
+            <div className="w-[min(75vw,75vh)] h-[min(75vw,75vh)] max-w-[520px] max-h-[520px] flex items-center justify-center">
               <NetraEyeScanner size="100%" />
             </div>
 
@@ -190,7 +215,7 @@ export default function ForensicHub() {
                 className="h-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-sky-300 shadow-[0_0_10px_#00f0ff] rounded-full"
                 style={{
                   width: `${introProgress}%`,
-                  transition: `width 9800ms cubic-bezier(0.16, 1, 0.3, 1)`,
+                  transition: `width 6000ms cubic-bezier(0.16, 1, 0.3, 1)`,
                 }}
               />
             </div>
