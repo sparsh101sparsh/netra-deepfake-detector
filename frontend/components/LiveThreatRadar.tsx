@@ -33,7 +33,7 @@ export function LiveThreatRadar() {
   const [markers, setMarkers] = useState<ThreatMarker[]>([]);
   const [selectedMarker, setSelectedMarker] = useState<ThreatMarker | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
-  const [mapTheme, setMapTheme] = useState<"voyager" | "satellite" | "osm">("voyager");
+  const [mapTheme, setMapTheme] = useState<"street" | "satellite" | "osm">("street");
   const [isMapReady, setIsMapReady] = useState(false);
 
   // 1. Fetch live threat markers from backend with fallback
