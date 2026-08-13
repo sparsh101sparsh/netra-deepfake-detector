@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Script from "next/script";
 import { 
   X, LogOut, Shield, KeyRound, Palette, CheckCircle2, 
-  ExternalLink, User, Sparkles, Lock, ArrowRight 
+  ExternalLink, User, Sparkles, Lock, ArrowRight, BookOpen 
 } from "lucide-react";
 import { NetraUserAvatar, NETRA_AVATARS, AvatarTheme } from "@/components/NetraUserAvatar";
 import { Button } from "@/components/atoms/Button";
@@ -19,6 +19,7 @@ declare global {
 }
 
 export interface UserProfile {
+  id?: string;
   name: string;
   email: string;
   picture?: string;
@@ -49,6 +50,8 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
   const [gsiLoaded, setGsiLoaded] = useState(false);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [activeTab, setActiveTab] = useState<"account" | "avatars" | "keys">("account");
+  const [userPosts, setUserPosts] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
 
   const clientId =
@@ -58,6 +61,37 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch blogs authored by this user
+  useEffect(() => {
+    if (isOpen && user) {
+      setLoadingPosts(true);
+      fetch(`/api/backend/api/v1/community/posts?author_email=${encodeURIComponent(user.email)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.posts) {
+            setUserPosts(data.posts);
+          }
+        })
+        .catch(() => {
+          try {
+            const raw = localStorage.getItem("netra_community_posts");
+            if (raw) {
+              const all = JSON.parse(raw);
+              const mine = all.filter(
+                (p: any) =>
+                  (p.author?.email && p.author.email.toLowerCase() === user.email.toLowerCase()) ||
+                  (user.sub && p.author?.id === user.sub)
+              );
+              setUserPosts(mine);
+            }
+          } catch {
+            // ignore
+          }
+        })
+        .finally(() => setLoadingPosts(false));
+    }
+  }, [isOpen, user]);
 
   // Parse JWT token from Google Identity Services
   const parseJwt = (token: string): any => {
@@ -83,11 +117,11 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
       if (payload) {
         const randomAvatarIndex = Math.floor(Math.random() * NETRA_AVATARS.length);
         const profile: UserProfile = {
-          name: payload.name || payload.given_name || "Investigator",
+          id: payload.sub || payload.email,
+          name: payload.name || payload.given_name || "Community Member",
           email: payload.email,
           avatarIndex: randomAvatarIndex,
           sub: payload.sub,
-          role: "FORENSIC_ANALYST",
         };
         onUserChange(profile);
         localStorage.setItem("netra_auth_user", JSON.stringify(profile));
@@ -158,11 +192,11 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
   // Demo sign-in for offline / dev sandbox environments
   const handleDemoSignIn = () => {
     const demoProfile: UserProfile = {
-      name: "Forensic Analyst",
-      email: "analyst@netra.cyber.gov.in",
-      avatarIndex: 0,
-      sub: "demo-analyst-session",
-      role: "SENIOR_INVESTIGATOR",
+      id: "demo-user-session",
+      name: "Sparsh Singh",
+      email: "sparppp86@gmail.com",
+      avatarIndex: 5,
+      sub: "demo-user-session",
     };
     onUserChange(demoProfile);
     localStorage.setItem("netra_auth_user", JSON.stringify(demoProfile));
@@ -256,8 +290,11 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
                   <div className="text-xs text-ink-2 font-mono truncate mt-0.5">
                     {user.email}
                   </div>
-                  <div className="text-[11px] text-accent font-mono mt-1 font-medium">
-                    ROLE: {user.role || "FORENSIC_ANALYST"}
+                  <div className="text-[11px] text-ink-3 font-mono mt-1 flex items-center gap-1.5">
+                    <span>Persona:</span>
+                    <span className="text-accent font-medium">
+                      {NETRA_AVATARS[user.avatarIndex ?? 0]?.name.split(" ")[0] || "Sentinel"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -304,6 +341,57 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
 
               {/* Quick Actions & Security Links */}
               <div className="space-y-2">
+                {/* My Published Blogs Link & Counter */}
+                <a
+                  href="/community"
+                  className="flex items-center justify-between p-3 rounded-xl bg-canvas hover:bg-hover border-[1.5px] border-line transition-colors text-xs text-ink group"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <BookOpen className="size-4 text-accent shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-medium text-ink flex items-center gap-2">
+                        <span className="truncate">My Published Blogs</span>
+                        <span className="px-1.5 py-0.2 text-[10px] font-mono rounded bg-accent/15 text-accent border border-accent/25 shrink-0">
+                          {userPosts.length}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-ink-3 font-mono truncate">
+                        {userPosts.length > 0 
+                          ? `${userPosts.length} research write-up${userPosts.length > 1 ? "s" : ""} published to community`
+                          : "Publish and view your community investigations"}
+                      </div>
+                    </div>
+                  </div>
+                  <ArrowRight className="size-4 text-ink-3 group-hover:text-accent group-hover:translate-x-0.5 transition-all shrink-0" />
+                </a>
+
+                {/* Published Blogs Inline List (if user has posted) */}
+                {userPosts.length > 0 && (
+                  <div className="p-3 rounded-xl bg-inset border border-line space-y-2">
+                    <div className="text-[10.5px] font-mono text-ink-3 uppercase tracking-wider font-semibold">
+                      Your Articles
+                    </div>
+                    <div className="space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar">
+                      {userPosts.map((p) => (
+                        <a
+                          key={p.id}
+                          href="/community"
+                          className="flex items-center justify-between p-2 rounded-lg bg-canvas hover:bg-hover border border-line text-xs transition-colors"
+                        >
+                          <span className="text-ink font-medium truncate max-w-[240px]">
+                            {p.title}
+                          </span>
+                          <span className="text-[10px] font-mono text-ink-3 shrink-0 flex items-center gap-1.5">
+                            <span>{p.views || 0} views</span>
+                            <span>•</span>
+                            <span>{p.likes || 0} likes</span>
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <a
                   href="/developers"
                   className="flex items-center justify-between p-3 rounded-xl bg-canvas hover:bg-hover border-[1.5px] border-line transition-colors text-xs text-ink group"

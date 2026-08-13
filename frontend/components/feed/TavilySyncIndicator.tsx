@@ -42,12 +42,12 @@ export function TavilySyncIndicator({
           pulse={!isRefreshing}
           className="font-semibold tracking-wider text-[11px] uppercase shrink-0"
         >
-          24H TAVILY CRAWLER ACTIVE
+          LIVE SCAM ALERTS
         </StatusPill>
 
         {typeof totalCount === "number" && totalCount > 0 && !compact && (
           <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-inset text-ink-2 border-[1.5px] border-line tabular-nums">
-            {totalCount} Verified Intel
+            {totalCount} Verified Reports
           </span>
         )}
       </div>

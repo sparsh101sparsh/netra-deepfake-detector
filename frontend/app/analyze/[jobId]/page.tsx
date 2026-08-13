@@ -1,30 +1,31 @@
 "use client";
-// app/analyze/[jobId]/page.tsx
-// Main results page — polls job status, shows all components
-// Premium UI Redesign Applied
+// app/analyze/[jobId]/page.tsx — Analysis results page
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { pollJobStatus, getVideoUrl, JobStatus, DetectionResult } from "@/lib/api";
 import EvidenceTimeline from "@/components/EvidenceTimeline";
 import ConfidenceMeter from "@/components/ConfidenceMeter";
 import DetectorScorecard from "@/components/DetectorScorecard";
-import { Loader2, ShieldCheck, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { Loader2, ShieldCheck, ShieldAlert, AlertTriangle } from "lucide-react";
 
 interface Props {
   params: { jobId: string };
 }
 
-const STAGE_DESCRIPTIONS: Record<string, string> = {
-  "Downloading video": "Fetching your media from secure storage...",
-  "Extracting frames and audio": "Splitting payload into analysis vectors...",
-  "Running spatial deepfake detector": "EfficientNet-B4 scanning for facial manipulation...",
-  "Running CLIP generalisation detector": "CLIP probe searching for AI-generation fingerprints...",
-  "Running audio deepfake detector": "Wav2Vec2 analyzing audio frequency anomalies...",
-  "Analyzing metadata and auxiliary signals": "Cross-referencing telemetry and structural data...",
-  "Fusing detector scores": "Synthesizing evidence streams...",
-  "Building evidence bundle": "Compiling forensic package...",
-  "Generating forensic report via Amazon Bedrock": "AI forensic investigator writing final report...",
-  "Finalizing results": "Almost complete...",
+// Human-readable stage labels — no technical jargon
+const STAGE_LABELS: Record<string, string> = {
+  "Downloading video": "Retrieving your file…",
+  "Extracting frames and audio": "Breaking down video and audio tracks…",
+  "Running spatial deepfake detector": "Checking for facial manipulation…",
+  "Running CLIP generalisation detector": "Scanning for AI generation signatures…",
+  "Running audio deepfake detector": "Analyzing voice and audio patterns…",
+  "Analyzing metadata and auxiliary signals": "Checking file metadata…",
+  "Fusing detector scores": "Combining analysis results…",
+  "Building evidence bundle": "Preparing evidence package…",
+  "Generating forensic report via Amazon Bedrock": "Writing detailed report…",
+  "Finalizing results": "Almost done…",
 };
 
 export default function AnalysisPage({ params }: Props) {
@@ -50,23 +51,24 @@ export default function AnalysisPage({ params }: Props) {
         const status = await pollJobStatus(jobId);
         if (!cancelled) {
           setJobStatus(status);
-
-          if (status.status === "complete") {
-            const url = await getVideoUrl(jobId);
-            if (!cancelled) setVideoUrl(url);
+          if (status.status === "complete" || status.status === "error") {
             if (pollingRef.current) clearInterval(pollingRef.current);
-          } else if (status.status === "error") {
-            setError(status.current_stage || "Analysis failed. Please try again.");
-            if (pollingRef.current) clearInterval(pollingRef.current);
+            if (status.status === "error") {
+              setError("Analysis failed. Please try again.");
+            } else {
+              const url = await getVideoUrl(jobId);
+              if (!cancelled) setVideoUrl(url);
+            }
           }
         }
-      } catch (e: any) {
-        if (!cancelled) setError(e.message || "Network error");
+      } catch (err) {
+        if (!cancelled) setError("Could not reach the analysis server. Please try again.");
+        if (pollingRef.current) clearInterval(pollingRef.current);
       }
     }
 
-    poll(); 
-    pollingRef.current = setInterval(poll, 2000);
+    poll();
+    pollingRef.current = setInterval(poll, 3000);
 
     return () => {
       cancelled = true;
@@ -74,58 +76,62 @@ export default function AnalysisPage({ params }: Props) {
     };
   }, [jobId]);
 
-  const result = jobStatus?.result;
-  const isComplete = jobStatus?.status === "complete" && result;
+  const isComplete = jobStatus?.status === "complete";
+  const result: DetectionResult | null = isComplete ? (jobStatus?.result ?? null) : null;
+
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
-      
-      {/* Header Context */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Analysis Report</h1>
-          <p className="text-muted-foreground font-mono text-xs mt-1">ID: {jobId}</p>
-        </div>
-        {!isComplete && !error && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-full border border-border">
-            <Loader2 className="w-4 h-4 text-foreground animate-spin" />
-            <span className="text-xs font-medium">Processing Payload</span>
-          </div>
-        )}
-      </div>
+    <div className="min-h-screen bg-page text-ink flex flex-col font-sans">
+      <Navbar />
 
-      <main className="w-full space-y-6">
-        
-        {/* Processing state */}
+      <main className="w-full max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 py-8 flex-1 space-y-6 animate-in fade-in duration-300">
+
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink">
+              Analysis Report
+            </h1>
+            <p className="text-xs font-mono text-ink-3 mt-1">ID: {jobId}</p>
+          </div>
+          {!isComplete && !error && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-line rounded-full">
+              <Loader2 className="w-4 h-4 text-ink-3 animate-spin" />
+              <span className="text-xs font-medium text-ink-2">Analyzing…</span>
+            </div>
+          )}
+        </div>
+
+        {/* Processing State */}
         {!isComplete && !error && (
-          <div className="card-premium p-10 flex flex-col items-center justify-center min-h-[400px]">
+          <div className="rounded-2xl bg-surface border-[1.5px] border-line p-10 flex flex-col items-center justify-center min-h-[400px] shadow-card">
             <div className="text-center mb-8">
-              <Loader2 className="w-12 h-12 text-muted-foreground animate-spin mx-auto mb-6" />
-              <h2 className="text-xl font-semibold mb-2">
-                {jobStatus?.current_stage || "Initializing..."}
+              <Loader2 className="w-12 h-12 text-ink-3 animate-spin mx-auto mb-6" />
+              <h2 className="text-xl font-semibold text-ink mb-2">
+                {STAGE_LABELS[jobStatus?.current_stage || ""] || jobStatus?.current_stage || "Starting…"}
               </h2>
-              <p className="text-muted-foreground">
-                {STAGE_DESCRIPTIONS[jobStatus?.current_stage || ""] || "Stand by for analysis."}
+              <p className="text-sm text-ink-2">
+                Analysis is running in the background
               </p>
             </div>
 
             {/* Progress bar */}
             <div className="w-full max-w-lg mb-8">
-              <div className="bg-secondary rounded-full h-2 overflow-hidden mb-2">
+              <div className="bg-inset rounded-full h-1.5 overflow-hidden mb-2">
                 <div
-                  className="h-full bg-foreground rounded-full transition-all duration-500"
+                  className="h-full bg-accent rounded-full transition-all duration-500"
                   style={{ width: `${jobStatus?.progress || 0}%` }}
                 />
               </div>
-              <p className="text-right text-xs text-muted-foreground">{jobStatus?.progress || 0}% Complete</p>
+              <p className="text-right text-xs text-ink-3">{jobStatus?.progress || 0}% complete</p>
             </div>
 
-            {/* Stage indicators */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-3xl">
-              {Object.keys(STAGE_DESCRIPTIONS).map((stage) => {
+            {/* Stage grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 w-full max-w-3xl">
+              {Object.keys(STAGE_LABELS).map((stage) => {
                 const progress = jobStatus?.progress || 0;
-                const stageIndex = Object.keys(STAGE_DESCRIPTIONS).indexOf(stage);
-                const totalStages = Object.keys(STAGE_DESCRIPTIONS).length;
+                const stageIndex = Object.keys(STAGE_LABELS).indexOf(stage);
+                const totalStages = Object.keys(STAGE_LABELS).length;
                 const stageProgress = (stageIndex / totalStages) * 100;
                 const isDone = progress > stageProgress + 8;
                 const isActive = jobStatus?.current_stage === stage;
@@ -135,14 +141,20 @@ export default function AnalysisPage({ params }: Props) {
                     key={stage}
                     className={`text-xs px-3 py-2.5 rounded-lg border flex items-center gap-2 transition-all duration-300 ${
                       isActive
-                        ? "border-border bg-secondary text-foreground shadow-sm"
+                        ? "border-accent/40 bg-accent/5 text-ink"
                         : isDone
-                        ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-500"
-                        : "border-transparent text-muted-foreground"
+                        ? "border-green-500/20 bg-green-500/5 text-green-400"
+                        : "border-transparent text-ink-3"
                     }`}
                   >
-                    {isDone ? <ShieldCheck className="w-3.5 h-3.5" /> : isActive ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/50" />}
-                    {stage}
+                    {isDone ? (
+                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                    ) : isActive ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border border-line shrink-0" />
+                    )}
+                    {STAGE_LABELS[stage] || stage}
                   </div>
                 );
               })}
@@ -150,69 +162,70 @@ export default function AnalysisPage({ params }: Props) {
           </div>
         )}
 
-        {/* Error state */}
+        {/* Error State */}
         {error && (
-          <div className="card-premium border-destructive/30 bg-destructive/5 p-8 flex flex-col items-center justify-center text-center">
-            <AlertTriangle className="w-12 h-12 text-destructive mb-4" />
-            <h2 className="text-xl font-semibold text-destructive mb-2">Analysis Failed</h2>
-            <p className="text-muted-foreground mb-6">{error}</p>
-            <button onClick={() => window.location.href = '/'} className="btn-secondary">
-              Return to Hub
+          <div className="rounded-2xl bg-red-500/5 border border-red-500/25 p-8 flex flex-col items-center justify-center text-center">
+            <AlertTriangle className="w-12 h-12 text-red-400 mb-4" />
+            <h2 className="text-xl font-semibold text-red-400 mb-2">Analysis Failed</h2>
+            <p className="text-sm text-ink-2 mb-6">{error}</p>
+            <button
+              onClick={() => (window.location.href = "/")}
+              className="px-5 py-2 rounded-xl bg-surface border border-line text-ink text-sm font-medium hover:bg-hover transition-all"
+            >
+              Return to Scanner
             </button>
           </div>
         )}
 
-        {/* RESULTS */}
+        {/* Results */}
         {isComplete && result && (
-          <div className="space-y-6 animate-in fade-in duration-500 slide-in-from-bottom-4">
-            
-            {/* Top verdict banner */}
+          <div className="space-y-5 animate-in fade-in duration-500">
+
+            {/* Verdict Banner */}
             <div
               className={`rounded-2xl p-8 text-center border relative overflow-hidden ${
                 result.confidence > 70
-                  ? "border-destructive/40 bg-destructive/10"
+                  ? "border-red-500/30 bg-red-500/8"
                   : result.confidence > 30
-                  ? "border-orange-500/40 bg-orange-500/10"
-                  : "border-emerald-500/40 bg-emerald-500/10"
+                  ? "border-amber-500/30 bg-amber-500/8"
+                  : "border-green-500/30 bg-green-500/8"
               }`}
             >
-              <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
-              <div className="relative z-10 flex flex-col items-center">
+              <div className="flex flex-col items-center">
                 {result.confidence > 70 ? (
-                  <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
+                  <ShieldAlert className="w-14 h-14 text-red-400 mb-4" />
                 ) : result.confidence > 30 ? (
-                  <AlertTriangle className="w-16 h-16 text-orange-500 mb-4" />
+                  <AlertTriangle className="w-14 h-14 text-amber-400 mb-4" />
                 ) : (
-                  <ShieldCheck className="w-16 h-16 text-emerald-500 mb-4" />
+                  <ShieldCheck className="w-14 h-14 text-green-400 mb-4" />
                 )}
                 <h2
-                  className={`text-3xl font-bold tracking-tight mb-2 ${
-                    result.confidence > 70
-                      ? "text-destructive"
-                      : result.confidence > 30
-                      ? "text-orange-500"
-                      : "text-emerald-500"
+                  className={`text-2xl sm:text-3xl font-bold tracking-tight mb-2 ${
+                    result.confidence > 70 ? "text-red-400" : result.confidence > 30 ? "text-amber-400" : "text-green-400"
                   }`}
                 >
-                  {result.manipulation_type || result.verdict.replace(/_/g, " ")} DETECTED
+                  {result.confidence > 70 ? "Likely AI-Generated" : result.confidence > 30 ? "Possibly Altered" : "Appears Authentic"}
                 </h2>
-                <p className="text-muted-foreground text-sm font-medium">
-                  Risk Level: <span className="text-foreground capitalize">{result.risk_level}</span>
+                <p className="text-sm text-ink-2">
+                  Risk level:{" "}
+                  <span className="text-ink font-medium capitalize">{result.risk_level?.toLowerCase()}</span>
                 </p>
               </div>
             </div>
 
-            {/* 3-column grid: Confidence + Detectors */}
-            <div className="grid lg:grid-cols-3 gap-6">
-              {/* Confidence meter */}
-              <div className="card-premium p-6 flex flex-col items-center justify-center min-h-[300px]">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-6 self-start w-full">CONFIDENCE RATING</h3>
+            {/* Confidence + Detectors */}
+            <div className="grid lg:grid-cols-3 gap-5">
+              <div className="rounded-2xl bg-surface border-[1.5px] border-line p-6 flex flex-col items-center justify-center min-h-[280px] shadow-card">
+                <h3 className="text-xs font-mono text-ink-3 uppercase tracking-wider mb-6 self-start w-full">
+                  Detection Confidence
+                </h3>
                 <ConfidenceMeter value={result.confidence} />
               </div>
 
-              {/* Detector scorecards */}
-              <div className="lg:col-span-2 card-premium p-6">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-6">DETECTOR BREAKDOWN</h3>
+              <div className="lg:col-span-2 rounded-2xl bg-surface border-[1.5px] border-line p-6 shadow-card">
+                <h3 className="text-xs font-mono text-ink-3 uppercase tracking-wider mb-6">
+                  Detector Results
+                </h3>
                 <DetectorScorecard
                   visualScore={result.visual_score}
                   audioScore={result.audio_score}
@@ -222,26 +235,23 @@ export default function AnalysisPage({ params }: Props) {
               </div>
             </div>
 
-            {/* Video + Evidence Timeline */}
-            <div className="card-premium p-6">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-6">EVIDENCE TIMELINE</h3>
+            {/* Video + Timeline */}
+            <div className="rounded-2xl bg-surface border-[1.5px] border-line p-6 shadow-card">
+              <h3 className="text-xs font-mono text-ink-3 uppercase tracking-wider mb-5">
+                Evidence Timeline
+              </h3>
 
               {videoUrl && (
-                <div className="rounded-xl overflow-hidden border border-border bg-black mb-6 w-full flex justify-center">
-                  <video
-                    ref={videoRef}
-                    src={videoUrl}
-                    controls
-                    className="max-h-[400px] w-auto"
-                  />
+                <div className="rounded-xl overflow-hidden border border-line bg-black mb-5 w-full flex justify-center">
+                  <video ref={videoRef} src={videoUrl} controls className="max-h-[400px] w-auto" />
                 </div>
               )}
 
-              <div className="p-4 rounded-lg bg-secondary/30 border border-border">
+              <div className="p-4 rounded-xl bg-inset border border-line">
                 <EvidenceTimeline
                   frames={result.frames || []}
                   audioFlags={result.audio_flags || []}
-                  duration={30} 
+                  duration={30}
                   onSeek={handleSeek}
                   videoUrl={videoUrl}
                 />
@@ -250,29 +260,32 @@ export default function AnalysisPage({ params }: Props) {
 
             {/* Forensic Report */}
             {result.forensic_report && (
-              <div className="card-premium p-8">
-                <div className="flex items-center justify-between mb-6 border-b border-border pb-4">
-                  <h3 className="text-sm font-semibold">FORENSIC ANALYSIS REPORT</h3>
-                  <div className="flex items-center gap-2 px-3 py-1 bg-secondary rounded-full border border-border">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse-soft"></div>
-                    <span className="text-xs text-muted-foreground font-mono">{result.report_generated_by || "AI Analyst"}</span>
+              <div className="rounded-2xl bg-surface border-[1.5px] border-line p-6 sm:p-8 shadow-card">
+                <div className="flex items-center justify-between mb-5 border-b border-line pb-4">
+                  <h3 className="text-xs font-mono text-ink-3 uppercase tracking-wider">Detailed Report</h3>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-inset rounded-full border border-line">
+                    <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+                    <span className="text-xs text-ink-3">AI Analysis</span>
                   </div>
                 </div>
-                <div className="prose prose-sm prose-invert max-w-none text-muted-foreground">
-                  <p className="whitespace-pre-wrap leading-relaxed text-sm">
-                    {result.forensic_report}
-                  </p>
-                </div>
+                <p className="whitespace-pre-wrap leading-relaxed text-sm text-ink-2">
+                  {result.forensic_report}
+                </p>
               </div>
             )}
 
-            {/* Metadata flags */}
+            {/* Metadata Flags */}
             {result.metadata_flags && result.metadata_flags.length > 0 && (
-              <div className="card-premium p-6">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-4">METADATA ANOMALIES</h3>
+              <div className="rounded-2xl bg-surface border-[1.5px] border-line p-6 shadow-card">
+                <h3 className="text-xs font-mono text-ink-3 uppercase tracking-wider mb-4">
+                  Suspicious Signals
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {result.metadata_flags.map((flag, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-500 rounded-md text-xs font-medium shadow-sm">
+                    <span
+                      key={i}
+                      className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-xs font-medium"
+                    >
                       {flag.replace(/_/g, " ")}
                     </span>
                   ))}
@@ -282,6 +295,8 @@ export default function AnalysisPage({ params }: Props) {
           </div>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 }

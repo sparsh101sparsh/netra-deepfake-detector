@@ -124,12 +124,9 @@ export const SplashIntro: React.FC<SplashIntroProps> = ({
       {/* Center Container: Eye Scanner + Telemetry + Progress Bar */}
       <div className="flex flex-col items-center justify-center relative z-20 space-y-4 sm:space-y-6">
         
-        {/* Top Header Motto Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-canvas/90 border-[1.5px] border-line shadow-card backdrop-blur-md animate-fade-in">
-          <span className="size-1.5 rounded-full bg-accent animate-ping" />
-          <span className="text-[11px] sm:text-xs font-mono font-semibold tracking-widest uppercase text-ink">
-            NETRA — <span className="text-accent">FORENSIC SUITE</span>
-          </span>
+        {/* Top Header Motto: Pure large text without borders */}
+        <div className="text-xl sm:text-3xl font-bold tracking-tight text-white font-sans animate-fade-in text-center">
+          NETRA: <span className="text-accent">Eyes that see through</span>
         </div>
 
         {/* Master Eye Scanner Vector */}
@@ -137,13 +134,8 @@ export const SplashIntro: React.FC<SplashIntroProps> = ({
           <NetraEyeScanner size="100%" />
         </div>
 
-        {/* Real-Time Telemetry Stream Text */}
-        <div className="h-5 flex items-center justify-center font-mono text-[11px] text-accent tracking-wider font-medium">
-          <span>{telemetryMessages[telemetryStep]}</span>
-        </div>
-
         {/* Horizontal Precision Progress Bar */}
-        <div className="w-48 sm:w-64 h-[2px] bg-inset rounded-full overflow-hidden border border-line shadow-hairline relative">
+        <div className="w-48 sm:w-64 h-[3px] bg-inset rounded-full overflow-hidden border border-line shadow-hairline relative">
           <div
             className="h-full bg-gradient-to-r from-accent via-sky-400 to-white shadow-[0_0_8px_var(--accent)] rounded-full"
             style={{
@@ -151,11 +143,6 @@ export const SplashIntro: React.FC<SplashIntroProps> = ({
               transition: `width ${autoDismissMs - 400}ms cubic-bezier(0.16, 1, 0.3, 1)`,
             }}
           />
-        </div>
-
-        {/* Skip Hint */}
-        <div className="pt-2 text-[10px] font-mono text-ink-3 uppercase tracking-widest flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity">
-          <span>Press ESC or Click anywhere to skip</span>
         </div>
       </div>
     </div>

@@ -27,19 +27,19 @@ export const MODALITY_CONFIGS: Record<SandboxModality, ModalityConfig> = {
     acceptMimes: ["video/mp4", "video/quicktime", "video/webm", "video/avi", "video/x-msvideo"],
     acceptExtensions: [".mp4", ".mov", ".webm", ".avi"],
     maxSizeMb: 100,
-    title: "Drop suspect video or browse files",
-    subtitle: "Extracts frame facial topology, 2D-DCT spectral seams & GenD ViT-L/14 temporal artifacts.",
-    engineBadge: "GenD ViT-L/14 + Spatial-Temporal Fusion",
+    title: "Drop video or browse files",
+    subtitle: "Checks for deepfake faces, artificial editing, and voice-lip mismatch.",
+    engineBadge: "AI Video Analysis Engine",
   },
   image: {
-    label: "Image / Photo OCR",
+    label: "Image / Screenshot",
     iconName: "image",
     acceptMimes: ["image/jpeg", "image/png", "image/webp", "image/jpg", "image/bmp"],
     acceptExtensions: [".png", ".jpg", ".webp", ".jpeg"],
     maxSizeMb: 50,
-    title: "Drop suspect screenshot or browse files",
-    subtitle: "Multilingual PaddleOCR text extraction -> feeds text into NETRA Scam Detector + SBI facial boundary analysis.",
-    engineBadge: "PaddleOCR v2.7 + Rule Intelligence Engine",
+    title: "Drop screenshot or browse files",
+    subtitle: "Reads text to find scam messages, fake official notices, and fraud payment links.",
+    engineBadge: "Text & Image Analysis Engine",
   },
   audio: {
     label: "Audio / Voice Clone",
@@ -47,9 +47,9 @@ export const MODALITY_CONFIGS: Record<SandboxModality, ModalityConfig> = {
     acceptMimes: ["audio/wav", "audio/mpeg", "audio/mp3", "audio/x-m4a", "audio/aac", "audio/ogg"],
     acceptExtensions: [".wav", ".mp3", ".m4a", ".ogg"],
     maxSizeMb: 50,
-    title: "Drop suspect audio recording or browse files",
-    subtitle: "Detects neural vocoder signatures (ElevenLabs, Bark, RVC) and micro-glottal pitch jitter.",
-    engineBadge: "Neural Vocoder Residual Analyzer",
+    title: "Drop audio recording or browse files",
+    subtitle: "Checks for AI voice cloning, robotic speech patterns, and audio tampering.",
+    engineBadge: "Voice Analysis Engine",
   },
 };
 
@@ -170,10 +170,10 @@ export function DropZone({
         className={cn(
           "relative flex flex-col items-center justify-center text-center select-none cursor-pointer",
           "border-[1.5px] border-dashed rounded-xl p-8 sm:p-10 transition-all duration-200",
-          "bg-[var(--inset)]/50 hover:bg-[var(--hover)]/40",
+          "bg-canvas/50 hover:bg-hover/40",
           isDragOver
-            ? "border-[var(--brand-cyan)] bg-[var(--accent-tint)] scale-[0.99] shadow-[0_0_24px_rgba(0,240,255,0.15)]"
-            : "border-[var(--line-strong)] hover:border-[var(--brand-cyan)]",
+            ? "border-white/40 bg-hover/60 scale-[0.99] shadow-card"
+            : "border-line hover:border-white/20",
           isUploading && "pointer-events-none opacity-90"
         )}
       >
@@ -182,13 +182,13 @@ export function DropZone({
           <div
             className={cn(
               "w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300",
-              "bg-[var(--surface)] border-[1.5px] border-[var(--border)] shadow-card text-[var(--accent)]",
-              isDragOver && "scale-110 border-[var(--brand-cyan)] shadow-[0_0_20px_rgba(0,240,255,0.3)]"
+              "bg-[#18181B] border border-white/10 shadow-card text-white",
+              isDragOver && "scale-110 border-white/30 shadow-card"
             )}
           >
-            <CyberIcon name={config.iconName} size={30} glow={isDragOver} />
+            <CyberIcon name={config.iconName} size={28} />
           </div>
-          <span className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--canvas)] border-[1.5px] border-[var(--line)] text-ink-2">
+          <span className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-[#18181B] border border-white/10 text-zinc-400">
             <UploadCloud className="w-3.5 h-3.5" />
           </span>
         </div>
@@ -210,17 +210,12 @@ export function DropZone({
               {ext}
             </Chip>
           ))}
-          <Chip tone="accent" size="sm" mono className="text-[11px]">
+          <Chip tone="neutral" size="sm" mono className="text-[11px] text-white bg-[#27272A] border-white/10">
             Max {config.maxSizeMb}MB
           </Chip>
         </div>
 
-        {/* Engine Pipeline Badge */}
-        <div className="mt-3">
-          <StatusPill tone="info" size="sm" dot>
-            {config.engineBadge}
-          </StatusPill>
-        </div>
+
 
         {/* Upload / In-Flight Processing Bar */}
         {isUploading && (

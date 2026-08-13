@@ -87,31 +87,31 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
   const taskRows: TaskRow[] = [
     {
       key: "ocr_extraction",
-      label: `PaddleOCR Script Analysis (${ocr.engine || "PaddleOCR v2.7"})`,
-      amount: `${ocr.lines_count || 1} spans`,
+      label: "Image Text Scanning",
+      amount: `${ocr.lines_count || 1} lines`,
       status: "done",
       details: [
-        { label: "Processing Latency", meta: `${ocr.processing_time_ms || 120}ms` },
-        { label: "Detected Character Count", meta: `${ocr.full_text?.length || 0} chars` },
+        { label: "Scan Time", meta: `${ocr.processing_time_ms || 120}ms` },
+        { label: "Characters Detected", meta: `${ocr.full_text?.length || 0} chars` },
       ],
     },
     {
       key: "ioc_triage",
-      label: "Threat Intelligence & IOC Pattern Extraction",
-      amount: `${totalIOCs} indicators`,
+      label: "Contact, Payment & Link Detection",
+      amount: `${totalIOCs} details found`,
       status: totalIOCs > 0 && scam.is_scam ? "failed" : "done",
       details: matchedRules.length > 0
-        ? matchedRules.map((rule, idx) => ({ label: `Rule #${idx + 1}`, meta: rule }))
-        : [{ label: "IOC Status", meta: totalIOCs > 0 ? "Flagged suspect handles" : "Clean — no IOCs found" }],
+        ? matchedRules.map((rule, idx) => ({ label: `Safety Rule #${idx + 1}`, meta: rule }))
+        : [{ label: "Status", meta: totalIOCs > 0 ? "Suspicious details found" : "Clean — no suspect details found" }],
     },
     {
       key: "threat_scoring",
-      label: "Multimodal Forgery & Scam Confidence Fusion",
+      label: "Overall Scam Risk Assessment",
       amount: `${riskScore}%`,
       status: scam.is_scam ? "failed" : "done",
       details: [
-        { label: "Classification Category", meta: scam.scam_type || "SCREENSHOT_FORGERY" },
-        { label: "Verdict Summary", meta: scam.verdict || "Analysis complete" },
+        { label: "Category", meta: scam.scam_type || "SUSPICIOUS_IMAGE" },
+        { label: "Summary", meta: scam.verdict || "Analysis complete" },
       ],
     },
   ];
@@ -132,12 +132,12 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--accent)]">
-                {ocr.engine || "PaddleOCR v2.7 Engine"}
+                Text Scanner
               </span>
               <span className="text-[11px] text-ink-3 font-mono">• {data.filename || "Uploaded Screenshot"}</span>
             </div>
             <h4 className="text-sm sm:text-base font-semibold text-ink tracking-tight mt-0.5">
-              {scam.verdict || "Image Forensic Triage Complete"}
+              {scam.verdict || "Image Analysis Complete"}
             </h4>
           </div>
         </div>
@@ -151,7 +151,7 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
               type="button"
               onClick={onReset}
               className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-3 hover:bg-[var(--hover)] hover:text-ink transition-colors border border-transparent hover:border-[var(--line)]"
-              title="Close Dossier"
+              title="Close"
             >
               <X className="w-4 h-4" />
             </button>
@@ -164,7 +164,7 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
         <div className="flex items-center justify-between text-xs">
           <span className="font-medium text-ink flex items-center gap-1.5">
             <ShieldAlert className="w-3.5 h-3.5 text-[var(--accent)]" />
-            Scam Probability Gauge
+            Scam Risk Level
           </span>
           <span className="font-mono font-semibold text-ink tabular-nums">{riskScore}/100</span>
         </div>
@@ -193,7 +193,7 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
         <div className="flex items-center justify-between text-xs">
           <span className="font-medium text-ink-2 flex items-center gap-1.5">
             <FileText className="w-3.5 h-3.5 text-ink-3" />
-            Extracted Multilingual OCR Text
+            Extracted Document Text
           </span>
           <span className="font-mono text-[11px] text-ink-3">
             {ocr.full_text?.length || 0} characters
@@ -204,15 +204,15 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
         </div>
       </div>
 
-      {/* Structured IOC Chips with 1-Click Copy */}
+      {/* Structured Details Chips with 1-Click Copy */}
       {totalIOCs > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="font-medium text-ink flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-orange" />
-              Extracted Indicators of Compromise (IOCs)
+              Detected Scam Details (Phone, UPI, Links)
             </span>
-            <span className="font-mono text-[11px] text-ink-3">Click chip to copy</span>
+            <span className="font-mono text-[11px] text-ink-3">Click to copy</span>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -287,10 +287,10 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
         </div>
       )}
 
-      {/* Matched Forensic Rules (TaskRows primitive) */}
+      {/* Safety Rules (TaskRows primitive) */}
       <div className="space-y-1.5">
         <span className="text-xs font-medium text-ink-2">
-          Forensic Inspection Trace & Rule Verification
+          Safety Checks & Detection Steps
         </span>
         <TaskRows variant="List" rows={taskRows} />
       </div>
@@ -298,7 +298,7 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
       {/* Actionable Recommendation Footer */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-[var(--line)] text-xs text-ink-2">
         <span className="text-[11.5px]">
-          {data.recommendation || "Forensic Section 65B metadata generated."}
+          {data.recommendation || "Verified by NETRA AI security checks."}
         </span>
         <div className="flex items-center gap-2 self-end sm:self-auto">
           {scam.is_scam && (
@@ -308,13 +308,13 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 rounded-lg bg-red px-3 py-1 text-xs font-semibold text-white hover:brightness-110 shadow-btn transition-all"
             >
-              <span>Report to I4C</span>
+              <span>Report to Cybercrime Cell</span>
               <ArrowUpRight className="w-3 h-3" />
             </a>
           )}
           {onReset && (
             <Button variant="secondary" size="xs" onClick={onReset}>
-              Close Triage
+              Close
             </Button>
           )}
         </div>
