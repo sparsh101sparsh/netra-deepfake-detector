@@ -73,7 +73,7 @@ typst_content = f'''#set page(
     row-gutter: 8pt,
     [*Evaluation Date:*], [August 31, 2026],
     [*Dataset Scope:*], [100 Prominent Indian Figures (Politicians, CEOs, Athletes, Celebrities)],
-    [*Target Driving Video:*], [148 Frames \@ 1620x1080p, 30 FPS (`rahulgandhiowner.mov`)],
+    [*Target Driving Video:*], [148 Frames \@ 1620x1080p, 30 FPS (`sparsh.mov`)],
     [*Synthesis Pipeline:*], [Path B: InSwapper-128 + GPEN-BFR-512 GAN + Reinhard LAB + Gaussian Feathering],
     [*Evaluated Models:*], [1. NETRA Spatial SBI (EfficientNet-B4), 2. MesoInception-4, 3. MesoNet-4]
   )

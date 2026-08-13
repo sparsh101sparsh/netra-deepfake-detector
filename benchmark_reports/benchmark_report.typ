@@ -42,7 +42,7 @@
     columns: (1.2fr, 2.8fr),
     row-gutter: 6pt,
     [*Evaluation Target:*], [100 High-Definition Indian Figures (Politicians, CEOs, Athletes, Icons)],
-    [*Driver Video:*], [148 Frames \@ 1620x1080p, 30 FPS (`rahulgandhiowner.mov`)],
+    [*Driver Video:*], [148 Frames \@ 1620x1080p, 30 FPS (`sparsh.mov`)],
     [*Manipulation Stack:*], [InSwapper-128 + Masked Skin Harmonization + Spatial Blending],
     [*Benchmarked Models:*], [1. NETRA Multi-Modal (Spatial+Spectral+CLIP), 2. CLIP-ViT-B/32 Probe, 3. MesoInception-4, 4. Meso-4, 5. Spectral-DCT]
   ]

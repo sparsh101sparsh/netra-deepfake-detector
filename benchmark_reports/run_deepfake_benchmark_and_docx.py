@@ -418,7 +418,7 @@ def build_docx_report(results):
         </w:tblPr>'''
     meta_table += make_table_row([("Evaluation Date", 2500, "left"), ("August 31, 2026", 7000, "left")], bg_color="F8F9FA")
     meta_table += make_table_row([("Dataset Scope", 2500, "left"), ("100 Indian Prominent Figures (Politicians, CEOs, Celebrities, Athletes)", 7000, "left")])
-    meta_table += make_table_row([("Target Driving Video", 2500, "left"), ("rahulgandhiowner.mov (148 Frames @ 1620x1080p, 30 FPS)", 7000, "left")], bg_color="F8F9FA")
+    meta_table += make_table_row([("Target Driving Video", 2500, "left"), ("sparsh.mov (148 Frames @ 1620x1080p, 30 FPS)", 7000, "left")], bg_color="F8F9FA")
     meta_table += make_table_row([("Synthesis Pipeline", 2500, "left"), ("Path B: InSwapper-128 + GPEN-BFR-512 GAN + Reinhard LAB + Gaussian Soft Blend", 7000, "left")])
     meta_table += make_table_row([("Evaluated Models", 2500, "left"), ("1. NETRA Spatial SBI (EfficientNet-B4)\n2. MesoNet-4\n3. MesoInception-4", 7000, "left")], bg_color="F8F9FA")
     meta_table += "</w:tbl>"
