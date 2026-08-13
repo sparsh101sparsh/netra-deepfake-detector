@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
@@ -21,76 +20,83 @@ export default function ForensicHub() {
   const router = useRouter();
   
   // High frame rate GPU morphing state: 'intro' -> 'morphing' -> 'ready'
-  const [introStage, setIntroStage] = useState<'intro' | 'morphing' | 'ready'>(() => {
-    if (typeof window !== 'undefined' && sessionStorage.getItem('netra_intro_seen')) {
-      return 'ready';
-    }
-    return 'intro';
-  });
+  const [introStage, setIntroStage] = useState<'intro' | 'morphing' | 'ready'>('intro');
   const [introProgress, setIntroProgress] = useState(0);
-  const [telemetryStatus, setTelemetryStatus] = useState("INITIALIZING NEURAL SENSORS");
+  const [activeNavSection, setActiveNavSection] = useState<string>("analyzer");
 
-  // Synchronized Intro Timeline (Smooth 0 to 100% calibration, then silky morph)
+  // Run Butter-Smooth 120fps Intro Timeline (Only once per session, re-plays on page refresh)
   useEffect(() => {
+    const navEntries = typeof window !== 'undefined' && window.performance?.getEntriesByType?.('navigation');
+    const isReload = navEntries && (navEntries[0] as any)?.type === 'reload';
+    const hasSeenIntro = typeof window !== 'undefined' && sessionStorage.getItem('netra_intro_seen');
+
+    if (hasSeenIntro && !isReload) {
+      setIntroStage('ready');
+      return;
+    }
+
     if (typeof window !== 'undefined') {
-      const hasSeenIntro = sessionStorage.getItem('netra_intro_seen');
-      if (hasSeenIntro) {
-        setIntroStage('ready');
-        return;
-      }
       sessionStorage.setItem('netra_intro_seen', 'true');
     }
 
-    const startTime = Date.now();
-    const duration = 3600; // 3.6s total calibration duration
+    // Start sub-pixel progress fill
+    const raf = setTimeout(() => {
+      setIntroProgress(100);
+    }, 50);
 
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const pct = Math.min(100, Math.round((elapsed / duration) * 100));
-      setIntroProgress(pct);
+    // After 10.4s (or ESC), trigger GPU morph
+    const tMorph = setTimeout(() => {
+      setIntroStage('morphing');
+      setTimeout(() => {
+        setIntroStage('ready');
+      }, 1200); // 1200ms silky GPU spring morph
+    }, 10400);
 
-      if (pct < 25) {
-        setTelemetryStatus("INITIALIZING MULTI-MODAL FORENSIC PIPELINE...");
-      } else if (pct < 50) {
-        setTelemetryStatus("CALIBRATING 2D-DCT FREQUENCY SPECTRAL SENSORS...");
-      } else if (pct < 75) {
-        setTelemetryStatus("SYNCHRONIZING TAVILY LIVE CYBER INTEL FEED...");
-      } else if (pct < 95) {
-        setTelemetryStatus("LOADING OCR & NEURAL SCAM CLASSIFIER...");
-      } else {
-        setTelemetryStatus("FORENSIC NEURAL SUITE ONLINE");
-      }
-
-      if (pct >= 100) {
-        clearInterval(interval);
-        // Pause 300ms at 100%, then trigger morph
-        setTimeout(() => {
-          setIntroStage('morphing');
-          setTimeout(() => {
-            setIntroStage('ready');
-          }, 700);
-        }, 300);
-      }
-    }, 40);
-
+    // Keyboard shortcut (ESC) to fast-forward morph immediately
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        clearInterval(interval);
         setIntroStage('morphing');
-        setTimeout(() => setIntroStage('ready'), 250);
+        setTimeout(() => setIntroStage('ready'), 600);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener('keydown', handleKeyDown);
+      clearTimeout(raf);
+      clearTimeout(tMorph);
     };
   }, []);
 
-  const skipIntro = () => {
-    setIntroStage('morphing');
-    setTimeout(() => setIntroStage('ready'), 250);
+  // ScrollSpy to track active section in single-page view
+  useEffect(() => {
+    const sectionIds = ["analyzer", "mapping", "reported", "technology", "developers"];
+    
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 250;
+      for (const id of sectionIds) {
+        const el = document.getElementById(id);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveNavSection(id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    setActiveNavSection(id);
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   const isIntroActive = introStage === 'intro';
@@ -99,36 +105,31 @@ export default function ForensicHub() {
   return (
     <div className="min-h-screen bg-[#030712] text-neutral-100 selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-x-hidden font-mono flex flex-col justify-between">
       
-      {/* 1. Fullscreen Intro Eye Overlay with Hardware-Accelerated Morphing */}
+      {/* 1. Fullscreen Intro Eye Overlay with Hardware-Accelerated 120fps Morphing */}
       {introStage !== 'ready' && (
         <div
-          className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#000000] select-none ${
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#000000] select-none pointer-events-none ${
             isMorphing
-              ? 'opacity-0 scale-[0.85] pointer-events-none'
-              : 'opacity-100 scale-100'
+              ? 'opacity-0 scale-[0.22] translate-x-[26vw] -translate-y-[8vh]'
+              : 'opacity-100 scale-100 translate-x-0 translate-y-0'
           }`}
           style={{
-            transition: 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1), opacity 600ms cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'transform 1200ms cubic-bezier(0.19, 1, 0.22, 1), opacity 900ms cubic-bezier(0.19, 1, 0.22, 1)',
             willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            transformStyle: 'preserve-3d',
           }}
         >
-          {/* Skip Button */}
-          <button
-            onClick={skipIntro}
-            className="absolute top-6 right-6 z-30 px-3.5 py-1.5 rounded-full bg-neutral-900/80 border border-neutral-800 text-[10px] text-neutral-400 hover:text-white hover:border-cyan-500/40 transition-all cursor-pointer font-mono"
-          >
-            Skip Intro [ESC]
-          </button>
-
           {/* Ambient Radial Glow */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-[600px] h-[600px] rounded-full bg-gradient-to-r from-cyan-500/20 via-sky-500/10 to-transparent blur-3xl"></div>
           </div>
 
-          <div className="flex flex-col items-center justify-center relative z-20 px-4">
+          <div className="flex flex-col items-center justify-center relative z-20">
             {/* Top Motto Header: NETRA — Eyes that see through */}
-            <div className={`mb-3 sm:mb-6 text-center transition-all duration-500 ${
-              isMorphing ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'
+            <div className={`mb-3 sm:mb-6 text-center transition-all duration-700 ${
+              isMorphing ? 'opacity-0 -translate-y-6 scale-90' : 'opacity-100 translate-y-0 scale-100'
             }`}>
               <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-neutral-950/90 border border-cyan-500/40 shadow-[0_0_25px_rgba(0,240,255,0.25)] backdrop-blur-md">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
@@ -139,23 +140,23 @@ export default function ForensicHub() {
             </div>
 
             {/* Master Eye Vector */}
-            <div className="w-[min(70vw,70vh)] h-[min(70vw,70vh)] max-w-[480px] max-h-[480px] flex items-center justify-center">
+            <div className="w-[min(75vw,75vh)] h-[min(75vw,75vh)] max-w-[520px] max-h-[520px] flex items-center justify-center">
               <NetraEyeScanner size="100%" />
             </div>
 
-            {/* Horizontal Progress Bar & Live Telemetry Milestone */}
-            <div className="mt-2 flex flex-col items-center space-y-3 w-64 sm:w-80">
-              <div className="w-full h-[3px] bg-neutral-900 rounded-full overflow-hidden border border-cyan-500/30 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-sky-300 shadow-[0_0_12px_#00f0ff] rounded-full transition-all duration-75 ease-out"
-                  style={{ width: `${introProgress}%` }}
-                />
-              </div>
-
-              <div className="flex items-center justify-between w-full text-[10px] text-neutral-400 font-mono tracking-wider">
-                <span className="text-cyan-400 truncate max-w-[200px]">{telemetryStatus}</span>
-                <span className="text-white font-bold">{introProgress}%</span>
-              </div>
+            {/* Silky Horizontal Progress Bar */}
+            <div 
+              className={`-mt-6 sm:-mt-10 w-44 sm:w-60 h-[2.5px] bg-neutral-950 rounded-full overflow-hidden border border-cyan-500/20 shadow-[0_0_15px_rgba(0,240,255,0.15)] relative transition-opacity duration-300 ${
+                isMorphing ? 'opacity-0' : 'opacity-100'
+              }`}
+            >
+              <div
+                className="h-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-sky-300 shadow-[0_0_10px_#00f0ff] rounded-full"
+                style={{
+                  width: `${introProgress}%`,
+                  transition: `width 10400ms cubic-bezier(0.16, 1, 0.3, 1)`,
+                }}
+              />
             </div>
           </div>
         </div>
@@ -191,15 +192,9 @@ export default function ForensicHub() {
             ].map((nav) => {
               const IconComp = nav.icon;
               return (
-                <Link
+                <a
                   key={nav.href}
                   href={nav.href}
-                  onClick={(e) => {
-                    if (nav.href === "/") {
-                      e.preventDefault();
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }
-                  }}
                   className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-all duration-200 ${
                     nav.active
                       ? "bg-neutral-850 text-white font-bold shadow-[0_0_12px_rgba(0,240,255,0.15)] border border-cyan-500/30"
@@ -209,7 +204,7 @@ export default function ForensicHub() {
                   {nav.active && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>}
                   <IconComp className={`w-3.5 h-3.5 ${nav.active ? "text-cyan-400" : "text-neutral-500"}`} />
                   <span>{nav.label}</span>
-                </Link>
+                </a>
               );
             })}
           </nav>
