@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'NETRA — Truth Beyond the Surface | Multi-Modal Forensic AI',
+  title: 'NETRA — Eyes That See Through | Multi-Modal Forensic AI',
   description: 'Next-Generation Multi-Modal AI Forensic Engine for Deepfake & Voice Clone Detection',
   icons: {
     icon: [

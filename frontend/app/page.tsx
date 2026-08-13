@@ -248,9 +248,8 @@ export default function ForensicHub() {
             </div>
 
             <h1 className="font-serif text-5xl sm:text-6xl xl:text-7xl font-normal tracking-tight text-white leading-[1.05]">
-              Truth<br />
-              beyond<br />
-              the surface.
+              Eyes that<br />
+              see through.
             </h1>
 
             <p className="text-neutral-300 text-sm sm:text-base leading-relaxed font-sans max-w-xl">
