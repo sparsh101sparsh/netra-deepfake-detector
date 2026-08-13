@@ -1,305 +1,76 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
-import Script from "next/script";
-import { LogOut, Shield, X, CheckCircle2, User, Palette, Sparkles } from "lucide-react";
-import { NetraUserAvatar, NETRA_AVATARS, getAvatarByEmailOrName } from "./NetraUserAvatar";
+import React, { useState, useEffect } from "react";
+import { GoogleAuthModal, UserProfile } from "./layout/GoogleAuthModal";
+import { NetraUserAvatar } from "./NetraUserAvatar";
+import { cn } from "@/lib/utils";
 
-interface UserProfile {
-  name: string;
-  email: string;
-  picture?: string;
-  avatarIndex?: number;
-  sub?: string;
+export interface GoogleAuthButtonProps {
+  className?: string;
 }
 
-declare global {
-  interface Window {
-    google?: any;
-  }
-}
-
-export const GoogleAuthButton: React.FC = () => {
+/**
+ * GoogleAuthButton — Subtle Dark Google Auth Component.
+ * Integrates with GoogleAuthModal and handles avatar display and session persistence.
+ */
+export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ className = "" }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-  const [gsiLoaded, setGsiLoaded] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const googleBtnContainerRef = useRef<HTMLDivElement>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "934298152536-ft5qgqj1ouh125jrfckjiup1b3jp04gl.apps.googleusercontent.com";
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Decode JWT helper
-  const parseJwt = (token: string): any => {
-    try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
-      );
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      console.error("Failed to parse Google JWT:", e);
-      return null;
-    }
-  };
-
-  const handleCredentialResponse = (response: any) => {
-    if (response && response.credential) {
-      const payload = parseJwt(response.credential);
-      if (payload) {
-        const randomAvatarIndex = Math.floor(Math.random() * NETRA_AVATARS.length);
-        const profile: UserProfile = {
-          name: payload.name || payload.given_name || "Google User",
-          email: payload.email,
-          avatarIndex: randomAvatarIndex,
-          sub: payload.sub,
-        };
-        setUser(profile);
-        localStorage.setItem("netra_auth_user", JSON.stringify(profile));
-        setShowModal(false);
-      }
-    }
-  };
-
-  // Restore saved session
+  // Restore authenticated session from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("netra_auth_user");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (typeof parsed.avatarIndex !== "number") {
-          parsed.avatarIndex = Math.floor(Math.random() * NETRA_AVATARS.length);
-        }
         setUser(parsed);
-      } catch {
-        // ignore
+      } catch (err) {
+        console.error("Failed to restore auth session in GoogleAuthButton:", err);
       }
     }
   }, []);
 
-  // Initialize GSI when script is loaded or modal opens
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleCredentialResponse,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-        setGsiLoaded(true);
-
-        if (showModal && googleBtnContainerRef.current) {
-          googleBtnContainerRef.current.innerHTML = "";
-          window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
-            theme: "filled_blue",
-            size: "large",
-            shape: "pill",
-            width: 280,
-            text: "signin_with",
-          });
-        }
-      } catch (err) {
-        console.error("GSI initialize error:", err);
-      }
-    }
-  }, [gsiLoaded, showModal]);
-
-  // Handle ESC to close modal
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && showModal) {
-        setShowModal(false);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showModal]);
-
-  const handleTriggerGooglePrompt = () => {
-    setShowModal(true);
-  };
-
-  const handleSelectAvatar = (index: number) => {
-    if (!user) return;
-    const updated = { ...user, avatarIndex: index };
-    setUser(updated);
-    localStorage.setItem("netra_auth_user", JSON.stringify(updated));
-    setShowAvatarPicker(false);
-  };
-
-  const handleSignOut = () => {
-    if (window.google?.accounts?.id && user?.email) {
-      window.google.accounts.id.revoke(user.email, () => {
-        console.log("Google session revoked");
-      });
-    }
-    setUser(null);
-    localStorage.removeItem("netra_auth_user");
-    setShowDropdown(false);
-    setShowAvatarPicker(false);
-  };
-
-  const modalContent = showModal && mounted ? createPortal(
-    <div 
-      className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-      onClick={() => setShowModal(false)}
-    >
-      <div 
-        className="bg-neutral-950 border border-cyan-500/40 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-[0_0_60px_rgba(0,0,0,0.95)] animate-in zoom-in-95 duration-200 relative font-mono"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-[10px] font-bold text-cyan-400 tracking-widest uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-            NETRA AUTH
-          </div>
-          <button
-            onClick={() => setShowModal(false)}
-            className="p-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-850 text-neutral-400 hover:text-white transition-all"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Title & Description */}
-        <div className="text-center space-y-2 pt-1">
-          <h3 className="text-xl font-bold text-white tracking-tight">
-            Sign In with Google
-          </h3>
-          <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-            Authenticate with your official Google account to unlock institutional multi-modal forensic investigations and developer API keys.
-          </p>
-        </div>
-
-        {/* Official Google GSI Render Container */}
-        <div className="flex flex-col items-center justify-center py-4">
-          <div ref={googleBtnContainerRef} className="flex justify-center min-h-[44px]"></div>
-        </div>
-      </div>
-    </div>,
-    document.body
-  ) : null;
-
   return (
     <>
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={() => setGsiLoaded(true)}
-      />
-
-      <div className="relative font-mono">
+      <div className={cn("relative font-mono", className)}>
         {user ? (
-          /* Signed In State */
-          <div className="relative">
-            <button
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-850 border border-cyan-500/40 text-xs text-white transition-all shadow-[0_0_15px_rgba(0,240,255,0.15)]"
-            >
-              <NetraUserAvatar 
-                avatarIndex={user.avatarIndex} 
-                seed={user.email} 
-                size={24} 
-              />
-              <span className="font-bold hidden sm:inline max-w-[120px] truncate">{user.name}</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            </button>
-
-            {/* Profile Dropdown */}
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 w-72 p-3 rounded-2xl bg-neutral-950/95 backdrop-blur-xl border border-neutral-800 shadow-2xl z-50 text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150">
-                
-                {/* User Header with Avatar */}
-                <div className="flex items-center gap-3 p-2.5 bg-neutral-900/80 rounded-xl border border-neutral-850">
-                  <NetraUserAvatar 
-                    avatarIndex={user.avatarIndex} 
-                    seed={user.email} 
-                    size={38} 
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold text-white truncate">{user.name}</div>
-                    <div className="text-[10px] text-neutral-400 truncate">{user.email}</div>
-                  </div>
-                </div>
-
-                {/* 10 Avatar Customizer Section */}
-                <div className="p-2.5 bg-neutral-900/50 rounded-xl border border-neutral-850 space-y-2">
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-neutral-400 font-bold flex items-center gap-1">
-                      <Palette className="w-3 h-3 text-cyan-400" />
-                      Cyber Avatar ({NETRA_AVATARS[user.avatarIndex ?? 0]?.name})
-                    </span>
-                    <button
-                      onClick={() => setShowAvatarPicker(!showAvatarPicker)}
-                      className="text-cyan-400 hover:text-cyan-300 font-bold"
-                    >
-                      {showAvatarPicker ? "Close" : "Change"}
-                    </button>
-                  </div>
-
-                  {/* 10 Avatar Grid */}
-                  {showAvatarPicker && (
-                    <div className="grid grid-cols-5 gap-2 pt-1 animate-in fade-in duration-200">
-                      {NETRA_AVATARS.map((av, idx) => (
-                        <button
-                          key={av.id}
-                          onClick={() => handleSelectAvatar(idx)}
-                          className={`p-1 rounded-xl flex flex-col items-center justify-center transition-all ${
-                            user.avatarIndex === idx
-                              ? "ring-2 ring-cyan-400 bg-neutral-800 scale-105"
-                              : "hover:bg-neutral-800/80 opacity-70 hover:opacity-100"
-                          }`}
-                          title={av.name}
-                        >
-                          <NetraUserAvatar avatarIndex={idx} size={28} showGlow={false} />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Navigation Actions */}
-                <div className="space-y-1 pt-1 border-t border-neutral-850">
-                  <a
-                    href="/developers"
-                    className="flex items-center gap-2 p-2 rounded-xl text-neutral-300 hover:text-white hover:bg-neutral-900 transition-colors"
-                  >
-                    <Shield className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>My Developer API Keys</span>
-                  </a>
-
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full flex items-center gap-2 p-2 rounded-xl text-red-400 hover:bg-red-950/40 transition-colors text-left"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-
-              </div>
-            )}
-          </div>
-        ) : (
-          /* Sign In Button */
+          /* Authenticated User Button */
           <button
-            onClick={handleTriggerGooglePrompt}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-neutral-100 text-neutral-900 text-xs font-bold transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-[1.02]"
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className={cn(
+              "flex items-center gap-2.5 px-3 py-1.5 rounded-full",
+              "bg-[var(--canvas)] hover:bg-[var(--hover)] border-[1.5px] border-[var(--border)]",
+              "shadow-hairline text-xs font-medium text-ink transition-all duration-150",
+              "focus-visible:ring-1 focus-visible:ring-accent"
+            )}
+            title={`Signed in as ${user.name} (${user.email})`}
+          >
+            <NetraUserAvatar
+              avatarIndex={user.avatarIndex}
+              seed={user.email}
+              size={22}
+              showGlow={false}
+            />
+            <span className="font-semibold hidden sm:inline max-w-[120px] truncate text-ink">
+              {user.name}
+            </span>
+            <span className="size-2 rounded-full bg-green animate-pulse" />
+          </button>
+        ) : (
+          /* Sign In Trigger */
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className={cn(
+              "flex items-center gap-2 px-3.5 py-1.5 rounded-full",
+              "bg-[var(--canvas)] hover:bg-[var(--hover)] border-[1.5px] border-[var(--border)]",
+              "shadow-hairline text-xs font-medium text-ink transition-all duration-150",
+              "hover:border-line-strong focus-visible:ring-1 focus-visible:ring-accent hover:scale-[1.02]"
+            )}
           >
             {/* Google Multi-Color G */}
-            <svg className="w-4 h-4" viewBox="0 0 24 24">
+            <svg className="size-3.5 shrink-0" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
@@ -322,8 +93,13 @@ export const GoogleAuthButton: React.FC = () => {
         )}
       </div>
 
-      {/* Render Modal via React Portal directly into document.body */}
-      {modalContent}
+      {/* Auth Modal Portal */}
+      <GoogleAuthModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        user={user}
+        onUserChange={setUser}
+      />
     </>
   );
 };

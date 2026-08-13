@@ -2,94 +2,363 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ──────────────────────────────────────────────────────────
+ * NETRA Forensic Design System — OKLCH Tokens & Elevation
+ * Bespoke obsidian/navy surfaces, hairline inner borders,
+ * layered ambient shadows, and precision cybersecurity palette.
+ * ────────────────────────────────────────────────────────── */
+
+:root,
+.dark {
+  /* Surfaces — Deep Obsidian / Navy Elevation Hierarchy */
+  --page: oklch(0.209 0.004 264.477);     /* #030712 deep obsidian foundation */
+  --canvas: oklch(0.231 0.004 264.487);   /* #060d1b navy canvas base */
+  --surface: oklch(0.26 0.006 271.191);   /* #081525 elevated card surface */
+  --inset: oklch(0.243 0.004 264.492);    /* #0b1c32 recessed container / track */
+  --hover: oklch(0.289 0.006 271.22);     /* #0e233d interactive hover state */
+  --hover-2: oklch(0.318 0.007 274.747);  /* #122b4a active/focused hover */
+  --field: oklch(0.293 0.006 271.223);    /* input field surface */
+  --stripe: oklch(1 0 0 / 0.04);
+  --stripe-bg: oklch(0.209 0.004 264.477);
+
+  /* Ink Ramp — Precision Typography Contrast */
+  --ink: oklch(0.964 0.002 247.839);      /* #f3f4f6 primary text (high contrast) */
+  --ink-2: oklch(0.731 0.008 260.731);    /* #9ca3af secondary text */
+  --ink-3: oklch(0.541 0.01 264.484);     /* #6b7280 captions, disabled, placeholders */
+  --ink-primary: var(--ink);
+  --ink-secondary: var(--ink-2);
+  --ink-muted: var(--ink-3);
+
+  /* Line & 1.5px Signature Border System */
+  --line: oklch(0.308 0.006 258.354);     /* subtle card divider */
+  --line-strong: oklch(0.356 0.007 264.474); /* active/highlighted border */
+  --line-soft: oklch(0.278 0.006 258.354);   /* ghost/quiet divider */
+  --border: var(--line);
+  --border-signature: 1.5px solid var(--line);
+
+  /* Brand Accents & Signal Colors */
+  --accent: oklch(0.68 0.173 253.301);    /* Cyan forensic signal */
+  --accent-ink: oklch(0.788 0.113 248.33);
+  --accent-tint: oklch(0.68 0.173 253.301 / 0.16);
+  --brand-cyan: oklch(0.68 0.173 253.301);
+  --brand-amber: oklch(0.746 0.156 55.642);
+
+  /* Semantics: Green / Amber / Red / Purple */
+  --green: oklch(0.705 0.154 153.814);
+  --green-tint: oklch(0.705 0.154 153.814 / 0.14);
+  --orange: oklch(0.746 0.156 55.642);
+  --orange-tint: oklch(0.746 0.156 55.642 / 0.14);
+  --red: oklch(0.666 0.18 21.433);
+  --red-tint: oklch(0.666 0.18 21.433 / 0.14);
+  --purple: oklch(0.68 0.18 300.0);
+  --purple-tint: oklch(0.68 0.18 300.0 / 0.15);
+
+  /* Tooltip Overlays */
+  --tooltip-bg: oklch(0.182 0.004 264.459);
+  --tooltip-fg: oklch(0.964 0.002 247.839);
+  --tooltip-muted: oklch(0.731 0.008 260.731);
+  --tooltip-border: oklch(0.308 0.006 258.354);
+
+  /* Multi-Tier Ambient Drop Shadows & Hairline Inner Highlight Rings */
+  --shadow-hairline: 0 0 0 1px var(--line);
+  --shadow-btn: 0 0 0 1px oklch(1 0 0 / 0.1), 0 1px 2px oklch(0 0 0 / 0.3);
+  --shadow-card: 0 0 0 1px oklch(1 0 0 / 0.11), 0 1px 2px oklch(0 0 0 / 0.2), 0 2px 6px oklch(0 0 0 / 0.2);
+  --shadow-raised: 0 0 0 1px oklch(1 0 0 / 0.13), 0 2px 10px oklch(0 0 0 / 0.22);
+  --shadow-overlay: 0 0 0 1px oklch(1 0 0 / 0.15), 0 8px 28px oklch(0 0 0 / 0.34);
+  --shadow-inset-field: inset 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-forensic-glow: inset 0 1px 0 0 oklch(1 0 0 / 0.11), 0 4px 16px -2px rgba(0,0,0,0.5);
+
+  /* Radii */
+  --radius-chip: 6px;
+  --radius-control: 8px;
+  --radius-card: 10px;
+  --radius-window: 14px;
+  --radius: 0.75rem;
+
+  /* Backward Compatibility Tokens for Existing UI */
+  --background: 8 8 10;
+  --foreground: 245 245 244;
+  --card: 16 17 20;
+  --card-foreground: 245 245 244;
+  --popover: 16 17 20;
+  --popover-foreground: 245 245 244;
+  --primary: 245 245 244;
+  --primary-foreground: 8 8 10;
+  --secondary: 26 27 31;
+  --secondary-foreground: 245 245 244;
+  --muted: 26 27 31;
+  --muted-foreground: 161 161 170;
+  --destructive: 239 68 68;
+  --destructive-foreground: 245 245 244;
+  --input: 39 39 42;
+  --ring: 103 232 249;
+}
+
 @layer base {
-  :root {
-    /* Hackathon2 & Beautiful-UI Hybrid Real-SWE Design Tokens */
-    --background: 8 8 10; /* #08080a - Deep canvas */
-    --foreground: 245 245 244; /* #f5f5f4 - High contrast ink */
-    
-    --card: 16 17 20; /* #101114 - Surface card */
-    --card-foreground: 245 245 244;
-    
-    --popover: 16 17 20;
-    --popover-foreground: 245 245 244;
-    
-    --primary: 245 245 244;
-    --primary-foreground: 8 8 10;
-    
-    --secondary: 26 27 31; /* #1a1b1f */
-    --secondary-foreground: 245 245 244;
-    
-    --muted: 26 27 31;
-    --muted-foreground: 161 161 170; /* #a1a1aa */
-    
-    --accent: 103 232 249; /* #67e8f9 - Cyan signal */
-    --accent-foreground: 8 8 10;
-    
-    --destructive: 239 68 68; /* Red 500 */
-    --destructive-foreground: 245 245 244;
-
-    --border: 39 39 42; /* Hairline divider */
-    --input: 39 39 42;
-    --ring: 103 232 249;
-
-    --radius: 0.75rem;
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    font-family: var(--font-lexend), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    @apply bg-[#08080a] text-foreground antialiased selection:bg-cyan-500/25 selection:text-cyan-100;
-    letter-spacing: -0.012em;
-    font-feature-settings: "cv11" 1, "ss01" 1, "rlig" 1, "calt" 1;
+    background-color: var(--page);
+    color: var(--ink);
+    font-family: var(--font-sans), Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    letter-spacing: -0.01em;
+    line-height: 1.5;
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-lexend), sans-serif;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 
   code, pre, kbd, samp {
-    font-family: var(--font-mono), SFMono-Regular, Consolas, monospace;
+    font-family: var(--font-mono), "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
     letter-spacing: normal;
+  }
+
+  ::selection {
+    background: var(--accent-tint);
+    color: var(--ink);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  label:has(input),
+  a {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [contenteditable]:focus-visible {
+    outline: none;
   }
 }
 
 @layer components {
-  /* Real-SWE Tactile Buttons */
-  .btn-premium {
-    @apply inline-flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
-    @apply active:scale-[0.97];
-  }
-  
-  .btn-primary {
-    @apply btn-premium bg-white text-black hover:bg-neutral-100 font-semibold shadow-[0_0_20px_rgba(255,255,255,0.15)];
+  /* Signature 1.5px Border Utilities */
+  .border-signature {
+    border-width: 1.5px;
+    border-style: solid;
+    border-color: var(--line);
   }
 
-  .btn-secondary {
-    @apply btn-premium bg-[#101114] text-neutral-200 hover:bg-[#1a1b1f] border border-neutral-800 shadow-sm;
-  }
-  
-  .btn-outline {
-    @apply btn-premium border border-neutral-800 bg-transparent hover:bg-neutral-900 text-neutral-200;
+  .border-signature-strong {
+    border-width: 1.5px;
+    border-style: solid;
+    border-color: var(--line-strong);
   }
 
-  /* Real-SWE Surface Cards */
-  .card-premium {
-    @apply rounded-2xl border border-white/[0.08] bg-[#101114] text-foreground shadow-lg relative overflow-hidden transition-all duration-200;
+  /* Card Surfaces with Ambient Depth and Inner Hairline */
+  .card-forensic {
+    background-color: var(--surface);
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    transition: border-color 200ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 200ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
-  /* Glassmorphism Panels */
-  .glass-panel-premium {
-    @apply rounded-2xl border border-white/[0.08] bg-[#101114]/80 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)];
+  .card-forensic:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-raised);
   }
 
-  /* Tabular Figures for Counters & Percentages */
+  .glass-panel-forensic {
+    background-color: color-mix(in srgb, var(--surface) 85%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-window);
+    box-shadow: var(--shadow-overlay);
+  }
+
+  /* Interactive Button Base */
+  .btn-tactile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    user-select: none;
+    transition: transform 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, opacity 150ms ease-out;
+  }
+
+  .btn-tactile:active {
+    transform: scale(0.96);
+  }
+
+  .btn-tactile:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* Animated Link Underline */
+  .animated-underline {
+    position: relative;
+    display: inline-block;
+  }
+
+  .animated-underline::after {
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 1px;
+    content: "";
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  a:hover .animated-underline::after,
+  a:focus-visible .animated-underline::after {
+    transform: scaleX(1);
+  }
+
+  /* Tabular Figures */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
 }
 
-/* Custom sleek scrollbar */
+/* ──────────────────────────────────────────────────────────
+ * StreamText & Micro-Interaction Styling
+ * ────────────────────────────────────────────────────────── */
+.stream-tail {
+  filter: blur(1.6px);
+  -webkit-mask-image: linear-gradient(to right, oklch(0 0 0) 20%, oklch(0 0 0 / 0.2));
+  mask-image: linear-gradient(to right, oklch(0 0 0) 20%, oklch(0 0 0 / 0.2));
+}
+
+.stream-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 1.5px;
+  translate: 0 -0.5px;
+  border-radius: 1px;
+  background: var(--ink);
+  vertical-align: text-bottom;
+  animation: caret-blink 1s step-end infinite;
+}
+
+.stream-caret.is-streaming {
+  animation: none;
+}
+
+/* Source Avatar Ring */
+.source-avatar {
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 0.1);
+}
+
+/* ──────────────────────────────────────────────────────────
+ * Keyframe Animations
+ * ────────────────────────────────────────────────────────── */
+@keyframes shimmer-text {
+  from {
+    background-position: 150% center;
+  }
+  to {
+    background-position: -50% center;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pixel-on {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  18%, 42% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes eq-bounce {
+  0%, 100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes caret-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes radar-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Custom Sleek Dark Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -98,5 +367,20 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-neutral-800 rounded-full border-[1px] border-transparent bg-clip-padding hover:bg-neutral-700;
+  background-color: var(--line);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--line-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stream-caret {
+    animation: none;
+  }
+  .stream-tail {
+    filter: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
 }
