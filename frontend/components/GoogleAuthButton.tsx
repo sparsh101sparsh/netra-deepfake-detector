@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Script from "next/script";
-import { LogOut, Shield, X, CheckCircle2, User } from "lucide-react";
+import { LogOut, Shield, X, CheckCircle2, User, Palette, Sparkles } from "lucide-react";
+import { NetraUserAvatar, NETRA_AVATARS, getAvatarByEmailOrName } from "./NetraUserAvatar";
 
 interface UserProfile {
   name: string;
   email: string;
-  picture: string;
+  picture?: string;
+  avatarIndex?: number;
   sub?: string;
 }
 
@@ -21,6 +23,7 @@ export const GoogleAuthButton: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [gsiLoaded, setGsiLoaded] = useState(false);
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
 
@@ -48,10 +51,12 @@ export const GoogleAuthButton: React.FC = () => {
     if (response && response.credential) {
       const payload = parseJwt(response.credential);
       if (payload) {
+        // Assign random avatar index from 0 to 9 if new account
+        const randomAvatarIndex = Math.floor(Math.random() * NETRA_AVATARS.length);
         const profile: UserProfile = {
           name: payload.name || payload.given_name || "Google User",
           email: payload.email,
-          picture: payload.picture || "",
+          avatarIndex: randomAvatarIndex,
           sub: payload.sub,
         };
         setUser(profile);
@@ -66,7 +71,11 @@ export const GoogleAuthButton: React.FC = () => {
     const saved = localStorage.getItem("netra_auth_user");
     if (saved) {
       try {
-        setUser(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.avatarIndex !== "number") {
+          parsed.avatarIndex = Math.floor(Math.random() * NETRA_AVATARS.length);
+        }
+        setUser(parsed);
       } catch {
         // ignore
       }
@@ -85,7 +94,6 @@ export const GoogleAuthButton: React.FC = () => {
         });
         setGsiLoaded(true);
 
-        // Render official button if modal container exists
         if (googleBtnContainerRef.current) {
           window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
             theme: "outline",
@@ -116,6 +124,14 @@ export const GoogleAuthButton: React.FC = () => {
     }
   };
 
+  const handleSelectAvatar = (index: number) => {
+    if (!user) return;
+    const updated = { ...user, avatarIndex: index };
+    setUser(updated);
+    localStorage.setItem("netra_auth_user", JSON.stringify(updated));
+    setShowAvatarPicker(false);
+  };
+
   const handleSignOut = () => {
     if (window.google?.accounts?.id && user?.email) {
       window.google.accounts.id.revoke(user.email, () => {
@@ -125,6 +141,7 @@ export const GoogleAuthButton: React.FC = () => {
     setUser(null);
     localStorage.removeItem("netra_auth_user");
     setShowDropdown(false);
+    setShowAvatarPicker(false);
   };
 
   return (
@@ -141,41 +158,72 @@ export const GoogleAuthButton: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-cyan-500/40 text-xs text-white transition-all shadow-[0_0_15px_rgba(0,240,255,0.15)]"
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-850 border border-cyan-500/40 text-xs text-white transition-all shadow-[0_0_15px_rgba(0,240,255,0.15)]"
             >
-              {user.picture ? (
-                <img
-                  src={user.picture}
-                  alt={user.name}
-                  className="w-6 h-6 rounded-full border border-cyan-400 object-cover"
-                />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-cyan-950 border border-cyan-400 flex items-center justify-center text-[10px] font-bold text-cyan-300">
-                  {user.name.charAt(0)}
-                </div>
-              )}
-              <span className="font-bold hidden sm:inline max-w-[100px] truncate">{user.name}</span>
+              <NetraUserAvatar 
+                avatarIndex={user.avatarIndex} 
+                seed={user.email} 
+                size={24} 
+              />
+              <span className="font-bold hidden sm:inline max-w-[120px] truncate">{user.name}</span>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             </button>
 
             {/* Profile Dropdown */}
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-64 p-3 rounded-2xl bg-neutral-950/95 backdrop-blur-xl border border-neutral-800 shadow-2xl z-50 text-xs space-y-2 animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center gap-3 p-2 bg-neutral-900/60 rounded-xl border border-neutral-850">
-                  {user.picture ? (
-                    <img src={user.picture} alt={user.name} className="w-9 h-9 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-cyan-950 text-cyan-400 flex items-center justify-center font-bold">
-                      {user.name.charAt(0)}
-                    </div>
-                  )}
+              <div className="absolute right-0 mt-2 w-72 p-3 rounded-2xl bg-neutral-950/95 backdrop-blur-xl border border-neutral-800 shadow-2xl z-50 text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150">
+                
+                {/* User Header with Avatar */}
+                <div className="flex items-center gap-3 p-2.5 bg-neutral-900/80 rounded-xl border border-neutral-850">
+                  <NetraUserAvatar 
+                    avatarIndex={user.avatarIndex} 
+                    seed={user.email} 
+                    size={38} 
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="font-bold text-white truncate">{user.name}</div>
                     <div className="text-[10px] text-neutral-400 truncate">{user.email}</div>
                   </div>
                 </div>
 
-                <div className="pt-1 space-y-1">
+                {/* 10 Avatar Customizer Section */}
+                <div className="p-2.5 bg-neutral-900/50 rounded-xl border border-neutral-850 space-y-2">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-neutral-400 font-bold flex items-center gap-1">
+                      <Palette className="w-3 h-3 text-cyan-400" />
+                      Cyber Avatar ({NETRA_AVATARS[user.avatarIndex ?? 0]?.name})
+                    </span>
+                    <button
+                      onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+                      className="text-cyan-400 hover:text-cyan-300 font-bold"
+                    >
+                      {showAvatarPicker ? "Close" : "Change"}
+                    </button>
+                  </div>
+
+                  {/* 10 Avatar Grid */}
+                  {showAvatarPicker && (
+                    <div className="grid grid-cols-5 gap-2 pt-1 animate-in fade-in duration-200">
+                      {NETRA_AVATARS.map((av, idx) => (
+                        <button
+                          key={av.id}
+                          onClick={() => handleSelectAvatar(idx)}
+                          className={`p-1 rounded-xl flex flex-col items-center justify-center transition-all ${
+                            user.avatarIndex === idx
+                              ? "ring-2 ring-cyan-400 bg-neutral-800 scale-105"
+                              : "hover:bg-neutral-800/80 opacity-70 hover:opacity-100"
+                          }`}
+                          title={av.name}
+                        >
+                          <NetraUserAvatar avatarIndex={idx} size={28} showGlow={false} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation Actions */}
+                <div className="space-y-1 pt-1 border-t border-neutral-850">
                   <a
                     href="/developers"
                     className="flex items-center gap-2 p-2 rounded-xl text-neutral-300 hover:text-white hover:bg-neutral-900 transition-colors"
@@ -192,6 +240,7 @@ export const GoogleAuthButton: React.FC = () => {
                     <span>Sign Out</span>
                   </button>
                 </div>
+
               </div>
             )}
           </div>
@@ -246,7 +295,6 @@ export const GoogleAuthButton: React.FC = () => {
                   </div>
 
                   <div className="flex flex-col items-center justify-center pt-2 space-y-3">
-                    {/* Render GSI Official One-Tap / Button Container */}
                     <div ref={googleBtnContainerRef} className="flex justify-center min-h-[44px]"></div>
                   </div>
                 </div>
