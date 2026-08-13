@@ -4,105 +4,99 @@
 
 @layer base {
   :root {
-    /* Linear / Vercel Premium Dark Mode Tokens */
-    --background: 9 9 11; /* #09090b - Zinc 950 */
-    --foreground: 250 250 250; /* #fafafa - Zinc 50 */
+    /* Hackathon2 & Beautiful-UI Hybrid Real-SWE Design Tokens */
+    --background: 8 8 10; /* #08080a - Deep canvas */
+    --foreground: 245 245 244; /* #f5f5f4 - High contrast ink */
     
-    --card: 24 24 27; /* #18181b - Zinc 900 */
-    --card-foreground: 250 250 250;
+    --card: 16 17 20; /* #101114 - Surface card */
+    --card-foreground: 245 245 244;
     
-    --popover: 24 24 27;
-    --popover-foreground: 250 250 250;
+    --popover: 16 17 20;
+    --popover-foreground: 245 245 244;
     
-    --primary: 250 250 250;
-    --primary-foreground: 9 9 11;
+    --primary: 245 245 244;
+    --primary-foreground: 8 8 10;
     
-    --secondary: 39 39 42; /* #27272a - Zinc 800 */
-    --secondary-foreground: 250 250 250;
+    --secondary: 26 27 31; /* #1a1b1f */
+    --secondary-foreground: 245 245 244;
     
-    --muted: 39 39 42;
-    --muted-foreground: 161 161 170; /* #a1a1aa - Zinc 400 */
+    --muted: 26 27 31;
+    --muted-foreground: 161 161 170; /* #a1a1aa */
     
-    --accent: 39 39 42;
-    --accent-foreground: 250 250 250;
+    --accent: 103 232 249; /* #67e8f9 - Cyan signal */
+    --accent-foreground: 8 8 10;
     
-    --destructive: 220 38 38; /* Red 600 */
-    --destructive-foreground: 250 250 250;
+    --destructive: 239 68 68; /* Red 500 */
+    --destructive-foreground: 245 245 244;
 
-    --border: 39 39 42; /* Zinc 800 */
+    --border: 39 39 42; /* Hairline divider */
     --input: 39 39 42;
-    --ring: 212 212 216; /* Zinc 300 */
+    --ring: 103 232 249;
 
-    --radius: 0.75rem; /* 12px border radius for premium feel */
+    --radius: 0.75rem;
   }
 
   body {
-    @apply bg-background text-foreground antialiased selection:bg-white/20;
-    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1; /* Premium typographic features */
+    font-family: var(--font-lexend), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    @apply bg-[#08080a] text-foreground antialiased selection:bg-cyan-500/25 selection:text-cyan-100;
+    letter-spacing: -0.012em;
+    font-feature-settings: "cv11" 1, "ss01" 1, "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-lexend), sans-serif;
+    letter-spacing: -0.025em;
+  }
+
+  code, pre, kbd, samp {
+    font-family: var(--font-mono), SFMono-Regular, Consolas, monospace;
+    letter-spacing: normal;
   }
 }
 
 @layer components {
-  /* Premium UI Buttons */
+  /* Real-SWE Tactile Buttons */
   .btn-premium {
-    @apply inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
-    @apply active:scale-[0.98]; /* Apple-style click interaction */
+    @apply inline-flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    @apply active:scale-[0.97];
   }
   
   .btn-primary {
-    @apply btn-premium bg-foreground text-background hover:bg-foreground/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_1px_2px_rgba(0,0,0,0.4)];
+    @apply btn-premium bg-white text-black hover:bg-neutral-100 font-semibold shadow-[0_0_20px_rgba(255,255,255,0.15)];
   }
 
   .btn-secondary {
-    @apply btn-premium bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border shadow-sm;
+    @apply btn-premium bg-[#101114] text-neutral-200 hover:bg-[#1a1b1f] border border-neutral-800 shadow-sm;
   }
   
   .btn-outline {
-    @apply btn-premium border border-border bg-transparent hover:bg-secondary/50 text-foreground;
+    @apply btn-premium border border-neutral-800 bg-transparent hover:bg-neutral-900 text-neutral-200;
   }
 
-  /* Premium Cards */
+  /* Real-SWE Surface Cards */
   .card-premium {
-    @apply rounded-xl border border-border bg-card text-card-foreground shadow-sm relative overflow-hidden transition-colors;
-    background: linear-gradient(180deg, rgba(24,24,27,1) 0%, rgba(9,9,11,1) 100%);
+    @apply rounded-2xl border border-white/[0.08] bg-[#101114] text-foreground shadow-lg relative overflow-hidden transition-all duration-200;
   }
 
   /* Glassmorphism Panels */
   .glass-panel-premium {
-    @apply rounded-xl border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_4px_24px_-1px_rgba(0,0,0,0.5)];
+    @apply rounded-2xl border border-white/[0.08] bg-[#101114]/80 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)];
   }
 
-  /* Text Gradients */
-  .text-gradient-premium {
-    @apply bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60;
-  }
-
-  /* Micro-interactions */
-  .hover-glow {
-    @apply transition-all duration-300 hover:shadow-[0_0_20px_-5px_rgba(255,255,255,0.1)];
+  /* Tabular Figures for Counters & Percentages */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Custom minimal scrollbar */
+/* Custom sleek scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted rounded-full border-[2px] border-transparent bg-clip-padding;
-}
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground;
-}
-
-/* Animations */
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(0.98); }
-}
-.animate-pulse-soft {
-  animation: pulse-soft 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  @apply bg-neutral-800 rounded-full border-[1px] border-transparent bg-clip-padding hover:bg-neutral-700;
 }
