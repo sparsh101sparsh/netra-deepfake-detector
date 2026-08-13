@@ -3,9 +3,9 @@
 import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  Video, Image as ImageIcon, Mic, MessageSquare, 
   Scan, Upload, AlertCircle, Play, CheckCircle2, RefreshCw, FileText, Sparkles 
 } from "lucide-react";
+import { DfdIcon, DfdIconName } from "@/components/DfdIcon";
 
 interface MultiModalScannerProps {
   onScanComplete?: (result: any) => void;
@@ -38,10 +38,17 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
     details: string;
   } | null>(null);
 
-  const tabConfig = {
+  const tabConfig: Record<string, {
+    label: string;
+    iconName: DfdIconName;
+    accept: string;
+    formats: string;
+    description: string;
+    presets: any[];
+  }> = {
     video: {
       label: "Video Deepfake",
-      icon: Video,
+      iconName: "video",
       accept: "video/mp4,video/quicktime,video/webm,video/x-msvideo",
       formats: "MP4, MOV, WEBM (Max 100MB)",
       description: "Extracts frame facial topology, 2D-DCT spectral seams & GenD ViT-L/14 temporal artifacts.",
@@ -53,7 +60,7 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
     },
     image: {
       label: "Image / Photo",
-      icon: ImageIcon,
+      iconName: "image",
       accept: "image/jpeg,image/png,image/webp",
       formats: "JPG, PNG, WEBP (Max 50MB)",
       description: "Scans for synthetic facial boundary blending (SBI), pixel resampling & camera optics EXIF.",
@@ -65,7 +72,7 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
     },
     audio: {
       label: "Audio / Voice Clone",
-      icon: Mic,
+      iconName: "audio",
       accept: "audio/wav,audio/mpeg,audio/mp3,audio/x-m4a",
       formats: "WAV, MP3, M4A (Max 50MB)",
       description: "Detects neural vocoder signatures (ElevenLabs, Bark, RVC) and micro-glottal pitch jitter.",
@@ -77,7 +84,7 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
     },
     text: {
       label: "Text / Scam Triage",
-      icon: MessageSquare,
+      iconName: "document",
       accept: "",
       formats: "SMS, WhatsApp, Telegram Text, APK links",
       description: "Extracts malicious phone numbers, fraudulent UPI IDs, phishing URLs & generates Section 65B FIR dossier.",
@@ -192,7 +199,6 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
   };
 
   const current = tabConfig[activeTab];
-  const CurrentIcon = current.icon;
 
   return (
     <div className="bg-neutral-950/90 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 font-mono h-full flex flex-col justify-between">
@@ -201,7 +207,7 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800/80 pb-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
-            <Scan className="w-5 h-5" />
+            <DfdIcon name="glyph" size={22} glow />
           </div>
           <div>
             <h3 className="font-bold text-base sm:text-lg text-white">Forensic Detection Sandbox</h3>
@@ -212,7 +218,7 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
         {/* 4-Tab Switcher: VIDEO | IMAGE | AUDIO | TEXT */}
         <div className="flex items-center gap-1.5 bg-neutral-900/90 p-1.5 rounded-2xl border border-neutral-800 text-xs self-start sm:self-auto">
           {(["video", "image", "audio", "text"] as const).map((tab) => {
-            const Icon = tabConfig[tab].icon;
+            const conf = tabConfig[tab];
             const isActive = activeTab === tab;
             return (
               <button
@@ -223,13 +229,13 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
                   setSampleScan(null);
                   setTextResult(null);
                 }}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl uppercase font-bold text-xs transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl uppercase font-bold text-xs transition-all ${
                   isActive
                     ? "bg-cyan-600 text-white shadow-[0_0_15px_rgba(0,240,255,0.25)] border border-cyan-400/60"
                     : "text-neutral-400 hover:text-white"
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <DfdIcon name={conf.iconName} size={15} />
                 <span>{tab}</span>
               </button>
             );
@@ -244,7 +250,9 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
           <div className="space-y-2">
             <label className="text-xs uppercase font-bold text-neutral-300 flex items-center justify-between">
               <span>Paste Suspect Scam Message / WhatsApp / SMS Payload</span>
-              <span className="text-cyan-400 text-[10px]">AI IOC Extraction Active</span>
+              <span className="text-cyan-400 text-[10px] flex items-center gap-1">
+                <DfdIcon name="chip" size={13} /> AI IOC Extraction
+              </span>
             </label>
             <textarea
               rows={4}
@@ -271,7 +279,7 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
               disabled={isAnalyzingText}
               className="px-6 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50"
             >
-              {isAnalyzingText ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {isAnalyzingText ? <RefreshCw className="w-4 h-4 animate-spin" /> : <DfdIcon name="lightning" size={15} />}
               <span>Triage Threat & Extract IOCs</span>
             </button>
           </div>
@@ -322,7 +330,7 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
             className="border-2 border-dashed border-neutral-800 hover:border-cyan-500/50 bg-neutral-900/30 hover:bg-neutral-900/50 rounded-3xl p-10 sm:p-14 text-center cursor-pointer transition-all space-y-3 relative group"
           >
             <div className="w-16 h-16 rounded-3xl bg-cyan-950/60 border border-cyan-500/40 flex items-center justify-center text-cyan-400 mx-auto shadow-[0_0_20px_rgba(0,240,255,0.2)] group-hover:scale-105 transition-transform duration-300">
-              <CurrentIcon className="w-8 h-8" />
+              <DfdIcon name={current.iconName} size={30} glow />
             </div>
 
             <div>
@@ -356,14 +364,14 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
       <div className="pt-4 border-t border-neutral-850 space-y-3">
         <div className="flex items-center justify-between text-xs">
           <span className="text-neutral-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
-            <Play className="w-3.5 h-3.5 text-cyan-400" />
+            <DfdIcon name="lightning" size={14} />
             1-Click Forensic Benchmark Presets ({activeTab.toUpperCase()})
           </span>
           <span className="text-neutral-500 text-[11px]">Instant GPU Verification</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          {tabConfig[activeTab].presets.map((preset: any) => (
+          {current.presets.map((preset: any) => (
             <button
               key={preset.name}
               onClick={() => {
@@ -392,7 +400,7 @@ export function MultiModalForensicScanner({ onScanComplete }: MultiModalScannerP
         <div className="p-4 rounded-2xl bg-neutral-900/90 border border-cyan-500/40 space-y-2 text-xs animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
             <span className="font-bold text-white flex items-center gap-1.5">
-              {sampleScan.isScanning ? <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" /> : <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
+              {sampleScan.isScanning ? <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" /> : <DfdIcon name="check" size={16} />}
               {sampleScan.fileName}
             </span>
             <span className="px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-bold text-[10px]">

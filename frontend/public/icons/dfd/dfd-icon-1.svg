@@ -1,0 +1,1 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"> <rect width="1200" height="800" fill="#0E1014"/> <g transform="translate(600 400)" fill="none" stroke="#F5F5F2" stroke-width="6" stroke-linecap="round"> <circle r="180"/> <path d="M0 -220 V -180 M0 220 V 180 M-220 0 H -180 M220 0 H 180"/> </g> <circle cx="600" cy="400" r="34" fill="#2240E6"/> </svg>
