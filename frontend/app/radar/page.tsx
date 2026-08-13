@@ -21,15 +21,24 @@ export default function RadarPage() {
             </a>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-xs font-mono font-medium text-neutral-400">
-            <a href="/#analyzer" className="hover:text-white transition-colors">Analyzer</a>
-            <a href="/radar" className="text-white font-bold transition-colors flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-              Threat Radar
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-2 text-xs font-mono font-medium text-neutral-400 bg-neutral-950/70 p-1.5 rounded-2xl border border-neutral-850">
+            <a href="/" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
+              <span>Scanner & Feed</span>
             </a>
-            <a href="/reported" className="hover:text-white transition-colors">Threat Catalog</a>
-            <a href="/technology" className="hover:text-white transition-colors">Technology</a>
-            <a href="/developers" className="hover:text-white transition-colors">Developer API</a>
+            <a href="/radar" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-neutral-850 text-white font-bold shadow-[0_0_12px_rgba(0,240,255,0.15)] border border-cyan-500/30 transition-all">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+              <span>Threat Mapping</span>
+            </a>
+            <a href="/reported" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
+              <span>Threat Catalog</span>
+            </a>
+            <a href="/technology" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
+              <span>Technology</span>
+            </a>
+            <a href="/developers" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
+              <span>Developer API</span>
+            </a>
           </nav>
 
           <div className="flex items-center gap-3">
