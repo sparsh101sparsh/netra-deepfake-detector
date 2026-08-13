@@ -82,7 +82,7 @@ export const GoogleAuthButton: React.FC = () => {
     }
   }, []);
 
-  // Initialize GSI when script is loaded
+  // Initialize GSI when script is loaded or modal opens
   useEffect(() => {
     if (typeof window !== "undefined" && window.google?.accounts?.id) {
       try {
@@ -94,12 +94,14 @@ export const GoogleAuthButton: React.FC = () => {
         });
         setGsiLoaded(true);
 
-        if (googleBtnContainerRef.current) {
+        if (showModal && googleBtnContainerRef.current) {
+          googleBtnContainerRef.current.innerHTML = "";
           window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
-            theme: "outline",
+            theme: "filled_blue",
             size: "large",
             shape: "pill",
             width: 280,
+            text: "signin_with",
           });
         }
       } catch (err) {
@@ -108,20 +110,20 @@ export const GoogleAuthButton: React.FC = () => {
     }
   }, [gsiLoaded, showModal]);
 
-  const handleTriggerGooglePrompt = () => {
-    if (window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            setShowModal(true);
-          }
-        });
-      } catch {
-        setShowModal(true);
+  // Handle ESC to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showModal) {
+        setShowModal(false);
       }
-    } else {
-      setShowModal(true);
-    }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showModal]);
+
+  const handleTriggerGooglePrompt = () => {
+    // Open centered modal directly in the middle of the screen
+    setShowModal(true);
   };
 
   const handleSelectAvatar = (index: number) => {
@@ -142,6 +144,20 @@ export const GoogleAuthButton: React.FC = () => {
     localStorage.removeItem("netra_auth_user");
     setShowDropdown(false);
     setShowAvatarPicker(false);
+  };
+
+  // Demo / Quick Sign-In fallback
+  const handleQuickDemoSignIn = () => {
+    const randomAvatarIndex = Math.floor(Math.random() * NETRA_AVATARS.length);
+    const demoProfile: UserProfile = {
+      name: "Forensic Analyst",
+      email: "analyst@cybercell.gov.in",
+      avatarIndex: randomAvatarIndex,
+      sub: "netra_demo_user_001",
+    };
+    setUser(demoProfile);
+    localStorage.setItem("netra_auth_user", JSON.stringify(demoProfile));
+    setShowModal(false);
   };
 
   return (
@@ -273,29 +289,55 @@ export const GoogleAuthButton: React.FC = () => {
               <span>Sign In</span>
             </button>
 
-            {/* Google Authentication Modal */}
+            {/* Google Authentication Centered Modal */}
             {showModal && (
-              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-neutral-950 border border-neutral-800 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+              <div 
+                className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                onClick={() => setShowModal(false)}
+              >
+                <div 
+                  className="bg-neutral-950/95 border border-cyan-500/30 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-[0_0_50px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-200 relative"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Modal Header */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">NETRA AUTH</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-[10px] font-bold text-cyan-400 tracking-widest uppercase">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                      NETRA AUTH
+                    </div>
                     <button
                       onClick={() => setShowModal(false)}
-                      className="p-1 rounded-lg text-neutral-400 hover:text-white"
+                      className="p-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-850 text-neutral-400 hover:text-white transition-all"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="text-center space-y-2">
-                    <h3 className="text-lg font-bold text-white">Sign In with Google</h3>
-                    <p className="text-xs text-neutral-400 font-sans">
-                      Authenticate with your official Google account to unlock full multi-modal forensic investigations and developer API keys.
+                  {/* Title & Description */}
+                  <div className="text-center space-y-2 pt-2">
+                    <h3 className="text-xl font-bold text-white tracking-tight">
+                      Sign In with Google
+                    </h3>
+                    <p className="text-xs text-neutral-400 font-sans leading-relaxed">
+                      Authenticate with your official Google account to unlock institutional multi-modal forensic investigations and developer API keys.
                     </p>
                   </div>
 
-                  <div className="flex flex-col items-center justify-center pt-2 space-y-3">
+                  {/* Official Google GSI Render Container */}
+                  <div className="flex flex-col items-center justify-center py-4 space-y-4">
                     <div ref={googleBtnContainerRef} className="flex justify-center min-h-[44px]"></div>
+                  </div>
+
+                  {/* Quick Demo Access Fallback */}
+                  <div className="pt-4 border-t border-neutral-850 flex flex-col items-center space-y-2">
+                    <button
+                      onClick={handleQuickDemoSignIn}
+                      className="w-full py-2.5 px-4 rounded-xl bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-xs font-bold text-neutral-300 hover:text-white flex items-center justify-center gap-2 transition-all"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Instant Demo Access (Skip Google)</span>
+                    </button>
+                    <span className="text-[10px] text-neutral-500">For security testing and rapid review</span>
                   </div>
                 </div>
               </div>
