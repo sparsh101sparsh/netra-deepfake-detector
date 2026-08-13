@@ -248,23 +248,6 @@ export const GoogleAuthButton: React.FC = () => {
                   <div className="flex flex-col items-center justify-center pt-2 space-y-3">
                     {/* Render GSI Official One-Tap / Button Container */}
                     <div ref={googleBtnContainerRef} className="flex justify-center min-h-[44px]"></div>
-
-                    <button
-                      onClick={() => {
-                        // Direct simulated fallback if popup blocker intervenes
-                        const fallbackProfile: UserProfile = {
-                          name: "Sparsh",
-                          email: "sparppp86@gmail.com",
-                          picture: "https://lh3.googleusercontent.com/a/ACg8ocL0k...",
-                        };
-                        setUser(fallbackProfile);
-                        localStorage.setItem("netra_auth_user", JSON.stringify(fallbackProfile));
-                        setShowModal(false);
-                      }}
-                      className="text-[11px] text-neutral-500 hover:text-neutral-300 transition-colors underline pt-1"
-                    >
-                      Fast-Track Developer Sign-In (Sparsh)
-                    </button>
                   </div>
                 </div>
               </div>
