@@ -92,7 +92,7 @@ export function LiveThreatRadar() {
 
       // Tile URLs - 100% Watermark-Free & High-Performance
       const tileUrls = {
-        voyager: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        street: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
         satellite: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         osm: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       };
@@ -190,7 +190,7 @@ export function LiveThreatRadar() {
         <div className="flex flex-wrap items-center gap-2">
           {/* Layer Mode */}
           <div className="flex items-center gap-1 bg-neutral-950 p-1 rounded-xl border border-neutral-800 text-[11px]">
-            {(["voyager", "satellite", "osm"] as const).map((theme) => (
+            {(["street", "satellite", "osm"] as const).map((theme) => (
               <button
                 key={theme}
                 onClick={() => setMapTheme(theme)}
@@ -223,7 +223,7 @@ export function LiveThreatRadar() {
       </div>
 
       {/* Real Interactive Leaflet Map Container */}
-      <div className="w-full h-[520px] relative bg-[#090d16]">
+      <div className="w-full h-[660px] relative bg-[#090d16]">
         
         {/* Leaflet Map DOM Target */}
         <div ref={mapContainerRef} className="w-full h-full z-0" />
