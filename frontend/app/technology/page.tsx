@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { 
   Cpu, Layers, Eye, Radio, Sparkles, CheckCircle2, 
   BarChart3, Activity, ShieldCheck, Zap, ArrowRight, Database, Terminal, Shield 
@@ -28,30 +27,30 @@ export default function TechnologyPage() {
         <div className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <NetraBrandLogo size={40} />
-            <Link href="/" className="flex items-center gap-2 text-2xl font-bold tracking-tight text-white hover:text-cyan-400 transition-colors">
+            <a href="/" className="flex items-center gap-2 text-2xl font-bold tracking-tight text-white hover:text-cyan-400 transition-colors">
               NETRA
               <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded bg-neutral-900 border border-neutral-800 text-cyan-400">v5.1</span>
-            </Link>
+            </a>
           </div>
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-2 text-xs font-mono font-medium text-neutral-400 bg-neutral-950/70 p-1.5 rounded-2xl border border-neutral-850">
-            <Link href="/" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
+            <a href="/" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
               <span>Scanner & Feed</span>
-            </Link>
-            <Link href="/radar" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
+            </a>
+            <a href="/radar" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
               <span>Threat Mapping</span>
-            </Link>
-            <Link href="/reported" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
+            </a>
+            <a href="/reported" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
               <span>Threat Catalog</span>
-            </Link>
-            <Link href="/technology" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-neutral-850 text-white font-bold shadow-[0_0_12px_rgba(0,240,255,0.15)] border border-cyan-500/30 transition-all">
+            </a>
+            <a href="/technology" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-neutral-850 text-white font-bold shadow-[0_0_12px_rgba(0,240,255,0.15)] border border-cyan-500/30 transition-all">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
               <span>Technology</span>
-            </Link>
-            <Link href="/developers" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
+            </a>
+            <a href="/developers" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white transition-all">
               <span>Developer API</span>
-            </Link>
+            </a>
           </nav>
 
           <div className="flex items-center gap-3">
