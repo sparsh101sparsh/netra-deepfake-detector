@@ -33,7 +33,7 @@ export function LiveThreatRadar() {
   const [markers, setMarkers] = useState<ThreatMarker[]>([]);
   const [selectedMarker, setSelectedMarker] = useState<ThreatMarker | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
-  const [mapTheme, setMapTheme] = useState<"dark" | "voyager" | "satellite" | "osm">("dark");
+  const [mapTheme, setMapTheme] = useState<"voyager" | "satellite" | "osm">("voyager");
   const [isMapReady, setIsMapReady] = useState(false);
 
   // 1. Fetch live threat markers from backend with fallback
@@ -92,7 +92,6 @@ export function LiveThreatRadar() {
 
       // Tile URLs - 100% Watermark-Free & High-Performance
       const tileUrls = {
-        dark: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
         voyager: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
         satellite: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         osm: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -102,14 +101,6 @@ export function LiveThreatRadar() {
         subdomains: ["a", "b", "c", "d"],
         maxZoom: 19,
       }).addTo(map);
-
-      // Add label layer for dark canvas to keep text ultra crisp
-      if (mapTheme === "dark") {
-        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
-          maxZoom: 19,
-          opacity: 0.85,
-        }).addTo(map);
-      }
 
       const markersGroup = L.layerGroup().addTo(map);
       markersLayerGroupRef.current = markersGroup;
@@ -199,7 +190,7 @@ export function LiveThreatRadar() {
         <div className="flex flex-wrap items-center gap-2">
           {/* Layer Mode */}
           <div className="flex items-center gap-1 bg-neutral-950 p-1 rounded-xl border border-neutral-800 text-[11px]">
-            {(["dark", "voyager", "satellite", "osm"] as const).map((theme) => (
+            {(["voyager", "satellite", "osm"] as const).map((theme) => (
               <button
                 key={theme}
                 onClick={() => setMapTheme(theme)}
