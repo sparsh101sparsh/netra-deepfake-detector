@@ -1,0 +1,101 @@
+index,video_filename,subject_target,gend_vit_l_score,gend_hypersphere_distance,spatial_sbi_score,spectral_2d_dct_score,spectral_seam_ratio,audio_vocoder_score,clip_probe_score,exif_container_software,fused_ensemble_prob,final_verdict,inference_latency_ms
+1,deepfake_ACM_Amar_Preet_Singh.mp4,ACM Amar Preet Singh,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,982.15
+2,deepfake_A_R_Rahman.mp4,A R Rahman,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,771.81
+3,deepfake_Abhinav_Bindra.mp4,Abhinav Bindra,0.158,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,737.42
+4,deepfake_Adm_Krishna_Swaminathan.mp4,Adm Krishna Swaminathan,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,733.93
+5,deepfake_Ajit_Doval.mp4,Ajit Doval,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,837.76
+6,deepfake_Akhilesh_Yadav.mp4,Akhilesh Yadav,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,744.79
+7,deepfake_Alia_Bhatt.mp4,Alia Bhatt,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,731.37
+8,deepfake_Amartya_Sen.mp4,Amartya Sen,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,730.37
+9,deepfake_Amit_Shah.mp4,Amit Shah,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,739.23
+10,deepfake_Amitabh_Bachchan.mp4,Amitabh Bachchan,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,749.87
+11,deepfake_Anurag_Thakur.mp4,Anurag Thakur,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,775.41
+12,deepfake_Arundhati_Roy.mp4,Arundhati Roy,0.158,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,776.44
+13,deepfake_Arvind_Kejriwal.mp4,Arvind Kejriwal,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,872.43
+14,deepfake_Asha_Bhosle.mp4,Asha Bhosle,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,812.21
+15,deepfake_Ashwini_Vaishnaw.mp4,Ashwini Vaishnaw,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,1024.96
+16,deepfake_Azim_Premji.mp4,Azim Premji,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,945.22
+17,deepfake_Bhavish_Aggarwal.mp4,Bhavish Aggarwal,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,1041.63
+18,deepfake_CNR_Rao.mp4,CNR Rao,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,3758.0
+19,deepfake_C_P_Radhakrishnan.mp4,C P Radhakrishnan,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,3062.97
+20,deepfake_Cyrus_Poonawalla.mp4,Cyrus Poonawalla,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,4660.01
+21,deepfake_Deepika_Padukone.mp4,Deepika Padukone,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,2817.87
+22,deepfake_Deepinder_Goyal.mp4,Deepinder Goyal,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,1095.98
+23,deepfake_Devendra_Fadnavis.mp4,Devendra Fadnavis,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,1099.44
+24,deepfake_Dharmendra_Pradhan.mp4,Dharmendra Pradhan,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,1643.06
+25,deepfake_Dilip_Shanghvi.mp4,Dilip Shanghvi,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,1615.3
+26,deepfake_Droupadi_Murmu.mp4,Droupadi Murmu,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,3502.76
+27,deepfake_Gautam_Adani.mp4,Gautam Adani,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,3149.36
+28,deepfake_Gen_Dhiraj_Seth.mp4,Gen Dhiraj Seth,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,1171.71
+29,deepfake_Gyanesh_Kumar.mp4,Gyanesh Kumar,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,761.27
+30,deepfake_Himanta_Biswa_Sarma.mp4,Himanta Biswa Sarma,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,761.24
+31,deepfake_J_P_Nadda.mp4,J P Nadda,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,723.43
+32,deepfake_Kailash_Satyarthi.mp4,Kailash Satyarthi,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,729.56
+33,deepfake_Kamal_Haasan.mp4,Kamal Haasan,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,724.35
+34,deepfake_Kapil_Dev.mp4,Kapil Dev,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,847.37
+35,deepfake_Kapil_Sibal.mp4,Kapil Sibal,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,728.41
+36,deepfake_Kumar_Mangalam_Birla.mp4,Kumar Mangalam Birla,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,739.71
+37,deepfake_Kunal_Shah.mp4,Kunal Shah,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,717.77
+38,deepfake_Lakshmi_Mittal.mp4,Lakshmi Mittal,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,727.23
+39,deepfake_Lata_Mangeshkar.mp4,Lata Mangeshkar,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,792.97
+40,deepfake_MK_Stalin.mp4,MK Stalin,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,769.0
+41,deepfake_MS_Dhoni.mp4,MS Dhoni,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,864.23
+42,deepfake_Madhabi_Puri_Buch.mp4,Madhabi Puri Buch,0.158,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,726.08
+43,deepfake_Mallikarjun_Kharge.mp4,Mallikarjun Kharge,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,725.23
+44,deepfake_Mamata_Banerjee.mp4,Mamata Banerjee,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,725.07
+45,deepfake_Mary_Kom.mp4,Mary Kom,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,726.72
+46,deepfake_Mohan_Bhagwat.mp4,Mohan Bhagwat,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,743.37
+47,deepfake_Mohanlal.mp4,Mohanlal,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,723.38
+48,deepfake_Mukesh_Ambani.mp4,Mukesh Ambani,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,741.17
+49,deepfake_N_Chandrababu_Naidu.mp4,N Chandrababu Naidu,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,727.76
+50,deepfake_N_S_Raja_Subramani.mp4,N S Raja Subramani,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,727.8
+51,deepfake_Narendra_Modi.mp4,Narendra Modi,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,769.87
+52,deepfake_Neeraj_Chopra.mp4,Neeraj Chopra,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,768.19
+53,deepfake_Nikhil_Kamath.mp4,Nikhil Kamath,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,794.88
+54,deepfake_Nirmala_Sitharaman.mp4,Nirmala Sitharaman,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,902.87
+55,deepfake_Nithin_Kamath.mp4,Nithin Kamath,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,885.42
+56,deepfake_Nitin_Gadkari.mp4,Nitin Gadkari,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,761.92
+57,deepfake_Nitin_Nabin.mp4,Nitin Nabin,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,846.05
+58,deepfake_Nitish_Kumar.mp4,Nitish Kumar,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,775.31
+59,deepfake_Om_Birla.mp4,Om Birla,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,919.52
+60,deepfake_PV_Sindhu.mp4,PV Sindhu,0.158,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,759.58
+61,deepfake_Peyush_Bansal.mp4,Peyush Bansal,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,748.22
+62,deepfake_Pinarayi_Vijayan.mp4,Pinarayi Vijayan,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,874.4
+63,deepfake_Piyush_Goyal.mp4,Piyush Goyal,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,1195.08
+64,deepfake_Prabhas.mp4,Prabhas,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,920.32
+65,deepfake_R_Venkataramani.mp4,R Venkataramani,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,1103.04
+66,deepfake_Radhakishan_Damani.mp4,Radhakishan Damani,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,1021.55
+67,deepfake_Raghuram_Rajan.mp4,Raghuram Rajan,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,857.72
+68,deepfake_Rahul_Gandhi.mp4,Rahul Gandhi,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,733.53
+69,deepfake_Rajinikanth.mp4,Rajinikanth,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,764.03
+70,deepfake_Rajnath_Singh.mp4,Rajnath Singh,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,3043.33
+71,deepfake_Revanth_Reddy.mp4,Revanth Reddy,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,906.25
+72,deepfake_Ritesh_Agarwal.mp4,Ritesh Agarwal,0.158,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,741.57
+73,deepfake_Rohit_Sharma.mp4,Rohit Sharma,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,774.93
+74,deepfake_SS_Rajamouli.mp4,SS Rajamouli,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,785.87
+75,deepfake_S_Jaishankar.mp4,S Jaishankar,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,727.72
+76,deepfake_S_Somanath.mp4,S Somanath,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,727.58
+77,deepfake_Sachin_Bansal.mp4,Sachin Bansal,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,824.56
+78,deepfake_Sachin_Tendulkar.mp4,Sachin Tendulkar,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,760.28
+79,deepfake_Saina_Nehwal.mp4,Saina Nehwal,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,757.82
+80,deepfake_Sania_Mirza.mp4,Sania Mirza,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,754.59
+81,deepfake_Savitri_Jindal.mp4,Savitri Jindal,0.158,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,794.07
+82,deepfake_Shah_Rukh_Khan.mp4,Shah Rukh Khan,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,736.59
+83,deepfake_Shaktikanta_Das.mp4,Shaktikanta Das,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,925.39
+84,deepfake_Sharad_Pawar.mp4,Sharad Pawar,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,766.08
+85,deepfake_Shashi_Tharoor.mp4,Shashi Tharoor,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,781.24
+86,deepfake_Shiv_Nadar.mp4,Shiv Nadar,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,780.38
+87,deepfake_Siddaramaiah.mp4,Siddaramaiah,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,973.23
+88,deepfake_Soumya_Swaminathan.mp4,Soumya Swaminathan,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,795.19
+89,deepfake_Sridhar_Vembu.mp4,Sridhar Vembu,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,768.02
+90,deepfake_Sunil_Bharti_Mittal.mp4,Sunil Bharti Mittal,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,749.67
+91,deepfake_Sunil_Chhetri.mp4,Sunil Chhetri,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,741.52
+92,deepfake_Surya_Kant.mp4,Surya Kant,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,831.29
+93,deepfake_T_V_Somanathan.mp4,T V Somanathan,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,951.63
+94,deepfake_Uday_Kotak.mp4,Uday Kotak,0.158,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.52,AUTHENTIC,748.37
+95,deepfake_Uddhav_Thackeray.mp4,Uddhav Thackeray,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,737.2
+96,deepfake_Venki_Ramakrishnan.mp4,Venki Ramakrishnan,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,899.03
+97,deepfake_Vijay_Shekhar_Sharma.mp4,Vijay Shekhar Sharma,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,1356.39
+98,deepfake_Virat_Kohli.mp4,Virat Kohli,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,1267.85
+99,deepfake_Viswanathan_Anand.mp4,Viswanathan Anand,0.159,0.384,0.25,0.25,1.85,0.25,0.6,Lavf59.27.100,0.268,AUTHENTIC,1182.32
+100,deepfake_Yogi_Adityanath.mp4,Yogi Adityanath,0.159,0.384,0.25,0.25,1.85,0.88,0.6,Lavf59.27.100,0.521,AUTHENTIC,1011.97
