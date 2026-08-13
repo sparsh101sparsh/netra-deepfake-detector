@@ -26,7 +26,7 @@ interface CyberIconProps {
 
 export function CyberIcon({ name, size = 20, className = "", glow = false }: CyberIconProps) {
   const glowStyle = glow
-    ? { filter: "drop-shadow(0 0 8px rgba(0, 240, 255, 0.45))" }
+    ? { filter: "drop-shadow(0 0 4px rgba(255, 255, 255, 0.25))" }
     : {};
 
   const renderPath = () => {

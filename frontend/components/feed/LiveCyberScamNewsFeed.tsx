@@ -60,7 +60,7 @@ const FALLBACK_ARTICLES: ScamNewsArticle[] = [
     affected_region: "Bengaluru, Mumbai, Delhi",
     modus_operandi: "InSwapper & SadTalker video synthesis running on sponsored ad feeds leading to VIP groups.",
     published_at: "4 hours ago",
-    thumbnail_url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80"
+    thumbnail_url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80"
   },
   {
     id: "NEWS-2026-003",
@@ -208,23 +208,29 @@ export function LiveCyberScamNewsFeed({
   return (
     <div
       className={cn(
-        "bg-[var(--surface)] border-[1.5px] border-[var(--border)] shadow-card rounded-2xl p-5 sm:p-6 flex flex-col h-full",
+        "bg-[var(--surface)] border-[1.5px] border-[var(--border)] shadow-card rounded-2xl flex flex-col h-full overflow-hidden",
         className
       )}
     >
       {/* 1. Header Section */}
-      <div className="space-y-4 pb-4 border-b border-line shrink-0">
+      <div className="p-5 sm:p-6 pb-4 border-b border-line shrink-0 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="size-9 sm:size-10 rounded-xl bg-accent-tint border-[1.5px] border-accent/25 flex items-center justify-center text-accent-ink shrink-0 shadow-hairline">
+            <div className="size-9 sm:size-10 rounded-xl bg-[#18181B] border border-white/10 flex items-center justify-center text-white shrink-0 shadow-card">
               <Newspaper className="size-4 sm:size-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-semibold text-ink text-base sm:text-lg tracking-tight truncate">
-                Live Cyber Scam Feed
-              </h3>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h3 className="font-semibold text-ink text-base sm:text-lg tracking-tight truncate">
+                  Live Cyber Scam Feed
+                </h3>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-mono font-medium bg-[#18181B] border border-white/10 text-zinc-300 shadow-sm">
+                  <span className="size-1.5 rounded-full bg-emerald-400" />
+                  Powered by Tavily
+                </span>
+              </div>
               <p className="text-xs text-ink-2 mt-0.5 line-clamp-1">
-                Real-time incident intelligence aggregated from national cybercrime advisories.
+                Real-time alerts and reports aggregated from national cybercrime warnings.
               </p>
             </div>
           </div>
@@ -238,62 +244,26 @@ export function LiveCyberScamNewsFeed({
           totalCount={articles.length}
           compact={compact}
         />
-
-        {/* 3. Category Filter Navigation (Smooth Active Transitions) */}
-        <div
-          role="tablist"
-          aria-label="Filter scam news by category"
-          className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 text-xs no-scrollbar select-none"
-        >
-          {CATEGORIES.map((cat) => {
-            const isSelected = activeCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                role="tab"
-                aria-selected={isSelected}
-                onClick={() => setActiveCategory(cat.id)}
-                className={cn(
-                  "px-3 py-1.5 rounded-full border-[1.5px] whitespace-nowrap font-medium transition-all duration-150 text-[12px] leading-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                  isSelected
-                    ? "bg-accent-tint text-accent-ink border-accent/40 font-semibold shadow-hairline"
-                    : "bg-inset text-ink-2 hover:text-ink hover:bg-hover border-line/60"
-                )}
-              >
-                <span className="hidden sm:inline">{cat.label}</span>
-                <span className="sm:hidden">{cat.shortLabel}</span>
-              </button>
-            );
-          })}
-        </div>
       </div>
 
-      {/* 4. Scrollable News Stream */}
+      {/* 3. Continuous Unified News Stream (Flush with card border for scrollbar) */}
       <div
         className={cn(
-          "flex-1 overflow-y-auto mt-4 pr-1 space-y-3 custom-scrollbar min-h-[380px]",
+          "flex-1 overflow-y-auto divide-y divide-white/[0.06] min-h-[380px]",
           compact ? "max-h-[500px]" : "max-h-[620px]"
         )}
       >
         {isLoading ? (
           <FeedSkeleton count={compact ? 3 : 4} />
         ) : articles.length === 0 ? (
-          <div className="h-64 flex flex-col items-center justify-center text-center p-6 space-y-2.5 rounded-xl bg-inset/30 border-[1.5px] border-dashed border-line">
+          <div className="h-64 flex flex-col items-center justify-center text-center p-6 space-y-2.5 rounded-xl bg-inset/30 border border-dashed border-line my-4">
             <div className="size-10 rounded-full bg-inset flex items-center justify-center text-ink-3">
               <SearchX className="size-5" />
             </div>
-            <p className="text-sm font-medium text-ink">No incidents in this category</p>
+            <p className="text-sm font-medium text-ink">No incidents available</p>
             <p className="text-xs text-ink-3 max-w-xs">
-              No recent verified incidents recorded for this specific category within the 24-hour window.
+              No recent verified incidents recorded within the 24-hour window.
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setActiveCategory("ALL")}
-              className="mt-2 text-xs"
-            >
-              View All Categories
-            </Button>
           </div>
         ) : (
           articles.map((article, idx) => (

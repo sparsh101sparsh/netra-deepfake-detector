@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Map, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Activity, ShieldAlert, Users, TrendingUp } from 'lucide-react';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 
 const CITIES = [
   { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
@@ -46,87 +48,84 @@ export default function ScamTrendsPage() {
   }, []);
 
   const trends = [
-    { title: "Voice Cloning Extortion", severity: "High", affected: "1.2M", description: "Scammers clone voices of family members requesting urgent UPI transfers.", growth: "+24%" },
-    { title: "Deepfake Investment Gurus", severity: "Critical", affected: "3.4M", description: "Fake videos of public figures endorsing fraudulent crypto schemes.", growth: "+89%" },
+    { title: "Voice Cloning Extortion", severity: "High", affected: "1.2M", description: "Scammers clone voices of family members requesting urgent transfers.", growth: "+24%" },
+    { title: "Fake Investment Videos", severity: "Critical", affected: "3.4M", description: "Fake videos of public figures endorsing fraudulent schemes.", growth: "+89%" },
     { title: "Election Misinformation", severity: "High", affected: "5M+", description: "AI-generated speeches of politicians circulating in local languages.", growth: "+15%" },
   ];
 
   return (
-    <div className="flex flex-col gap-8 h-full animate-in fade-in duration-500">
-      
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight mb-2">Telemetry & Intelligence</h1>
-          <p className="text-muted-foreground">Real-time visualization of intercepted AI-driven threats.</p>
-        </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-full border border-border">
-          <Activity className="w-4 h-4 text-emerald-500 animate-pulse-soft" />
-          <span className="text-xs font-medium text-muted-foreground">Live Telemetry Active</span>
-        </div>
-      </div>
-
-      {/* MapLibre Map Container */}
-      <div className="w-full h-[500px] rounded-xl overflow-hidden border border-border bg-card shadow-sm relative">
-        <Map
-          initialViewState={{ longitude: 78.9629, latitude: 20.5937, zoom: 4 }}
-          mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-          attributionControl={false}
-          interactive={false}
-        >
-          {markers.map(marker => (
-            <Marker key={marker.id} longitude={marker.lng} latitude={marker.lat}>
-              <div className="relative flex items-center justify-center" style={{ opacity: marker.opacity }}>
-                <div className="absolute w-8 h-8 bg-destructive rounded-full animate-ping opacity-75"></div>
-                <div className="relative w-3 h-3 bg-destructive rounded-full border-2 border-background shadow-sm"></div>
-              </div>
-            </Marker>
-          ))}
-        </Map>
+    <div className="min-h-screen bg-page text-ink flex flex-col font-sans">
+      <Navbar />
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 flex flex-col gap-8">
         
-        {/* Overlay HUD */}
-        <div className="absolute top-4 left-4 p-4 z-10 rounded-lg bg-background/80 backdrop-blur-md border border-border shadow-sm">
-          <div className="flex items-center gap-2 mb-3 border-b border-border pb-2">
-            <ShieldAlert className="w-4 h-4 text-foreground" />
-            <span className="font-semibold text-sm">Threat Radar</span>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink mb-2">Threat Trends</h1>
+            <p className="text-ink-2">Real-time visualization of reported threats across the country.</p>
           </div>
-          <p className="text-xs text-muted-foreground flex justify-between gap-6 mb-1">
-            <span>Region</span> <span className="font-medium text-foreground">IND</span>
-          </p>
-          <p className="text-xs text-muted-foreground flex justify-between gap-6">
-            <span>Engine</span> <span className="font-medium text-foreground">MapLibre GL</span>
-          </p>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-surface rounded-full border border-line">
+            <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
+            <span className="text-[11px] font-mono text-ink-3 uppercase tracking-wider">Live Activity</span>
+          </div>
         </div>
-      </div>
-      
-      {/* Trends Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {trends.map((trend, i) => (
-          <div key={i} className="card-premium p-6 group hover:border-muted-foreground/30 transition-all">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="font-semibold">{trend.title}</h3>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                trend.severity === 'Critical' ? 'bg-destructive/10 text-destructive border border-destructive/20' : 
-                'bg-orange-500/10 text-orange-500 border border-orange-500/20'
-              }`}>
-                {trend.severity}
-              </span>
+
+        <div className="w-full h-[500px] rounded-2xl overflow-hidden border-[1.5px] border-line bg-surface shadow-card relative">
+          <Map
+            initialViewState={{ longitude: 78.9629, latitude: 20.5937, zoom: 4 }}
+            mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+            attributionControl={false}
+            interactive={false}
+          >
+            {markers.map(marker => (
+              <Marker key={marker.id} longitude={marker.lng} latitude={marker.lat}>
+                <div className="relative flex items-center justify-center" style={{ opacity: marker.opacity }}>
+                  <div className="absolute w-8 h-8 bg-red-500 rounded-full animate-ping opacity-75"></div>
+                  <div className="relative w-3 h-3 bg-red-500 rounded-full border-2 border-page shadow-sm"></div>
+                </div>
+              </Marker>
+            ))}
+          </Map>
+          
+          <div className="absolute top-4 left-4 p-4 z-10 rounded-2xl bg-surface/80 backdrop-blur-md border-[1.5px] border-line shadow-card">
+            <div className="flex items-center gap-2 mb-3 border-b border-line pb-2">
+              <ShieldAlert className="w-4 h-4 text-ink" />
+              <span className="font-semibold text-sm text-ink">Threat Activity</span>
             </div>
-            <p className="text-sm text-muted-foreground flex-1 mb-6">{trend.description}</p>
-            <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border">
-              <div className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" />
-                <span>{trend.affected} Reach</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-foreground font-medium">
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                <span>{trend.growth}</span>
-              </div>
-            </div>
+            <p className="text-[11px] font-mono text-ink-3 flex justify-between gap-6 mb-1">
+              <span className="uppercase tracking-wider">Region</span> <span className="font-medium text-ink">IND</span>
+            </p>
           </div>
-        ))}
-      </div>
-      
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {trends.map((trend, i) => (
+            <div key={i} className="rounded-2xl bg-surface border-[1.5px] border-line shadow-card p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="font-semibold text-ink">{trend.title}</h3>
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider ${
+                  trend.severity === 'Critical' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 
+                  'bg-orange-500/10 text-orange-500 border border-orange-500/20'
+                }`}>
+                  {trend.severity}
+                </span>
+              </div>
+              <p className="text-sm text-ink-2 flex-1 mb-6">{trend.description}</p>
+              <div className="flex items-center justify-between text-[11px] font-mono text-ink-3 uppercase tracking-wider pt-4 border-t border-line">
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>{trend.affected} Impacted</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-emerald-500">{trend.growth}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+      </main>
+      <Footer />
     </div>
   )
 }

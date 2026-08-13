@@ -15,23 +15,23 @@ export interface ChipProps {
 }
 
 const toneStyles: Record<ChipTone, string> = {
-  neutral: "bg-inset text-ink-2 border-line hover:border-line-strong",
-  accent: "bg-accent-tint text-accent-ink border-accent/25 hover:border-accent/40",
-  cyan: "bg-accent-tint text-accent-ink border-accent/25 hover:border-accent/40",
+  neutral: "bg-[#18181B] text-zinc-300 border-white/10 hover:border-white/20",
+  accent: "bg-[#27272A] text-white border-white/10 hover:border-white/20",
+  cyan: "bg-[#27272A] text-white border-white/10 hover:border-white/20",
   orange: "bg-orange-tint text-orange border-orange/25 hover:border-orange/40",
   red: "bg-red-tint text-red border-red/25 hover:border-red/40",
   green: "bg-green-tint text-green border-green/25 hover:border-green/40",
-  purple: "bg-purple-tint text-purple border-purple/25 hover:border-purple/40",
+  purple: "bg-[#27272A] text-zinc-200 border-white/10 hover:border-white/20",
 };
 
 const dotColors: Record<ChipTone, string> = {
-  neutral: "bg-ink-3",
-  accent: "bg-accent",
-  cyan: "bg-accent",
+  neutral: "bg-zinc-500",
+  accent: "bg-white",
+  cyan: "bg-white",
   orange: "bg-orange",
   red: "bg-red",
   green: "bg-green",
-  purple: "bg-purple",
+  purple: "bg-zinc-300",
 };
 
 export function Chip({

@@ -13,10 +13,10 @@ import { Chip } from "@/components/atoms/Chip";
 import { Button } from "@/components/atoms/Button";
 import { StreamText } from "@/components/primitives/StreamText";
 import { ThinkingState, ThinkingRow } from "@/components/primitives/ThinkingState";
+import { LoadingState } from "@/components/primitives/LoadingState";
 import { TaskRows, TaskRow } from "@/components/primitives/TaskRows";
 import { DropZone, SandboxModality } from "./DropZone";
 import { OCRDossier, OCRDossierResult } from "./OCRDossier";
-import { BenchmarkPresets, BenchmarkPreset } from "./BenchmarkPresets";
 import { cn } from "@/lib/utils";
 
 export type ScannerModality = "video" | "image" | "audio" | "text";
@@ -302,62 +302,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
     }
   };
 
-  // Handle Preset Selection
-  const handleSelectPreset = (preset: BenchmarkPreset) => {
-    setUploadError(null);
-    setImageOcrResult(null);
-    setTextResult(null);
-    setNeuralSimulation(null);
 
-    if (preset.modality === "text" && preset.textContent) {
-      setActiveModality("text");
-      setRawText(preset.textContent.text);
-      if (preset.textContent.city) setTextCity(preset.textContent.city);
-
-      // Auto trigger triage
-      setIsAnalyzingText(true);
-      const iocs = extractClientIOCs(preset.textContent.text);
-      setTimeout(() => {
-        setIsAnalyzingText(false);
-        setTextResult({
-          is_scam: preset.threatScore > 50,
-          risk_score: preset.threatScore,
-          confidence: parseInt(preset.confidence) || 98,
-          verdict: preset.verdict,
-          scam_type: preset.category,
-          matched_rules: [
-            "Coercive urgency trigger in message body",
-            "Unverified external contact / UPI handle extraction",
-          ],
-          analysis_method: "rule_engine + llm_triage",
-          processing_time_ms: 95,
-          llm_reason: `Benchmark test case: ${preset.title}. Verified threat signatures match active syndicated campaign telemetry.`,
-          extracted_iocs: iocs,
-        });
-      }, 400);
-    } else if (preset.modality === "image" && preset.ocrData) {
-      setActiveModality("image");
-      setImageOcrResult(preset.ocrData);
-    } else if (preset.modality === "video") {
-      setActiveModality("video");
-      runSimulatedNeuralScan(
-        preset.videoFileName || `${preset.title}.mp4`,
-        preset.verdict,
-        preset.confidence,
-        preset.threatScore,
-        "video"
-      );
-    } else if (preset.modality === "audio") {
-      setActiveModality("audio");
-      runSimulatedNeuralScan(
-        preset.audioFileName || `${preset.title}.wav`,
-        preset.verdict,
-        preset.confidence,
-        preset.threatScore,
-        "audio"
-      );
-    }
-  };
 
   const handleCopyIoc = (val: string, key: string) => {
     if (navigator?.clipboard) {
@@ -370,35 +315,28 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
   return (
     <div
       className={cn(
-        "rounded-2xl bg-[var(--surface)] border-[1.5px] border-[var(--border)] shadow-card p-6 sm:p-8 flex flex-col justify-between h-full font-sans gap-6",
+        "rounded-2xl bg-surface border-[1.5px] border-line shadow-card p-5 sm:p-6 flex flex-col justify-between h-full font-sans gap-5",
         className
       )}
     >
       {/* ── 1. HEADER WITH MODE SWITCHER (SegmentedControl) ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-4 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--canvas)] border-[1.5px] border-[var(--border)] text-[var(--accent)] shadow-card">
-            <CyberIcon name="eye" size={22} glow />
+          <div className="size-9 sm:size-10 rounded-xl bg-[#18181B] border border-white/10 flex items-center justify-center text-white shrink-0 shadow-card">
+            <CyberIcon name="eye" size={20} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-base sm:text-lg text-ink tracking-tight">
-                Forensic Detection Sandbox
-              </h3>
-              <span className="hidden sm:inline-flex">
-                <StatusPill tone="info" size="sm" dot>
-                  v5.1 Live
-                </StatusPill>
-              </span>
-            </div>
-            <p className="text-xs text-ink-2 font-sans">
+            <h3 className="font-semibold text-base sm:text-lg text-ink tracking-tight">
+              Forensic Detection Sandbox
+            </h3>
+            <p className="text-xs text-ink-2 mt-0.5 line-clamp-1">
               {activeModality === "image"
-                ? "Multilingual PaddleOCR extraction + Threat intelligence model"
+                ? "Text extraction and threat detection from screenshots & images"
                 : activeModality === "text"
-                ? "Autonomous scam text triage + Section 65B FIR dossier"
+                ? "Scam message analysis and legal evidence report generation"
                 : activeModality === "audio"
-                ? "Neural vocoder residual scan + AI voice clone verification"
-                : "GenD ViT-L/14 facial topology + 2D-DCT spectral deepfake forensics"}
+                ? "Voice clone and synthetic audio detection"
+                : "Deepfake video and facial manipulation detection"}
             </p>
           </div>
         </div>
@@ -425,7 +363,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
               };
               return (
                 <span className="inline-flex items-center gap-1.5 uppercase font-semibold text-[11.5px]">
-                  <CyberIcon name={iconMap[opt]} size={13} glow={isSelected} />
+                  <CyberIcon name={iconMap[opt]} size={13} />
                   <span>{opt}</span>
                 </span>
               );
@@ -442,15 +380,15 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <label className="font-semibold text-ink flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-[var(--accent)]" />
-                  Paste Suspicious SMS / WhatsApp / Extortion Payload
+                  <FileText className="w-3.5 h-3.5 text-zinc-300" />
+                  Paste suspicious SMS, WhatsApp message, or notice
                 </label>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-mono text-ink-3">
                     {rawText.length} characters
                   </span>
-                  <StatusPill tone="info" size="sm">
-                    IOC Extraction Active
+                  <StatusPill tone="neutral" size="sm">
+                    Smart Scan Active
                   </StatusPill>
                 </div>
               </div>
@@ -459,11 +397,11 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                 rows={4}
                 value={rawText}
                 onChange={(e) => setRawText(e.target.value)}
-                placeholder="Paste suspect message, phishing SMS, or extortion notice text here..."
+                placeholder="Paste suspicious message, SMS, or notice text here..."
                 className={cn(
-                  "w-full rounded-xl bg-[var(--canvas)] border-[1.5px] border-[var(--border)] p-4",
+                  "w-full rounded-xl bg-canvas border-[1.5px] border-line p-4",
                   "text-xs sm:text-sm text-ink placeholder:text-ink-3 leading-relaxed",
-                  "focus:outline-none focus:border-[var(--brand-cyan)] focus:ring-1 focus:ring-[var(--brand-cyan)] transition-all",
+                  "focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all",
                   "shadow-inset-field"
                 )}
               />
@@ -472,25 +410,25 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             {/* Jurisdiction & Action Toolbar */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs text-ink-2">
-                <span className="font-medium">Incident Jurisdiction:</span>
+                <span className="font-medium">City or Region (optional):</span>
                 <input
                   type="text"
                   value={textCity}
                   onChange={(e) => setTextCity(e.target.value)}
-                  className="rounded-lg bg-[var(--canvas)] border-[1.5px] border-[var(--line)] px-2.5 py-1 text-xs text-ink font-medium focus:outline-none focus:border-[var(--brand-cyan)] w-36"
+                  className="rounded-lg bg-canvas border-[1.5px] border-line px-2.5 py-1 text-xs text-ink font-medium focus:outline-none focus:border-white/30 w-36"
                   placeholder="e.g. New Delhi"
                 />
               </div>
 
               <Button
-                variant="accent"
+                variant="primary"
                 size="sm"
                 loading={isAnalyzingText}
                 leftIcon={<Zap className="w-3.5 h-3.5" />}
                 onClick={handleTextTriage}
                 disabled={!rawText.trim()}
               >
-                Triage Threat & Extract IOCs
+                Check for Scam
               </Button>
             </div>
 
@@ -501,9 +439,9 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                 <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
                   <div className="flex items-center gap-2">
                     <span className="font-mono uppercase font-bold text-[11px] text-[var(--accent)]">
-                      {textResult.scam_type || "SUSPECT_PAYLOAD"}
+                      {textResult.scam_type || "SUSPICIOUS_MESSAGE"}
                     </span>
-                    <span className="text-[11px] text-ink-3">• {textResult.analysis_method}</span>
+                    <span className="text-[11px] text-ink-3">• AI Verified</span>
                   </div>
 
                   <StatusPill
@@ -511,23 +449,37 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                     size="sm"
                     pulse={textResult.is_scam}
                   >
-                    {textResult.risk_score}% Threat Score • {textResult.is_scam ? "CRITICAL" : "SAFE"}
+                    {textResult.risk_score}% Risk Level • {textResult.is_scam ? "SCAM DETECTED" : "SAFE"}
                   </StatusPill>
                 </div>
 
-                <div className="space-y-1">
+                {/* Thinking Trace (Collapsible Reasoning Tree) */}
+                <ThinkingState
+                  variant="Reasoning"
+                  isProcessing={false}
+                  activeLabel="Analyzing message details"
+                  doneLabel="Analysis complete"
+                  rows={[
+                    { primary: "Checking message urgency and pressure tactics", secondary: "Pattern check" },
+                    { primary: "Extracting contact numbers, UPI handles & links", secondary: `${(textResult.extracted_iocs?.phones?.length || 0) + (textResult.extracted_iocs?.upis?.length || 0)} details` },
+                    { primary: "Cross-referencing known reported scams", secondary: "Scam database" },
+                    { primary: "Generating scam risk assessment", secondary: `${textResult.risk_score}% risk` },
+                  ]}
+                />
+
+                <div className="space-y-1 pt-1 border-t border-line">
                   <div className="font-semibold text-xs text-ink">{textResult.verdict}</div>
                   {textResult.llm_reason && (
-                    <div className="text-[12px] text-ink-2 leading-relaxed pt-1 bg-[var(--inset)]/40 p-3 rounded-lg border border-[var(--line)]">
+                    <div className="text-[12px] text-ink-2 leading-relaxed pt-1 bg-inset/60 p-3 rounded-lg border border-line">
                       <StreamText text={textResult.llm_reason} charsPerTick={3} tickMs={10} />
                     </div>
                   )}
                 </div>
 
-                {/* Extracted IOC Chips */}
+                {/* Extracted Details Chips */}
                 {textResult.extracted_iocs && (
                   <div className="space-y-1.5 pt-1">
-                    <span className="text-[11px] font-semibold text-ink-2">Extracted Threat IOCs:</span>
+                    <span className="text-[11px] font-semibold text-ink-2">Detected Scam Details (Phone, UPI, Links):</span>
                     <div className="flex flex-wrap gap-1.5">
                       {textResult.extracted_iocs.phones?.map((p) => (
                         <button
@@ -620,43 +572,62 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
         )}
       </div>
 
-      {/* ── 3. SIMULATED NEURAL SCAN CARD FOR VIDEO / AUDIO ── */}
+      {/* ── 3. BEAUTIFUL UI NEURAL SCAN CARD FOR VIDEO / AUDIO ── */}
       {neuralSimulation && (
-        <div className="rounded-xl bg-[var(--inset)] border-[1.5px] border-[var(--border)] p-4 space-y-2.5 text-xs shadow-card animate-in fade-up duration-300">
-          <div className="flex items-center justify-between border-b border-[var(--line)] pb-2.5">
+        <div className="rounded-xl bg-surface border-[1.5px] border-line p-4 space-y-3.5 text-xs shadow-card animate-in fade-up duration-300">
+          <div className="flex items-center justify-between border-b border-line pb-3">
             <span className="font-semibold text-ink flex items-center gap-2">
-              {neuralSimulation.isScanning ? (
-                <RefreshCw className="w-4 h-4 animate-spin text-[var(--accent)]" />
-              ) : (
-                <CheckCircle2 className="w-4 h-4 text-[var(--accent)]" />
-              )}
-              {neuralSimulation.fileName}
+              <CyberIcon name={neuralSimulation.modality === "audio" ? "audio" : "video"} size={16} glow={!neuralSimulation.isScanning} />
+              <span className="truncate max-w-[200px] sm:max-w-xs">{neuralSimulation.fileName}</span>
             </span>
-            <StatusPill
-              tone={neuralSimulation.threatScore >= 75 ? "critical" : "active"}
-              size="sm"
-            >
-              {neuralSimulation.confidence} Confidence
-            </StatusPill>
+
+            {neuralSimulation.isScanning ? (
+              <LoadingState label="Inspecting signal..." variant="Drive" />
+            ) : (
+              <StatusPill
+                tone={neuralSimulation.threatScore >= 75 ? "critical" : "active"}
+                size="sm"
+                pulse={neuralSimulation.threatScore >= 75}
+              >
+                {neuralSimulation.confidence} Confidence • {neuralSimulation.threatScore >= 75 ? "MANIPULATED" : "AUTHENTIC"}
+              </StatusPill>
+            )}
           </div>
 
-          <div className="font-semibold text-xs text-[var(--accent-ink)]">
-            {neuralSimulation.verdict}
-          </div>
+          {/* Thinking Trace (Collapsible Reasoning Tree) */}
+          <ThinkingState
+            variant="Forensic"
+            isProcessing={neuralSimulation.isScanning}
+            activeLabel={neuralSimulation.modality === "audio" ? "Checking voice naturalness" : "Analyzing facial movements and video edges"}
+            doneLabel={neuralSimulation.modality === "audio" ? "Voice analysis complete" : "Face and video analysis complete"}
+            rows={
+              neuralSimulation.modality === "audio"
+                ? [
+                    { primary: "Checking voice pitch and tone naturalness", secondary: "Audio check" },
+                    { primary: "Checking for synthetic or robotic speech patterns", secondary: "Voice scan" },
+                    { primary: "Checking background room and environment sound", secondary: "Acoustic check" },
+                    { primary: "Generating AI voice risk score", secondary: neuralSimulation.confidence },
+                  ]
+                : [
+                    { primary: "Analyzing facial features and eye movements", secondary: "Face tracking" },
+                    { primary: "Checking for digital face-swapping or editing edges", secondary: "Visual check" },
+                    { primary: "Checking smoothness and consistency across frames", secondary: "Frame flow" },
+                    { primary: "Generating deepfake risk score", secondary: neuralSimulation.confidence },
+                  ]
+            }
+          />
 
-          <p className="text-[11.5px] text-ink-2 leading-relaxed">
-            {neuralSimulation.details}
-          </p>
+          {!neuralSimulation.isScanning && (
+            <div className="space-y-1.5 pt-1 border-t border-line">
+              <div className="font-semibold text-xs text-ink">{neuralSimulation.verdict}</div>
+              <div className="text-[12px] text-ink-2 leading-relaxed bg-inset/60 p-3 rounded-lg border border-line">
+                <StreamText text={neuralSimulation.details} charsPerTick={3} tickMs={12} />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── 4. 1-CLICK BENCHMARK PRESETS BAR ── */}
-      <div className="pt-4 border-t border-[var(--line)]">
-        <BenchmarkPresets
-          currentModality={activeModality}
-          onSelectPreset={handleSelectPreset}
-        />
-      </div>
     </div>
   );
 }

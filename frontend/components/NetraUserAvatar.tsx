@@ -109,8 +109,8 @@ export const NETRA_AVATARS: AvatarTheme[] = [
     Icon: Disc,
   },
   {
-    id: "cipher-key",
-    name: "Cipher Key",
+    id: "nexus-cyber",
+    name: "Nexus Cyber",
     imageUrl: "/avatars/avatar-10.svg",
     bgGradient: "from-teal-950 via-slate-900 to-teal-900",
     borderColor: "border-teal-400",

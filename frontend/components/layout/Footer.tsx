@@ -1,13 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { 
-  Shield, Terminal, Activity, FileCheck2, 
-  ExternalLink, Lock, CheckCircle2, Cpu, Globe, Database, Scan
+  PhoneCall, ExternalLink, ShieldAlert, Globe, 
+  Scan, Terminal, Cpu, Database, Copy, Check, 
+  Layers, ArrowUpRight, MessageSquareWarning, 
+  Video, Mic, FileText, CheckCircle2, Shield
 } from "lucide-react";
 import { NetraBrandLogo } from "@/components/NetraBrandLogo";
-import { StatusPill } from "@/components/atoms/StatusPill";
 import { cn } from "@/lib/utils";
 
 export interface FooterProps {
@@ -15,184 +16,197 @@ export interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
-  const telemetryBadges = [
-    { label: "API Latency", value: "24ms", tone: "active" as const },
-    { label: "PaddleOCR", value: "v2.8 ACTIVE", tone: "active" as const },
-    { label: "Tavily Stream", value: "CONNECTED", tone: "active" as const },
-    { label: "Compliance", value: "Sec 65B IT Act", tone: "accent" as const },
-    { label: "Cryptography", value: "AES-256-GCM", tone: "neutral" as const },
+
+  const forensicEngines = [
+    { label: "Live Multi-Modal Scanner", href: "/", badge: "Core", external: false },
+    { label: "Scam Message Checker", href: "/scam", badge: "SMS/App", external: false },
+    { label: "Text Extraction & Notice OCR", href: "/", badge: "Vision", external: false },
+    { label: "Face Manipulation Check", href: "/", badge: "Video", external: false },
+    { label: "Voice Synthesis Detection", href: "/", badge: "Audio", external: false },
+  ];
+
+  const threatIntelligence = [
+    { label: "Live Threat Radar (Map)", href: "/radar", badge: "Geospatial", external: false },
+    { label: "Reported Threat Catalog", href: "/reported", badge: "Database", external: false },
+    { label: "Threat Trends & Analytics", href: "/trends", badge: "Live", external: false },
+    { label: "Live Scam Feed (Tavily AI)", href: "/#feed", badge: "24H Sync", external: false },
+    { label: "National Cyber Crime Portal", href: "https://cybercrime.gov.in", badge: "Gov.in", external: true },
+  ];
+
+  const developersAndSafety = [
+    { label: "REST API Documentation", href: "/developers", badge: "FastAPI", external: false },
+    { label: "Model Architecture & Benchmarks", href: "/technology", badge: "Telemetry", external: false },
+    { label: "Sanchar Saathi (Chakshu)", href: "https://sancharsaathi.gov.in", badge: "DoT", external: true },
+    { label: "RBI Sachet Portal", href: "https://sachet.rbi.org.in", badge: "RBI", external: true },
   ];
 
   return (
     <footer
       className={cn(
-        "w-full bg-[var(--page)] border-t border-[var(--line)] py-12 text-ink font-sans select-none",
+        "w-full py-6 sm:py-8 select-none font-sans",
         className
       )}
-      aria-label="Institutional Footer"
+      aria-label="Platform Footer"
     >
-      <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-12 space-y-10">
+      <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10">
         
-        {/* Top Telemetry Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-canvas border-[1.5px] border-line shadow-card">
-          <div className="flex items-center gap-2">
-            <span className="size-2 rounded-full bg-green animate-pulse" />
-            <span className="text-xs font-mono font-semibold text-ink uppercase tracking-wider">
-              System Telemetry & Live Diagnostics
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-            {telemetryBadges.map((badge, idx) => (
-              <div
-                key={idx}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-inset border-[1.5px] border-line text-[11px]"
-              >
-                <span className="text-ink-3">{badge.label}:</span>
-                <span className={cn(
-                  "font-semibold",
-                  badge.tone === "active" && "text-green",
-                  badge.tone === "accent" && "text-accent",
-                  badge.tone === "neutral" && "text-ink"
-                )}>
-                  {badge.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Multi-Column Main Navigation Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
-          
-          {/* Col 1: Brand Statement & Insignia */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <NetraBrandLogo size={34} />
-              <div>
-                <span className="text-base font-bold tracking-tight text-ink font-sans">
-                  NETRA FORENSIC AI
-                </span>
-                <div className="text-[11px] font-mono text-accent">
-                  Eyes That See Through • Institutional Cyber Suite
+        {/* ── UNIFIED BEAUTIFUL-UI FORENSIC MATRIX CARD ── */}
+        <div className="rounded-2xl bg-surface border-[1.5px] border-line shadow-card overflow-hidden p-6 sm:p-8 lg:p-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
+            
+            {/* ── COL 1 (Brand & Mission): 4 columns ── */}
+            <div className="lg:col-span-4 flex flex-col justify-between space-y-6">
+              <div className="space-y-3.5">
+                <div className="flex items-center gap-3">
+                  <NetraBrandLogo size={32} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-bold tracking-tight text-ink font-sans">
+                        NETRA
+                      </span>
+                    </div>
+                    <div className="text-[10.5px] font-mono text-ink-3 tracking-wider">
+                      Eyes that see through
+                    </div>
+                  </div>
                 </div>
+
+                <p className="text-xs text-ink-2 leading-relaxed max-w-sm">
+                  Open-access multi-modal artificial intelligence platform engineered to detect deepfakes, synthetic voice clones, and deceptive scam communications in real time.
+                </p>
+              </div>
+
+              {/* Live Telemetry Dot */}
+              <div className="flex items-center gap-2 text-[11px] font-mono text-ink-3">
+                <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>FastAPI Backend Online • Real-Time Protection</span>
               </div>
             </div>
 
-            <p className="text-xs text-ink-2 font-sans leading-relaxed max-w-md">
-              Autonomous multi-modal artificial intelligence engine engineered for deepfake forensic decomposition, audio waveform artifact detection, and 24-hour real-time cyber threat intelligence triage.
-            </p>
+            {/* ── COL 2: FORENSIC ENGINES (3 columns) ── */}
+            <div className="lg:col-span-3 space-y-3.5">
+              <div className="flex items-center gap-2 pb-1 border-b border-line">
+                <div className="size-7 rounded-lg bg-inset border border-line flex items-center justify-center text-ink shrink-0">
+                  <Scan className="size-3.5" />
+                </div>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-ink font-semibold">
+                  Forensic Engines
+                </h4>
+              </div>
 
-            <div className="flex items-center gap-2 pt-1 text-[11px] font-mono text-ink-3">
-              <Shield className="size-3.5 text-accent" />
-              <span>Certified Cyber Forensics & Evidence Preservation Framework</span>
+              <ul className="space-y-1 text-xs w-full">
+                {forensicEngines.map((item) => (
+                  <li key={item.label} className="w-full">
+                    <Link
+                      href={item.href}
+                      className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg hover:bg-hover text-ink-2 hover:text-ink transition-colors duration-150"
+                    >
+                      <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
+                        {item.label}
+                      </span>
+                      <span className="w-[74px] shrink-0 text-center text-[10px] font-mono py-0.5 rounded bg-inset border border-line text-ink-3 group-hover:text-ink group-hover:border-line-hover transition-colors">
+                        {item.badge}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
 
-          {/* Col 2: Forensic AI Engines */}
-          <div className="space-y-3">
-            <div className="text-xs font-mono font-bold uppercase tracking-wider text-ink">
-              Forensic Engines
+            {/* ── COL 3: THREAT INTELLIGENCE (3 columns) ── */}
+            <div className="lg:col-span-3 space-y-3.5">
+              <div className="flex items-center gap-2 pb-1 border-b border-line">
+                <div className="size-7 rounded-lg bg-inset border border-line flex items-center justify-center text-ink shrink-0">
+                  <Globe className="size-3.5" />
+                </div>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-ink font-semibold">
+                  Threat Intelligence
+                </h4>
+              </div>
+
+              <ul className="space-y-1 text-xs w-full">
+                {threatIntelligence.map((item) => (
+                  <li key={item.label} className="w-full">
+                    {item.external ? (
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg hover:bg-hover text-ink-2 hover:text-ink transition-colors duration-150"
+                      >
+                        <span className="flex items-center gap-1 group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
+                          <span className="truncate">{item.label}</span>
+                          <ExternalLink className="size-2.5 opacity-60 shrink-0" />
+                        </span>
+                        <span className="w-[74px] shrink-0 text-center text-[10px] font-mono py-0.5 rounded bg-inset border border-line text-ink-3 group-hover:text-ink group-hover:border-line-hover transition-colors">
+                          {item.badge}
+                        </span>
+                      </a>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg hover:bg-hover text-ink-2 hover:text-ink transition-colors duration-150"
+                      >
+                        <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
+                          {item.label}
+                        </span>
+                        <span className="w-[74px] shrink-0 text-center text-[10px] font-mono py-0.5 rounded bg-inset border border-line text-ink-3 group-hover:text-ink group-hover:border-line-hover transition-colors">
+                          {item.badge}
+                        </span>
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="space-y-2 text-xs text-ink-2">
-              <li>
-                <Link href="/" className="hover:text-ink transition-colors flex items-center gap-1.5">
-                  <Scan className="size-3 text-accent" />
-                  <span>Multi-Modal Sandbox</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/" className="hover:text-ink transition-colors flex items-center gap-1.5">
-                  <FileCheck2 className="size-3 text-green" />
-                  <span>PaddleOCR Dossier</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/" className="hover:text-ink transition-colors">
-                  Audio Spectral Analysis
-                </Link>
-              </li>
-              <li>
-                <Link href="/" className="hover:text-ink transition-colors">
-                  Video Temporal Artifacts
-                </Link>
-              </li>
-            </ul>
-          </div>
 
-          {/* Col 3: Intelligence & Catalog */}
-          <div className="space-y-3">
-            <div className="text-xs font-mono font-bold uppercase tracking-wider text-ink">
-              Threat Intelligence
+            {/* ── COL 4: DEVELOPERS & SAFETY (2 columns) ── */}
+            <div className="lg:col-span-2 space-y-3.5">
+              <div className="flex items-center gap-2 pb-1 border-b border-line">
+                <div className="size-7 rounded-lg bg-inset border border-line flex items-center justify-center text-ink shrink-0">
+                  <Terminal className="size-3.5" />
+                </div>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-ink font-semibold">
+                  Developers & Safety
+                </h4>
+              </div>
+
+              <ul className="space-y-1 text-xs w-full">
+                {developersAndSafety.map((item) => (
+                  <li key={item.label} className="w-full">
+                    {item.external ? (
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg hover:bg-hover text-ink-2 hover:text-ink transition-colors duration-150"
+                      >
+                        <span className="flex items-center gap-1 group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
+                          <span className="truncate">{item.label}</span>
+                          <ExternalLink className="size-2.5 opacity-60 shrink-0" />
+                        </span>
+                        <span className="w-[74px] shrink-0 text-center text-[10px] font-mono py-0.5 rounded bg-inset border border-line text-ink-3 group-hover:text-ink group-hover:border-line-hover transition-colors">
+                          {item.badge}
+                        </span>
+                      </a>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg hover:bg-hover text-ink-2 hover:text-ink transition-colors duration-150"
+                      >
+                        <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
+                          {item.label}
+                        </span>
+                        <span className="w-[74px] shrink-0 text-center text-[10px] font-mono py-0.5 rounded bg-inset border border-line text-ink-3 group-hover:text-ink group-hover:border-line-hover transition-colors">
+                          {item.badge}
+                        </span>
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="space-y-2 text-xs text-ink-2">
-              <li>
-                <Link href="/radar" className="hover:text-ink transition-colors flex items-center gap-1.5">
-                  <Globe className="size-3 text-accent" />
-                  <span>Threat Radar 3D</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/reported" className="hover:text-ink transition-colors flex items-center gap-1.5">
-                  <Database className="size-3 text-amber-400" />
-                  <span>Scam Threat Catalog</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/" className="hover:text-ink transition-colors">
-                  24H Tavily News Stream
-                </Link>
-              </li>
-              <li>
-                <Link href="/technology" className="hover:text-ink transition-colors">
-                  Model Architecture
-                </Link>
-              </li>
-            </ul>
-          </div>
 
-          {/* Col 4: Developers & Legal */}
-          <div className="space-y-3">
-            <div className="text-xs font-mono font-bold uppercase tracking-wider text-ink">
-              Developers & Compliance
-            </div>
-            <ul className="space-y-2 text-xs text-ink-2">
-              <li>
-                <Link href="/developers" className="hover:text-ink transition-colors flex items-center gap-1.5">
-                  <Terminal className="size-3 text-accent" />
-                  <span>REST API Documentation</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/developers" className="hover:text-ink transition-colors">
-                  Python SDK & CLI
-                </Link>
-              </li>
-              <li>
-                <Link href="/developers" className="hover:text-ink transition-colors">
-                  Section 65B Audit Certificate
-                </Link>
-              </li>
-              <li>
-                <Link href="/technology" className="hover:text-ink transition-colors">
-                  Chain of Custody Whitepaper
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-        </div>
-
-        {/* Legal Disclaimer & Bottom Copyright Bar */}
-        <div className="pt-6 border-t border-line flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-mono text-ink-3">
-          <p className="text-[11px] leading-relaxed max-w-2xl text-center md:text-left">
-            Institutional Notice: NETRA forensic dossiers are generated in strict adherence to Section 65B of the Indian Evidence Act (1872 / BSA 2023) for digital evidence preservation and evidentiary integrity.
-          </p>
-
-          <div className="flex items-center gap-4 shrink-0 text-[11px]">
-            <span>© 2026 NETRA Cyber AI</span>
-            <span>•</span>
-            <span className="text-green">All Systems Nominal</span>
           </div>
         </div>
 

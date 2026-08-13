@@ -18,16 +18,16 @@ export type Tone = StatusPillTone;
 export type StatusPillSize = "sm" | "md" | "lg";
 
 const toneStyles: Record<StatusPillTone, string> = {
-  active: "bg-green-tint text-green border-green/25",
-  green: "bg-green-tint text-green border-green/25",
-  warning: "bg-orange-tint text-orange border-orange/25",
-  orange: "bg-orange-tint text-orange border-orange/25",
-  critical: "bg-red-tint text-red border-red/25",
-  red: "bg-red-tint text-red border-red/25",
-  info: "bg-accent-tint text-accent-ink border-accent/25",
-  accent: "bg-accent-tint text-accent-ink border-accent/25",
-  purple: "bg-purple-tint text-purple border-purple/25",
-  neutral: "bg-inset text-ink-2 border-line",
+  active: "bg-[#18181B] text-zinc-200 border-white/10",
+  green: "bg-[#18181B] text-zinc-200 border-white/10",
+  warning: "bg-[#18181B] text-zinc-200 border-white/10",
+  orange: "bg-[#18181B] text-zinc-200 border-white/10",
+  critical: "bg-[#18181B] text-zinc-200 border-white/10",
+  red: "bg-[#18181B] text-zinc-200 border-white/10",
+  info: "bg-[#27272A] text-white border-white/10",
+  accent: "bg-[#27272A] text-white border-white/10",
+  purple: "bg-[#27272A] text-zinc-200 border-white/10",
+  neutral: "bg-[#18181B] text-zinc-400 border-white/10",
 };
 
 const sizeStyles: Record<StatusPillSize, string> = {
@@ -37,16 +37,16 @@ const sizeStyles: Record<StatusPillSize, string> = {
 };
 
 const dotColor: Record<StatusPillTone, string> = {
-  active: "bg-green",
-  green: "bg-green",
-  warning: "bg-orange",
-  orange: "bg-orange",
-  critical: "bg-red",
-  red: "bg-red",
-  info: "bg-accent",
-  accent: "bg-accent",
-  purple: "bg-purple",
-  neutral: "bg-ink-3",
+  active: "bg-emerald-400",
+  green: "bg-emerald-400",
+  warning: "bg-amber-400",
+  orange: "bg-amber-400",
+  critical: "bg-rose-500",
+  red: "bg-rose-500",
+  info: "bg-white",
+  accent: "bg-white",
+  purple: "bg-zinc-300",
+  neutral: "bg-zinc-500",
 };
 
 export function statusPillVariants({
