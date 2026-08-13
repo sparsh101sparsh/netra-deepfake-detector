@@ -1,14 +1,17 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { Activity, ShieldAlert, Cpu, BarChart3, ShieldCheck } from 'lucide-react'
-import Link from 'next/link'
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
-  title: 'NETRA - Deepfake & Scam Detector',
-  description: 'Premium AI-Powered Security Infrastructure',
+  title: 'NETRA — Truth Beyond the Surface | Multi-Modal Forensic AI',
+  description: 'Next-Generation Multi-Modal AI Forensic Engine for Deepfake & Voice Clone Detection',
+  icons: {
+    icon: [
+      { url: '/netra_favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/netra_favicon.svg',
+    apple: '/netra_favicon.svg',
+  },
 }
 
 export default function RootLayout({
@@ -17,54 +20,17 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} font-sans`}>
-      <body className="bg-background text-foreground antialiased min-h-screen flex flex-col selection:bg-white/10">
-        
-        {/* Vercel-style Top Navigation */}
-        <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-          <div className="flex h-14 items-center px-4 md:px-6 max-w-7xl mx-auto w-full justify-between">
-            <div className="flex items-center gap-6">
-              <Link href="/" className="flex items-center gap-2 group">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-active:scale-95 overflow-hidden border border-border">
-                  <img src="/logo.png" alt="NETRA Logo" className="w-full h-full object-cover" />
-                </div>
-                <span className="font-semibold tracking-tight text-lg">NETRA</span>
-              </Link>
-              
-              <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
-                <Link href="/" className="px-3 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex items-center gap-2">
-                  <Cpu className="w-4 h-4" />
-                  Analyzer
-                </Link>
-                <Link href="/trends" className="px-3 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex items-center gap-2">
-                  <Activity className="w-4 h-4" />
-                  Telemetry
-                </Link>
-                <Link href="/scam" className="px-3 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4" />
-                  Scam Intel
-                </Link>
-                <Link href="/developers" className="px-3 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  Developers
-                </Link>
-              </nav>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <button className="btn-secondary px-3 py-1.5 text-xs">Documentation</button>
-              <div className="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center text-xs font-semibold">
-                S
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 relative">
-          {/* Subtle background glow effect (Linear style) */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] bg-white/[0.02] rounded-full blur-3xl pointer-events-none -z-10"></div>
-          {children}
-        </main>
+    <html lang="en" className="dark">
+      <head>
+        <link rel="icon" type="image/svg+xml" href="/netra_favicon.svg" />
+        <link rel="alternate icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/netra_favicon.svg" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      </head>
+      <body className="bg-[#030712] text-neutral-100 antialiased min-h-screen flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200">
+        {children}
       </body>
     </html>
   )
