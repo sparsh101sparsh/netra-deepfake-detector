@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Script from "next/script";
 import { LogOut, Shield, X, CheckCircle2, User, Palette, Sparkles } from "lucide-react";
 import { NetraUserAvatar, NETRA_AVATARS, getAvatarByEmailOrName } from "./NetraUserAvatar";
@@ -25,9 +26,14 @@ export const GoogleAuthButton: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [gsiLoaded, setGsiLoaded] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
 
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "934298152536-ft5qgqj1ouh125jrfckjiup1b3jp04gl.apps.googleusercontent.com";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Decode JWT helper
   const parseJwt = (token: string): any => {
@@ -51,7 +57,6 @@ export const GoogleAuthButton: React.FC = () => {
     if (response && response.credential) {
       const payload = parseJwt(response.credential);
       if (payload) {
-        // Assign random avatar index from 0 to 9 if new account
         const randomAvatarIndex = Math.floor(Math.random() * NETRA_AVATARS.length);
         const profile: UserProfile = {
           name: payload.name || payload.given_name || "Google User",
@@ -122,7 +127,6 @@ export const GoogleAuthButton: React.FC = () => {
   }, [showModal]);
 
   const handleTriggerGooglePrompt = () => {
-    // Open centered modal directly in the middle of the screen
     setShowModal(true);
   };
 
@@ -146,19 +150,47 @@ export const GoogleAuthButton: React.FC = () => {
     setShowAvatarPicker(false);
   };
 
-  // Demo / Quick Sign-In fallback
-  const handleQuickDemoSignIn = () => {
-    const randomAvatarIndex = Math.floor(Math.random() * NETRA_AVATARS.length);
-    const demoProfile: UserProfile = {
-      name: "Forensic Analyst",
-      email: "analyst@cybercell.gov.in",
-      avatarIndex: randomAvatarIndex,
-      sub: "netra_demo_user_001",
-    };
-    setUser(demoProfile);
-    localStorage.setItem("netra_auth_user", JSON.stringify(demoProfile));
-    setShowModal(false);
-  };
+  const modalContent = showModal && mounted ? createPortal(
+    <div 
+      className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+      onClick={() => setShowModal(false)}
+    >
+      <div 
+        className="bg-neutral-950 border border-cyan-500/40 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-[0_0_60px_rgba(0,0,0,0.95)] animate-in zoom-in-95 duration-200 relative font-mono"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="flex items-center justify-between">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-[10px] font-bold text-cyan-400 tracking-widest uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            NETRA AUTH
+          </div>
+          <button
+            onClick={() => setShowModal(false)}
+            className="p-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-850 text-neutral-400 hover:text-white transition-all"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Title & Description */}
+        <div className="text-center space-y-2 pt-1">
+          <h3 className="text-xl font-bold text-white tracking-tight">
+            Sign In with Google
+          </h3>
+          <p className="text-xs text-neutral-400 font-sans leading-relaxed">
+            Authenticate with your official Google account to unlock institutional multi-modal forensic investigations and developer API keys.
+          </p>
+        </div>
+
+        {/* Official Google GSI Render Container */}
+        <div className="flex flex-col items-center justify-center py-4">
+          <div ref={googleBtnContainerRef} className="flex justify-center min-h-[44px]"></div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  ) : null;
 
   return (
     <>
@@ -262,89 +294,36 @@ export const GoogleAuthButton: React.FC = () => {
           </div>
         ) : (
           /* Sign In Button */
-          <>
-            <button
-              onClick={handleTriggerGooglePrompt}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-neutral-100 text-neutral-900 text-xs font-bold transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-[1.02]"
-            >
-              {/* Google Multi-Color G */}
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24Z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15Z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"
-                />
-              </svg>
-              <span>Sign In</span>
-            </button>
-
-            {/* Google Authentication Centered Modal */}
-            {showModal && (
-              <div 
-                className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-                onClick={() => setShowModal(false)}
-              >
-                <div 
-                  className="bg-neutral-950/95 border border-cyan-500/30 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-[0_0_50px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-200 relative"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {/* Modal Header */}
-                  <div className="flex items-center justify-between">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-[10px] font-bold text-cyan-400 tracking-widest uppercase">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                      NETRA AUTH
-                    </div>
-                    <button
-                      onClick={() => setShowModal(false)}
-                      className="p-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-850 text-neutral-400 hover:text-white transition-all"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Title & Description */}
-                  <div className="text-center space-y-2 pt-2">
-                    <h3 className="text-xl font-bold text-white tracking-tight">
-                      Sign In with Google
-                    </h3>
-                    <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-                      Authenticate with your official Google account to unlock institutional multi-modal forensic investigations and developer API keys.
-                    </p>
-                  </div>
-
-                  {/* Official Google GSI Render Container */}
-                  <div className="flex flex-col items-center justify-center py-4 space-y-4">
-                    <div ref={googleBtnContainerRef} className="flex justify-center min-h-[44px]"></div>
-                  </div>
-
-                  {/* Quick Demo Access Fallback */}
-                  <div className="pt-4 border-t border-neutral-850 flex flex-col items-center space-y-2">
-                    <button
-                      onClick={handleQuickDemoSignIn}
-                      className="w-full py-2.5 px-4 rounded-xl bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-xs font-bold text-neutral-300 hover:text-white flex items-center justify-center gap-2 transition-all"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Instant Demo Access (Skip Google)</span>
-                    </button>
-                    <span className="text-[10px] text-neutral-500">For security testing and rapid review</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
+          <button
+            onClick={handleTriggerGooglePrompt}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-neutral-100 text-neutral-900 text-xs font-bold transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-[1.02]"
+          >
+            {/* Google Multi-Color G */}
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24Z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15Z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"
+              />
+            </svg>
+            <span>Sign In</span>
+          </button>
         )}
       </div>
+
+      {/* Render Modal via React Portal directly into document.body */}
+      {modalContent}
     </>
   );
 };
