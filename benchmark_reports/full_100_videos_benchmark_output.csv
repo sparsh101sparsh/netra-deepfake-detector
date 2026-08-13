@@ -1,0 +1,101 @@
+index,person_name,filename,netra_fused_prob,confidence_pct,verdict,risk_level,spatial_effnet,clip_probe,spectral_score,seam_ratio,meso_incept,meso4
+1,ACM Amar Preet Singh,deepfake_ACM_Amar_Preet_Singh.mp4,0.6456,64.6,EDITED_VIDEO,MEDIUM,0.8976,0.5551,0.25,1.115,0.5551,0.4827
+2,A R Rahman,deepfake_A_R_Rahman.mp4,0.5916,59.2,EDITED_VIDEO,LOW,0.7685,0.5557,0.25,0.94,0.555,0.4826
+3,Abhinav Bindra,deepfake_Abhinav_Bindra.mp4,0.6691,66.9,EDITED_VIDEO,MEDIUM,0.9533,0.5556,0.25,1.045,0.555,0.4826
+4,Adm Krishna Swaminathan,deepfake_Adm_Krishna_Swaminathan.mp4,0.6025,60.2,EDITED_VIDEO,MEDIUM,0.7943,0.5559,0.25,1.003,0.5549,0.4825
+5,Ajit Doval,deepfake_Ajit_Doval.mp4,0.5934,59.3,EDITED_VIDEO,LOW,0.7731,0.5555,0.25,0.999,0.555,0.4826
+6,Akhilesh Yadav,deepfake_Akhilesh_Yadav.mp4,0.6189,61.9,EDITED_VIDEO,MEDIUM,0.8335,0.5558,0.25,1.053,0.5549,0.4825
+7,Alia Bhatt,deepfake_Alia_Bhatt.mp4,0.5792,57.9,EDITED_VIDEO,LOW,0.7398,0.555,0.25,1.024,0.5551,0.4827
+8,Amartya Sen,deepfake_Amartya_Sen.mp4,0.6062,60.6,EDITED_VIDEO,MEDIUM,0.8035,0.5555,0.25,1.015,0.555,0.4826
+9,Amit Shah,deepfake_Amit_Shah.mp4,0.6621,66.2,EDITED_VIDEO,MEDIUM,0.9366,0.5555,0.25,1.052,0.555,0.4826
+10,Amitabh Bachchan,deepfake_Amitabh_Bachchan.mp4,0.6495,64.9,EDITED_VIDEO,MEDIUM,0.9064,0.5556,0.25,1.035,0.555,0.4826
+11,Anurag Thakur,deepfake_Anurag_Thakur.mp4,0.6077,60.8,EDITED_VIDEO,MEDIUM,0.8072,0.5553,0.25,1.064,0.5551,0.4827
+12,Arundhati Roy,deepfake_Arundhati_Roy.mp4,0.5411,54.1,EDITED_VIDEO,LOW,0.6481,0.556,0.25,0.975,0.555,0.4826
+13,Arvind Kejriwal,deepfake_Arvind_Kejriwal.mp4,0.5581,55.8,EDITED_VIDEO,LOW,0.6889,0.5555,0.25,0.999,0.5551,0.4827
+14,Asha Bhosle,deepfake_Asha_Bhosle.mp4,0.6554,65.5,EDITED_VIDEO,MEDIUM,0.9207,0.5555,0.25,0.952,0.555,0.4826
+15,Ashwini Vaishnaw,deepfake_Ashwini_Vaishnaw.mp4,0.6426,64.3,EDITED_VIDEO,MEDIUM,0.8897,0.556,0.25,1.087,0.555,0.4826
+16,Azim Premji,deepfake_Azim_Premji.mp4,0.6498,65.0,EDITED_VIDEO,MEDIUM,0.9071,0.5557,0.25,0.979,0.555,0.4826
+17,Bhavish Aggarwal,deepfake_Bhavish_Aggarwal.mp4,0.6733,67.3,EDITED_VIDEO,MEDIUM,0.9634,0.5555,0.25,1.001,0.5551,0.4827
+18,CNR Rao,deepfake_CNR_Rao.mp4,0.6593,65.9,EDITED_VIDEO,MEDIUM,0.9297,0.5557,0.25,0.916,0.555,0.4826
+19,C P Radhakrishnan,deepfake_C_P_Radhakrishnan.mp4,0.6462,64.6,EDITED_VIDEO,MEDIUM,0.8986,0.5556,0.25,1.057,0.5551,0.4827
+20,Cyrus Poonawalla,deepfake_Cyrus_Poonawalla.mp4,0.5774,57.7,EDITED_VIDEO,LOW,0.7344,0.5561,0.25,1.069,0.555,0.4826
+21,Deepika Padukone,deepfake_Deepika_Padukone.mp4,0.5636,56.4,EDITED_VIDEO,LOW,0.7021,0.5555,0.25,0.984,0.555,0.4826
+22,Deepinder Goyal,deepfake_Deepinder_Goyal.mp4,0.6771,67.7,EDITED_VIDEO,MEDIUM,0.9723,0.5555,0.25,1.027,0.5551,0.4827
+23,Devendra Fadnavis,deepfake_Devendra_Fadnavis.mp4,0.6825,68.2,EDITED_VIDEO,MEDIUM,0.9849,0.5557,0.25,1.064,0.5551,0.4827
+24,Dharmendra Pradhan,deepfake_Dharmendra_Pradhan.mp4,0.5478,54.8,EDITED_VIDEO,LOW,0.6645,0.5555,0.25,1.07,0.555,0.4826
+25,Dilip Shanghvi,deepfake_Dilip_Shanghvi.mp4,0.5363,53.6,EDITED_VIDEO,LOW,0.6373,0.5552,0.25,0.984,0.5552,0.4828
+26,Droupadi Murmu,deepfake_Droupadi_Murmu.mp4,0.6126,61.3,EDITED_VIDEO,MEDIUM,0.8184,0.5559,0.25,0.93,0.5549,0.4825
+27,Gautam Adani,deepfake_Gautam_Adani.mp4,0.6126,61.3,EDITED_VIDEO,MEDIUM,0.8189,0.5552,0.25,1.012,0.5551,0.4827
+28,Gen Dhiraj Seth,deepfake_Gen_Dhiraj_Seth.mp4,0.5869,58.7,EDITED_VIDEO,LOW,0.7572,0.5558,0.25,0.961,0.5551,0.4827
+29,Gyanesh Kumar,deepfake_Gyanesh_Kumar.mp4,0.6465,64.7,EDITED_VIDEO,MEDIUM,0.8994,0.5557,0.25,1.005,0.5551,0.4827
+30,Himanta Biswa Sarma,deepfake_Himanta_Biswa_Sarma.mp4,0.6621,66.2,EDITED_VIDEO,MEDIUM,0.9363,0.5557,0.25,0.996,0.555,0.4826
+31,J P Nadda,deepfake_J_P_Nadda.mp4,0.6495,64.9,EDITED_VIDEO,MEDIUM,0.9065,0.5556,0.25,1.015,0.5551,0.4827
+32,Kailash Satyarthi,deepfake_Kailash_Satyarthi.mp4,0.5811,58.1,EDITED_VIDEO,LOW,0.7436,0.5557,0.25,1.015,0.555,0.4826
+33,Kamal Haasan,deepfake_Kamal_Haasan.mp4,0.5953,59.5,EDITED_VIDEO,LOW,0.7778,0.5553,0.25,1.053,0.5551,0.4827
+34,Kapil Dev,deepfake_Kapil_Dev.mp4,0.651,65.1,EDITED_VIDEO,MEDIUM,0.9102,0.5555,0.25,1.053,0.555,0.4826
+35,Kapil Sibal,deepfake_Kapil_Sibal.mp4,0.6592,65.9,EDITED_VIDEO,MEDIUM,0.9294,0.5559,0.25,0.952,0.5549,0.4825
+36,Kumar Mangalam Birla,deepfake_Kumar_Mangalam_Birla.mp4,0.6708,67.1,EDITED_VIDEO,MEDIUM,0.9575,0.5553,0.25,1.015,0.555,0.4826
+37,Kunal Shah,deepfake_Kunal_Shah.mp4,0.5846,58.5,EDITED_VIDEO,LOW,0.752,0.5556,0.25,0.982,0.5548,0.4825
+38,Lakshmi Mittal,deepfake_Lakshmi_Mittal.mp4,0.6114,61.1,EDITED_VIDEO,MEDIUM,0.816,0.5554,0.25,1.052,0.555,0.4826
+39,Lata Mangeshkar,deepfake_Lata_Mangeshkar.mp4,0.6666,66.7,EDITED_VIDEO,MEDIUM,0.9474,0.5555,0.25,1.036,0.5551,0.4827
+40,MK Stalin,deepfake_MK_Stalin.mp4,0.5771,57.7,EDITED_VIDEO,LOW,0.734,0.5556,0.25,1.091,0.5549,0.4826
+41,MS Dhoni,deepfake_MS_Dhoni.mp4,0.6566,65.7,EDITED_VIDEO,MEDIUM,0.9237,0.5552,0.25,1.047,0.555,0.4826
+42,Madhabi Puri Buch,deepfake_Madhabi_Puri_Buch.mp4,0.6188,61.9,EDITED_VIDEO,MEDIUM,0.833,0.5561,0.25,0.993,0.555,0.4826
+43,Mallikarjun Kharge,deepfake_Mallikarjun_Kharge.mp4,0.5187,51.9,EDITED_VIDEO,LOW,0.5952,0.5555,0.25,0.98,0.5549,0.4825
+44,Mamata Banerjee,deepfake_Mamata_Banerjee.mp4,0.5989,59.9,EDITED_VIDEO,LOW,0.7862,0.5554,0.25,0.942,0.5549,0.4825
+45,Mary Kom,deepfake_Mary_Kom.mp4,0.5817,58.2,EDITED_VIDEO,LOW,0.7454,0.5553,0.25,0.934,0.555,0.4826
+46,Mohan Bhagwat,deepfake_Mohan_Bhagwat.mp4,0.6396,64.0,EDITED_VIDEO,MEDIUM,0.8832,0.5553,0.25,0.889,0.555,0.4826
+47,Mohanlal,deepfake_Mohanlal.mp4,0.5899,59.0,EDITED_VIDEO,LOW,0.7649,0.5553,0.25,1.076,0.5551,0.4827
+48,Mukesh Ambani,deepfake_Mukesh_Ambani.mp4,0.6449,64.5,EDITED_VIDEO,MEDIUM,0.8954,0.5558,0.25,0.964,0.5551,0.4827
+49,N Chandrababu Naidu,deepfake_N_Chandrababu_Naidu.mp4,0.5993,59.9,EDITED_VIDEO,LOW,0.7867,0.5559,0.25,1.085,0.555,0.4826
+50,N S Raja Subramani,deepfake_N_S_Raja_Subramani.mp4,0.6713,67.1,EDITED_VIDEO,MEDIUM,0.9587,0.5553,0.25,0.983,0.555,0.4826
+51,Narendra Modi,deepfake_Narendra_Modi.mp4,0.5039,50.4,EDITED_VIDEO,LOW,0.5601,0.5554,0.25,1.051,0.5551,0.4827
+52,Neeraj Chopra,deepfake_Neeraj_Chopra.mp4,0.685,68.5,EDITED_VIDEO,MEDIUM,0.9913,0.5553,0.25,1.09,0.555,0.4826
+53,Nikhil Kamath,deepfake_Nikhil_Kamath.mp4,0.6433,64.3,EDITED_VIDEO,MEDIUM,0.8919,0.5553,0.25,1.062,0.555,0.4826
+54,Nirmala Sitharaman,deepfake_Nirmala_Sitharaman.mp4,0.4518,45.2,INCONCLUSIVE,LOW,0.4353,0.556,0.25,0.937,0.5551,0.4827
+55,Nithin Kamath,deepfake_Nithin_Kamath.mp4,0.6094,60.9,EDITED_VIDEO,MEDIUM,0.8111,0.5556,0.25,1.005,0.555,0.4826
+56,Nitin Gadkari,deepfake_Nitin_Gadkari.mp4,0.5917,59.2,EDITED_VIDEO,LOW,0.7691,0.5555,0.25,0.988,0.5551,0.4827
+57,Nitin Nabin,deepfake_Nitin_Nabin.mp4,0.6217,62.2,EDITED_VIDEO,MEDIUM,0.8404,0.5555,0.25,1.019,0.5551,0.4827
+58,Nitish Kumar,deepfake_Nitish_Kumar.mp4,0.6046,60.5,EDITED_VIDEO,MEDIUM,0.7997,0.5556,0.25,1.016,0.555,0.4826
+59,Om Birla,deepfake_Om_Birla.mp4,0.581,58.1,EDITED_VIDEO,LOW,0.7434,0.5556,0.25,0.993,0.5549,0.4825
+60,PV Sindhu,deepfake_PV_Sindhu.mp4,0.5923,59.2,EDITED_VIDEO,LOW,0.7704,0.5556,0.25,1.056,0.5551,0.4827
+61,Peyush Bansal,deepfake_Peyush_Bansal.mp4,0.5723,57.2,EDITED_VIDEO,LOW,0.7225,0.5556,0.25,1.109,0.555,0.4826
+62,Pinarayi Vijayan,deepfake_Pinarayi_Vijayan.mp4,0.6146,61.5,EDITED_VIDEO,MEDIUM,0.8232,0.5559,0.25,0.97,0.555,0.4826
+63,Piyush Goyal,deepfake_Piyush_Goyal.mp4,0.5507,55.1,EDITED_VIDEO,LOW,0.6711,0.5557,0.25,0.96,0.555,0.4826
+64,Prabhas,deepfake_Prabhas.mp4,0.6218,62.2,EDITED_VIDEO,MEDIUM,0.8408,0.5555,0.25,1.096,0.555,0.4826
+65,R Venkataramani,deepfake_R_Venkataramani.mp4,0.5937,59.4,EDITED_VIDEO,LOW,0.7735,0.5557,0.25,1.011,0.555,0.4826
+66,Radhakishan Damani,deepfake_Radhakishan_Damani.mp4,0.6314,63.1,EDITED_VIDEO,MEDIUM,0.8635,0.5555,0.25,0.976,0.555,0.4826
+67,Raghuram Rajan,deepfake_Raghuram_Rajan.mp4,0.6032,60.3,EDITED_VIDEO,MEDIUM,0.7959,0.5561,0.25,1.115,0.555,0.4826
+68,Rahul Gandhi,deepfake_Rahul_Gandhi.mp4,0.6091,60.9,EDITED_VIDEO,MEDIUM,0.8101,0.5557,0.25,1.056,0.555,0.4826
+69,Rajinikanth,deepfake_Rajinikanth.mp4,0.5426,54.3,EDITED_VIDEO,LOW,0.6518,0.5557,0.25,1.114,0.5551,0.4827
+70,Rajnath Singh,deepfake_Rajnath_Singh.mp4,0.5243,52.4,EDITED_VIDEO,LOW,0.6084,0.5557,0.25,1.031,0.5549,0.4826
+71,Revanth Reddy,deepfake_Revanth_Reddy.mp4,0.6641,66.4,EDITED_VIDEO,MEDIUM,0.9414,0.5555,0.25,1.152,0.555,0.4826
+72,Ritesh Agarwal,deepfake_Ritesh_Agarwal.mp4,0.55,55.0,EDITED_VIDEO,LOW,0.6698,0.5554,0.25,1.11,0.555,0.4826
+73,Rohit Sharma,deepfake_Rohit_Sharma.mp4,0.591,59.1,EDITED_VIDEO,LOW,0.7675,0.5552,0.25,1.123,0.555,0.4826
+74,SS Rajamouli,deepfake_SS_Rajamouli.mp4,0.6169,61.7,EDITED_VIDEO,MEDIUM,0.829,0.5554,0.25,1.078,0.555,0.4826
+75,S Jaishankar,deepfake_S_Jaishankar.mp4,0.6143,61.4,EDITED_VIDEO,MEDIUM,0.8228,0.5555,0.25,1.044,0.5551,0.4827
+76,S Somanath,deepfake_S_Somanath.mp4,0.6644,66.4,EDITED_VIDEO,MEDIUM,0.9421,0.5555,0.25,1.101,0.555,0.4826
+77,Sachin Bansal,deepfake_Sachin_Bansal.mp4,0.6575,65.7,EDITED_VIDEO,MEDIUM,0.9254,0.5557,0.25,1.068,0.555,0.4826
+78,Sachin Tendulkar,deepfake_Sachin_Tendulkar.mp4,0.6159,61.6,EDITED_VIDEO,MEDIUM,0.8266,0.5555,0.25,0.994,0.555,0.4826
+79,Saina Nehwal,deepfake_Saina_Nehwal.mp4,0.596,59.6,EDITED_VIDEO,LOW,0.7792,0.5556,0.25,1.027,0.555,0.4826
+80,Sania Mirza,deepfake_Sania_Mirza.mp4,0.4783,47.8,INCONCLUSIVE,LOW,0.4988,0.5558,0.25,1.08,0.555,0.4826
+81,Savitri Jindal,deepfake_Savitri_Jindal.mp4,0.5971,59.7,EDITED_VIDEO,LOW,0.7816,0.5557,0.25,1.032,0.5549,0.4825
+82,Shah Rukh Khan,deepfake_Shah_Rukh_Khan.mp4,0.5703,57.0,EDITED_VIDEO,LOW,0.7179,0.5556,0.25,1.095,0.555,0.4826
+83,Shaktikanta Das,deepfake_Shaktikanta_Das.mp4,0.5856,58.6,EDITED_VIDEO,LOW,0.7545,0.5556,0.25,0.985,0.5551,0.4827
+84,Sharad Pawar,deepfake_Sharad_Pawar.mp4,0.611,61.1,EDITED_VIDEO,MEDIUM,0.8146,0.5557,0.25,0.927,0.5549,0.4825
+85,Shashi Tharoor,deepfake_Shashi_Tharoor.mp4,0.6811,68.1,EDITED_VIDEO,MEDIUM,0.9814,0.556,0.25,0.992,0.5551,0.4827
+86,Shiv Nadar,deepfake_Shiv_Nadar.mp4,0.6313,63.1,EDITED_VIDEO,MEDIUM,0.8635,0.5552,0.25,0.97,0.5549,0.4826
+87,Siddaramaiah,deepfake_Siddaramaiah.mp4,0.5819,58.2,EDITED_VIDEO,LOW,0.7455,0.5557,0.25,1.008,0.555,0.4826
+88,Soumya Swaminathan,deepfake_Soumya_Swaminathan.mp4,0.5407,54.1,EDITED_VIDEO,LOW,0.6471,0.556,0.25,0.93,0.5551,0.4827
+89,Sridhar Vembu,deepfake_Sridhar_Vembu.mp4,0.5775,57.7,EDITED_VIDEO,LOW,0.7351,0.5555,0.25,1.143,0.5552,0.4828
+90,Sunil Bharti Mittal,deepfake_Sunil_Bharti_Mittal.mp4,0.618,61.8,EDITED_VIDEO,MEDIUM,0.8314,0.5558,0.25,1.017,0.555,0.4826
+91,Sunil Chhetri,deepfake_Sunil_Chhetri.mp4,0.6456,64.6,EDITED_VIDEO,MEDIUM,0.8971,0.5556,0.25,1.1,0.555,0.4826
+92,Surya Kant,deepfake_Surya_Kant.mp4,0.6242,62.4,EDITED_VIDEO,MEDIUM,0.8467,0.5553,0.25,1.039,0.555,0.4826
+93,T V Somanathan,deepfake_T_V_Somanathan.mp4,0.6476,64.8,EDITED_VIDEO,MEDIUM,0.9018,0.5558,0.25,1.028,0.5551,0.4827
+94,Uday Kotak,deepfake_Uday_Kotak.mp4,0.5764,57.6,EDITED_VIDEO,LOW,0.7328,0.5552,0.25,1.062,0.555,0.4826
+95,Uddhav Thackeray,deepfake_Uddhav_Thackeray.mp4,0.6012,60.1,EDITED_VIDEO,MEDIUM,0.7917,0.5553,0.25,1.02,0.5551,0.4827
+96,Venki Ramakrishnan,deepfake_Venki_Ramakrishnan.mp4,0.6146,61.5,EDITED_VIDEO,MEDIUM,0.8233,0.5557,0.25,0.996,0.555,0.4826
+97,Vijay Shekhar Sharma,deepfake_Vijay_Shekhar_Sharma.mp4,0.6176,61.8,EDITED_VIDEO,MEDIUM,0.8303,0.5559,0.25,1.014,0.555,0.4826
+98,Virat Kohli,deepfake_Virat_Kohli.mp4,0.5926,59.3,EDITED_VIDEO,LOW,0.7718,0.5548,0.25,1.062,0.5549,0.4826
+99,Viswanathan Anand,deepfake_Viswanathan_Anand.mp4,0.661,66.1,EDITED_VIDEO,MEDIUM,0.9341,0.5555,0.25,1.047,0.555,0.4826
+100,Yogi Adityanath,deepfake_Yogi_Adityanath.mp4,0.6051,60.5,EDITED_VIDEO,MEDIUM,0.8006,0.5558,0.25,1.019,0.555,0.4826
