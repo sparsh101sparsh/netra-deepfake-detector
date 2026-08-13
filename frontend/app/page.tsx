@@ -70,7 +70,7 @@ export default function ForensicHub() {
 
   // ScrollSpy to track active section in single-page view
   useEffect(() => {
-    const sectionIds = ["analyzer", "news", "reported", "technology", "developers"];
+    const sectionIds = ["analyzer", "mapping", "reported", "technology", "developers"];
     
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 250;
@@ -184,8 +184,8 @@ export default function ForensicHub() {
           {/* Smooth Scroll Navigation Links */}
           <nav className="hidden md:flex items-center gap-2 text-xs font-mono font-medium text-neutral-400 bg-neutral-950/70 p-1.5 rounded-2xl border border-neutral-850">
             {[
-              { id: "analyzer", label: "Scanner & Radar", icon: Scan },
-              { id: "news", label: "Scam Feed (Tavily)", icon: Newspaper },
+              { id: "analyzer", label: "Scanner & Feed", icon: Scan },
+              { id: "mapping", label: "Threat Mapping", icon: Globe },
               { id: "reported", label: "Threat Catalog", icon: Database },
               { id: "technology", label: "Technology", icon: Cpu },
               { id: "developers", label: "Developer API", icon: Terminal },
@@ -219,7 +219,7 @@ export default function ForensicHub() {
       {/* Main Single-Page Container */}
       <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-12 space-y-20 py-6 sm:py-8">
         
-        {/* ================= TOP ROW: SPLIT GRID [MAP (LEFT) | DRAG & DROP MULTI-MODAL (RIGHT)] ================= */}
+        {/* ================= TOP ROW: SPLIT GRID [TAVILY FEED (LEFT) | DRAG & DROP MULTI-MODAL (RIGHT)] ================= */}
         <section 
           id="analyzer"
           className={`scroll-mt-24 transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] ${
@@ -229,11 +229,9 @@ export default function ForensicHub() {
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             
-            {/* LEFT BOX: Live Interactive Threat Radar Map (6 Cols) */}
+            {/* LEFT BOX: 24-Hour Live Autonomous Cyber Scam Feed (Tavily) */}
             <div className="lg:col-span-6 flex flex-col justify-between">
-              <div className="h-full rounded-3xl overflow-hidden border border-neutral-800 shadow-2xl bg-neutral-950/80 flex flex-col">
-                <LiveThreatRadar />
-              </div>
+              <LiveCyberScamNewsFeed compact={true} />
             </div>
 
             {/* RIGHT BOX: Complete Drag and Drop Multi-Modal Scanner (6 Cols) */}
@@ -244,9 +242,35 @@ export default function ForensicHub() {
           </div>
         </section>
 
-        {/* ================= BOTTOM ROW: TAVILY SCAM NEWS FEED (GOOGLE NEWS STYLE) ================= */}
-        <section id="news" className="pt-16 border-t border-neutral-800/80 scroll-mt-28">
-          <LiveCyberScamNewsFeed />
+        {/* ================= SECTION 2: NATIONAL CYBER THREAT RADAR & GEOSPATIAL MAPPING ================= */}
+        <section id="mapping" className="pt-16 border-t border-neutral-800/80 scroll-mt-28">
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                  <Globe className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-white tracking-tight text-base sm:text-xl">
+                      National Cyber Threat Radar & Geospatial Mapping
+                    </h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                      LIVE GPS & TELECOM PINS
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-400 font-sans mt-0.5">
+                    Live geographic telemetry mapping deepfake video uploads, voice clone extortion, and scam campaigns across Indian cities.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full h-[620px] rounded-3xl overflow-hidden border border-neutral-800 shadow-2xl bg-neutral-950/80">
+              <LiveThreatRadar />
+            </div>
+          </div>
         </section>
 
         {/* ================= SECTION 3: THREAT CATALOG & VERIFIED IOC REGISTRY ================= */}
@@ -277,8 +301,8 @@ export default function ForensicHub() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-6 text-xs">
-            <button onClick={() => scrollToSection("analyzer")} className="hover:text-white transition-colors">Scanner & Radar</button>
-            <button onClick={() => scrollToSection("news")} className="hover:text-white transition-colors">Scam Feed</button>
+            <button onClick={() => scrollToSection("analyzer")} className="hover:text-white transition-colors">Scanner & Feed</button>
+            <button onClick={() => scrollToSection("mapping")} className="hover:text-white transition-colors">Threat Mapping</button>
             <button onClick={() => scrollToSection("reported")} className="hover:text-white transition-colors">Threat Catalog</button>
             <button onClick={() => scrollToSection("technology")} className="hover:text-white transition-colors">Technology</button>
             <button onClick={() => scrollToSection("developers")} className="hover:text-white transition-colors">Developer API</button>
