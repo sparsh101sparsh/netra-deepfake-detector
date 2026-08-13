@@ -10,8 +10,7 @@ node_modules/
 
 *.pth
 venv/
-*.mp4
-*.mov
+# *.mp4 and *.mov are tracked via Git LFS — do not ignore them
 *.pptx
 *.pkl
 kaggle_logs*/
