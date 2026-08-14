@@ -18,9 +18,11 @@ import numpy as np
 import pypdfium2
 
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from PIL import Image as PILImage
+
 
 # ─── Path Setup ───────────────────────────────────────────────────────────────
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -195,14 +197,57 @@ def create_natural_magnified_crop(frame_bgr, box):
     return cv2.resize(crop, (tw, th), interpolation=cv2.INTER_LANCZOS4)
 
 
+def build_timeline_filmstrip(frames_list, out_path, thumb_w=170, thumb_h=98, cols=6):
+    n = len(frames_list)
+    rows = (n + cols - 1) // cols
+    cell_w = thumb_w + 8
+    cell_h = thumb_h + 22
+    canvas_w = cols * cell_w + 8
+    canvas_h = rows * cell_h + 8
+
+    canvas = np.ones((canvas_h, canvas_w, 3), dtype=np.uint8) * 248
+
+    for idx, f in enumerate(frames_list):
+        r = idx // cols
+        c = idx % cols
+        x0 = 8 + c * cell_w
+        y0 = 8 + r * cell_h
+
+        thumb = cv2.resize(f['raw_frame'], (thumb_w, thumb_h))
+
+        is_crit = f['fusion_score'] >= 65.0
+        is_susp = f['fusion_score'] >= 45.0
+
+        if is_crit:
+            b_col = (38, 38, 220)  # Red BGR
+            tag = "FLAGGED"
+        elif is_susp:
+            b_col = (11, 158, 245) # Amber BGR
+            tag = "SUSP"
+        else:
+            b_col = (74, 163, 22)  # Green BGR
+            tag = "CLEAR"
+
+        cv2.rectangle(thumb, (0, 0), (thumb_w - 1, thumb_h - 1), b_col, 2)
+        canvas[y0:y0+thumb_h, x0:x0+thumb_w] = thumb
+
+        lbl = f"#{f['frame_num']} ({f['timestamp_sec']}s): {f['fusion_score']}% [{tag}]"
+        cv2.putText(canvas, lbl, (x0 + 2, y0 + thumb_h + 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.30, (15, 23, 42), 1, cv2.LINE_AA)
+
+    cv2.imwrite(out_path, canvas, [cv2.IMWRITE_JPEG_QUALITY, 94])
+    return out_path
+
+
 # ─── PDF Builder ──────────────────────────────────────────────────────────────
 def generate_clean_forensic_pdf(subject_name, video_filename, top_keyframes,
                                  all_frames, video_meta, pipeline_results,
-                                 out_pdf_path, out_png_path):
+                                 filmstrip_img_path, out_pdf_path, out_png_path):
     sha256  = hashlib.sha256(
         f"{video_filename}{video_meta['total_frames']}{video_meta['duration']:.4f}".encode()
     ).hexdigest()[:36] + "..."
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
 
     doc = SimpleDocTemplate(out_pdf_path, pagesize=A4,
                             leftMargin=26, rightMargin=26, topMargin=14, bottomMargin=14)
@@ -384,16 +429,41 @@ def generate_clean_forensic_pdf(subject_name, video_filename, top_keyframes,
         story.append(row)
         story.append(Spacer(1, 3))
 
-    # ── Section 2: All-Frames Log ─────────────────────────────────────────────
-    story.append(Paragraph(f"2. Complete Analysis Log of All Sampled Frames ({len(all_frames)} Frames Analysed)", sec_s))
+    # Page 1 Footer Navigation
+    callout_s = ParagraphStyle("CO", fontSize=6.8, fontName="Helvetica-Bold", leading=8.5,
+                               textColor=colors.HexColor("#64748b"), alignment=1)
+    story.append(Spacer(1, 2))
+    story.append(Paragraph(
+        "<font color='#d97706'>[PAGE 1 OF 2: EXECUTIVE EVIDENCE &bull; "
+        "CONTINUED ON PAGE 2: COMPLETE 17-FRAME TIMELINE GALLERY &amp; FULL TELEMETRY LOG &rarr;]</font>",
+        callout_s
+    ))
+    story.append(PageBreak())
+
+    # ── Page 2: Complete 17-Frame Timeline Evidence Audit ────────────────────
+    story.append(Paragraph("NETRA FORENSIC CYBERCRIME EVIDENCE DOSSIER", title_s))
+    story.append(Paragraph("NETRA &bull; EYES THAT SEE THROUGH | SECTION 2 &amp; 3: COMPREHENSIVE TIMELINE AUDIT", motto_s))
+    story.append(Spacer(1, 2))
+
+    # ── Section 2: Complete Visual Timeline Filmstrip Gallery ────────────────
+    if filmstrip_img_path and os.path.exists(filmstrip_img_path):
+        story.append(Paragraph(
+            f"2. Complete Visual Timeline Evidence ({len(all_frames)} Sampled Frames Audited Across Video Duration)",
+            sec_s
+        ))
+        rl_strip = RLImage(filmstrip_img_path, width=543, height=215)
+        story.append(rl_strip)
+        story.append(Spacer(1, 3))
+
+    # ── Section 3: All-Frames Log Table (ALL 17 FRAMES) ──────────────────────
+    story.append(Paragraph(f"3. Complete Analysis Log of All Sampled Frames (All {len(all_frames)} Frames Analysed)", sec_s))
 
     log_rows = [[
         Paragraph("Frame #",b_bold), Paragraph("Timestamp",b_bold),
         Paragraph("SBI Spatial",b_bold), Paragraph("DCT Freq",b_bold),
         Paragraph("Fused Score",b_bold), Paragraph("Model Decision",b_bold)
     ]]
-    step_ = max(1, len(all_frames) // 10)
-    for f in all_frames[::step_][:10]:
+    for f in all_frames:  # EVERY SINGLE ONE OF THE 17 FRAMES
         col = "#dc2626" if f['fusion_score'] >= 65 else ("#d97706" if f['fusion_score'] >= 45 else "#16a34a")
         log_rows.append([
             Paragraph(f"#{f['frame_num']}", b_norm),
@@ -408,15 +478,34 @@ def generate_clean_forensic_pdf(subject_name, video_filename, top_keyframes,
         ('BACKGROUND',(0,0),(-1,0),colors.HexColor("#f1f5f9")),
         ('BOX',(0,0),(-1,-1),1,colors.HexColor("#cbd5e1")),
         ('INNERGRID',(0,0),(-1,-1),0.5,colors.HexColor("#e2e8f0")),
-        ('TOPPADDING',(0,0),(-1,-1),1.2),('BOTTOMPADDING',(0,0),(-1,-1),1.2),
+        ('TOPPADDING',(0,0),(-1,-1),0.9),('BOTTOMPADDING',(0,0),(-1,-1),0.9),
         ('LEFTPADDING',(0,0),(-1,-1),4),('RIGHTPADDING',(0,0),(-1,-1),4),
     ]))
     story.append(t_log)
     doc.build(story)
 
+    # Render multi-page preview PNGs
     pdf_doc = pypdfium2.PdfDocument(out_pdf_path)
-    pypdfium2.PdfDocument(out_pdf_path)[0].render(scale=2.0).to_pil().save(out_png_path)
+    total_pages = len(pdf_doc)
+    page1_img = pdf_doc[0].render(scale=2.0).to_pil()
+    page1_img.save(out_png_path)
+
+    if total_pages > 1:
+        page2_img = pdf_doc[1].render(scale=2.0).to_pil()
+        p2_path   = out_png_path.replace("_page1.png", "_page2.png")
+        page2_img.save(p2_path)
+
+        # Create combined full view (Page 1 + Page 2 stacked vertically)
+        full_w = max(page1_img.width, page2_img.width)
+        full_h = page1_img.height + page2_img.height + 20
+        combined = PILImage.new("RGB", (full_w, full_h), (241, 245, 249))
+        combined.paste(page1_img, (0, 0))
+        combined.paste(page2_img, (0, page1_img.height + 20))
+        comb_path = out_png_path.replace("_page1.png", "_combined.png")
+        combined.save(comb_path, quality=95)
+
     pdf_doc.close()
+
 
 
 # ─── Orchestrator ─────────────────────────────────────────────────────────────
@@ -531,6 +620,9 @@ def process_video_forensic_clean(vf, custom_vpath=None, custom_subject=None):
         "sbi_checkpoint":  getattr(_spatial, "model_source", "trained_checkpoint"),
     }
 
+    filmstrip_p = os.path.join(OUT_DIR, f"{stem}_all_17_frames_timeline.jpg")
+    build_timeline_filmstrip(all_frames, filmstrip_p)
+
     pdf_out = os.path.join(OUT_DIR, f"{stem}_evidence.pdf")
     png_out = os.path.join(OUT_DIR, f"{stem}_evidence_page1.png")
 
@@ -538,10 +630,12 @@ def process_video_forensic_clean(vf, custom_vpath=None, custom_subject=None):
         subject_name=subject, video_filename=vf,
         top_keyframes=top_keyframes, all_frames=all_frames,
         video_meta=video_meta, pipeline_results=pipeline_results,
+        filmstrip_img_path=filmstrip_p,
         out_pdf_path=pdf_out, out_png_path=png_out,
     )
     return {**pipeline_results, "video": vf, "pdf_path": pdf_out,
             "png_path": png_out, "total_frames_logged": len(all_frames)}
+
 
 
 if __name__ == "__main__":
