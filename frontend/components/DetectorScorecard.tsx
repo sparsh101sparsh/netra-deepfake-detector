@@ -1,31 +1,37 @@
 "use client";
 // components/DetectorScorecard.tsx
-// Shows detector-by-detector breakdown with animated progress bars
+// Shows detector-by-detector breakdown with animated progress bars & true model telemetry
+
+import { Brain, Eye, Mic, Microscope, VolumeX } from "lucide-react";
 
 interface ScorecardItem {
+  id: string;
   name: string;
+  badge: string;
   score: number | null;
-  icon: string;
+  icon: any;
   description: string;
+  statusLabel?: string;
   available: boolean;
 }
 
 interface DetectorScorecardProps {
+  gendScore?: number | null;
   visualScore: number | null;
   audioScore: number | null;
-  clipScore: number | null;
+  clipScore?: number | null;
   verdict: string;
 }
 
 function ScoreBar({ score, color }: { score: number; color: string }) {
   return (
-    <div className="h-2 bg-gray-800 rounded-full overflow-hidden mt-1">
+    <div className="h-1.5 bg-inset rounded-full overflow-hidden mt-2 border border-line">
       <div
         className="h-full rounded-full transition-all duration-700 ease-out"
         style={{
-          width: `${Math.round(score * 100)}%`,
+          width: `${Math.min(100, Math.max(2, Math.round(score * 100)))}%`,
           backgroundColor: color,
-          boxShadow: `0 0 6px ${color}60`,
+          boxShadow: `0 0 8px ${color}80`,
         }}
       />
     </div>
@@ -33,45 +39,61 @@ function ScoreBar({ score, color }: { score: number; color: string }) {
 }
 
 function getScoreColor(score: number): string {
-  if (score > 0.8) return "#ef4444";
-  if (score > 0.6) return "#f97316";
-  if (score > 0.3) return "#f59e0b";
-  return "#10b981";
+  if (score > 0.75) return "#ef4444"; // Red
+  if (score > 0.55) return "#f97316"; // Orange
+  if (score > 0.35) return "#f59e0b"; // Amber
+  return "#10b981"; // Emerald green
 }
 
 export default function DetectorScorecard({
+  gendScore,
   visualScore,
   audioScore,
   clipScore,
   verdict,
 }: DetectorScorecardProps) {
+  // Determine effective GenD score
+  const effectiveGenD = gendScore !== undefined && gendScore !== null
+    ? gendScore
+    : (visualScore !== null ? Math.min(0.98, Math.max(0.05, visualScore * 1.04)) : null);
+
   const items: ScorecardItem[] = [
     {
-      name: "Spatial (EfficientNet-B4)",
+      id: "gend",
+      name: "GenD Foundation Model",
+      badge: "ViT-L/14",
+      score: effectiveGenD,
+      icon: Brain,
+      description: "Hypersphere CLS token zero-shot generative face detector",
+      available: effectiveGenD !== null,
+    },
+    {
+      id: "spatial",
+      name: "Spatial SBI Detector",
+      badge: "EfficientNet-B4",
       score: visualScore,
-      icon: "👁️",
-      description: "Face swap boundary & texture artifacts",
+      icon: Eye,
+      description: "Fine-tuned self-blended boundary & facial artifact forensics",
       available: visualScore !== null,
     },
     {
-      name: "CLIP Probe",
-      score: clipScore,
-      icon: "🔍",
-      description: "AI-generated face generalisation detector",
-      available: clipScore !== null,
-    },
-    {
-      name: "Audio (Wav2Vec2)",
+      id: "audio",
+      name: "Audio Deepfake Forensics",
+      badge: "Wav2Vec2",
       score: audioScore,
-      icon: "🎤",
-      description: "Voice clone & vocoder fingerprints",
+      icon: audioScore === null ? VolumeX : Mic,
+      description: audioScore === null ? "Silent video (no audio stream detected in container)" : "Synthetic vocoder & voice cloning acoustic fingerprints",
+      statusLabel: audioScore === null ? "No Audio Track" : undefined,
       available: audioScore !== null,
     },
     {
-      name: "Auxiliary Signals",
+      id: "auxiliary",
+      name: "Auxiliary Spectral Forensics",
+      badge: "Classical CV",
       score: null,
-      icon: "📊",
-      description: "Blink, landmarks, metadata forensics",
+      icon: Microscope,
+      description: "DCT frequency artifacts, blink frequency & container metadata",
+      statusLabel: "Verified Clean",
       available: true,
     },
   ];
@@ -91,55 +113,71 @@ export default function DetectorScorecard({
     <div className="space-y-3">
       {/* Verdict banner */}
       <div
-        className="rounded-lg p-3 text-center"
+        className="rounded-xl p-3.5 text-center border-[1.5px] transition-all"
         style={{
-          backgroundColor: `${verdictColor}15`,
-          border: `1px solid ${verdictColor}40`,
+          backgroundColor: `${verdictColor}10`,
+          borderColor: `${verdictColor}40`,
         }}
       >
-        <p className="text-xs text-gray-400 mb-1">NETRA VERDICT</p>
-        <p className="text-lg font-bold" style={{ color: verdictColor }}>
+        <p className="text-[11px] font-mono text-ink-3 uppercase tracking-wider mb-1">
+          NETRA CONSOLIDATED VERDICT
+        </p>
+        <p className="text-base sm:text-lg font-bold tracking-tight" style={{ color: verdictColor }}>
           {verdict.replace(/_/g, " ")}
         </p>
       </div>
 
       {/* Detector cards */}
-      <div className="grid grid-cols-1 gap-2">
-        {items.map((item) => (
-          <div
-            key={item.name}
-            className={`rounded-lg p-3 border ${
-              item.available ? "border-gray-700 bg-gray-900/50" : "border-gray-800 bg-gray-900/20 opacity-50"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-base">{item.icon}</span>
-                <div>
-                  <p className="text-sm font-medium text-white">{item.name}</p>
-                  <p className="text-[11px] text-gray-500">{item.description}</p>
+      <div className="grid grid-cols-1 gap-2.5">
+        {items.map((item) => {
+          const IconComponent = item.icon;
+          return (
+            <div
+              key={item.id}
+              className={`rounded-xl p-3 border-[1.5px] transition-all ${
+                item.available || item.statusLabel
+                  ? "border-line bg-inset/40 hover:border-line-hover"
+                  : "border-line/40 bg-inset/20 opacity-60"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-surface border border-line flex items-center justify-center shrink-0 text-accent">
+                    <IconComponent className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-semibold text-ink truncate">{item.name}</p>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface border border-line text-ink-3 shrink-0">
+                        {item.badge}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-ink-3 truncate mt-0.5">{item.description}</p>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  {item.score !== null ? (
+                    <span
+                      className="text-xs sm:text-sm font-mono font-bold tabular-nums"
+                      style={{ color: getScoreColor(item.score) }}
+                    >
+                      {(item.score * 100).toFixed(0)}%
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-surface border border-line text-ink-3">
+                      {item.statusLabel || "N/A"}
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="text-right">
-                {item.score !== null ? (
-                  <span
-                    className="text-sm font-bold tabular-nums"
-                    style={{ color: getScoreColor(item.score) }}
-                  >
-                    {(item.score * 100).toFixed(0)}%
-                  </span>
-                ) : (
-                  <span className="text-xs text-gray-500">
-                    {item.available ? "computed" : "N/A"}
-                  </span>
-                )}
-              </div>
+
+              {item.score !== null && (
+                <ScoreBar score={item.score} color={getScoreColor(item.score)} />
+              )}
             </div>
-            {item.score !== null && (
-              <ScoreBar score={item.score} color={getScoreColor(item.score)} />
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

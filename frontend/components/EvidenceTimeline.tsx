@@ -41,24 +41,21 @@ function buildSegments(
   audioFlags: string[]
 ): TimelineSegment[] {
   const segments: TimelineSegment[] = [];
-
-  // Create safe baseline
-  if (duration > 0) {
-    segments.push({ startTime: 0, endTime: duration, type: "SAFE", confidence: 0, flags: [] });
-  }
+  const effectiveDuration = Math.max(1, duration);
 
   // Overlay suspicious/fake segments from frame evidence
+  const segDuration = Math.min(Math.max(0.3, effectiveDuration * 0.06), 1.5);
+
   for (const frame of frames) {
     const t = parseTimestampToSeconds(frame.timestamp);
-    const segDuration = 1.5; // 1.5s window around each flagged frame
 
     const type: TimelineSegment["type"] =
-      frame.confidence > 0.85 ? "CONFIRMED_FAKE" :
-      frame.confidence > 0.6 ? "SUSPICIOUS" : "SAFE";
+      frame.confidence > 0.75 ? "CONFIRMED_FAKE" :
+      frame.confidence > 0.45 ? "SUSPICIOUS" : "SAFE";
 
     segments.push({
-      startTime: Math.max(0, t - 0.5),
-      endTime: Math.min(duration, t + segDuration),
+      startTime: Math.max(0, t - (segDuration / 3)),
+      endTime: Math.min(effectiveDuration, t + segDuration),
       type,
       confidence: frame.confidence,
       flags: frame.flags,
@@ -176,36 +173,34 @@ export default function EvidenceTimeline({
         </div>
       </div>
 
-      {/* Selected segment detail panel */}
-      {selectedSegment && selectedSegment.type !== "SAFE" && (
-        <div className="rounded-lg border border-gray-700 bg-gray-900/80 p-3 text-sm animate-in slide-in-from-top-2">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-semibold text-white">
-              {selectedSegment.timestamp && `Frame at ${selectedSegment.timestamp}`}
-              {selectedSegment.frameNumber !== undefined && ` (Frame #${selectedSegment.frameNumber})`}
-            </span>
-            <span
-              className={`px-2 py-0.5 rounded text-xs font-bold ${
-                selectedSegment.type === "CONFIRMED_FAKE"
-                  ? "bg-red-500/20 text-red-400"
-                  : "bg-yellow-500/20 text-yellow-400"
-              }`}
-            >
-              {(selectedSegment.confidence * 100).toFixed(1)}% confidence
-            </span>
-          </div>
-          {selectedSegment.flags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-1">
-              {selectedSegment.flags.map((flag, i) => (
-                <span key={i} className="px-2 py-0.5 bg-gray-800 rounded text-gray-300 text-xs">
-                  {flag.replace(/_/g, " ")}
-                </span>
-              ))}
-            </div>
-          )}
-          <p className="text-xs text-gray-500 mt-1.5">
-            Detected by: SpatialSBI Detector · Click timeline to seek video
+      {/* Flagged Frame Chips (Quick Seek) */}
+      {frames && frames.length > 0 && (
+        <div className="pt-2">
+          <p className="text-[11px] font-mono text-ink-3 uppercase tracking-wider mb-2">
+            Flagged Forensic Keyframes ({frames.length})
           </p>
+          <div className="flex flex-wrap gap-2">
+            {frames.map((f, idx) => {
+              const t = parseTimestampToSeconds(f.timestamp);
+              const isHighFake = f.confidence > 0.75;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => onSeek?.(t)}
+                  className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-mono transition-all hover:scale-[1.02] ${
+                    isHighFake
+                      ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
+                      : "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                  }`}
+                  title={`Jump to frame ${f.frame_number}`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                  <span>#{f.frame_number} @ {f.timestamp}</span>
+                  <span className="font-bold">{(f.confidence * 100).toFixed(0)}%</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

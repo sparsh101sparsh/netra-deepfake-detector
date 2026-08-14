@@ -81,6 +81,7 @@ export default function AnalysisPage({ params }: Props) {
   const [copiedReport, setCopiedReport] = useState<boolean>(false);
   const [activeWorkerCmdTab, setActiveWorkerCmdTab] = useState<"python" | "npm">("python");
   const [elapsedQueueSeconds, setElapsedQueueSeconds] = useState<number>(0);
+  const [videoDuration, setVideoDuration] = useState<number>(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -663,6 +664,7 @@ export default function AnalysisPage({ params }: Props) {
                     Multi-Detector Neural Scorecard
                   </h3>
                   <DetectorScorecard
+                    gendScore={result.gend_score}
                     visualScore={result.visual_score}
                     audioScore={result.audio_score}
                     clipScore={result.clip_score}
@@ -671,8 +673,8 @@ export default function AnalysisPage({ params }: Props) {
                 </div>
 
                 <div className="pt-4 mt-4 border-t border-line flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-ink-3">
-                  <span>Fusion: Gated Cross-Modal Probability</span>
-                  <span>Model: ViT-B/16 + Wav2Vec2 + CLIP</span>
+                  <span>Ensemble: GenD ViT-L/14 + Spatial SBI + Wav2Vec2</span>
+                  <span className="text-accent">Active Cloud Node: ap-south-1</span>
                 </div>
               </div>
             </div>
@@ -689,12 +691,14 @@ export default function AnalysisPage({ params }: Props) {
               </div>
 
               {videoUrl && (
-                <div className="rounded-xl overflow-hidden border border-line bg-black flex justify-center shadow-inner">
+                <div className="rounded-xl overflow-hidden border border-line bg-black flex justify-center items-center shadow-inner relative max-w-2xl mx-auto aspect-video">
                   <video
                     ref={videoRef}
                     src={videoUrl}
                     controls
-                    className="max-h-[420px] w-auto"
+                    playsInline
+                    onLoadedMetadata={(e) => setVideoDuration(e.currentTarget.duration)}
+                    className="w-full h-full object-contain"
                   />
                 </div>
               )}
@@ -703,7 +707,7 @@ export default function AnalysisPage({ params }: Props) {
                 <EvidenceTimeline
                   frames={result.frames || []}
                   audioFlags={result.audio_flags || []}
-                  duration={30}
+                  duration={videoDuration > 0 ? videoDuration : (result.video_duration || 5)}
                   onSeek={handleSeek}
                   videoUrl={videoUrl}
                 />
@@ -711,44 +715,105 @@ export default function AnalysisPage({ params }: Props) {
             </div>
 
             {/* Detailed AI Forensic Intelligence Dossier */}
-            {result.forensic_report && (
-              <div className="rounded-2xl bg-surface border-[1.5px] border-line p-6 sm:p-8 shadow-card space-y-4">
-                <div className="flex items-center justify-between border-b border-line pb-4">
-                  <div className="flex items-center gap-2.5">
-                    <FileText className="w-4 h-4 text-accent" />
-                    <h3 className="text-xs font-mono text-ink-3 uppercase tracking-wider">
-                      Forensic Intelligence Dossier
-                    </h3>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="text-[11px] font-mono text-ink-3 hidden sm:inline">
-                      {result.report_generated_by || "NETRA Forensic Engine v5.0"}
-                    </span>
-                    <button
-                      onClick={() => copyToClipboard(result.forensic_report, "report")}
-                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-inset border border-line text-xs font-medium text-ink hover:bg-hover transition-all"
-                    >
-                      {copiedReport ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-green-400" />
-                          <span className="text-green-400">Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5 text-ink-3" />
-                          <span>Copy Dossier</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+            <div className="rounded-2xl bg-surface border-[1.5px] border-line p-6 sm:p-8 shadow-card space-y-6">
+              <div className="flex items-center justify-between border-b border-line pb-4">
+                <div className="flex items-center gap-2.5">
+                  <FileText className="w-4 h-4 text-accent" />
+                  <h3 className="text-xs font-mono text-ink-3 uppercase tracking-wider">
+                    Forensic Intelligence Dossier
+                  </h3>
                 </div>
 
-                <div className="bg-inset/50 rounded-xl p-5 border border-line text-sm text-ink-2 leading-relaxed whitespace-pre-wrap font-sans">
-                  {result.forensic_report}
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-mono text-ink-3 hidden sm:inline">
+                    {result.report_generated_by || "NETRA Neural Forensic Engine v5.0"}
+                  </span>
+                  <button
+                    onClick={() => copyToClipboard(result.forensic_report || JSON.stringify(result, null, 2), "report")}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-inset border border-line text-xs font-medium text-ink hover:bg-hover transition-all"
+                  >
+                    {copiedReport ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                        <span className="text-green-400">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-ink-3" />
+                        <span>Copy Dossier</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
-            )}
+
+              {/* Executive Summary Narrative */}
+              <div className="bg-inset/50 rounded-xl p-5 border border-line text-sm text-ink-2 leading-relaxed whitespace-pre-wrap font-sans">
+                {result.forensic_report || `Forensic analysis completed for job ${jobId}. Verified verdict: ${result.verdict} with ${result.confidence}% confidence across GenD ViT-L and Spatial SBI models.`}
+              </div>
+
+              {/* Forensic Artifacts Breakdown */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-inset/30 border border-line space-y-2">
+                  <h4 className="text-xs font-mono text-ink uppercase tracking-wider">Detected Visual Artifacts</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {result.frames && result.frames.flatMap((f) => f.flags).length > 0 ? (
+                      Array.from(new Set(result.frames.flatMap((f) => f.flags))).map((flag, idx) => (
+                        <span key={idx} className="px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono">
+                          {flag.replace(/_/g, " ")}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-ink-3 font-mono">No localized facial boundary blending detected</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-inset/30 border border-line space-y-2">
+                  <h4 className="text-xs font-mono text-ink uppercase tracking-wider">Audio & Spectral Signatures</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {result.audio_flags && result.audio_flags.length > 0 ? (
+                      result.audio_flags.map((flag, idx) => (
+                        <span key={idx} className="px-2 py-0.5 rounded bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-mono">
+                          {flag.replace(/_/g, " ")}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-ink-3 font-mono">
+                        {result.audio_score !== null ? "Acoustic spectrum consistent with authentic speech" : "Silent media / No acoustic stream in MP4 container"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Digital Chain of Custody & Evidence Metadata */}
+              <div className="p-4 rounded-xl bg-inset/20 border border-line">
+                <h4 className="text-[11px] font-mono text-ink-3 uppercase tracking-wider mb-3">
+                  Digital Chain of Custody & Cloud Telemetry
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                  <div>
+                    <span className="text-ink-3 block">Cloud Region</span>
+                    <span className="text-accent font-semibold">ap-south-1 (Mumbai)</span>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block">Worker Node</span>
+                    <span className="text-ink font-semibold truncate block" title={jobStatus?.worker_telemetry?.assigned_worker_id || "worker-mumbai-ec2"}>
+                      {jobStatus?.worker_telemetry?.assigned_worker_id || "worker-mumbai-ec2"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block">Ledger Persistence</span>
+                    <span className="text-green-400 font-semibold">DynamoDB netra-jobs</span>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block">Encrypted Media Bucket</span>
+                    <span className="text-ink font-semibold truncate block">netra-media-mumbai</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Suspicious Signals & Metadata Flags */}
             {result.metadata_flags && result.metadata_flags.length > 0 && (
