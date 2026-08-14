@@ -266,6 +266,25 @@ class AudioDeepfakeDetector:
                 audio = self._resample_to_16k(audio, sr)
                 sr = 16000
 
+            # Acoustic Energy & Voice Activity Gate:
+            # MelodyMachine is trained specifically on vocal formants.
+            # Pure silence or low-energy ambient room hiss lacks human vocal tract resonance
+            # and triggers massive false positives if fed to speech classification models.
+            rms = float(np.sqrt(np.mean(audio**2)))
+            peak = float(np.abs(audio).max())
+            if rms < 0.003 and peak < 0.04:
+                logger.info(
+                    f"Audio track is silent or ambient room floor noise (RMS={rms:.6f}, peak={peak:.4f}). "
+                    "Skipping neural vocoder classification to prevent false positives."
+                )
+                return {
+                    "fake_probability": 0.0,
+                    "flags": ["ambient_or_silent_audio"],
+                    "timestamp_segments": [],
+                    "available": False,
+                    "has_speech": False,
+                }
+
             # Cap at 60s max to avoid memory saturation
             max_samples = 16000 * 60
             audio = audio[:max_samples]

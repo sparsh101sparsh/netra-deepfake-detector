@@ -99,9 +99,9 @@ class GatedFusionEngine:
             return "AI_GENERATED_FACE"
         elif audio_available and audio > 0.8 and visual < 0.3:
             return "VOICE_CLONE_ONLY"
-        elif visual > 0.5 or (audio_available and audio > 0.5):
+        elif visual > 0.55 or (audio_available and audio > 0.55):
             return "EDITED_VIDEO"
-        elif visual < 0.3 and (not audio_available or audio < 0.3):
+        elif visual < 0.50 and (not audio_available or audio < 0.50):
             return "AUTHENTIC"
         else:
             return "INCONCLUSIVE"
