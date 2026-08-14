@@ -45,45 +45,90 @@ export function LiveCyberScamNewsFeed({
   limit = 20,
   initialCategory = "ALL",
 }: LiveCyberScamNewsFeedProps) {
-  const [articles, setArticles] = useState<ScamNewsArticle[]>([]);
+  const [articles, setArticles] = useState<ScamNewsArticle[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("netra_news_feed_cache");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return [];
+  });
   const [activeCategory, setActiveCategory] = useState<string>(initialCategory);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("netra_news_feed_cache");
+        if (cached && JSON.parse(cached)?.length > 0) return false;
+      } catch {}
+    }
+    return true;
+  });
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchNews = useCallback(
-    async (category: string = "ALL") => {
-      setIsLoading(true);
-      setError(null);
+    async (category: string = "ALL", isRetry = false) => {
+      if (!isRetry) {
+        // Keep existing articles visible while revalidating
+        setError(null);
+      }
 
       const params = new URLSearchParams({ limit: String(limit) });
       if (category !== "ALL") {
         params.append("category", category);
       }
 
-      const url = `/api/backend/api/v1/news/feed?${params.toString()}`;
+      const endpoints = [
+        `/api/backend/api/v1/news/feed?${params.toString()}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "https://netra-api-pmr7.onrender.com"}/api/v1/news/feed?${params.toString()}`
+      ];
 
-      try {
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error(`Server returned ${res.status}`);
+      let fetchedData = null;
+      let lastErr = null;
+
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(ep, { cache: "no-store" });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && Array.isArray(data.feed) && data.feed.length > 0) {
+              fetchedData = data.feed;
+              break;
+            }
+          }
+        } catch (e: any) {
+          lastErr = e;
         }
-        const data = await res.json();
-        if (data && Array.isArray(data.feed)) {
-          setArticles(data.feed);
-        } else {
-          setArticles([]);
-        }
-        setLastSyncedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
-      } catch (err: any) {
-        console.warn("News feed backend fetch error:", err?.message || err);
-        setError("News intelligence gateway unreachable. Connect API node to stream live advisories.");
-        setArticles([]);
-      } finally {
-        setIsLoading(false);
-        setIsRefreshing(false);
       }
+
+      if (fetchedData) {
+        setArticles(fetchedData);
+        setError(null);
+        setLastSyncedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+        try {
+          localStorage.setItem("netra_news_feed_cache", JSON.stringify(fetchedData));
+        } catch {}
+      } else if (!isRetry) {
+        // Auto-retry once after 1.5 seconds before showing error
+        setTimeout(() => fetchNews(category, true), 1500);
+        return;
+      } else {
+        // If still failing after retry, only show error if we have no cached articles
+        setArticles((prev) => {
+          if (prev.length === 0) {
+            setError("News intelligence gateway temporarily waking up. Retrying connection...");
+          }
+          return prev;
+        });
+      }
+
+      setIsLoading(false);
+      setIsRefreshing(false);
     },
     [limit]
   );
