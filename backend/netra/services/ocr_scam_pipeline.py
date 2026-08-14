@@ -15,8 +15,20 @@ from PIL import Image
 logger = logging.getLogger("netra.ocr_scam_pipeline")
 
 # Lazy-loaded OCR engines
+_rapid_ocr = None
 _easyocr_reader = None
 _paddle_ocr = None
+
+def get_rapid_ocr():
+    global _rapid_ocr
+    if _rapid_ocr is None:
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+            _rapid_ocr = RapidOCR()
+        except Exception as e:
+            logger.warning(f"RapidOCR initialization failed: {e}")
+            _rapid_ocr = False
+    return _rapid_ocr if _rapid_ocr is not False else None
 
 def get_easyocr_reader():
     global _easyocr_reader
@@ -74,23 +86,40 @@ def extract_text_from_image(image_input) -> Dict[str, Any]:
     extracted_lines = []
     engine_used = "none"
 
-    # Try PaddleOCR
-    paddle = get_paddle_ocr()
-    if paddle:
+    # 1. Primary Engine: RapidOCR (Lightweight ONNX Runtime, fast CPU inference)
+    rapid = get_rapid_ocr()
+    if rapid:
         try:
             import numpy as np
             np_img = np.array(pil_img)
-            result = paddle.ocr(np_img, cls=True)
-            if result and result[0]:
-                for line in result[0]:
-                    txt = line[1][0]
-                    if txt.strip():
-                        extracted_lines.append(txt.strip())
-                engine_used = "PaddleOCR v2.7"
+            ocr_res, _ = rapid(np_img)
+            if ocr_res:
+                for line in ocr_res:
+                    txt = line[1]
+                    if txt and str(txt).strip():
+                        extracted_lines.append(str(txt).strip())
+                engine_used = "RapidOCR (ONNX Engine)"
         except Exception as e:
-            logger.warning(f"PaddleOCR execution error: {e}")
+            logger.warning(f"RapidOCR execution error: {e}")
 
-    # Fallback to EasyOCR
+    # 2. Fallback to PaddleOCR
+    if not extracted_lines:
+        paddle = get_paddle_ocr()
+        if paddle:
+            try:
+                import numpy as np
+                np_img = np.array(pil_img)
+                result = paddle.ocr(np_img, cls=True)
+                if result and result[0]:
+                    for line in result[0]:
+                        txt = line[1][0]
+                        if txt.strip():
+                            extracted_lines.append(txt.strip())
+                    engine_used = "PaddleOCR v2.7"
+            except Exception as e:
+                logger.warning(f"PaddleOCR execution error: {e}")
+
+    # 3. Fallback to EasyOCR
     if not extracted_lines:
         easy = get_easyocr_reader()
         if easy:
@@ -106,7 +135,7 @@ def extract_text_from_image(image_input) -> Dict[str, Any]:
             except Exception as e:
                 logger.warning(f"EasyOCR execution error: {e}")
 
-    # Fallback to PyTesseract
+    # 4. Fallback to PyTesseract
     if not extracted_lines:
         try:
             import pytesseract
@@ -133,10 +162,10 @@ def extract_text_from_image(image_input) -> Dict[str, Any]:
 def run_image_ocr_and_scam_detection(image_bytes: bytes, filename: str = "uploaded_image.png") -> Dict[str, Any]:
     """
     Complete end-to-end multi-modal image analysis:
-    1. Extract OCR text via PaddleOCR/EasyOCR.
+    1. Extract OCR text via RapidOCR / PaddleOCR / EasyOCR.
     2. Extract IOCs (Phone, UPI, APK, URL).
     3. Run text through NETRA Scam Detector Engine.
-    4. Combine with visual boundary forgery heuristic.
+    4. Synthesize multi-modal risk assessment.
     """
     # 1. OCR Extraction
     ocr_result = extract_text_from_image(image_bytes)
@@ -153,11 +182,11 @@ def run_image_ocr_and_scam_detection(image_bytes: bytes, filename: str = "upload
     else:
         scam_verdict = {
             "is_scam": False,
-            "risk_score": 5,
-            "confidence": 50,
+            "risk_score": 10,
+            "confidence": 35,
             "matched_rules": [],
-            "scam_type": "CLEAN_IMAGE",
-            "reason": "No text detected in image."
+            "scam_type": "UNVERIFIED_IMAGE",
+            "reason": "No legible text detected in image. Please ensure image contains clear, legible text."
         }
 
     # 4. Synthesize Multi-Modal Verdict
@@ -176,18 +205,26 @@ def run_image_ocr_and_scam_detection(image_bytes: bytes, filename: str = "upload
         is_scam = True
         matched_rules.append(f"Fraudulent UPI extraction: {', '.join(iocs['upis'])}")
 
-    if risk_score >= 75:
+    if not extracted_text:
+        risk_level = "LOW"
+        verdict_label = "NO MACHINE-READABLE TEXT DETECTED"
+        recommendation_text = "Document contains no extractable text. Manual verification recommended."
+    elif risk_score >= 75:
         risk_level = "CRITICAL"
         verdict_label = "CRITICAL SCAM / FORGED MEDIA DETECTED"
+        recommendation_text = "Do NOT send money or call the contact number. Report to cybercrime.gov.in."
     elif risk_score >= 40:
         risk_level = "HIGH"
         verdict_label = "HIGH RISK FRAUDULENT SCREENSHOT"
+        recommendation_text = "Suspected fraud. Verify authenticity directly with the organization."
     elif risk_score >= 20:
         risk_level = "MEDIUM"
         verdict_label = "CAUTION — SUSPICIOUS PATTERNS"
+        recommendation_text = "Contains cautionary elements. Proceed with caution."
     else:
         risk_level = "LOW"
         verdict_label = "AUTHENTIC / LOW RISK MEDIA"
+        recommendation_text = "Standard legitimate document signature."
 
     return {
         "status": "success",
@@ -208,6 +245,6 @@ def run_image_ocr_and_scam_detection(image_bytes: bytes, filename: str = "upload
             "analysis_reason": scam_verdict.get("reason") or scam_verdict.get("llm_reason") or "OCR pattern analysis completed."
         },
         "extracted_iocs": iocs,
-        "recommendation": "File an immediate cyber crime complaint at cybercrime.gov.in" if is_scam else "Standard legitimate document signature."
+        "recommendation": recommendation_text
     }
 
