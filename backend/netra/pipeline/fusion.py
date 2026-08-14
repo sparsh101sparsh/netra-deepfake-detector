@@ -27,6 +27,7 @@ class GatedFusionEngine:
         clip_score: Optional[float] = None,
         gend_score: Optional[float] = None,
         aux_flags: list = None,
+        spectral_score: Optional[float] = None,
     ) -> Dict:
         """
         Fuse all detector scores into a final verdict.
@@ -52,6 +53,16 @@ class GatedFusionEngine:
             effective_visual = 0.70 * gend_score + 0.30 * visual_score
         elif clip_score is not None:
             effective_visual = 0.70 * visual_score + 0.30 * clip_score
+
+        # Spectral Boundary Validation:
+        # Cross-checks high-frequency seams vs natural camera features (glasses, hair, lighting)
+        if spectral_score is not None:
+            if spectral_score <= 0.30 and effective_visual > 0.45:
+                # Spectral analyzer proves there is NO synthetic blending seam (seam_ratio <= 1.2)
+                # Moderates false positives from glasses/specular glare
+                effective_visual = 0.40 * effective_visual + 0.60 * spectral_score
+            else:
+                effective_visual = 0.75 * effective_visual + 0.25 * spectral_score
 
         # Audio gate: if audio unavailable or very low, downweight heavily
         audio_available = audio_score is not None

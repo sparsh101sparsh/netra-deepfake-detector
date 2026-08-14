@@ -401,7 +401,11 @@ class ModelRegistry:
             logger.warning(f"GenD initialization warning: {e}")
             self.gend_engine = None
 
-        # 5. Gated Fusion Engine
+        # 5. Spectral Boundary & Frequency Analyzer
+        from netra.pipeline.frequency_analyzer import SpectralBoundaryAnalyzer
+        self.spectral_analyzer = SpectralBoundaryAnalyzer()
+
+        # 6. Gated Fusion Engine
         from netra.pipeline.fusion import GatedFusionEngine
 
         self.fusion_engine = GatedFusionEngine()
@@ -698,11 +702,31 @@ def process_job(
             except Exception as e:
                 logger.warning(f"GenD analysis failed: {e}")
 
+        # Spectral Boundary & Frequency Seam Analysis
+        global_spectral = None
+        if getattr(models, "spectral_analyzer", None):
+            try:
+                face_crops = [
+                    p["face_crop"]
+                    for p in frame_predictions
+                    if p.get("face_crop") is not None and getattr(p.get("face_crop"), "size", 0) > 0
+                ]
+                if face_crops:
+                    spec_scores = [
+                        models.spectral_analyzer.analyze_spectral_consistency(fc).get("frequency_fake_score", 0.25)
+                        for fc in face_crops
+                    ]
+                    global_spectral = float(np.mean(spec_scores))
+                    logger.info(f"Spectral Boundary Analysis fake_score: {global_spectral}")
+            except Exception as e:
+                logger.warning(f"Spectral boundary analysis failed: {e}")
+
         fusion_result = models.fusion_engine.fuse(
             visual_score=global_visual,
             audio_score=global_audio,
             clip_score=global_clip,
             gend_score=global_gend,
+            spectral_score=global_spectral,
             aux_flags=auxiliary_result.get("all_flags", []),
         )
 
