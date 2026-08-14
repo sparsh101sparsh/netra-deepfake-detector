@@ -15,7 +15,7 @@ import { StreamText } from "@/components/primitives/StreamText";
 import { ThinkingState } from "@/components/primitives/ThinkingState";
 import { DropZone, SandboxModality } from "./DropZone";
 import { OCRDossier, OCRDossierResult } from "./OCRDossier";
-import { FacialDeepfakeCard, DualBranchResult } from "./FacialDeepfakeCard";
+import { FacialAnomalyCard, FacialDeepfakeCard, DualBranchResult } from "./FacialAnomalyCard";
 import { generateForensicPDF } from "@/lib/pdfReportGenerator";
 import { cn } from "@/lib/utils";
 
@@ -53,8 +53,15 @@ export interface MultiModalScannerProps {
 // ─────────────────────────────────────────────────────────────────────────────
 function HybridDossier({ data, onReset }: { data: DualBranchResult; onReset: () => void }) {
   const [activeTab, setActiveTab] = useState<"face" | "text">("face");
-  const hasFacialData = (data.facial_analysis?.face_count ?? 0) > 0;
-  const hasTextData = (data.ocr_analysis?.lines_count ?? 0) > 0 || (data.scam_analysis?.risk_score ?? 0) > 0;
+  const faceCount = data.facial_analysis?.face_count ?? (data.facial_analysis?.faces?.length ?? 0);
+  const totalIOCs =
+    (data.extracted_iocs?.phones?.length ?? 0) +
+    (data.extracted_iocs?.upis?.length ?? 0) +
+    (data.extracted_iocs?.urls?.length ?? 0) +
+    (data.extracted_iocs?.apks?.length ?? 0);
+
+  const hasFacialData = faceCount > 0;
+  const hasTextData = (data.ocr_analysis?.lines_count ?? 0) > 0 || (data.scam_analysis?.risk_score ?? 0) > 0 || totalIOCs > 0;
 
   const compositeScore = data.composite_risk_score ?? 0;
   const compositeLevel = data.composite_risk_level ?? "LOW";
@@ -82,30 +89,46 @@ function HybridDossier({ data, onReset }: { data: DualBranchResult; onReset: () 
         <button
           onClick={() => setActiveTab("face")}
           className={cn(
-            "flex-1 rounded-lg py-1.5 text-[11.5px] font-semibold transition-all duration-150",
+            "flex-1 rounded-lg py-1.5 px-2 text-[11.5px] font-semibold transition-all duration-150 flex items-center justify-center gap-1.5",
             activeTab === "face"
               ? "bg-surface text-amber-400 border border-amber-500/30 shadow-sm"
               : "text-zinc-500 hover:text-zinc-300"
           )}
         >
-          🎭 Facial Deepfake Analysis
+          <span>🎭 Facial Deepfake Analysis</span>
+          <span
+            className={cn(
+              "px-1.5 py-0.5 rounded text-[10px] font-mono",
+              activeTab === "face" ? "bg-amber-500/20 text-amber-300" : "bg-white/5 text-zinc-400"
+            )}
+          >
+            ({faceCount} Face{faceCount !== 1 ? "s" : ""})
+          </span>
         </button>
         <button
           onClick={() => setActiveTab("text")}
           className={cn(
-            "flex-1 rounded-lg py-1.5 text-[11.5px] font-semibold transition-all duration-150",
+            "flex-1 rounded-lg py-1.5 px-2 text-[11.5px] font-semibold transition-all duration-150 flex items-center justify-center gap-1.5",
             activeTab === "text"
               ? "bg-surface text-amber-400 border border-amber-500/30 shadow-sm"
               : "text-zinc-500 hover:text-zinc-300"
           )}
         >
-          📄 Text Scam Intelligence
+          <span>📄 Text Scam Intelligence</span>
+          <span
+            className={cn(
+              "px-1.5 py-0.5 rounded text-[10px] font-mono",
+              activeTab === "text" ? "bg-amber-500/20 text-amber-300" : "bg-white/5 text-zinc-400"
+            )}
+          >
+            ({totalIOCs} IOC{totalIOCs !== 1 ? "s" : ""})
+          </span>
         </button>
       </div>
 
       {/* Active Tab Content */}
       {activeTab === "face" && hasFacialData && (
-        <FacialDeepfakeCard data={data} onReset={onReset} />
+        <FacialAnomalyCard data={data} onReset={onReset} />
       )}
       {activeTab === "text" && hasTextData && (
         <OCRDossier data={data as OCRDossierResult} onReset={onReset} />
@@ -599,9 +622,9 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             const isHybrid = mode === "hybrid";
 
             if (isPureFace) {
-              // Branch A: Facial deepfake inspection card only
+              // Branch A: Facial anomaly & deepfake inspection card only
               return (
-                <FacialDeepfakeCard
+                <FacialAnomalyCard
                   data={imageOcrResult}
                   onReset={() => setImageOcrResult(null)}
                 />
