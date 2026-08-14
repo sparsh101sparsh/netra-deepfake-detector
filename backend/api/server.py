@@ -1,9 +1,14 @@
-import os
+import os, sys
 from dotenv import load_dotenv
 
+# Ensure backend directory is in sys.path regardless of execution working directory
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
 # Ensure environment variables are loaded prior to route initialization
-root_env = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env")
-backend_env = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+root_env = os.path.join(os.path.dirname(backend_dir), ".env")
+backend_env = os.path.join(backend_dir, ".env")
 if os.path.exists(root_env): load_dotenv(root_env)
 if os.path.exists(backend_env): load_dotenv(backend_env)
 
