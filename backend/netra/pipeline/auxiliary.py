@@ -58,6 +58,23 @@ def analyze_metadata(video_path: str) -> Dict:
         if bit_rate > 0 and bit_rate < 100000:
             anomalies.append("very_low_bitrate")
 
+        # Extract Geolocation and Camera EXIF tags from format & stream tags
+        fmt_tags = fmt.get("tags", {})
+        loc_str = fmt_tags.get("location") or fmt_tags.get("location-eng") or fmt_tags.get("com.apple.quicktime.location.ISO6709")
+        lat, lng = None, None
+        if loc_str:
+            import re
+            m = re.match(r'([+-]\d+\.?\d*)([+-]\d+\.?\d*)', loc_str)
+            if m:
+                try:
+                    lat = float(m.group(1))
+                    lng = float(m.group(2))
+                except Exception:
+                    pass
+
+        device_model = fmt_tags.get("model") or fmt_tags.get("com.apple.quicktime.model") or fmt_tags.get("make") or "Digital Video Camera"
+        software = fmt_tags.get("encoder") or fmt_tags.get("software") or "Standard Video Encoder"
+
         if reencode_count > 1:
             anomalies.append(f"reencoded_{reencode_count}_times")
 
@@ -67,6 +84,10 @@ def analyze_metadata(video_path: str) -> Dict:
             "codec": video_streams[0].get("codec_name") if video_streams else "unknown",
             "duration": float(fmt.get("duration", 0)),
             "bit_rate": bit_rate,
+            "lat": lat,
+            "lng": lng,
+            "device_model": device_model,
+            "software_used": software,
         }
 
     except Exception as e:

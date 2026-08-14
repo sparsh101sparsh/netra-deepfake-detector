@@ -24,7 +24,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Live Scanner", icon: Scan, id: "scanner" },
   { href: "/reported", label: "Catalog", icon: Database, id: "reported" },
-  { href: "/radar", label: "Threat Radar", icon: Globe, id: "radar" },
+  { href: "/radar", label: "Netra Radar", icon: Globe, id: "radar" },
   { href: "/community", label: "Community", icon: Users, id: "community" },
   { href: "/developers", label: "API Docs", icon: Terminal, id: "developers" },
   { href: "/technology", label: "Technology", icon: Cpu, id: "technology" },

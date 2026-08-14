@@ -45,31 +45,26 @@ export function LiveCyberScamNewsFeed({
   limit = 20,
   initialCategory = "ALL",
 }: LiveCyberScamNewsFeedProps) {
-  const [articles, setArticles] = useState<ScamNewsArticle[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const cached = localStorage.getItem("netra_news_feed_cache");
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch {}
-    }
-    return [];
-  });
+  const [articles, setArticles] = useState<ScamNewsArticle[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>(initialCategory);
-  const [isLoading, setIsLoading] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const cached = localStorage.getItem("netra_news_feed_cache");
-        if (cached && JSON.parse(cached)?.length > 0) return false;
-      } catch {}
-    }
-    return true;
-  });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Restore client-side cache after mount to ensure 100% hydration fidelity
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("netra_news_feed_cache");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setArticles(parsed);
+          setIsLoading(false);
+        }
+      }
+    } catch {}
+  }, []);
 
   const fetchNews = useCallback(
     async (category: string = "ALL", isRetry = false) => {
