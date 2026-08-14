@@ -104,12 +104,17 @@ def init_db():
     conn.close()
 
 # API Key Management Functions
-def create_api_key(name: str, tier: str = "free", monthly_quota: int = 100) -> Dict[str, str]:
+def create_api_key(name: str, tier: str = "developer", monthly_quota: int = -1) -> Dict[str, str]:
     import secrets
-    raw_token = f"netra_live_{secrets.token_hex(16)}"
+    import binascii
+
+    entropy = secrets.token_hex(16)
+    crc = binascii.crc32(entropy.encode("utf-8"))
+    checksum = f"{crc:08x}"[:4]
+    raw_token = f"netra_live_{entropy}_{checksum}"
     key_id = f"key_{secrets.token_hex(6)}"
     key_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
-    key_prefix = raw_token[:12] + "••••"
+    key_prefix = raw_token[:15] + "••••"
     created_at = time.strftime("%Y-%m-%d %H:%M:%S")
     
     conn = get_db()
@@ -131,6 +136,8 @@ def create_api_key(name: str, tier: str = "free", monthly_quota: int = 100) -> D
     }
 
 def verify_and_consume_key(raw_token: str) -> Optional[Dict]:
+    if not raw_token or not raw_token.strip():
+        return None
     key_hash = hashlib.sha256(raw_token.strip().encode("utf-8")).hexdigest()
     conn = get_db()
     row = conn.execute("SELECT * FROM api_keys WHERE api_key_hash = ?", (key_hash,)).fetchone()
@@ -140,10 +147,13 @@ def verify_and_consume_key(raw_token: str) -> Optional[Dict]:
         return None
         
     key_data = dict(row)
-    if key_data["used_requests"] >= key_data["monthly_quota"]:
+
+    # If monthly_quota > 0, enforce quota limits; if <= 0 (e.g. -1), key is unlimited
+    quota = key_data.get("monthly_quota", -1)
+    if quota is not None and quota > 0 and key_data.get("used_requests", 0) >= quota:
         conn.close()
-        return {"error": "QUOTA_EXCEEDED", "used": key_data["used_requests"], "quota": key_data["monthly_quota"]}
-        
+        return {"error": "QUOTA_EXCEEDED", "used": key_data["used_requests"], "quota": quota}
+
     # Increment usage counter
     now = time.strftime("%Y-%m-%d %H:%M:%S")
     conn.execute(

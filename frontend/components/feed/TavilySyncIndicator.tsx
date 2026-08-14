@@ -31,15 +31,15 @@ export function TavilySyncIndicator({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 select-none",
+        "flex flex-wrap items-center justify-between gap-2.5 select-none",
         className
       )}
     >
-      <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex items-center gap-2 min-w-0">
         <StatusPill
           tone="accent"
           size={compact ? "sm" : "md"}
-          pulse={!isRefreshing}
+          pulse={true}
           className="font-semibold tracking-wider text-[11px] uppercase shrink-0"
         >
           LIVE SCAM ALERTS
@@ -52,29 +52,16 @@ export function TavilySyncIndicator({
         )}
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        {lastSyncedAt && !compact && (
-          <span className="hidden md:inline text-[11.5px] text-ink-3">
-            Updated {lastSyncedAt}
+      <div className="flex items-center gap-2 shrink-0 text-right">
+        <div className="flex flex-col items-end">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-ink-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Syncs every 24h automatically
           </span>
-        )}
-
-        <Button
-          variant="secondary"
-          size={compact ? "xs" : "sm"}
-          onClick={onRefresh}
-          disabled={isRefreshing}
-          className="gap-1.5 font-medium hover:border-line-strong active:scale-95 transition-all text-xs"
-          title="Trigger live Tavily crawl and refresh intelligence feed"
-        >
-          <RefreshCw
-            className={cn(
-              "size-3.5 text-accent-ink transition-transform",
-              isRefreshing && "animate-spin text-accent"
-            )}
-          />
-          <span>{isRefreshing ? "Syncing…" : "Sync"}</span>
-        </Button>
+          <span className="text-[10px] text-ink-3">
+            Daily intelligence sent to WhatsApp & Telegram bots
+          </span>
+        </div>
       </div>
     </div>
   );
