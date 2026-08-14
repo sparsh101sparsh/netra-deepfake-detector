@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Lock, Shield, ArrowLeft } from "lucide-react";
+import { Lock, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
 import { StatusPill } from "@/components/atoms/StatusPill";
 import { cn } from "@/lib/utils";
@@ -81,12 +81,6 @@ export const AuthRequiredGate: React.FC<AuthRequiredGateProps> = ({
               Return Home
             </Button>
           </Link>
-        </div>
-
-        {/* Technical Trust Footnote */}
-        <div className="mt-8 pt-6 border-t border-[var(--line)] flex items-center justify-center gap-2 text-xs text-[var(--ink-3)] font-mono">
-          <Shield className="size-3.5 text-amber-500/70" />
-          <span>Section 65B Certified Forensic Infrastructure // End-to-End Encryption</span>
         </div>
       </div>
     </div>
