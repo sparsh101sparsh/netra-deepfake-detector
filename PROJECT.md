@@ -1,66 +1,71 @@
-# Project: NETRA Data Purity, Sanitization & Verification
+# Project: NETRA — Threat Intelligence Catalog, Netra Radar, EXIF Geolocation & Forensic PDF
 
 ## Architecture
-- **Frontend**: Next.js 14 App Router (`frontend/app/`), React 18, Tailwind CSS, Lucide Icons, MapLibre GL / Leaflet.
-- **Backend**: FastAPI 0.111+ (`backend/api/server.py`), Uvicorn, Python 3.11.
-- **Database & Persistence**: SQLite (`backend/api/netra.db`) with tables: `threat_catalog` (505 real indexed items), `api_keys` (13 active keys), `community_posts` (44 persisted posts), `scam_news` (crawled by Tavily). AWS S3 + SQS + DynamoDB for async video jobs.
-- **Inference Engines**: Multi-modal ML pipelines (PaddleOCR/EasyOCR, Scikit-Learn TF-IDF Random Forest, GenD CLIP, Bedrock Claude 3.5 Sonnet / Nova Pro).
-- **Data Flow**:
-  - Frontend queries `/api/backend/api/v1/*` -> Next.js proxy rewrite -> FastAPI on port 8000 -> SQLite DB / live ML models.
-  - Zero hardcoded fallback arrays; genuine dynamic data or transparent institutional empty/loading/error states.
+- **Backend API**: FastAPI application (`backend/api/server.py`) with SQLite database (`backend/api/netra.db`) for persistent threat catalog (`threat_catalog`), community posts (`community_posts`), and API keys (`api_keys`).
+- **Media Pipeline & Storage**: Multi-modal forensic detection engines (`worker/worker.py`, `detectors/`, `ocr_scam_pipeline.py`, `exif_engine.py`) storing media under `backend/media/` mounted at `/api/v1/media`.
+- **Forensic PDF Engine**: Server-side Typst compiler (`/opt/homebrew/bin/typst`) generating institutional, cryptographically authenticated PDF forensic reports via `backend/api/routes/jobs.py` and `backend/api/routes/threat_intel.py`.
+- **Frontend SPA**: Next.js 14 (App Router) with Tailwind CSS, Lucide icons, Leaflet geospatial mapping, and Gliding filter tabs (`frontend/app/`). Proxies `/api/backend/*` to FastAPI port 8000.
 
 ## Feature Inventory
 | # | Feature | Description | Milestone | Source |
 |---|---------|-------------|-----------|--------|
-| 1 | Backend Threat Intel Contract Fix | Harmonize catalog endpoint response (`results` & `items` alias) and query param (`media_type` & `type` alias) in `threat_intel.py` | M1 | Survey |
-| 2 | Backend Community SQLite Persistence | Replace in-memory `COMMUNITY_POSTS` list with dynamic SQLite persistence in `netra.db` | M1 | Survey |
-| 3 | Backend Coordinate Jitter Removal | Eliminate `np.random.rand()` and `random.random()` synthetic coordinate jitter in `public_api.py` and `exif_engine.py` | M1 | Survey |
-| 4 | Backend Auth Bypass Removal | Remove `sk_test_`/`sk_live_` mock bypass in `auth.py`, enforcing 100% SHA-256 database key verification | M1 | Survey |
-| 5 | Backend Typst Path & Gend Lazy Loading | Make Typst executable lookup cross-platform in `threat_intel.py`, lazy-load GenD weights in `gend_engine.py` | M1 | Survey |
-| 6 | Frontend LiveThreatRadar Sanitization | Remove `demoMarkers` (10 items) fallback; fetch live geo-telemetry or render zero-marker state | M2 | Survey |
-| 7 | Frontend LiveCyberScamNewsFeed Sanitization | Remove `FALLBACK_ARTICLES` (6 items); bind strictly to Tavily crawler feed or render institutional zero-state | M2 | Survey |
-| 8 | Frontend /reported Catalog Sanitization | Remove `DEMO_ITEMS` (6 items); read `data.results || data.items`; render institutional empty state | M2 | Survey |
-| 9 | Frontend /community Sanitization | Remove `SEED_POSTS` (3 items); fetch real posts from backend SQLite DB or render clean empty state | M2 | Survey |
-| 10 | Frontend /scam Score Sanitization | Remove `Math.random()` synthetic risk scores (55-95) and dummy reasoning; show transparent error banner on failure | M2 | Survey |
-| 11 | Frontend /trends Sanitization | Remove `Math.random()` coordinate jitter interval and hardcoded percentages; bind to live threat radar | M2 | Survey |
-| 12 | Frontend MultiModalForensicScanner Sanitization | Remove `runSimulatedNeuralScan` fake timer, dummy OCR, and synthesized text verdicts; trigger real API endpoints | M2 | Survey |
-| 13 | Frontend Developer Portal & Modals Sanitization | Remove hardcoded default API key and fallback post creation in `CommunityEditorModal.tsx` | M2 | Survey |
-| 14 | Frontend Offline Font Build Fix | Fix `frontend/app/layout.tsx` `next/font/google` offline build error by using CSS font variables | M3 | Survey |
-| 15 | Institutional Empty/Loading/Error States | Implement shimmer skeletons, institutional zero-records cards, transparent node unreachable banners, null-safety | M3 | Survey |
-| 16 | Build & Runtime Verification | Verify `npm run build` succeeds with 0 errors, FastAPI runs cleanly, all routes verified | M4 | Survey |
+| 1 | Database Purge | Purge dummy items (`NETRA-SCAM-0001..0010`) and seed posts from `threat_catalog` and `community_posts` in `netra.db`. Remove stale root `threat_catalog.db`. Ensure clean start. | M1 | ORIGINAL_REQUEST §1 |
+| 2 | Media Storage & Type Normalization | Mount `/api/v1/media` static directory in `server.py`, expand `ReportThreatRequest`, normalize `get_threat_catalog` queries so `media_type=video` matches `video_deepfake`, etc. | M1 | ORIGINAL_REQUEST §2, §5 |
+| 3 | Honest EXIF GPS Extraction | Fix `exif_engine.py`: add Apple ISO6709 tag, remove hardcoded New Delhi fallback so unverified media has honest `lat=None, lng=None` and verified media gets `EXACT_GPS`. | M2 | ORIGINAL_REQUEST §5 |
+| 4 | Multi-Modal Auto-Population | Auto-insert analyzed video, image, audio, and text into `threat_catalog` with playable media URLs, forensic scores, and EXIF coordinates. | M2 | ORIGINAL_REQUEST §5 |
+| 5 | Forensic Typst PDF Engine | Implement `GET /api/v1/jobs/{job_id}/report.pdf` with Job ID, SHA-256, verdict, neural scorecard, metadata, and keyframe anomalies. Enhance FIR PDF endpoint. | M3 | ORIGINAL_REQUEST §4 |
+| 6 | Catalog UI Overhaul (/reported) | Change filter tabs to Media Types: All \| Video \| Image \| Audio \| Text. Update `ThreatItem` interface. | M4 | ORIGINAL_REQUEST §2 |
+| 7 | Playable Media Previews | Inline HTML5 video player, audio player, image lightbox, and clean transcript with copy button on catalog cards and modal. | M4 | ORIGINAL_REQUEST §2 |
+| 8 | Rebranding & Radar Filter Fix | Update Navbar & Footer to "Netra Radar", title to "Netra Cyber Threat Radar", fix LiveThreatRadar "Deepfakes" category filter bug. | M4 | ORIGINAL_REQUEST §3 |
+| 9 | 1-Click Forensic PDF Download Buttons | Add download buttons on `/analyze/[jobId]` and catalog slide-over modal linking to PDF endpoints. | M4 | ORIGINAL_REQUEST §4 |
+| 10 | E2E Integration & Forensic Audit | End-to-end verification across all 5 directives: clean DB, upload with EXIF GPS, auto-population, catalog filters/previews, radar plotting, PDF download, and forensic integrity audit. | M5 | ORIGINAL_REQUEST §1-§5 |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| M1 | Backend Remediation & Persistence | SQLite community table, catalog contract aliases, auth bypass removal, coordinate purity | none | DONE |
-| M2 | Frontend Fake Data & Fallback Purge | Remove `demoMarkers`, `FALLBACK_ARTICLES`, `DEMO_ITEMS`, `SEED_POSTS`, `Math.random()`, fake neural scans | M1 | DONE |
-| M3 | Frontend Build Fix & State Polish | `layout.tsx` font fix, shimmer loading states, institutional zero states, error banners | M2 | DONE |
-| M4 | Verification & Quality Gate | `npm run build`, `tsc --noEmit`, backend import & runtime testing, gate checks | M3 | DONE |
+| 1 | Database Purge & Storage Foundation | Clean DB, remove stale files, mount media serving, normalize catalog type query | none | COMPLETE |
+| 2 | EXIF Geolocation & Auto-Population | Fix exif_engine (honest GPS), wire auto-population for video, image, audio, text | M1 | COMPLETE |
+| 3 | Forensic Typst & ReportLab PDF Generator | Implement dual-engine client jsPDF + backend ReportLab FIR PDF | M1 | COMPLETE |
+| 4 | Frontend Catalog UI, Previews, Rebranding & PDF Buttons | Overhaul `/reported` tabs, media players, lightbox, transcript, rebranding, 1-click PDF buttons | M2, M3 | COMPLETE |
+| 5 | E2E Integration Testing & Forensic Integrity Audit | End-to-end verification, production deployment, and live cloud validation | M1, M2, M3, M4 | COMPLETE |
 
 ## Interface Contracts
-### `GET /api/v1/threat-intelligence/catalog`
-- Query parameters: `search: Optional[str]`, `category: Optional[str]`, `media_type: Optional[str]` (aliased to `type`), `limit: int`, `offset: int`
-- Response: `{"status": "success", "total_returned": int, "results": List[ThreatItem], "items": List[ThreatItem]}`
 
-### `GET /api/v1/threat-intelligence/radar`
-- Response: `{"status": "success", "total_markers": int, "markers": List[ThreatMarker]}`
+### Media Serving & Catalog Storage
+- **Media URL format**: `/api/backend/api/v1/media/{type}/{filename}` (proxied via Next.js to FastAPI `/api/v1/media/{type}/{filename}`)
+- **Normalized Media Types**:
+  - `video` <-> `type IN ('video', 'video_deepfake')`
+  - `image` <-> `type IN ('image', 'image_deepfake')`
+  - `audio` <-> `type IN ('audio', 'audio_clone')`
+  - `text` <-> `type IN ('text', 'scam_text')`
+- **Geolocation contract**:
+  - `lat`, `lng`: Decimal float or `None`.
+  - `location_source`: `"EXACT_GPS"` (when extracted from media EXIF/metadata) or `None`.
+  - Radar endpoint `/api/v1/threat-intelligence/radar` plots items ONLY where `lat IS NOT NULL AND lng IS NOT NULL`.
 
-### `GET /api/v1/news/feed`
-- Response: `{"status": "success", "count": int, "crawler_status": str, "feed": List[ScamNewsArticle]}`
-
-### `GET /api/v1/community/posts`
-- Response: `{"status": "success", "count": int, "posts": List[CommunityPost]}`
-
-### `POST /api/v1/community/posts`
-- Request JSON: `{ "title": str, "category": str, "content": str, "excerpt"?: str, "cover_image"?: str, "embed_url"?: str, "author": { "name": str, "email": str, "avatar"?: str, "role"?: str } }`
-- Response: `{"status": "success", "message": str, "post": CommunityPost}`
-
-### `POST /api/v1/detect/scam`
-- Request JSON: `{"text": str}`
-- Response: `{"is_scam": bool, "risk_score": int, "confidence": int, "verdict": str, "scam_type": Optional[str], "matched_rules": List[str], "analysis_method": str, "processing_time_ms": int, "llm_reason": Optional[str]}`
+### Forensic PDF Endpoint
+- **URL**: `GET /api/v1/jobs/{job_id}/report.pdf`
+- **Response**: `application/pdf`, filename `NETRA_Forensic_Report_{job_id}.pdf`
+- **Contents**:
+  - Header: Netra Forensic Seal & Institutional Banner
+  - Custody: Job ID, media SHA-256 hash, timestamp, worker node
+  - Verdict: Verdict (`DEEPFAKE`, `AUTHENTIC`, `SUSPICIOUS`), Risk Level (`CRITICAL`, `HIGH`, `LOW`), Confidence %
+  - Scorecard: Spatial SBI score, GenD ViT-L, Wav2Vec2 Audio, CLIP Probe
+  - Metadata: Container bitrate, duration, codec, EXIF location & device
+  - Keyframe Anomalies: timestamp, frame index, anomaly flags
 
 ## Code Layout
-- `frontend/app/` — Next.js 14 routes (`layout.tsx`, `page.tsx`, `radar/`, `reported/`, `community/`, `scam/`, `trends/`, `developers/`, `technology/`, `analyze/`)
-- `frontend/components/` — UI components (`LiveThreatRadar.tsx`, `ThreatCatalogSection.tsx`, `feed/LiveCyberScamNewsFeed.tsx`, `sandbox/MultiModalForensicScanner.tsx`, `community/`, etc.)
-- `backend/api/` — FastAPI server (`server.py`), DB management (`db.py`), auth (`auth.py`), routes (`routes/threat_intel.py`, `routes/community.py`, `routes/scam.py`, `routes/detect.py`, `routes/public_api.py`, `routes/news_routes.py`)
-- `backend/netra/` — Forensic engines (`pipeline/`, `services/tavily_crawler.py`, `services/ocr_scam_pipeline.py`)
+- `backend/api/db.py`: SQLite initialization, migrations, CRUD helpers (`get_threat_catalog`, `insert_threat_item`)
+- `backend/api/netra.db`: Primary SQLite database
+- `backend/api/server.py`: FastAPI entrypoint, router mounts, static media mount
+- `backend/api/routes/detect.py`: Multi-modal upload & analysis endpoints (video, image OCR, audio)
+- `backend/api/routes/scam.py`: Text scam analysis endpoint
+- `backend/api/routes/jobs.py`: Analysis job status and PDF report generation
+- `backend/api/routes/threat_intel.py`: Threat catalog, radar telemetry, FIR PDF generation
+- `backend/netra/pipeline/exif_engine.py`: EXIF GPS and container metadata extractor
+- `frontend/app/reported/page.tsx`: Threat catalog page with filter tabs, cards, media previews, slide-over modal
+- `frontend/app/analyze/[jobId]/page.tsx`: Video analysis results page with Download Forensic PDF button
+- `frontend/app/radar/page.tsx`: Netra Cyber Threat Radar page
+- `frontend/components/LiveThreatRadar.tsx`: Satellite radar map component
+- `frontend/components/layout/Navbar.tsx`: Header navigation
+- `frontend/components/layout/Footer.tsx`: Footer navigation
