@@ -135,15 +135,78 @@ async def upvote_threat(threat_id: str):
         "upvotes_count": new_count
     }
 
-@router.post("/threat-intelligence/report")
-async def report_new_threat(payload: ReportThreatRequest):
-    """Submit a verified scam or deepfake to the public catalog."""
-    item_id = insert_threat_item(payload.model_dump())
-    return {
-        "status": "success",
-        "message": "Threat successfully indexed in NETRA Global Catalog.",
-        "id": item_id
-    }
+@router.get("/threat-intelligence/{threat_id}/media")
+async def stream_threat_media(threat_id: str):
+    """
+    Secure media streaming proxy for threat catalog items.
+    If media is stored locally in media/, streams the file directly with Byte-Range support.
+    If media is on private AWS S3, generates a valid presigned S3 URL (HTTP 307 redirect).
+    """
+    item = get_threat_by_id(threat_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Threat incident not found")
+
+    media_url = item.get("media_url")
+    
+    # 1. Local video file check
+    # Check if this is a video job or locally uploaded file
+    clean_id = threat_id.replace("JOB-", "").replace("THREAT-", "").replace("SCAN-", "")
+    local_candidates = [
+        os.path.join(MEDIA_DIR, "videos", f"{clean_id}.mp4"),
+        os.path.join(MEDIA_DIR, "videos", f"{clean_id}_input.mp4"),
+        os.path.join(MEDIA_DIR, "uploads", f"{threat_id}.mp4"),
+        os.path.join(MEDIA_DIR, "uploads", f"{threat_id}.png"),
+        os.path.join(MEDIA_DIR, "uploads", f"{threat_id}.wav"),
+    ]
+    if media_url and media_url.startswith("/api/v1/media/"):
+        rel_sub = media_url.replace("/api/v1/media/", "")
+        local_candidates.insert(0, os.path.join(MEDIA_DIR, rel_sub))
+
+    for cand in local_candidates:
+        if os.path.exists(cand):
+            from fastapi.responses import FileResponse
+            ext = os.path.splitext(cand)[1].lower()
+            media_type = "video/mp4" if ext == ".mp4" else ("image/png" if ext in (".png", ".jpg", ".jpeg") else "audio/wav")
+            return FileResponse(cand, media_type=media_type)
+
+    # 2. Private S3 presigned redirect
+    if media_url and "amazonaws.com" in media_url:
+        try:
+            import boto3
+            from botocore.config import Config
+            s3_bucket = os.getenv("S3_BUCKET_MEDIA", "netra-media-mumbai-131746731374")
+            region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
+            ak = os.getenv("AWS_ACCESS_KEY_ID")
+            sk = os.getenv("AWS_SECRET_ACCESS_KEY")
+            
+            s3_client = boto3.client(
+                "s3",
+                region_name=region,
+                aws_access_key_id=ak.strip() if ak else None,
+                aws_secret_access_key=sk.strip() if sk else None,
+                config=Config(signature_version="s3v4")
+            )
+            # Extract key from URL
+            # e.g., https://netra-media-mumbai...s3.ap-south-1.amazonaws.com/{job_id}/input.mp4
+            s3_key = f"{clean_id}/input.mp4"
+            if ".amazonaws.com/" in media_url:
+                s3_key = media_url.split(".amazonaws.com/", 1)[1]
+
+            presigned_url = s3_client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": s3_bucket, "Key": s3_key},
+                ExpiresIn=3600
+            )
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(url=presigned_url, status_code=307)
+        except Exception as s3_err:
+            logger.warning(f"Failed to generate S3 presigned URL for {threat_id}: {s3_err}")
+
+    if media_url:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=media_url, status_code=307)
+
+    raise HTTPException(status_code=404, detail="No media stream available for this incident")
 
 @router.get("/threat-intelligence/{threat_id}/fir-pdf")
 async def download_fir_dossier(threat_id: str):
@@ -286,12 +349,12 @@ async def download_fir_dossier(threat_id: str):
 
             use_image = False
             img_p = resolve_snapshot_image_path(snap)
-            if img_p and os.path.exists(img_p):
+            if img_p and os.path.isfile(img_p) and os.path.getsize(img_p) > 0:
                 try:
                     from PIL import Image as PILImage
                     with PILImage.open(img_p) as test_im:
                         test_im.verify()
-                    rl_img = RLImage(img_p, width=220, height=145)
+                    rl_img = RLImage(img_p, width=220, height=145, lazy=0)
                     snap_t = Table([[rl_img, Paragraph(cap_text, body_style)]], colWidths=[230, 290])
                     snap_t.setStyle(TableStyle([
                         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#f8fafc")),

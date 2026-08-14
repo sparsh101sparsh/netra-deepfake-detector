@@ -13,6 +13,14 @@ const nextConfig = {
       {
         source: '/api/backend/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/:path*`
+      },
+      {
+        source: '/api/v1/media/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/v1/media/:path*`
+      },
+      {
+        source: '/media/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/v1/media/:path*`
       }
     ];
   }
