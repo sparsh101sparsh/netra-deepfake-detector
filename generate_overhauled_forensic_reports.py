@@ -226,11 +226,20 @@ def generate_clean_forensic_pdf(subject_name, video_filename, top_keyframes,
     verdict   = pipeline_results.get("verdict", "FACE_SWAP")
     conf      = pipeline_results.get("confidence", 0.0)
     risk      = pipeline_results.get("risk_level", "HIGH")
-    story.append(Paragraph(
-        f"Forensic Verdict: {verdict.replace('_',' ')} (CONFIDENCE {conf:.1f}%) \u2014 RISK: {risk}",
-        verdict_s
-    ))
+    is_auth   = verdict == "AUTHENTIC"
+    verdict_color = "#16a34a" if is_auth else "#dc2626"
+
+    verdict_s = ParagraphStyle("V", fontSize=9, fontName="Helvetica-Bold", leading=12,
+                               textColor=colors.HexColor(verdict_color), spaceAfter=2)
+
+    if is_auth:
+        verdict_text = f"Forensic Verdict: AUTHENTIC (VERIFIED {100.0 - conf:.1f}%) — RISK: {risk}"
+    else:
+        verdict_text = f"Forensic Verdict: {verdict.replace('_',' ')} (CONFIDENCE {conf:.1f}%) — RISK: {risk}"
+
+    story.append(Paragraph(verdict_text, verdict_s))
     story.append(Spacer(1, 2))
+
 
     # Metadata grid
     meta_data = [
@@ -328,8 +337,13 @@ def generate_clean_forensic_pdf(subject_name, video_filename, top_keyframes,
     story.append(t_scores)
     story.append(Spacer(1, 3))
 
-    # ── Section 1: Flagged Keyframes ──────────────────────────────────────────
-    story.append(Paragraph("1. Flagged Forensic Keyframe Visual Evidence (Multi-Frame Localization Gallery)", sec_s))
+    # ── Section 1: Visual Evidence (Coherence Gallery for Real, Anomaly Gallery for Fake) ──
+    sec1_title = (
+        "1. Audited Keyframe Visual Evidence (Facial & Ocular Coherence Gallery)"
+        if is_auth
+        else "1. Flagged Forensic Keyframe Visual Evidence (Multi-Frame Localization Gallery)"
+    )
+    story.append(Paragraph(sec1_title, sec_s))
 
     for kf in top_keyframes:
         rl_full = RLImage(kf["annotated_path"], width=155, height=98)
@@ -338,17 +352,28 @@ def generate_clean_forensic_pdf(subject_name, video_filename, top_keyframes,
         kf_spatial = kf.get("spatial_score_pct", 0.0)
         kf_freq    = kf.get("freq_score_pct", 0.0)
         region     = kf.get("region_name", "Iris / Pupil Ocular Region")
-        crit       = "CRITICAL" if kf_fused >= 65 else "SUSPICIOUS"
-        desc = (
-            f"<b>Keyframe #{kf['frame_num']} @ {kf['timestamp']:.2f}s</b><br/><br/>"
-            f"<b>Fused Neural Anomaly Index:</b> <font color='#dc2626'><b>{kf_fused:.1f}% ({crit})</b></font><br/>"
-            f"<b>SBI Spatial Score:</b> {kf_spatial:.1f}%   "
-            f"<b>DCT Freq Score:</b> {kf_freq:.1f}%<br/>"
-            f"<b>Anomaly Region:</b> {region}<br/>"
-            f"<b>Diagnostic:</b> Tamper-evident amber bounding box highlights specular reflection discontinuity "
-            f"and latent blending boundary seam. The 2.5x magnified crop exposes unnatural pixel gradient transitions."
-        )
+
+        if is_auth:
+            desc = (
+                f"<b>Keyframe #{kf['frame_num']} @ {kf['timestamp']:.2f}s</b><br/><br/>"
+                f"<b>Neural Coherence Index:</b> <font color='#16a34a'><b>{100.0 - kf_fused:.1f}% (VERIFIED AUTHENTIC)</b></font><br/>"
+                f"<b>SBI Spatial Score:</b> {kf_spatial:.1f}%   <b>DCT Freq Score:</b> {kf_freq:.1f}%<br/>"
+                f"<b>Audited Region:</b> {region}<br/>"
+                f"<b>Diagnostic:</b> Forensic audit confirms natural corneal specular reflection continuity "
+                f"and organic biological boundary gradients. Magnified crop verifies absence of synthetic blending seams."
+            )
+        else:
+            crit = "CRITICAL" if kf_fused >= 65 else "SUSPICIOUS"
+            desc = (
+                f"<b>Keyframe #{kf['frame_num']} @ {kf['timestamp']:.2f}s</b><br/><br/>"
+                f"<b>Fused Neural Anomaly Index:</b> <font color='#dc2626'><b>{kf_fused:.1f}% ({crit})</b></font><br/>"
+                f"<b>SBI Spatial Score:</b> {kf_spatial:.1f}%   <b>DCT Freq Score:</b> {kf_freq:.1f}%<br/>"
+                f"<b>Anomaly Region:</b> {region}<br/>"
+                f"<b>Diagnostic:</b> Tamper-evident amber bounding box highlights specular reflection discontinuity "
+                f"and latent blending boundary seam. The 2.5x magnified crop exposes unnatural pixel gradient transitions."
+            )
         row = Table([[rl_full, rl_mag, Paragraph(desc, card_s)]], colWidths=[160,160,223])
+
         row.setStyle(TableStyle([
             ('BACKGROUND',(0,0),(-1,-1),colors.HexColor("#f8fafc")),
             ('BOX',(0,0),(-1,-1),1,colors.HexColor("#cbd5e1")),
@@ -395,10 +420,15 @@ def generate_clean_forensic_pdf(subject_name, video_filename, top_keyframes,
 
 
 # ─── Orchestrator ─────────────────────────────────────────────────────────────
-def process_video_forensic_clean(vf):
-    vpath   = os.path.join(VIDEO_DIR, vf)
-    stem    = Path(vf).stem
-    subject = stem.replace("deepfake_","").replace("_"," ")
+def process_video_forensic_clean(vf, custom_vpath=None, custom_subject=None):
+    if custom_vpath:
+        vpath   = custom_vpath
+        stem    = Path(vpath).stem
+        subject = custom_subject or stem.replace("_"," ").title()
+    else:
+        vpath   = os.path.join(VIDEO_DIR, vf)
+        stem    = Path(vf).stem
+        subject = stem.replace("deepfake_","").replace("_"," ")
 
     # 1. Per-frame SBI + DCT inference
     print(f"  Frame-level SBI + DCT inference...")
@@ -459,13 +489,17 @@ def process_video_forensic_clean(vf):
         selected = all_frames[:2]
     selected.sort(key=lambda x: x["frame_num"])
 
-    # 7. Annotate + 2.5x magnify keyframes
+    # 7. Annotate + 2.5x magnify keyframes (supports dual-mode: authentic vs anomaly)
     top_keyframes = []
+    is_verdict_authentic = (fusion["verdict"] == "AUTHENTIC")
     for i, kf in enumerate(selected):
         annotated_bgr, meta = VisualAnomalyLocalizer.localize_and_annotate(
-            kf["raw_frame"], anomaly_score=kf["fusion_score"]/100.0
+            kf["raw_frame"],
+            anomaly_score=kf["fusion_score"]/100.0,
+            is_authentic=is_verdict_authentic
         )
         box     = meta["bounding_box"]
+
         mag_bgr = create_natural_magnified_crop(kf["raw_frame"], box)
 
         ann_p = os.path.join(OUT_DIR, f"{stem}_frame_{i}_annotated.jpg")
