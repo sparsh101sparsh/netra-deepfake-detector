@@ -10,12 +10,12 @@ import {
 import { CyberIcon, CyberIconType } from "@/components/CyberIcons";
 import { SegmentedControl } from "@/components/atoms/SegmentedControl";
 import { StatusPill, StatusPillTone } from "@/components/atoms/StatusPill";
-import { Chip } from "@/components/atoms/Chip";
 import { Button } from "@/components/atoms/Button";
 import { StreamText } from "@/components/primitives/StreamText";
 import { ThinkingState } from "@/components/primitives/ThinkingState";
 import { DropZone, SandboxModality } from "./DropZone";
 import { OCRDossier, OCRDossierResult } from "./OCRDossier";
+import { FacialDeepfakeCard, DualBranchResult } from "./FacialDeepfakeCard";
 import { generateForensicPDF } from "@/lib/pdfReportGenerator";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +47,73 @@ export interface MultiModalScannerProps {
   className?: string;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HybridDossier: Shown when analysis_mode === "hybrid"
+// Renders both Facial Deepfake Inspection + OCR Scam Dossier in a segmented tab view
+// ─────────────────────────────────────────────────────────────────────────────
+function HybridDossier({ data, onReset }: { data: DualBranchResult; onReset: () => void }) {
+  const [activeTab, setActiveTab] = useState<"face" | "text">("face");
+  const hasFacialData = (data.facial_analysis?.face_count ?? 0) > 0;
+  const hasTextData = (data.ocr_analysis?.lines_count ?? 0) > 0 || (data.scam_analysis?.risk_score ?? 0) > 0;
+
+  const compositeScore = data.composite_risk_score ?? 0;
+  const compositeLevel = data.composite_risk_level ?? "LOW";
+  const scoreTone = compositeScore >= 75 ? "critical" : compositeScore >= 40 ? "orange" : "active";
+
+  return (
+    <div className="space-y-3 animate-in fade-in duration-200">
+      {/* Composite Header */}
+      <div className="rounded-xl bg-canvas border-[1.5px] border-amber-500/30 bg-amber-500/5 px-4 py-3 flex items-center justify-between">
+        <div>
+          <div className="text-xs font-bold uppercase tracking-wide text-amber-400">
+            Hybrid Threat Detected
+          </div>
+          <div className="text-[11.5px] text-zinc-300 leading-relaxed mt-0.5">
+            {data.composite_verdict || "Image contains both facial content and scam text"}
+          </div>
+        </div>
+        <StatusPill tone={scoreTone} size="sm" pulse={compositeScore >= 75}>
+          {compositeScore}% Risk · {compositeLevel}
+        </StatusPill>
+      </div>
+
+      {/* Tab Switcher */}
+      <div className="flex items-center gap-1 bg-inset rounded-xl p-1 border border-line">
+        <button
+          onClick={() => setActiveTab("face")}
+          className={cn(
+            "flex-1 rounded-lg py-1.5 text-[11.5px] font-semibold transition-all duration-150",
+            activeTab === "face"
+              ? "bg-surface text-amber-400 border border-amber-500/30 shadow-sm"
+              : "text-zinc-500 hover:text-zinc-300"
+          )}
+        >
+          🎭 Facial Deepfake Analysis
+        </button>
+        <button
+          onClick={() => setActiveTab("text")}
+          className={cn(
+            "flex-1 rounded-lg py-1.5 text-[11.5px] font-semibold transition-all duration-150",
+            activeTab === "text"
+              ? "bg-surface text-amber-400 border border-amber-500/30 shadow-sm"
+              : "text-zinc-500 hover:text-zinc-300"
+          )}
+        >
+          📄 Text Scam Intelligence
+        </button>
+      </div>
+
+      {/* Active Tab Content */}
+      {activeTab === "face" && hasFacialData && (
+        <FacialDeepfakeCard data={data} onReset={onReset} />
+      )}
+      {activeTab === "text" && hasTextData && (
+        <OCRDossier data={data as OCRDossierResult} onReset={onReset} />
+      )}
+    </div>
+  );
+}
+
 export function MultiModalForensicScanner({ onScanComplete, className }: MultiModalScannerProps) {
   const router = useRouter();
   const [activeModality, setActiveModality] = useState<ScannerModality>("video");
@@ -57,7 +124,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Result States for Non-Redirecting Modalities
-  const [imageOcrResult, setImageOcrResult] = useState<OCRDossierResult | null>(null);
+  const [imageOcrResult, setImageOcrResult] = useState<DualBranchResult | null>(null);
   const [audioResult, setAudioResult] = useState<AudioDossierResult | null>(null);
 
   // Text Threat Triage State
@@ -290,7 +357,6 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
           <div>
             <h2 className="text-sm sm:text-base font-bold text-ink tracking-tight flex items-center gap-2">
               Multi-Modal Forensic Sandbox
-              <Chip tone="accent" size="sm">V5.1</Chip>
             </h2>
             <p className="text-xs text-ink-3">
               Deepfake video, audio voice notes, image OCR, and text fraud verification
@@ -525,11 +591,36 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             )}
           </div>
         ) : activeModality === "image" && imageOcrResult ? (
-          /* ── IMAGE OCR DOSSIER VIEW ── */
-          <OCRDossier
-            data={imageOcrResult}
-            onReset={() => setImageOcrResult(null)}
-          />
+          /* ── IMAGE: ADAPTIVE DUAL-BRANCH VIEW ── */
+          (() => {
+            const mode = imageOcrResult.analysis_mode;
+            const isPureFace = mode === "pure_face";
+            const isDocument = mode === "document";
+            const isHybrid = mode === "hybrid";
+
+            if (isPureFace) {
+              // Branch A: Facial deepfake inspection card only
+              return (
+                <FacialDeepfakeCard
+                  data={imageOcrResult}
+                  onReset={() => setImageOcrResult(null)}
+                />
+              );
+            }
+
+            if (isHybrid) {
+              // Branch C: Hybrid — both detectors fired, show tabbed view
+              return <HybridDossier data={imageOcrResult} onReset={() => setImageOcrResult(null)} />;
+            }
+
+            // Branch B (document) or inconclusive — OCR Scam Dossier
+            return (
+              <OCRDossier
+                data={imageOcrResult as OCRDossierResult}
+                onReset={() => setImageOcrResult(null)}
+              />
+            );
+          })()
         ) : activeModality === "audio" && audioResult ? (
           /* ── DEDICATED AUDIO DEEPFAKE DOSSIER VIEW ── */
           <div className="rounded-xl bg-canvas border-[1.5px] border-line p-5 space-y-4 animate-in fade-in duration-200">

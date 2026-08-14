@@ -128,7 +128,7 @@ export default function ThreatCatalogPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                Global Threat Catalog
+                Threat Catalog
               </h1>
               <p className="text-xs text-zinc-400 mt-1">
                 Real-time repository of verified synthetic media, deepfakes, voice clones, and fraud vectors.
