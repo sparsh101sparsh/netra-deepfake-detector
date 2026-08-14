@@ -52,6 +52,14 @@ class ScamDetector:
             "JOB_SCAM": [
                 r"\b(part\s*time\s*job|lik(?:e|ing)\s*(?:youtube|\w+\s*videos?)|telegram\s*(?:\w+\s*)?tasks?|earn\s*(?:rs\.?|inr|\$)?\s*[\d,]+|work\s*from\s*home|youtube\s*like)\b",
                 r"\b(prepaid\s*task|rating\s*hotel|google\s*review\s*job)\b"
+            ],
+            "LOTTERY_PRIZE_FRAUD": [
+                r"\b(lucky\s*draw|sim\s*card\s*lucky\s*draw|lottery|kbc|kaun\s*banega\s*crorepati|crorepati)\b",
+                r"\b(won\s*(?:the|a)?\s*(?:prize|lottery|car|amount|cash)|prize\s*(?:of|money)|collect\s*(?:your)?\s*prize|claim\s*(?:your)?\s*prize)\b",
+                r"\b(only\s*whatsapp\s*call|whatsapp\s*call|kbc\s*(?:department|head\s*office|officer|winner|no|number)?)\b",
+                r"(25[,\s]*00[,\s]*000|25\s*lakh|50\s*lakh|1\s*crore|cash\s*prize)",
+                r"\b(state\s*bank\s*of\s*india|congratulations\s*(?:you)?\s*(?:have|heve|got)?\s*(?:won)?)\b",
+                r"(लॉटरी|केबीसी|करोड़पति|बधाई\s*हो|आप\s*जीते\s*हैं|लकी\s*ड्रॉ)"
             ]
         }
 
@@ -87,6 +95,8 @@ class ScamDetector:
             rule_score_boost = max(rule_score_boost, 88)
         if "APK_MALWARE" in matched_rules:
             rule_score_boost = max(rule_score_boost, 92)
+        if "LOTTERY_PRIZE_FRAUD" in matched_rules:
+            rule_score_boost = max(rule_score_boost, 94)
         if "ELECTRICITY_KYC" in matched_rules:
             rule_score_boost = max(rule_score_boost, 82)
         if "STOCK_TRADING_FRAUD" in matched_rules:

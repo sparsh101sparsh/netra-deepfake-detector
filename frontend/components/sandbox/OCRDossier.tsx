@@ -88,9 +88,10 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
     {
       key: "ocr_extraction",
       label: "Image Text Scanning",
-      amount: `${ocr.lines_count || 1} lines`,
-      status: "done",
+      amount: `${ocr.lines_count ?? 0} lines`,
+      status: (ocr.lines_count ?? 0) > 0 ? "done" : "failed",
       details: [
+        { label: "OCR Engine", meta: ocr.engine || "RapidOCR" },
         { label: "Scan Time", meta: `${ocr.processing_time_ms || 120}ms` },
         { label: "Characters Detected", meta: `${ocr.full_text?.length || 0} chars` },
       ],
