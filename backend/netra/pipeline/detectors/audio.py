@@ -317,11 +317,30 @@ class AudioDeepfakeDetector:
                 }
 
             global_score = float(np.mean([c["score"] for c in chunk_scores]))
-            flags = self._generate_flags(global_score, chunk_scores)
-            suspicious_segments = [c for c in chunk_scores if c["score"] > 0.6]
+
+            # Cross-validate neural model against physical acoustic spectrogram:
+            # MelodyMachine (trained on ASVspoof studio audio) has an acoustic mismatch on laptop mics / room reverberation.
+            # SpectralAudioForensicsFallback measures physical vocoder cutoff, phase harmonics, Wiener entropy & micro-prosody.
+            spectral_score, spectral_flags = SpectralAudioForensicsFallback.analyze_audio(audio, sr)
+            if global_score > 0.70 and spectral_score <= 0.35:
+                logger.info(
+                    f"Audio acoustic mismatch detected: Neural={global_score:.4f} vs Physical Spectrogram={spectral_score:.4f}. "
+                    "Calibrating with physical acoustic harmonics."
+                )
+                final_audio_score = 0.25 * global_score + 0.75 * spectral_score
+            elif global_score <= 0.30:
+                final_audio_score = global_score
+            else:
+                final_audio_score = 0.50 * global_score + 0.50 * spectral_score
+
+            flags = self._generate_flags(final_audio_score, chunk_scores)
+            if spectral_score <= 0.35 and "vocoder_artifacts" in flags and final_audio_score < 0.50:
+                flags = [f for f in flags if f not in ("vocoder_artifacts", "prosody_mismatch")]
+
+            suspicious_segments = [c for c in chunk_scores if c["score"] > 0.6] if final_audio_score >= 0.50 else []
 
             return {
-                "fake_probability": round(global_score, 4),
+                "fake_probability": round(final_audio_score, 4),
                 "flags": flags,
                 "timestamp_segments": suspicious_segments,
                 "available": True,
