@@ -1,29 +1,36 @@
 """
-NETRA SQS Worker — GPU Process
-Polls the SQS queue, runs the full ML pipeline, writes results to DynamoDB.
-Runs on EC2 g4dn.xlarge Spot Instance (GPU).
+NETRA SQS Autonomous Worker Daemon — Forensic Processing Engine
+Polls the SQS queue, manages worker presence telemetry, prewarms neural models,
+progressively reports DynamoDB stage telemetry, and handles signals gracefully.
 
-DO NOT run ML models anywhere else — this is the only GPU process.
+Supported Hardware:
+- NVIDIA CUDA GPU (e.g. AWS EC2 g4dn / g5)
+- Apple Silicon GPU / Neural Engine (MPS)
+- High-Performance Multi-Threaded Host CPU
 """
-import boto3
-import json
-import os
 import asyncio
+import json
 import logging
+import os
+import platform
+import signal
+import sys
 import tempfile
+import threading
+import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
-)
-logger = logging.getLogger("netra.worker")
-
-import os, sys
+import boto3
+from botocore.exceptions import ClientError
 from dotenv import load_dotenv
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 # Ensure root and backend directories are in sys.path
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -35,16 +42,26 @@ for p in [root_dir, backend_dir]:
 load_dotenv(os.path.join(root_dir, ".env"))
 load_dotenv(os.path.join(backend_dir, ".env"))
 
-# AWS Config
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+)
+logger = logging.getLogger("netra.worker")
+
+# AWS & Environment Config
 REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL", "https://sqs.us-east-1.amazonaws.com/131746731374/netra-jobs")
 S3_BUCKET_MEDIA = os.getenv("S3_BUCKET_MEDIA", "netra-media-uploads")
 S3_BUCKET_MODELS = os.getenv("S3_BUCKET_MODELS", "netra-models")
-DYNAMO_TABLE = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
+DYNAMO_TABLE_JOBS = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
+DYNAMO_TABLE_WORKERS = os.getenv("DYNAMO_TABLE_WORKERS", "netra-workers")
 SPATIAL_MODEL_PATH = os.getenv("SPATIAL_MODEL_PATH", "/opt/netra/models/spatial/model.pth")
 CLIP_PROBE_PATH = os.getenv("CLIP_PROBE_PATH", "/opt/netra/models/clip_probe/model.pth")
 
+
 def get_boto3(service_name: str):
+    """Factory for boto3 client with optional explicit credentials and region."""
     kwargs = {"region_name": REGION}
     ak = os.getenv("AWS_ACCESS_KEY_ID")
     sk = os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -53,80 +70,469 @@ def get_boto3(service_name: str):
         kwargs["aws_secret_access_key"] = sk.strip()
     return boto3.client(service_name, **kwargs)
 
+
 sqs = get_boto3("sqs")
 s3 = get_boto3("s3")
 dynamodb = get_boto3("dynamodb")
 
 
-def update_job_progress(job_id: str, status: str, progress: int, stage: str):
+def get_optimal_device():
+    """
+    Resolve best available PyTorch compute device: CUDA -> MPS -> CPU.
+    Returns: (torch.device, device_type_str, device_name_str)
+    """
+    import torch
+
+    if torch.cuda.is_available():
+        dev = torch.device("cuda:0")
+        name = torch.cuda.get_device_name(0)
+        return dev, "cuda:0", name
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        dev = torch.device("mps")
+        return dev, "mps", "Apple Silicon (MPS)"
+    return torch.device("cpu"), "cpu", f"Host CPU ({platform.processor() or platform.machine()})"
+
+
+def get_worker_id() -> str:
+    """Generate or retrieve unique worker ID."""
+    env_id = os.getenv("WORKER_ID")
+    if env_id:
+        return env_id.strip()
+    hostname = platform.node() or "worker"
+    clean_host = hostname.replace(" ", "-").replace(".", "-")[:20]
+    return f"worker-{clean_host}-{uuid.uuid4().hex[:6]}"
+
+
+# ==============================================================================
+# SQS VISIBILITY HEARTBEAT
+# ==============================================================================
+
+class SQSVisibilityHeartbeat:
+    """
+    Background daemon thread / context manager calling
+    change_message_visibility(VisibilityTimeout=60) every 25 seconds during job processing.
+    """
+
+    def __init__(
+        self,
+        receipt_handle: str,
+        sqs_client=None,
+        queue_url: str = SQS_QUEUE_URL,
+        visibility_timeout: int = 60,
+        interval: float = 25.0,
+    ):
+        self.receipt_handle = receipt_handle
+        self.sqs = sqs_client or sqs
+        self.queue_url = queue_url
+        self.visibility_timeout = visibility_timeout
+        self.interval = interval
+        self._stop_event = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+
+    def start(self):
+        """Start visibility extension background thread."""
+        if self._thread is None or not self._thread.is_alive():
+            self._stop_event.clear()
+            self._thread = threading.Thread(
+                target=self._heartbeat_loop,
+                daemon=True,
+                name="SQSVisibilityHeartbeat",
+            )
+            self._thread.start()
+
+    def _heartbeat_loop(self):
+        """Periodic heartbeat loop extending visibility timeout."""
+        while not self._stop_event.wait(self.interval):
+            try:
+                self.sqs.change_message_visibility(
+                    QueueUrl=self.queue_url,
+                    ReceiptHandle=self.receipt_handle,
+                    VisibilityTimeout=self.visibility_timeout,
+                )
+                logger.debug(
+                    f"Extended SQS visibility by {self.visibility_timeout}s for {self.receipt_handle}"
+                )
+            except ClientError as e:
+                logger.warning(
+                    f"SQS visibility heartbeat ClientError: {e.response.get('Error', {}).get('Code')}"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to extend SQS visibility timeout: {e}")
+
+    def stop(self):
+        """Stop visibility extension background thread."""
+        self._stop_event.set()
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=2.0)
+
+    def reset_visibility_zero(self):
+        """Immediately reset visibility to 0 so other workers can pick up the message."""
+        try:
+            self.sqs.change_message_visibility(
+                QueueUrl=self.queue_url,
+                ReceiptHandle=self.receipt_handle,
+                VisibilityTimeout=0,
+            )
+            logger.info(f"Reset visibility to 0 for {self.receipt_handle}")
+        except Exception as e:
+            logger.warning(f"Failed to reset visibility to 0: {e}")
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+
+
+# ==============================================================================
+# WORKER LIVENESS & PRESENCE REGISTRY
+# ==============================================================================
+
+class WorkerLivenessRegistry:
+    """
+    Worker Presence & Heartbeat Registry.
+    Pulses worker presence to DynamoDB table `netra-workers` every 15s with TTL = now + 120s.
+    Records worker_id, status ("idle" | "busy" | "draining"), device_type, device_name,
+    active_job_id, last_heartbeat, last_heartbeat_epoch, and ttl.
+    """
+
+    def __init__(
+        self,
+        worker_id: Optional[str] = None,
+        dynamodb_client=None,
+        table_name: str = DYNAMO_TABLE_WORKERS,
+        pulse_interval: float = 15.0,
+        ttl_seconds: int = 120,
+    ):
+        self.worker_id = worker_id or get_worker_id()
+        self.dynamodb = dynamodb_client or dynamodb
+        self.table_name = table_name
+        self.pulse_interval = pulse_interval
+        self.ttl_seconds = ttl_seconds
+
+        device, dev_type, dev_name = get_optimal_device()
+        self.device = device
+        self.device_type = dev_type
+        self.device_name = dev_name
+
+        self.status = "idle"
+        self.active_job_id: Optional[str] = None
+        self._stop_event = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+        self._lock = threading.Lock()
+
+    def register(self):
+        """Register worker in DynamoDB on initial boot."""
+        now = datetime.now(timezone.utc)
+        now_epoch = int(now.timestamp())
+        item = {
+            "worker_id": {"S": self.worker_id},
+            "status": {"S": self.status},
+            "device_type": {"S": self.device_type},
+            "device_name": {"S": self.device_name},
+            "last_heartbeat": {"S": now.isoformat()},
+            "last_heartbeat_epoch": {"N": str(now_epoch)},
+            "ttl": {"N": str(now_epoch + self.ttl_seconds)},
+            "version": {"S": "5.1"},
+        }
+        if self.active_job_id:
+            item["active_job_id"] = {"S": self.active_job_id}
+        else:
+            item["active_job_id"] = {"NULL": True}
+
+        try:
+            self.dynamodb.put_item(TableName=self.table_name, Item=item)
+            logger.info(
+                f"Worker {self.worker_id} registered successfully ({self.device_type} / {self.device_name})"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to register worker {self.worker_id} in DynamoDB: {e}")
+
+    def pulse(self):
+        """Pulse heartbeat update to DynamoDB."""
+        now = datetime.now(timezone.utc)
+        now_epoch = int(now.timestamp())
+        ttl_epoch = now_epoch + self.ttl_seconds
+
+        with self._lock:
+            status = self.status
+            active_job_id = self.active_job_id
+
+        expr = "SET #s = :s, last_heartbeat = :lh, last_heartbeat_epoch = :e, ttl = :ttl, active_job_id = :j"
+        expr_names = {"#s": "status"}
+        expr_vals = {
+            ":s": {"S": status},
+            ":lh": {"S": now.isoformat()},
+            ":e": {"N": str(now_epoch)},
+            ":ttl": {"N": str(ttl_epoch)},
+            ":j": {"S": active_job_id} if active_job_id else {"NULL": True},
+        }
+
+        try:
+            self.dynamodb.update_item(
+                TableName=self.table_name,
+                Key={"worker_id": {"S": self.worker_id}},
+                UpdateExpression=expr,
+                ExpressionAttributeNames=expr_names,
+                ExpressionAttributeValues=expr_vals,
+            )
+        except Exception as e:
+            logger.warning(f"Worker {self.worker_id} heartbeat pulse failed: {e}")
+
+    def _pulse_loop(self):
+        """Continuous background pulse thread."""
+        while not self._stop_event.wait(self.pulse_interval):
+            self.pulse()
+
+    def start_pulse_thread(self):
+        """Start the background heartbeat thread."""
+        if self._thread is None or not self._thread.is_alive():
+            self._stop_event.clear()
+            self._thread = threading.Thread(
+                target=self._pulse_loop, daemon=True, name="WorkerHeartbeat"
+            )
+            self._thread.start()
+
+    def set_busy(self, job_id: str):
+        """Mark worker as busy processing job_id."""
+        with self._lock:
+            self.status = "busy"
+            self.active_job_id = job_id
+        self.pulse()
+
+    def set_idle(self):
+        """Mark worker as idle."""
+        with self._lock:
+            self.status = "idle"
+            self.active_job_id = None
+        self.pulse()
+
+    def set_draining(self):
+        """Set worker status to draining upon shutdown."""
+        with self._lock:
+            self.status = "draining"
+            self.active_job_id = None
+
+        now = datetime.now(timezone.utc)
+        now_epoch = int(now.timestamp())
+        try:
+            self.dynamodb.update_item(
+                TableName=self.table_name,
+                Key={"worker_id": {"S": self.worker_id}},
+                UpdateExpression="SET #s = :s, active_job_id = :j, drained_at = :d, last_heartbeat = :lh, last_heartbeat_epoch = :e",
+                ExpressionAttributeNames={"#s": "status"},
+                ExpressionAttributeValues={
+                    ":s": {"S": "draining"},
+                    ":j": {"NULL": True},
+                    ":d": {"S": now.isoformat()},
+                    ":lh": {"S": now.isoformat()},
+                    ":e": {"N": str(now_epoch)},
+                },
+            )
+        except Exception as e:
+            logger.warning(f"Worker {self.worker_id} draining update failed: {e}")
+
+    def stop(self):
+        """Stop background pulse thread and mark draining."""
+        self._stop_event.set()
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=2.0)
+        self.set_draining()
+
+
+# ==============================================================================
+# SINGLETON MODEL REGISTRY & PREWARMING
+# ==============================================================================
+
+class ModelRegistry:
+    """
+    Singleton Model Registry & Prewarming.
+    Preloads PyTorch detector suite once at daemon startup with CUDA -> MPS -> CPU fallback.
+    Keeps weights resident across jobs (no per-job re-initialization).
+    """
+
+    _instance = None
+    _lock = threading.Lock()
+
+    def __init__(self):
+        device, dev_type, dev_name = get_optimal_device()
+        self.device = device
+        self.device_type = dev_type
+        self.device_name = dev_name
+
+        logger.info(
+            f"ModelRegistry: Initializing and prewarming models on {self.device_type} ({self.device_name})..."
+        )
+
+        # 1. Spatial SBI Detector
+        from netra.pipeline.detectors.spatial import SpatialSBIDetector
+
+        self.spatial_detector = SpatialSBIDetector(
+            model_path=SPATIAL_MODEL_PATH
+            if (SPATIAL_MODEL_PATH and os.path.exists(SPATIAL_MODEL_PATH))
+            else None
+        )
+
+        # 2. Audio Deepfake Detector
+        from netra.pipeline.detectors.audio import AudioDeepfakeDetector
+
+        self.audio_detector = AudioDeepfakeDetector()
+
+        # 3. CLIP Deepfake Probe
+        from netra.pipeline.detectors.clip_probe import CLIPDeepfakeProbe
+
+        try:
+            self.clip_detector = CLIPDeepfakeProbe(
+                probe_path=CLIP_PROBE_PATH
+                if (CLIP_PROBE_PATH and os.path.exists(CLIP_PROBE_PATH))
+                else None
+            )
+        except Exception as e:
+            logger.warning(f"CLIPDeepfakeProbe initialization error: {e}")
+            self.clip_detector = None
+
+        # 4. Gated Fusion Engine
+        from netra.pipeline.fusion import GatedFusionEngine
+
+        self.fusion_engine = GatedFusionEngine()
+
+        logger.info("ModelRegistry: Prewarming complete. All models resident in memory.")
+
+    @classmethod
+    def get_instance(cls):
+        """Retrieve singleton ModelRegistry instance."""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
+        return cls._instance
+
+
+# ==============================================================================
+# PROGRESSIVE DYNAMODB TELEMETRY
+# ==============================================================================
+
+def update_job_progress(
+    job_id: str,
+    status: str,
+    progress: int,
+    stage: str,
+    worker_id: Optional[str] = None,
+):
     """Write progress update to DynamoDB so API can poll it."""
     try:
+        expr = "SET #s = :s, progress = :p, current_stage = :cs, updated_at = :ua"
+        names = {"#s": "status"}
+        values = {
+            ":s": {"S": status},
+            ":p": {"N": str(progress)},
+            ":cs": {"S": stage},
+            ":ua": {"S": datetime.now(timezone.utc).isoformat()},
+        }
+        if worker_id:
+            expr += ", assigned_worker_id = :w"
+            values[":w"] = {"S": worker_id}
+
         dynamodb.update_item(
-            TableName=DYNAMO_TABLE,
+            TableName=DYNAMO_TABLE_JOBS,
             Key={"job_id": {"S": job_id}},
-            UpdateExpression="SET #s = :s, progress = :p, current_stage = :cs, updated_at = :ua",
-            ExpressionAttributeNames={"#s": "status"},
-            ExpressionAttributeValues={
-                ":s": {"S": status},
-                ":p": {"N": str(progress)},
-                ":cs": {"S": stage},
-                ":ua": {"S": datetime.utcnow().isoformat()},
-            }
+            UpdateExpression=expr,
+            ExpressionAttributeNames=names,
+            ExpressionAttributeValues=values,
         )
     except Exception as e:
-        logger.error(f"Failed to update DynamoDB: {e}")
+        logger.error(f"Failed to update DynamoDB progress for job {job_id}: {e}")
 
 
-def write_result_to_dynamo(job_id: str, result: dict):
+def write_result_to_dynamo(
+    job_id: str, result: dict, worker_id: Optional[str] = None
+):
     """Write final complete result to DynamoDB."""
     try:
+        now_str = datetime.now(timezone.utc).isoformat()
+        expr = "SET #s = :s, progress = :p, current_stage = :cs, #r = :r, completed_at = :ca, updated_at = :ua"
+        names = {"#s": "status", "#r": "result"}
+        values = {
+            ":s": {"S": "complete"},
+            ":p": {"N": "100"},
+            ":cs": {"S": "Analysis complete"},
+            ":r": {"S": json.dumps(result)},
+            ":ca": {"S": now_str},
+            ":ua": {"S": now_str},
+        }
+        if worker_id:
+            expr += ", assigned_worker_id = :w"
+            values[":w"] = {"S": worker_id}
+
         dynamodb.update_item(
-            TableName=DYNAMO_TABLE,
+            TableName=DYNAMO_TABLE_JOBS,
             Key={"job_id": {"S": job_id}},
-            UpdateExpression="SET #s = :s, progress = :p, current_stage = :cs, #r = :r, completed_at = :ca",
-            ExpressionAttributeNames={"#s": "status", "#r": "result"},
-            ExpressionAttributeValues={
-                ":s": {"S": "complete"},
-                ":p": {"N": "100"},
-                ":cs": {"S": "Analysis complete"},
-                ":r": {"S": json.dumps(result)},
-                ":ca": {"S": datetime.utcnow().isoformat()},
-            }
+            UpdateExpression=expr,
+            ExpressionAttributeNames=names,
+            ExpressionAttributeValues=values,
         )
     except Exception as e:
-        logger.error(f"Failed to write result: {e}")
+        logger.error(f"Failed to write complete result for job {job_id}: {e}")
 
 
-def write_error_to_dynamo(job_id: str, error: str):
+def write_error_to_dynamo(
+    job_id: str, error: str, worker_id: Optional[str] = None
+):
     """Write error state to DynamoDB."""
     try:
+        now_str = datetime.now(timezone.utc).isoformat()
+        expr = "SET #s = :s, progress = :p, current_stage = :cs, #e = :e, updated_at = :ua"
+        names = {"#s": "status", "#e": "error"}
+        values = {
+            ":s": {"S": "error"},
+            ":p": {"N": "0"},
+            ":cs": {"S": f"Error: {error[:200]}"},
+            ":e": {"S": error},
+            ":ua": {"S": now_str},
+        }
+        if worker_id:
+            expr += ", assigned_worker_id = :w"
+            values[":w"] = {"S": worker_id}
+
         dynamodb.update_item(
-            TableName=DYNAMO_TABLE,
+            TableName=DYNAMO_TABLE_JOBS,
             Key={"job_id": {"S": job_id}},
-            UpdateExpression="SET #s = :s, progress = :p, current_stage = :cs, #e = :e",
-            ExpressionAttributeNames={"#s": "status", "#e": "error"},
-            ExpressionAttributeValues={
-                ":s": {"S": "error"},
-                ":p": {"N": "0"},
-                ":cs": {"S": f"Error: {error[:200]}"},
-                ":e": {"S": error},
-            }
+            UpdateExpression=expr,
+            ExpressionAttributeNames=names,
+            ExpressionAttributeValues=values,
         )
     except Exception as e:
-        logger.error(f"Failed to write error: {e}")
+        logger.error(f"Failed to write error for job {job_id}: {e}")
 
 
-def process_job(job_id: str, s3_key: str):
+# ==============================================================================
+# PIPELINE EXECUTION
+# ==============================================================================
+
+def process_job(
+    job_id: str,
+    s3_key: str,
+    worker_id: Optional[str] = None,
+    models: Optional[ModelRegistry] = None,
+):
     """
-    Full NETRA pipeline for one job:
-    1. Download video from S3
-    2. Extract frames and audio
-    3. Run all detectors
-    4. Fuse results
-    5. Generate Bedrock forensic report
-    6. Write complete result to DynamoDB
+    Full NETRA pipeline for one job with progressive 10-stage telemetry:
+    1. 5%   (downloading): Download video from S3
+    2. 15%  (extracting): Extract frames and audio
+    3. 30%  (spatial_vit): Run Spatial SBI detector
+    4. 50%  (clip_probe): Run CLIP generalisation probe
+    5. 65%  (audio_analysis): Run Audio deepfake detector
+    6. 75%  (metadata_aux): Run auxiliary signals and EXIF metadata
+    7. 82%  (fusion): Multi-modal gated score fusion
+    8. 87%  (evidence_bundle): Build structured evidence bundle
+    9. 92%  (dossier): Consolidate forensic evidence dossier
+    10. 98% (finalizing): Finalize results payload
+    11. 100% (complete): Analysis complete, persist to DynamoDB
     """
-    logger.info(f"Processing job {job_id}")
+    logger.info(f"Processing job {job_id} (s3_key: {s3_key})")
+    if models is None:
+        models = ModelRegistry.get_instance()
 
     with tempfile.TemporaryDirectory() as tmpdir:
         video_path = os.path.join(tmpdir, "input.mp4")
@@ -134,151 +540,271 @@ def process_job(job_id: str, s3_key: str):
         frames_dir = os.path.join(tmpdir, "frames")
         os.makedirs(frames_dir, exist_ok=True)
 
-        try:
-            # === STAGE 1: Download video ===
-            update_job_progress(job_id, "processing", 5, "Downloading video")
-            s3.download_file(S3_BUCKET_MEDIA, s3_key, video_path)
-            logger.info(f"Downloaded video: {os.path.getsize(video_path) / 1024:.1f} KB")
+        # === STAGE 1: Download video (5%) ===
+        update_job_progress(
+            job_id, "processing", 5, "Downloading video", worker_id=worker_id
+        )
+        s3.download_file(S3_BUCKET_MEDIA, s3_key, video_path)
+        logger.info(
+            f"Downloaded video: {os.path.getsize(video_path) / 1024:.1f} KB"
+        )
 
-            # === STAGE 2: Extract frames + audio (parallel) ===
-            update_job_progress(job_id, "processing", 15, "Extracting frames and audio")
-            from netra.pipeline.extractor import extract_frames, extract_audio
-            frames = extract_frames(video_path, job_id, frames_dir)
-            audio_path_result = extract_audio(video_path, audio_path)
-            logger.info(f"Extracted {len(frames)} frames, audio: {audio_path_result is not None}")
+        # === STAGE 2: Extract frames + audio (15%) ===
+        update_job_progress(
+            job_id,
+            "processing",
+            15,
+            "Extracting frames and audio",
+            worker_id=worker_id,
+        )
+        from netra.pipeline.extractor import extract_audio, extract_frames
 
-            # Get video duration
-            import cv2
-            cap = cv2.VideoCapture(video_path)
-            fps = cap.get(cv2.CAP_PROP_FPS) or 25
-            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            video_duration = total_frames / fps
-            cap.release()
+        frames = extract_frames(video_path, job_id, frames_dir)
+        audio_path_result = extract_audio(video_path, audio_path)
+        logger.info(
+            f"Extracted {len(frames)} frames, audio extracted: {audio_path_result is not None}"
+        )
 
-            # === STAGE 3: Run visual detector (EfficientNet-B4) ===
-            update_job_progress(job_id, "processing", 30, "Running spatial deepfake detector")
-            from netra.pipeline.detectors.spatial import SpatialSBIDetector
-            spatial_detector = SpatialSBIDetector(model_path=SPATIAL_MODEL_PATH if os.path.exists(SPATIAL_MODEL_PATH) else None)
-            frame_paths = [f["image_path"] for f in frames]
-            frame_predictions = spatial_detector.predict_frames_batch(frame_paths)
-
-            # === STAGE 4: Run CLIP probe ===
-            update_job_progress(job_id, "processing", 50, "Running CLIP generalisation detector")
+        # Get video duration
+        video_duration = 0.0
+        if cv2 is not None:
             try:
-                from netra.pipeline.detectors.clip_probe import CLIPDeepfakeProbe
-                clip_detector = CLIPDeepfakeProbe(probe_path=CLIP_PROBE_PATH if os.path.exists(CLIP_PROBE_PATH) else None)
-                clip_predictions = [clip_detector.predict_frame(fp) for fp in frame_paths]
+                cap = cv2.VideoCapture(video_path)
+                fps = cap.get(cv2.CAP_PROP_FPS) or 25
+                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                video_duration = (
+                    (total_frames / fps) if (total_frames > 0 and fps > 0) else 0.0
+                )
+                cap.release()
             except Exception as e:
-                logger.warning(f"CLIP probe failed: {e}")
+                logger.warning(f"Could not calculate video duration via cv2: {e}")
+
+        # === STAGE 3: Run spatial detector (30%) ===
+        update_job_progress(
+            job_id,
+            "processing",
+            30,
+            "Running spatial deepfake detector",
+            worker_id=worker_id,
+        )
+        frame_paths = [f["image_path"] for f in frames]
+        frame_predictions = models.spatial_detector.predict_frames_batch(
+            frame_paths
+        )
+
+        # === STAGE 4: Run CLIP probe (50%) ===
+        update_job_progress(
+            job_id,
+            "processing",
+            50,
+            "Running CLIP generalisation detector",
+            worker_id=worker_id,
+        )
+        clip_predictions = None
+        if models.clip_detector and getattr(
+            models.clip_detector, "available", False
+        ):
+            try:
+                clip_predictions = [
+                    models.clip_detector.predict_frame(fp) for fp in frame_paths
+                ]
+            except Exception as e:
+                logger.warning(f"CLIP probe inference error: {e}")
                 clip_predictions = None
 
-            # === STAGE 5: Run audio detector ===
-            update_job_progress(job_id, "processing", 65, "Running audio deepfake detector")
-            audio_result = None
-            if audio_path_result:
-                try:
-                    from netra.pipeline.detectors.audio import AudioDeepfakeDetector
-                    audio_detector = AudioDeepfakeDetector()
-                    audio_result = audio_detector.predict_audio(audio_path_result)
-                except Exception as e:
-                    logger.warning(f"Audio detection failed: {e}")
-
-            # === STAGE 6: Auxiliary signals ===
-            update_job_progress(job_id, "processing", 75, "Analyzing metadata and auxiliary signals")
+        # === STAGE 5: Run audio detector (65%) ===
+        update_job_progress(
+            job_id,
+            "processing",
+            65,
+            "Running audio deepfake detector",
+            worker_id=worker_id,
+        )
+        audio_result = None
+        if audio_path_result and models.audio_detector:
             try:
-                from netra.pipeline.auxiliary import run_all_auxiliary
-                auxiliary_result = run_all_auxiliary(video_path, frames)
+                audio_result = models.audio_detector.predict_audio(
+                    audio_path_result
+                )
             except Exception as e:
-                logger.warning(f"Auxiliary analysis failed: {e}")
-                auxiliary_result = {"metadata": {}, "all_flags": []}
+                logger.warning(f"Audio detection error: {e}")
+                audio_result = None
 
-            # === STAGE 7: Fusion ===
-            update_job_progress(job_id, "processing", 82, "Fusing detector scores")
-            from netra.pipeline.fusion import GatedFusionEngine
-            fusion = GatedFusionEngine()
+        # === STAGE 6: Auxiliary signals & metadata (75%) ===
+        update_job_progress(
+            job_id,
+            "processing",
+            75,
+            "Analyzing metadata and auxiliary signals",
+            worker_id=worker_id,
+        )
+        try:
+            from netra.pipeline.auxiliary import run_all_auxiliary
 
-            all_spatial = [p.get("fake_probability", 0) or 0 for p in frame_predictions]
-            global_visual = sum(all_spatial) / max(len(all_spatial), 1)
-            global_audio = audio_result.get("fake_probability") if audio_result and audio_result.get("available") else None
-            global_clip = None
-            if clip_predictions:
-                clip_scores = [p.get("fake_probability") for p in clip_predictions if p.get("fake_probability") is not None]
-                global_clip = sum(clip_scores) / len(clip_scores) if clip_scores else None
-
-            fusion_result = fusion.fuse(
-                visual_score=global_visual,
-                audio_score=global_audio,
-                clip_score=global_clip,
-                aux_flags=auxiliary_result.get("all_flags", []),
-            )
-
-            # === STAGE 8: Build evidence bundle ===
-            update_job_progress(job_id, "processing", 87, "Building evidence bundle")
-            from netra.pipeline.evidence import build_evidence_bundle
-            evidence = build_evidence_bundle(
-                job_id=job_id,
-                frames=frames,
-                frame_predictions=frame_predictions,
-                audio_result=audio_result,
-                clip_predictions=clip_predictions,
-                auxiliary_result=auxiliary_result,
-                fusion_result=fusion_result,
-                video_duration=video_duration,
-            )
-
-            # === STAGE 9: Deterministic Forensic Evidence Dossier ===
-            update_job_progress(job_id, "processing", 92, "Consolidating forensic evidence dossier")
-            bedrock_result = {
-                "full_report": f"Forensic analysis completed for job {job_id}. Verdict: {fusion_result['verdict']} with {fusion_result['confidence']:.1f}% confidence. Visual score: {fusion_result['visual_score']:.2f}, Risk level: {fusion_result['risk_level']}.",
-                "generated_by": "NETRA Neural Forensic Engine v5.0 (Deterministic)"
-            }
-
-            # === STAGE 10: Compose final result ===
-            update_job_progress(job_id, "processing", 98, "Finalizing results")
-
-            final_result = {
-                "verdict": fusion_result["verdict"],
-                "confidence": fusion_result["confidence"],
-                "visual_score": fusion_result["visual_score"],
-                "audio_score": fusion_result.get("audio_score"),
-                "clip_score": fusion_result.get("clip_score"),
-                "risk_level": fusion_result["risk_level"],
-                "frames": [
-                    {
-                        "frame_number": f.frame_number,
-                        "timestamp": f.timestamp,
-                        "confidence": f.confidence,
-                        "flags": f.flags,
-                        "spatial_score": f.spatial_score,
-                    }
-                    for f in evidence.suspicious_frames[:20]
-                ],
-                "audio_flags": evidence.audio_segments[0].flags if evidence.audio_segments else [],
-                "metadata_flags": evidence.metadata_flags,
-                "forensic_report": bedrock_result.get("full_report", ""),
-                "report_generated_by": bedrock_result.get("generated_by", ""),
-                "manipulation_type": fusion_result["verdict"].replace("_", " ").title(),
-            }
-
-            write_result_to_dynamo(job_id, final_result)
-            logger.info(f"Job {job_id} complete — verdict: {fusion_result['verdict']}, confidence: {fusion_result['confidence']:.1f}%")
-
+            auxiliary_result = run_all_auxiliary(video_path, frames)
         except Exception as e:
-            logger.error(f"Job {job_id} failed: {e}", exc_info=True)
-            write_error_to_dynamo(job_id, str(e))
+            logger.warning(f"Auxiliary analysis error: {e}")
+            auxiliary_result = {"metadata": {}, "all_flags": []}
 
+        # === STAGE 7: Fusion (82%) ===
+        update_job_progress(
+            job_id, "processing", 82, "Fusing detector scores", worker_id=worker_id
+        )
+        all_spatial = [
+            p.get("fake_probability", 0) or 0 for p in frame_predictions
+        ]
+        global_visual = sum(all_spatial) / max(len(all_spatial), 1)
+        global_audio = (
+            audio_result.get("fake_probability")
+            if audio_result and audio_result.get("available")
+            else None
+        )
+        global_clip = None
+        if clip_predictions:
+            clip_scores = [
+                p.get("fake_probability")
+                for p in clip_predictions
+                if p.get("fake_probability") is not None
+            ]
+            global_clip = (
+                sum(clip_scores) / len(clip_scores) if clip_scores else None
+            )
+
+        fusion_result = models.fusion_engine.fuse(
+            visual_score=global_visual,
+            audio_score=global_audio,
+            clip_score=global_clip,
+            aux_flags=auxiliary_result.get("all_flags", []),
+        )
+
+        # === STAGE 8: Build evidence bundle (87%) ===
+        update_job_progress(
+            job_id,
+            "processing",
+            87,
+            "Building evidence bundle",
+            worker_id=worker_id,
+        )
+        from netra.pipeline.evidence import build_evidence_bundle
+
+        evidence = build_evidence_bundle(
+            job_id=job_id,
+            frames=frames,
+            frame_predictions=frame_predictions,
+            audio_result=audio_result,
+            clip_predictions=clip_predictions,
+            auxiliary_result=auxiliary_result,
+            fusion_result=fusion_result,
+            video_duration=video_duration,
+        )
+
+        # === STAGE 9: Consolidate forensic evidence dossier (92%) ===
+        update_job_progress(
+            job_id,
+            "processing",
+            92,
+            "Consolidating forensic evidence dossier",
+            worker_id=worker_id,
+        )
+        report_summary = (
+            f"Forensic analysis completed for job {job_id}. Verdict: {fusion_result['verdict']} with {fusion_result['confidence']:.1f}% confidence. "
+            f"Visual score: {fusion_result['visual_score']:.2f}, Risk level: {fusion_result['risk_level']}."
+        )
+        bedrock_result = {
+            "full_report": report_summary,
+            "generated_by": "NETRA Neural Forensic Engine v5.0",
+        }
+
+        # === STAGE 10: Finalizing results (98%) ===
+        update_job_progress(
+            job_id, "processing", 98, "Finalizing results", worker_id=worker_id
+        )
+
+        final_result = {
+            "verdict": fusion_result["verdict"],
+            "confidence": fusion_result["confidence"],
+            "visual_score": fusion_result["visual_score"],
+            "audio_score": fusion_result.get("audio_score"),
+            "clip_score": fusion_result.get("clip_score"),
+            "risk_level": fusion_result["risk_level"],
+            "frames": [
+                {
+                    "frame_number": f.frame_number,
+                    "timestamp": f.timestamp,
+                    "confidence": f.confidence,
+                    "flags": f.flags,
+                    "spatial_score": f.spatial_score,
+                }
+                for f in evidence.suspicious_frames[:20]
+            ],
+            "audio_flags": (
+                evidence.audio_segments[0].flags
+                if evidence.audio_segments
+                else []
+            ),
+            "metadata_flags": evidence.metadata_flags,
+            "forensic_report": bedrock_result.get("full_report", ""),
+            "report_generated_by": bedrock_result.get(
+                "generated_by", "NETRA Neural Forensic Engine v5.0"
+            ),
+            "manipulation_type": fusion_result["verdict"]
+            .replace("_", " ")
+            .title(),
+        }
+
+        # === 100% Complete ===
+        write_result_to_dynamo(job_id, final_result, worker_id=worker_id)
+        logger.info(
+            f"Job {job_id} complete — verdict: {fusion_result['verdict']}, confidence: {fusion_result['confidence']:.1f}%"
+        )
+
+
+# ==============================================================================
+# MAIN WORKER DAEMON LOOP
+# ==============================================================================
 
 def run_worker():
-    """Main SQS polling loop. Runs continuously on the GPU EC2 instance."""
-    logger.info("NETRA Worker starting — polling SQS queue...")
+    """Main SQS polling loop. Runs continuously on GPU / MPS / CPU worker nodes."""
+    logger.info("NETRA Worker Daemon initializing...")
 
-    while True:
+    # Prewarm models once at daemon startup
+    models = ModelRegistry.get_instance()
+
+    # Initialize worker presence registry
+    worker_registry = WorkerLivenessRegistry()
+    worker_registry.register()
+    worker_registry.start_pulse_thread()
+
+    # Signal handling for graceful termination
+    shutdown_requested = threading.Event()
+    current_visibility_heartbeat = [None]
+
+    def handle_shutdown_signal(signum, frame):
+        logger.info(
+            f"Received termination signal ({signum}). Initiating graceful shutdown..."
+        )
+        shutdown_requested.set()
+        # Reset visibility for active job if in flight
+        if current_visibility_heartbeat[0] is not None:
+            current_visibility_heartbeat[0].reset_visibility_zero()
+            current_visibility_heartbeat[0].stop()
+        worker_registry.stop()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, handle_shutdown_signal)
+    signal.signal(signal.SIGTERM, handle_shutdown_signal)
+
+    logger.info(
+        f"NETRA Worker {worker_registry.worker_id} started — polling SQS queue {SQS_QUEUE_URL}..."
+    )
+
+    while not shutdown_requested.is_set():
         try:
             response = sqs.receive_message(
                 QueueUrl=SQS_QUEUE_URL,
                 MaxNumberOfMessages=1,
                 WaitTimeSeconds=20,  # Long polling
-                VisibilityTimeout=300,  # 5 mins — job should complete in <2 mins
+                VisibilityTimeout=60,  # Initial 60s visibility
             )
 
             messages = response.get("Messages", [])
@@ -286,33 +812,120 @@ def run_worker():
                 continue
 
             for message in messages:
-                receipt_handle = message["ReceiptHandle"]
-                body = json.loads(message["Body"])
+                if shutdown_requested.is_set():
+                    break
+
+                receipt_handle = message.get("ReceiptHandle")
+                raw_body = message.get("Body", "")
+
+                try:
+                    body = json.loads(raw_body)
+                except Exception as e:
+                    logger.warning(
+                        f"Unparseable SQS message body ({e}): {raw_body}"
+                    )
+                    # Delete poisoned / unparseable message
+                    if receipt_handle:
+                        sqs.delete_message(
+                            QueueUrl=SQS_QUEUE_URL, ReceiptHandle=receipt_handle
+                        )
+                    continue
+
+                if not isinstance(body, dict):
+                    logger.warning(f"Invalid non-dict SQS payload: {body}")
+                    if receipt_handle:
+                        sqs.delete_message(
+                            QueueUrl=SQS_QUEUE_URL, ReceiptHandle=receipt_handle
+                        )
+                    continue
 
                 job_id = body.get("job_id")
                 s3_key = body.get("s3_key")
 
-                if not job_id or not s3_key:
-                    logger.warning(f"Invalid SQS message: {body}")
-                    sqs.delete_message(QueueUrl=SQS_QUEUE_URL, ReceiptHandle=receipt_handle)
+                if (
+                    not job_id
+                    or not isinstance(job_id, str)
+                    or not job_id.strip()
+                    or not s3_key
+                    or not isinstance(s3_key, str)
+                    or not s3_key.strip()
+                ):
+                    logger.warning(
+                        f"Invalid SQS message (missing or empty job_id/s3_key): {body}"
+                    )
+                    if receipt_handle:
+                        sqs.delete_message(
+                            QueueUrl=SQS_QUEUE_URL, ReceiptHandle=receipt_handle
+                        )
                     continue
 
+                job_id = job_id.strip()
+                s3_key = s3_key.strip()
+
+                # Process job with visibility heartbeat and worker busy state
+                worker_registry.set_busy(job_id)
+                heartbeat = SQSVisibilityHeartbeat(
+                    receipt_handle=receipt_handle,
+                    visibility_timeout=60,
+                    interval=25.0,
+                )
+                current_visibility_heartbeat[0] = heartbeat
+                heartbeat.start()
+
+                delete_message = False
                 try:
-                    process_job(job_id, s3_key)
+                    process_job(
+                        job_id,
+                        s3_key,
+                        worker_id=worker_registry.worker_id,
+                        models=models,
+                    )
+                    delete_message = True
+                except (ValueError, getattr(cv2, "error", ValueError) if cv2 is not None else ValueError) as e:
+                    # Permanent corrupt media error: write to DynamoDB and delete message to prevent poison pill loop
+                    logger.error(
+                        f"Permanent media error processing job {job_id}: {e}"
+                    )
+                    write_error_to_dynamo(
+                        job_id, str(e), worker_id=worker_registry.worker_id
+                    )
+                    delete_message = True
                 except Exception as e:
-                    logger.error(f"Unhandled error for job {job_id}: {e}")
-                    write_error_to_dynamo(job_id, str(e))
+                    # Transient / unhandled error: write error state to DynamoDB, do NOT delete message (allow DLQ redrive)
+                    logger.error(
+                        f"Transient/unhandled error for job {job_id}: {e}",
+                        exc_info=True,
+                    )
+                    write_error_to_dynamo(
+                        job_id, str(e), worker_id=worker_registry.worker_id
+                    )
+                    delete_message = False
                 finally:
-                    # Always delete message from queue after processing
-                    sqs.delete_message(QueueUrl=SQS_QUEUE_URL, ReceiptHandle=receipt_handle)
+                    heartbeat.stop()
+                    current_visibility_heartbeat[0] = None
+                    if delete_message and receipt_handle:
+                        try:
+                            sqs.delete_message(
+                                QueueUrl=SQS_QUEUE_URL,
+                                ReceiptHandle=receipt_handle,
+                            )
+                        except Exception as e:
+                            logger.error(
+                                f"Failed to delete SQS message {receipt_handle}: {e}"
+                            )
+                    worker_registry.set_idle()
 
         except KeyboardInterrupt:
-            logger.info("Worker shutting down...")
+            logger.info(
+                "Worker daemon received KeyboardInterrupt, shutting down..."
+            )
             break
         except Exception as e:
-            logger.error(f"Worker loop error: {e}", exc_info=True)
-            import time
+            logger.error(f"Worker polling loop error: {e}", exc_info=True)
             time.sleep(5)  # Brief pause before retrying
+
+    worker_registry.stop()
+    logger.info("NETRA Worker Daemon terminated cleanly.")
 
 
 if __name__ == "__main__":

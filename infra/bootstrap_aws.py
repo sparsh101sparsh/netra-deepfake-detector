@@ -56,13 +56,13 @@ def create_s3_bucket(bucket_name: str, lifecycle_days: int = None):
             print(f"  ⚠️  Lifecycle rule failed: {e}")
 
 
-def create_dynamodb_table(table_name: str):
+def create_dynamodb_table(table_name: str, key_name: str = "job_id", ttl_attribute: str = None):
     """Create DynamoDB table with on-demand billing (always-free)."""
     try:
         dynamodb.create_table(
             TableName=table_name,
-            KeySchema=[{"AttributeName": "job_id", "KeyType": "HASH"}],
-            AttributeDefinitions=[{"AttributeName": "job_id", "AttributeType": "S"}],
+            KeySchema=[{"AttributeName": key_name, "KeyType": "HASH"}],
+            AttributeDefinitions=[{"AttributeName": key_name, "AttributeType": "S"}],
             BillingMode="PAY_PER_REQUEST",  # 25GB + 200M req/month free
         )
         print(f"  ✅ DynamoDB table created: {table_name}")
@@ -71,6 +71,20 @@ def create_dynamodb_table(table_name: str):
         print(f"  ✅ DynamoDB table already exists: {table_name}")
     except Exception as e:
         print(f"  ❌ DynamoDB table failed: {e}")
+        return
+
+    if ttl_attribute:
+        try:
+            dynamodb.update_time_to_live(
+                TableName=table_name,
+                TimeToLiveSpecification={
+                    "Enabled": True,
+                    "AttributeName": ttl_attribute,
+                }
+            )
+            print(f"  ✅ DynamoDB TTL enabled on {table_name} for attribute: {ttl_attribute}")
+        except Exception as e:
+            print(f"  ⚠️  Failed to enable TTL on {table_name}: {e}")
 
 
 def create_sqs_queue(queue_name: str):
@@ -138,9 +152,10 @@ def bootstrap():
 
     # DynamoDB
     print("\n🗄️  Creating DynamoDB Tables...")
-    create_dynamodb_table("netra-jobs")
-    create_dynamodb_table("netra-rate-limits")
-    create_dynamodb_table("netra-api-keys")
+    create_dynamodb_table("netra-jobs", key_name="job_id")
+    create_dynamodb_table("netra-workers", key_name="worker_id", ttl_attribute="ttl")
+    create_dynamodb_table("netra-rate-limits", key_name="key_id")
+    create_dynamodb_table("netra-api-keys", key_name="api_key")
 
     # SQS
     print("\n📬 Creating SQS Queues...")

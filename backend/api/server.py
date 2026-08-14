@@ -16,7 +16,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 
-from .routes import detect, jobs, scam, public_api, threat_intel, news_routes, community, bot_ingest
+from .routes import detect, jobs, workers, scam, public_api, threat_intel, news_routes, community, bot_ingest
 from netra.services.tavily_crawler import start_24h_background_worker
 
 app = FastAPI(title="NETRA API", version="5.1", description="Multi-Modal Deepfake Detection & Threat Intelligence Platform")
@@ -35,6 +35,7 @@ app.add_middleware(
 
 app.include_router(detect.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
+app.include_router(workers.router, prefix="/api/v1")
 app.include_router(scam.router, prefix="/api/v1")
 app.include_router(threat_intel.router, prefix="/api/v1")
 app.include_router(public_api.router, prefix="/api/v1/public")
