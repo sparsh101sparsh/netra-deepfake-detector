@@ -157,9 +157,9 @@ export default function DevelopersPage() {
       <main className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 py-10 space-y-8 animate-in fade-in duration-500 font-sans flex-1">
         {!isCheckingAuth && !user ? (
           <AuthRequiredGate
-            title="Developer Console & API Key Access"
-            subtitle="Generating production API credentials, monitoring request rate quotas, and running live inference in the REST playground requires an authenticated developer account."
-            badge="AUTHENTICATED ACCESS ONLY"
+            title="Developer Console & API Keys"
+            subtitle="Generate API credentials, monitor request quotas, and run live inference in the REST playground. Sign in to access your keys."
+            badge="SIGN IN REQUIRED"
             icon={Key}
             onSignInClick={() => setIsAuthModalOpen(true)}
           />

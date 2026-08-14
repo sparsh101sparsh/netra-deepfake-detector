@@ -148,9 +148,9 @@ export default function CommunityPage() {
       <main className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 space-y-8 flex-1 animate-in fade-in duration-300">
         {!isCheckingAuth && !user ? (
           <AuthRequiredGate
-            title="Verified Investigator Community"
-            subtitle="The NETRA community publishes verified forensic dossiers, emerging scam typologies, and deepfake investigations. Access is restricted to authenticated investigators and registered researchers."
-            badge="AUTHENTICATED ACCESS ONLY"
+            title="Community Scam Reports & Discussions"
+            subtitle="A place for people to report scams, share deepfake alerts, and discuss online safety. Sign in with your Google account to view reports and participate."
+            badge="COMMUNITY ACCESS"
             icon={Users}
             onSignInClick={() => setIsAuthModalOpen(true)}
           />

@@ -597,9 +597,9 @@ export default function BlogWriterPage() {
       {!isCheckingAuth && !user ? (
         <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-16 flex flex-col justify-center animate-in fade-in duration-300">
           <AuthRequiredGate
-            title="Investigator Authorization Required"
-            subtitle="Authoring and publishing forensic intelligence, threat analyses, or deepfake advisories requires an authenticated investigator profile."
-            badge="CONTRIBUTOR ACCESS ONLY"
+            title="Write a Community Post"
+            subtitle="Share a scam incident you encountered, alert others about suspicious media, or write a helpful safety guide. Sign in to write and publish your post."
+            badge="SIGN IN TO POST"
             icon={Edit3}
             onSignInClick={() => setAuthModalOpen(true)}
           />
