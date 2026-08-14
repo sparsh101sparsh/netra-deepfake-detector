@@ -111,7 +111,6 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-family: 'Lexend', var(--font-lexend), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    zoom: 0.8;
   }
 
   body {

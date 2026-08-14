@@ -280,7 +280,7 @@ class TestMultiJobStressSuite:
         # Page 2 must contain Section 3 legal provisions and non-repudiation footer
         p2_text = doc[1].get_textpage().get_text_range()
         assert "3. Applicable Legal Provisions under Indian Law" in p2_text
-        assert "Section 65B Indian Evidence Act" in p2_text
+        assert "Section 66D Information Technology Act 2000" in p2_text
         assert "Digitally Verified by NETRA Autonomous Forensic Intelligence Engine" in p2_text
 
     def test_job_07_five_keyframes_boundary(self, client, sample_keyframe_images):
@@ -750,7 +750,6 @@ class TestMultiJobStressSuite:
             "fir_dossier": {
                 "incident_summary": "Extortion scam utilizing deepfake audio and video mimicking law enforcement.",
                 "applicable_laws": [
-                    "Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023",
                     "Information Technology Act 2000 — Section 66D",
                     "Bharatiya Nyaya Sanhita 2023 — Section 318(4)",
                     "Information Technology Act 2000 — Section 66E"

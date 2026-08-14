@@ -105,7 +105,7 @@ export const BENCHMARK_PRESETS: BenchmarkPreset[] = [
         apks: ["bses-update.apk"],
         urls: [],
       },
-      recommendation: "Immediate Section 65B FIR recommended. Block phone 9876543210 and revoke UPI VPA.",
+      recommendation: "Immediate Cyber Crime FIR recommended. Block phone 9876543210 and revoke UPI VPA.",
     },
   },
   {

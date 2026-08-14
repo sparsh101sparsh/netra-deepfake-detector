@@ -40,14 +40,21 @@ export function SegmentedControl<T extends string>({
       const targetElement = optionRefs.current[targetOption];
       const container = containerRef.current;
       if (targetElement && container) {
-        const cRect = container.getBoundingClientRect();
-        const tRect = targetElement.getBoundingClientRect();
-        setIndicatorStyle({
-          left: tRect.left - cRect.left,
-          top: tRect.top - cRect.top,
-          width: tRect.width,
-          height: tRect.height,
-        });
+        const isDirect = targetElement.offsetParent === container;
+        const left = isDirect
+          ? targetElement.offsetLeft
+          : targetElement.getBoundingClientRect().left - container.getBoundingClientRect().left;
+        const top = isDirect
+          ? targetElement.offsetTop
+          : targetElement.getBoundingClientRect().top - container.getBoundingClientRect().top;
+        const width = isDirect
+          ? targetElement.offsetWidth
+          : targetElement.getBoundingClientRect().width;
+        const height = isDirect
+          ? targetElement.offsetHeight
+          : targetElement.getBoundingClientRect().height;
+
+        setIndicatorStyle({ left, top, width, height });
       }
     };
 

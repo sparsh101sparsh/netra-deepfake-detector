@@ -1,0 +1,117 @@
+{
+  "passed": 22,
+  "failed": 0,
+  "total": 22,
+  "results": [
+    {
+      "name": "1.1 Zero Faces: facial_analysis has face_count === 0 (clean early return null)",
+      "status": "PASS",
+      "details": "Clean null render"
+    },
+    {
+      "name": "1.2 Undefined facial_analysis payload (clean early return null)",
+      "status": "PASS",
+      "details": "Clean null render"
+    },
+    {
+      "name": "1.3 Null facial_analysis payload (clean early return null)",
+      "status": "PASS",
+      "details": "Clean null render"
+    },
+    {
+      "name": "1.4 Single Face: Authentic (verify selector pills suppressed and score rendered)",
+      "status": "PASS",
+      "details": "Render length: 9018 chars"
+    },
+    {
+      "name": "1.5 Single Face: Critical Deepfake (verify DEEPFAKE badge, amber/red risk, and neural gauges)",
+      "status": "PASS",
+      "details": "Render length: 11558 chars"
+    },
+    {
+      "name": "1.6 Many Faces: 20 detected faces with mixed verdicts (stress DOM rendering & selector pills)",
+      "status": "PASS",
+      "details": "Rendered 20 faces flawlessly"
+    },
+    {
+      "name": "2.1 Missing or non-array normalized_bbox (should skip overlay without error)",
+      "status": "PASS",
+      "details": "Safely skipped malformed overlays. HTML length: 9490"
+    },
+    {
+      "name": "2.2 Extreme normalized coordinates: Negative, Out-of-bounds (>1.0), Zero-size",
+      "status": "PASS",
+      "details": "Extreme coordinates rendered safely inside overflow-hidden container"
+    },
+    {
+      "name": "2.3 NaN and Infinity coordinates in normalized_bbox",
+      "status": "PASS",
+      "details": "NaN/Infinity styles handled without throwing. Length: 7668"
+    },
+    {
+      "name": "3.1 Missing neural_metrics, flags, evidence_code, anomaly_region (minimal payload)",
+      "status": "PASS",
+      "details": "Rendered cleanly: 5994 chars"
+    },
+    {
+      "name": "3.2 Missing or undefined fake_probability (should default to 0%)",
+      "status": "PASS",
+      "details": "Defaulted undefined probability to 0%"
+    },
+    {
+      "name": "3.3 Unknown / empty verdict string (should map to neutral tone)",
+      "status": "PASS",
+      "details": "Rendered cleanly with unknown verdict: 6015 chars"
+    },
+    {
+      "name": "4.1 Completely empty OCR result (data = {})",
+      "status": "PASS",
+      "details": "Empty data rendered cleanly: 11457 chars"
+    },
+    {
+      "name": "4.2 Missing or null extracted_iocs (no crashes, 0 details found)",
+      "status": "PASS",
+      "details": "Rendered cleanly: 11297 chars"
+    },
+    {
+      "name": "4.3 Empty IOC lists (phones: [], upis: [], urls: [], apks: [])",
+      "status": "PASS",
+      "details": "IOC section properly hidden when empty"
+    },
+    {
+      "name": "4.4 Populated IOCs with special characters and long URLs",
+      "status": "PASS",
+      "details": "Rendered full IOC suite and pills cleanly"
+    },
+    {
+      "name": "4.5 Tavily threat intel: verified_threat === true with multiple articles",
+      "status": "PASS",
+      "details": "Tavily advisory cards rendered cleanly"
+    },
+    {
+      "name": "4.6 Tavily threat intel: null or verified_threat === false (section hidden)",
+      "status": "PASS",
+      "details": "Tavily cleanly suppressed when not verified threat"
+    },
+    {
+      "name": "4.7 Extremely large text payload in OCR (10,000 characters stress test)",
+      "status": "PASS",
+      "details": "Handled 9600 characters without memory/render issues"
+    },
+    {
+      "name": "5.1 Unsafe Destructure Check: What happens if face.bbox is undefined in FaceScorecard?",
+      "status": "PASS",
+      "details": "Component safely handled missing face.bbox"
+    },
+    {
+      "name": "5.2 Unsafe Method Call Check: What happens if face.face_id is undefined or null in FaceScorecard?",
+      "status": "PASS",
+      "details": "Component safely handled missing face.face_id"
+    },
+    {
+      "name": "5.3 Mismatch: face_count > 0 but faces array is empty (activeF undefined)",
+      "status": "PASS",
+      "details": "Component safely handled empty faces array when face_count > 0. Length: 3984"
+    }
+  ]
+}

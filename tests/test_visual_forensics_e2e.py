@@ -183,7 +183,7 @@ class TestTier1FeatureCoverage:
         assert "evidence_code" in meta, "Must include evidence_code"
         assert meta.get("evidence_code", "").startswith("EVD-")
         assert "statutory_act" in meta, "Must cite statutory act"
-        assert "Section 65B" in meta.get("statutory_act", "")
+        assert "Section 66D" in meta.get("statutory_act", "")
 
     def test_r1_amber_border_and_badge_visual_styling(self, sample_video_frame: np.ndarray):
         """
@@ -376,7 +376,7 @@ class TestTier1FeatureCoverage:
 
             story = [
                 Paragraph("CYBER CRIME INCIDENT REPORT & FORENSIC DOSSIER", styles['Heading1']),
-                Paragraph("Certified under Section 65B Indian Evidence Act & Section 66D IT Act 2000", body_style),
+                Paragraph("Certified under Section 66D IT Act 2000 & Section 318(4) BNS 2023", body_style),
                 Spacer(1, 10),
                 Paragraph("2. Flagged Forensic Keyframe Visual Evidence (Anomaly Localization)", styles['Heading2'])
             ]
@@ -387,7 +387,7 @@ class TestTier1FeatureCoverage:
                 "<b>Neural Anomaly Index:</b> 99.2% (CRITICAL)<br/>"
                 "<b>Localized Region:</b> Eyewear Specular Glare Plane<br/>"
                 "<b>Detector Subsystem:</b> GenD ViT-L/14 + Spatial SBI<br/>"
-                "<b>Statutory Citation:</b> Section 65B Indian Evidence Act & Section 318(4) BNS 2023.<br/>"
+                "<b>Statutory Citation:</b> Section 66D IT Act 2000 & Section 318(4) BNS 2023.<br/>"
                 "<b>Forensic Finding:</b> Specular reflection discontinuity across spectacle plane."
             )
             side_by_side = Table([[rl_img, Paragraph(caption_text, body_style)]], colWidths=[230, 290])
@@ -440,7 +440,6 @@ class TestTier1FeatureCoverage:
                 "fir_dossier": {
                     "incident_summary": "Extortion scam utilizing deepfake audio and video.",
                     "applicable_laws": [
-                        "Section 65B Indian Evidence Act 1872",
                         "Section 66D Information Technology Act 2000",
                         "Section 318(4) Bharatiya Nyaya Sanhita 2023"
                     ]
@@ -592,8 +591,8 @@ class TestTier1FeatureCoverage:
                 "fir_dossier": {
                     "incident_summary": "Testing resilient fallback rendering in FIR dossier.",
                     "applicable_laws": [
-                        "Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023",
-                        "Section 66D Information Technology Act 2000"
+                        "Section 66D Information Technology Act 2000",
+                        "Section 318(4) Bharatiya Nyaya Sanhita 2023"
                     ]
                 }
             }))
@@ -834,7 +833,7 @@ class TestTier3CombinatorialPipelineFlow:
 
             story = [
                 Paragraph("NETRA AUTONOMOUS CYBER EVIDENCE DOSSIER", styles['Heading1']),
-                Paragraph("Official Court-Admissible Electronic Record | Section 65B Indian Evidence Act", body_style),
+                Paragraph("Official Court-Admissible Electronic Record | Section 66D IT Act 2000 & Section 318(4) BNS 2023", body_style),
                 Spacer(1, 8),
                 HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#f59e0b"), spaceAfter=8),
                 Paragraph("2. Flagged Forensic Keyframe Visual Evidence (Anomaly Localization)", styles['Heading2'])
@@ -846,7 +845,7 @@ class TestTier3CombinatorialPipelineFlow:
                 f"<b>Neural Anomaly Index:</b> {meta['anomaly_score']*100:.1f}% (CRITICAL)<br/>"
                 f"<b>Localized Region:</b> {meta.get('semantic_label', 'Eyewear Specular Glare')}<br/>"
                 f"<b>Detector Subsystem:</b> GenD ViT-L/14 + Spatial SBI<br/>"
-                f"<b>Statutory Citation:</b> {meta.get('statutory_act', 'Section 65B Indian Evidence Act')}<br/>"
+                f"<b>Statutory Citation:</b> {meta.get('statutory_act', 'Section 66D IT Act 2000')}<br/>"
                 f"<b>Evidence Code:</b> {meta.get('evidence_code', 'EVD-EYE-SPECULAR-GLARE')}"
             )
             side_by_side_table = Table([[rl_img, Paragraph(caption, body_style)]], colWidths=[240, 280])
@@ -1035,7 +1034,7 @@ class TestTier4RealWorld20VideoWorkload:
 
             story = [
                 Paragraph(f"FORENSIC EVIDENCE DOSSIER — {slug.upper()}", styles['Heading1']),
-                Paragraph("Section 65B Indian Evidence Act / Section 63 BSA 2023 Non-Repudiation Certificate", body_style),
+                Paragraph("Section 66D IT Act 2000 & Section 318(4) BNS 2023 Non-Repudiation Certificate", body_style),
                 Spacer(1, 8),
                 HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#f59e0b"), spaceAfter=8),
                 Paragraph("2. Localized Visual Keyframe Evidence", styles['Heading2'])
@@ -1048,7 +1047,7 @@ class TestTier4RealWorld20VideoWorkload:
                 f"<b>Target Figure:</b> {slug.replace('deepfake_', '').replace('_', ' ')}<br/>"
                 f"<b>Localized Region:</b> {meta.get('semantic_label', 'Eyewear Specular Glare')}<br/>"
                 f"<b>Detector Subsystem:</b> GenD ViT-L/14 + Spatial SBI<br/>"
-                f"<b>Statutory Citation:</b> Section 65B Indian Evidence Act & Section 66D IT Act 2000"
+                f"<b>Statutory Citation:</b> Section 66D IT Act 2000 & Section 318(4) BNS 2023"
             )
             table = Table([[rl_img, Paragraph(caption, body_style)]], colWidths=[230, 290])
             table.setStyle(TableStyle([

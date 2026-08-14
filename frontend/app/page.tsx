@@ -56,9 +56,9 @@ export default function ForensicHub() {
       {isIntroActive && (
         <div
           onClick={handleFinishIntro}
-          className="fixed inset-0 z-50 overflow-hidden cursor-pointer"
+          className="fixed inset-0 z-50 overflow-hidden cursor-pointer w-screen h-screen"
         >
-          <UltraFrameIntro onComplete={handleFinishIntro} showControls={false} />
+          <UltraFrameIntro onComplete={handleFinishIntro} showControls={false} className="w-full h-full" />
         </div>
       )}
 

@@ -486,7 +486,7 @@ def extract_aligned_faces(frame_rgb):
     inputShape: "Structured Evidence JSON Bundle + Senior Forensic Video Analyst Prompt",
     outputFormat: "4-Section Legal Forensic Report (Markdown + PDF Ready)",
     lossFunction: "RLHF with Constitutional AI Forensic Calibration",
-    trainingDataset: "Legal & Forensic Knowledge Base + Indian Evidence Act",
+    trainingDataset: "Legal & Forensic Knowledge Base + Indian Cyber Law",
     f1Score: "99.2% Forensic Coherence",
     aucRoc: "Zero Hallucination (Grounded in JSON)",
     description: "Acts as an expert forensic witness. Consumes the validated Evidence Bundle JSON and synthesizes an authoritative 4-part legal dossier formatted specifically for Indian Law Enforcement, Cyber Crime Cells, and High Court submissions under Sections 66D of IT Act and 318(4) of Bharatiya Nyaya Sanhita (BNS).",
@@ -516,7 +516,7 @@ Format strictly into:
         body=json.dumps({"anthropic_version": "bedrock-2023-05-31", "messages": [{"role": "user", "content": prompt}], "max_tokens": 1500, "temperature": 0.1})
     )
     return json.loads(response["body"].read())["content"][0]["text"]`,
-    legalRelevance: "Court-admissible forensic documentation ready for formal submission under Indian Evidence Act 65B certificate."
+    legalRelevance: "Court-admissible forensic documentation ready for formal submission with cryptographic SHA-256 integrity verification."
   },
 
   verdict_delivery: {

@@ -210,21 +210,21 @@ class VisualAnomalyLocalizer:
             semantic_label = "Iris/Pupil Corneal Reflection Discontinuity"
             evidence_code = cls.EVD_IRIS_CORNEAL
             region_name = "Iris / Pupil Ocular Region"
-            statutory_act = "Section 65B Indian Evidence Act & Section 66D IT Act 2000"
+            statutory_act = "Section 66D IT Act 2000"
         elif lip_score > ew_score and lip_score > 35.0:
             chosen_type = AnomalyRegionType.LIP_SYNC
             chosen_box = lip_box
             semantic_label = "Lip-Sync Blending Boundary Artifact"
             evidence_code = cls.EVD_LIP_SYNC_SEAM
             region_name = "Perioral / Mouth Blending Boundary"
-            statutory_act = "Section 65B Indian Evidence Act & Section 318(4) BNS 2023"
+            statutory_act = "Section 318(4) BNS 2023"
         else:
             chosen_type = AnomalyRegionType.EYEWEAR
             chosen_box = ew_box
             semantic_label = "Eyewear Specular Glare & Feature Discontinuity"
             evidence_code = cls.EVD_EYE_SPECULAR
             region_name = "Eyewear / Specular Glare Plane"
-            statutory_act = "Section 65B Indian Evidence Act & Section 66D IT Act 2000"
+            statutory_act = "Section 66D IT Act 2000"
 
         meta = {
             "chosen_type": chosen_type,
@@ -373,17 +373,17 @@ class VisualAnomalyLocalizer:
                 semantic_label = "Iris/Pupil Corneal Reflection Discontinuity"
                 evidence_code = cls.EVD_IRIS_CORNEAL
                 region_name = "Iris / Pupil Ocular Region"
-                statutory_act = "Section 65B Indian Evidence Act & Section 66D IT Act 2000"
+                statutory_act = "Section 66D IT Act 2000"
             elif normalized_target in (AnomalyRegionType.LIP_SYNC, AnomalyRegionType.FACIAL_SEAM):
                 semantic_label = "Lip-Sync Blending Boundary Artifact"
                 evidence_code = cls.EVD_LIP_SYNC_SEAM
                 region_name = "Perioral / Mouth Blending Boundary"
-                statutory_act = "Section 65B Indian Evidence Act & Section 318(4) BNS 2023"
+                statutory_act = "Section 318(4) BNS 2023"
             else:
                 semantic_label = "Eyewear Specular Glare & Feature Discontinuity"
                 evidence_code = cls.EVD_EYE_SPECULAR
                 region_name = "Eyewear / Specular Glare Plane"
-                statutory_act = "Section 65B Indian Evidence Act & Section 66D IT Act 2000"
+                statutory_act = "Section 66D IT Act 2000"
             detail_meta: Dict[str, Any] = {"regional_scores": {}}
         else:
             chosen_type, target_box, detail_meta = cls.evaluate_primary_anomaly(frame_bgr, face_bbox)

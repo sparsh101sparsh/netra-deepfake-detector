@@ -451,7 +451,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
                   <span>Compliance & Forensic Chain of Custody</span>
                 </div>
                 <p className="leading-normal">
-                  All audit actions and deepfake scans are stamped with cryptographic signatures in compliance with Section 65B of the Indian Evidence Act.
+                  All audit actions and deepfake scans are stamped with tamper-evident cryptographic SHA-256 signatures.
                 </p>
               </div>
             </div>

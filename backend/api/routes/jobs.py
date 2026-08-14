@@ -474,7 +474,7 @@ async def get_report_pdf(job_id: str):
     story = [
         Paragraph("CYBER CRIME INCIDENT REPORT &amp; FORENSIC DOSSIER", title_style),
         Spacer(1, 3),
-        Paragraph("Official Court-Admissible Visual Evidence | Generated under Section 65B Indian Evidence Act", sub_style),
+        Paragraph("Official Forensic AI Analysis Report | NETRA Autonomous Verification Engine", sub_style),
         Spacer(1, 6),
         HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#f59e0b"), spaceAfter=8)
     ]
@@ -571,14 +571,14 @@ async def get_report_pdf(job_id: str):
 
             detector_val = snap.get('detector_subsystem', 'GenD Foundation Model ViT-L/14 + Spatial SBI')
             region_val = snap.get('anomaly_region', 'Eyewear / Facial Specular Discontinuity')
-            finding_val = snap.get('forensic_finding', 'Tamper-evident bounding box marks high-frequency synthetic latent boundary discontinuity certified under Section 65B Indian Evidence Act.')
+            finding_val = snap.get('forensic_finding', 'Tamper-evident bounding box marks high-frequency synthetic latent boundary discontinuity.')
 
             cap_text = (
                 f"<b>Keyframe #{snap.get('frame_number', 0)} @ {snap.get('timestamp', '00:00')}</b><br/><br/>"
                 f"<b>Neural Anomaly Index:</b> {confidence_pct:.1f}% (CRITICAL)<br/>"
                 f"<b>Anomaly Region:</b> {region_val}<br/>"
                 f"<b>Detector Subsystem:</b> {detector_val}<br/>"
-                f"<b>Statutory Certification:</b> Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023 &amp; Section 66D IT Act 2000<br/>"
+                f"<b>Statutory Offense:</b> Section 66D IT Act 2000 &amp; Section 318(4) BNS 2023<br/>"
                 f"<b>Diagnostic Finding:</b> {finding_val}"
             )
 
@@ -647,7 +647,6 @@ async def get_report_pdf(job_id: str):
 
     # Section 3: Legal Provisions
     story.append(Paragraph("3. Applicable Legal Provisions under Indian Law", section_style))
-    story.append(Paragraph("&bull; <b>Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023:</b> Admissibility of electronic records and tamper-evident cryptographic hash non-repudiation.", body_style))
     story.append(Paragraph("&bull; <b>Section 66D Information Technology Act 2000:</b> Cheating by personation using computer resource / synthetic AI manipulation.", body_style))
     story.append(Paragraph("&bull; <b>Section 318(4) Bharatiya Nyaya Sanhita 2023:</b> Cheating and dishonestly inducing delivery of valuable property.", body_style))
     story.append(Paragraph("&bull; <b>Section 66E Information Technology Act 2000:</b> Violation of bodily privacy and synthetic facial manipulation.", body_style))
@@ -656,7 +655,7 @@ async def get_report_pdf(job_id: str):
     # Signature Footer
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=5))
     foot_style = ParagraphStyle('Foot', parent=styles['Normal'], fontName='Helvetica', fontSize=7.5, leading=10, alignment=1, textColor=colors.HexColor("#64748b"))
-    story.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified | Certified under Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023", foot_style))
+    story.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified", foot_style))
 
     try:
         doc.build(story)
@@ -667,16 +666,15 @@ async def get_report_pdf(job_id: str):
         fallback_story = [
             Paragraph("CYBER CRIME INCIDENT REPORT &amp; FORENSIC DOSSIER", title_style),
             Spacer(1, 6),
-            Paragraph("Official Court-Admissible Visual Evidence | Generated under Section 65B Indian Evidence Act", sub_style),
+            Paragraph("Official Forensic AI Analysis Report | NETRA Autonomous Verification Engine", sub_style),
             Spacer(1, 10),
             Paragraph(f"<b>Job Reference ID:</b> {job_id} | <b>Official Forensic Verdict:</b> {verdict} ({risk} RISK)", body_style),
             Spacer(1, 10),
             Paragraph("3. Applicable Legal Provisions under Indian Law", section_style),
-            Paragraph("&bull; <b>Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023:</b> Admissibility of electronic records and tamper-evident cryptographic hash non-repudiation.", body_style),
             Paragraph("&bull; <b>Section 66D Information Technology Act 2000:</b> Cheating by personation using computer resource.", body_style),
             Spacer(1, 10),
             HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=5),
-            Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified | Certified under Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023", foot_style)
+            Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified", foot_style)
         ]
         fallback_doc.build(fallback_story)
     pdf_bytes = buf.getvalue()

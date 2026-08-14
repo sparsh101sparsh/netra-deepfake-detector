@@ -10,17 +10,31 @@ import io
 import time
 import uuid
 import wave
+import hashlib
 import logging
 from typing import Dict, Any, List, Optional, Tuple
 
 import numpy as np
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
 from pydantic import BaseModel
 
 logger = logging.getLogger("netra.audio_detect")
 router = APIRouter()
 
 ALLOWED_AUDIO_EXTENSIONS = {".wav", ".mp3", ".ogg", ".opus", ".m4a", ".aac", ".webm"}
+
+
+class AcousticMetrics(BaseModel):
+    wiener_flatness: float
+    hf_cutoff_ratio: float
+    zcr_variance: float
+    rms_prosody_variance: float
+
+
+class AudioScorecard(BaseModel):
+    wav2vec2_score: Optional[float] = None
+    spectral_score: float
+    temporal_inconsistency: float
 
 
 class AudioDetectResponse(BaseModel):
@@ -30,10 +44,79 @@ class AudioDetectResponse(BaseModel):
     verdict: str
     risk_level: str
     speech_duration_seconds: float
+    sample_rate_hz: int = 16000
+    codec: str = "PCM 16-bit mono"
+    sha256_hash: Optional[str] = None
+    acoustic_metrics: Optional[AcousticMetrics] = None
+    scorecard: Optional[AudioScorecard] = None
     flags: List[str]
     processing_time_ms: int
     source_platform: str
     tavily_threat_intel: Optional[Dict[str, Any]] = None
+
+
+def detect_audio_codec(contents: bytes, filename: str) -> str:
+    """
+    Identifies audio encoding codec / container from magic bytes and filename extension.
+    """
+    ext = os.path.splitext(filename)[1].lower() if filename else ""
+    if contents.startswith(b"RIFF") and b"WAVE" in contents[:16]:
+        return "PCM 16-bit mono"
+    if contents.startswith(b"OggS"):
+        return "OPUS" if b"Opus" in contents[:32] else "OGG Vorbis"
+    if contents.startswith(b"ID3") or contents[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"):
+        return "MP3"
+    if len(contents) > 12 and b"ftyp" in contents[4:12]:
+        return "AAC"
+    if contents.startswith(b"\x1a\x45\xdf\xa3"):
+        return "WebM Audio"
+
+    codec_map = {
+        ".wav": "PCM 16-bit mono",
+        ".opus": "OPUS",
+        ".ogg": "OGG Vorbis",
+        ".mp3": "MP3",
+        ".m4a": "AAC",
+        ".aac": "AAC",
+        ".webm": "WebM Audio",
+    }
+    return codec_map.get(ext, "PCM 16-bit mono")
+
+
+def resolve_wav2vec2_score(audio: np.ndarray, sr: int = 16000) -> Optional[float]:
+    """
+    Safely probes local Wav2Vec2 model if weights are available on local disk.
+    Guarantees non-blocking execution (zero network downloads) and returns None if unavailable.
+    """
+    try:
+        from netra.pipeline.detectors.audio import resolve_local_audio_model_dir
+        local_dir = resolve_local_audio_model_dir()
+        if not local_dir:
+            return None
+
+        from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
+        import torch
+        device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if hasattr(torch.backends, "mps") and torch.backends.mps.is_available() else "cpu"))
+        extractor = AutoFeatureExtractor.from_pretrained(local_dir)
+        model = AutoModelForAudioClassification.from_pretrained(local_dir).to(device)
+        model.eval()
+
+        inputs = extractor(
+            audio[:min(len(audio), 16000 * 10)],
+            sampling_rate=16000,
+            return_tensors="pt",
+            padding=True,
+            truncation=True
+        )
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+        with torch.no_grad():
+            logits = model(**inputs).logits
+            probs = torch.softmax(logits, dim=-1)
+            fake_prob = float(probs[0, 0].item())
+            return round(fake_prob, 4)
+    except Exception as e:
+        logger.debug(f"Wav2Vec2 optional neural evaluation skipped: {e}")
+        return None
 
 
 class PureSpectralAudioForensics:
@@ -45,9 +128,18 @@ class PureSpectralAudioForensics:
     """
 
     @staticmethod
-    def analyze_audio(audio: np.ndarray, sr: int = 16000) -> Tuple[float, List[str]]:
+    def analyze_audio(
+        audio: np.ndarray,
+        sr: int = 16000
+    ) -> Tuple[float, List[str], Dict[str, float], float]:
         if len(audio) < 1600:
-            return 0.12, ["audio_segment_short"]
+            metrics = {
+                "wiener_flatness": 0.05,
+                "hf_cutoff_ratio": 0.05,
+                "zcr_variance": 0.005,
+                "rms_prosody_variance": 0.35,
+            }
+            return 0.12, ["audio_segment_short"], metrics, 0.0
 
         # Frame parameters (25ms window, 10ms hop at 16kHz)
         frame_len = int(0.025 * sr)
@@ -109,11 +201,33 @@ class PureSpectralAudioForensics:
             anomaly_score += 0.15
             flags.append("unnatural_pitch_coherence")
 
+        # Temporal inconsistency across 2.0s segments
+        temporal_inconsistency = 0.0
+        chunk_samples = int(2.0 * sr)
+        if len(audio) >= chunk_samples * 2:
+            chunk_scores = []
+            num_chunks = len(audio) // chunk_samples
+            for c_idx in range(min(num_chunks, 6)):
+                c_start = c_idx * chunk_samples
+                c_chunk = audio[c_start:c_start + chunk_samples]
+                c_score, _, _, _ = PureSpectralAudioForensics.analyze_audio(c_chunk, sr=sr)
+                chunk_scores.append(c_score)
+            if len(chunk_scores) > 1:
+                temporal_inconsistency = round(float(max(chunk_scores) - min(chunk_scores)), 4)
+                if temporal_inconsistency > 0.35:
+                    flags.append("temporal_audio_inconsistency")
+
         if anomaly_score > 0.65:
             flags.insert(0, "vocoder_synthetic_artifacts")
 
         final_score = float(np.clip(anomaly_score, 0.05, 0.95))
-        return final_score, flags
+        metrics = {
+            "wiener_flatness": round(flatness, 4),
+            "hf_cutoff_ratio": round(hf_ratio, 4),
+            "zcr_variance": round(zcr_var, 6),
+            "rms_prosody_variance": round(rms_var, 4),
+        }
+        return final_score, flags, metrics, temporal_inconsistency
 
 
 def decode_audio_bytes_pure(input_bytes: bytes, filename: str) -> Tuple[np.ndarray, float]:
@@ -160,8 +274,6 @@ def decode_audio_bytes_pure(input_bytes: bytes, filename: str) -> Tuple[np.ndarr
     return raw_samples, duration
 
 
-from fastapi import Request
-
 @router.post("/detect/audio", response_model=AudioDetectResponse)
 async def detect_audio(file: UploadFile = File(...), request: Request = None):
     """
@@ -178,13 +290,28 @@ async def detect_audio(file: UploadFile = File(...), request: Request = None):
     filename = file.filename or "voice_note.mp3"
     ext = os.path.splitext(filename)[1].lower()
 
-    # Decode audio using pure Python + NumPy
+    # 1. SHA-256 Hash & Codec Identification
+    sha256_hash = hashlib.sha256(contents).hexdigest()
+    codec = detect_audio_codec(contents, filename)
+
+    # 2. Decode audio using pure Python + NumPy
     audio, duration = decode_audio_bytes_pure(contents, filename)
 
-    # Spectral Forensics Analysis
-    score, flags = PureSpectralAudioForensics.analyze_audio(audio, sr=16000)
+    # 3. Spectral Forensics Analysis & Acoustic Metrics
+    score, flags, acoustic_metrics_dict, temporal_inconsistency = PureSpectralAudioForensics.analyze_audio(audio, sr=16000)
 
-    # Classification logic
+    # 4. Multi-Detector Scorecard
+    wav2vec2_score = resolve_wav2vec2_score(audio, sr=16000)
+    if wav2vec2_score is not None:
+        flags.append("wav2vec2_inference")
+
+    scorecard_dict = {
+        "wav2vec2_score": wav2vec2_score,
+        "spectral_score": round(score, 4),
+        "temporal_inconsistency": round(temporal_inconsistency, 4),
+    }
+
+    # 5. Classification logic
     is_fake = score >= 0.50
     confidence = int(round(score * 100))
     if is_fake:
@@ -219,16 +346,28 @@ async def detect_audio(file: UploadFile = File(...), request: Request = None):
         auto_catalog_scan(
             scan_type="audio",
             result={
-                "fake_probability": score,
+                "fake_probability": round(score, 3),
                 "verdict": verdict,
                 "risk_level": risk_level,
+                "speech_duration_seconds": round(duration, 2),
+                "sample_rate_hz": 16000,
+                "codec": codec,
+                "sha256_hash": sha256_hash,
+                "acoustic_metrics": acoustic_metrics_dict,
+                "scorecard": scorecard_dict,
                 "extracted_iocs": {
                     "duration_seconds": round(duration, 2),
+                    "sample_rate_hz": 16000,
+                    "codec": codec,
+                    "sha256_hash": sha256_hash,
                     "acoustic_flags": flags,
+                    "acoustic_metrics": acoustic_metrics_dict,
+                    "scorecard": scorecard_dict,
+                    "tavily_threat_intel": tavily_intel,
                 },
-                "incident_summary": f"Voice recording ({round(duration, 1)}s) analyzed for synthetic speech vocoder artifacts. Result: {verdict} ({confidence}% index)."
+                "incident_summary": f"Voice recording ({round(duration, 1)}s, {codec}) analyzed for synthetic speech vocoder artifacts. Result: {verdict} ({confidence}% index, SHA-256: {sha256_hash[:12]}...)."
             },
-            file_bytes=audio_bytes,
+            file_bytes=contents,  # FIXED: was audio_bytes (NameError)
             filename=file.filename or "uploaded_audio.wav",
             request=request
         )
@@ -242,6 +381,11 @@ async def detect_audio(file: UploadFile = File(...), request: Request = None):
         verdict=verdict,
         risk_level=risk_level,
         speech_duration_seconds=round(duration, 2),
+        sample_rate_hz=16000,
+        codec=codec,
+        sha256_hash=sha256_hash,
+        acoustic_metrics=AcousticMetrics(**acoustic_metrics_dict),
+        scorecard=AudioScorecard(**scorecard_dict),
         flags=flags,
         processing_time_ms=elapsed_ms,
         source_platform=source_platform,
