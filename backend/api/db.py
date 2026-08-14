@@ -13,13 +13,15 @@ from typing import Dict, List, Optional, Any
 DB_PATH = os.getenv("NETRA_DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "netra.db"))
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH, timeout=30.0, isolation_level=None)
+    db_path = os.getenv("NETRA_DB_PATH", DB_PATH)
+    conn = sqlite3.connect(db_path, timeout=30.0, isolation_level=None)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA busy_timeout=30000;")
     return conn
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
+    db_path = os.getenv("NETRA_DB_PATH", DB_PATH)
+    conn = sqlite3.connect(db_path, timeout=30.0)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA busy_timeout=30000;")
@@ -103,6 +105,50 @@ def init_db():
     # Purge legacy mock seed records so catalog and community only show real user submissions
     cursor.execute("DELETE FROM threat_catalog WHERE id LIKE 'NETRA-SCAM-%';")
     cursor.execute("DELETE FROM community_posts WHERE id LIKE 'post-%';")
+
+    # Cloud Rehydration: If local SQLite is fresh/empty, restore records from AWS DynamoDB
+    try:
+        count = cursor.execute("SELECT count(*) FROM threat_catalog").fetchone()[0]
+        if count == 0:
+            import boto3
+            table_name = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
+            region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
+            ak = os.getenv("AWS_ACCESS_KEY_ID")
+            sk = os.getenv("AWS_SECRET_ACCESS_KEY")
+            kwargs = {"region_name": region}
+            if ak and sk:
+                kwargs["aws_access_key_id"] = ak.strip()
+                kwargs["aws_secret_access_key"] = sk.strip()
+            dynamo = boto3.client("dynamodb", **kwargs)
+            res = dynamo.scan(
+                TableName=table_name,
+                FilterExpression="begins_with(job_id, :prefix)",
+                ExpressionAttributeValues={":prefix": {"S": "CATALOG#"}},
+                Limit=50
+            )
+            for item in res.get("Items", []):
+                payload_str = item.get("payload", {}).get("S")
+                if payload_str:
+                    p = json.loads(payload_str)
+                    cursor.execute("""
+                    INSERT OR IGNORE INTO threat_catalog (
+                        id, title, type, threat_category, source_platform, fake_probability, verdict,
+                        risk_level, thumbnail_url, media_url, lat, lng, city, state, country,
+                        location_source, device_model, software_used, extracted_iocs, fir_dossier,
+                        upvotes_count, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        p.get("id"), p.get("title"), p.get("type", "video_deepfake"),
+                        p.get("threat_category", "IMPERSONATION"), p.get("source_platform", "Web"),
+                        p.get("fake_probability", 0.8), p.get("verdict", "SUSPICIOUS"),
+                        p.get("risk_level", "HIGH"), p.get("thumbnail_url"), p.get("media_url"),
+                        p.get("lat"), p.get("lng"), p.get("city"), p.get("state"), p.get("country", "India"),
+                        p.get("location_source"), p.get("device_model"), p.get("software_used"),
+                        json.dumps(p.get("extracted_iocs", {})), json.dumps(p.get("fir_dossier", {})),
+                        p.get("upvotes_count", 1), p.get("created_at")
+                    ))
+    except Exception:
+        pass
 
     conn.commit()
     conn.close()
@@ -242,6 +288,36 @@ def insert_threat_item(item: Dict[str, Any]) -> str:
     ))
     conn.commit()
     conn.close()
+
+    # Cloud Persistence: Mirror to AWS DynamoDB so Render restarts never lose records
+    try:
+        table_name = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
+        region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
+        ak = os.getenv("AWS_ACCESS_KEY_ID")
+        sk = os.getenv("AWS_SECRET_ACCESS_KEY")
+        kwargs = {"region_name": region}
+        if ak and sk:
+            kwargs["aws_access_key_id"] = ak.strip()
+            kwargs["aws_secret_access_key"] = sk.strip()
+        import boto3
+        dynamo = boto3.client("dynamodb", **kwargs)
+        payload_data = dict(item)
+        payload_data["id"] = item_id
+        payload_data["created_at"] = created_at
+        dynamo.put_item(
+            TableName=table_name,
+            Item={
+                "job_id": {"S": f"CATALOG#{item_id}"},
+                "status": {"S": "catalog_archived"},
+                "payload": {"S": json.dumps(payload_data)},
+                "created_at": {"S": created_at},
+                "type": {"S": str(media_type)},
+                "verdict": {"S": str(verdict)}
+            }
+        )
+    except Exception:
+        pass
+
     return item_id
 
 def get_threat_catalog(
@@ -260,8 +336,18 @@ def get_threat_catalog(
         params.append(category)
         
     if media_type and media_type.lower() != "all":
-        query += " AND type = ?"
-        params.append(media_type)
+        mt = media_type.strip().lower()
+        if mt == "video":
+            query += " AND type IN ('video', 'video_deepfake')"
+        elif mt == "image":
+            query += " AND type IN ('image', 'image_deepfake')"
+        elif mt == "audio":
+            query += " AND type IN ('audio', 'audio_clone')"
+        elif mt == "text":
+            query += " AND type IN ('text', 'scam_text')"
+        else:
+            query += " AND type = ?"
+            params.append(media_type)
         
     if search:
         query += " AND (title LIKE ? OR city LIKE ? OR extracted_iocs LIKE ? OR software_used LIKE ?)"

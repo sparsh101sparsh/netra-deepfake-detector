@@ -44,12 +44,12 @@ export const MODALITY_CONFIGS: Record<SandboxModality, ModalityConfig> = {
   audio: {
     label: "Audio / Voice Clone",
     iconName: "audio",
-    acceptMimes: ["audio/wav", "audio/mpeg", "audio/mp3", "audio/x-m4a", "audio/aac", "audio/ogg"],
-    acceptExtensions: [".wav", ".mp3", ".m4a", ".ogg"],
+    acceptMimes: ["audio/wav", "audio/mpeg", "audio/mp3", "audio/x-m4a", "audio/aac", "audio/ogg", "audio/opus"],
+    acceptExtensions: [".wav", ".mp3", ".m4a", ".ogg", ".opus"],
     maxSizeMb: 50,
-    title: "Drop audio recording or browse files",
-    subtitle: "Checks for AI voice cloning, robotic speech patterns, and audio tampering.",
-    engineBadge: "Voice Analysis Engine",
+    title: "Drop WhatsApp voice note, audio or browse",
+    subtitle: "Detects AI voice cloning, neural vocoder pitch flattening, and synthetic audio spoofing.",
+    engineBadge: "Neural Vocoder Engine",
   },
 };
 

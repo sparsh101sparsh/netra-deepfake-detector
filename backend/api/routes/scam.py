@@ -21,6 +21,7 @@ class ScamResponse(BaseModel):
     reason: Optional[str] = None
     analysis_reason: Optional[str] = None
     llm_reason: Optional[str] = None
+    tavily_threat_intel: Optional[Dict[str, Any]] = None
 
 @router.post("/detect/scam", response_model=ScamResponse)
 async def detect_scam(request: ScamRequest):
@@ -92,6 +93,14 @@ async def detect_scam(request: ScamRequest):
     except Exception:
         pass
 
+    # Real-time Tavily Cyber Threat Intelligence Cross-Check
+    tavily_intel = None
+    try:
+        from netra.services.tavily_cross_check import cross_check_scam_with_tavily
+        tavily_intel = cross_check_scam_with_tavily(text=text)
+    except Exception:
+        pass
+
     return ScamResponse(
         is_scam=is_scam,
         risk_score=score,
@@ -104,4 +113,5 @@ async def detect_scam(request: ScamRequest):
         reason=reason,
         analysis_reason=reason,
         llm_reason=reason,
+        tavily_threat_intel=tavily_intel,
     )

@@ -14,9 +14,10 @@ if os.path.exists(backend_env): load_dotenv(backend_env)
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timezone
 
-from .routes import detect, jobs, workers, scam, public_api, threat_intel, news_routes, community, bot_ingest
+from .routes import detect, jobs, workers, scam, public_api, threat_intel, news_routes, community, bot_ingest, audio_detect
 from netra.services.tavily_crawler import start_24h_background_worker
 
 from contextlib import asynccontextmanager
@@ -42,6 +43,7 @@ app.add_middleware(
     )
 
 app.include_router(detect.router, prefix="/api/v1")
+app.include_router(audio_detect.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(workers.router, prefix="/api/v1")
 app.include_router(scam.router, prefix="/api/v1")
@@ -50,6 +52,13 @@ app.include_router(public_api.router, prefix="/api/v1/public")
 app.include_router(news_routes.router, prefix="/api/v1")
 app.include_router(community.router, prefix="/api/v1")
 app.include_router(bot_ingest.router, prefix="/api/v1")
+
+# Media Storage Mounting (videos, images, audio)
+MEDIA_DIR = os.getenv("NETRA_MEDIA_DIR", os.path.join(backend_dir, "media"))
+os.makedirs(os.path.join(MEDIA_DIR, "videos"), exist_ok=True)
+os.makedirs(os.path.join(MEDIA_DIR, "images"), exist_ok=True)
+os.makedirs(os.path.join(MEDIA_DIR, "audio"), exist_ok=True)
+app.mount("/api/v1/media", StaticFiles(directory=MEDIA_DIR), name="media")
 
 @app.get("/health")
 async def health():
