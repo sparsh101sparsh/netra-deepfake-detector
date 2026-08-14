@@ -147,8 +147,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <div className="relative">
                 <NetraBrandLogo size={36} />
-                <span className="absolute -bottom-0.5 -right-0.5 size-2 rounded-full bg-accent animate-ping" />
-                <span className="absolute -bottom-0.5 -right-0.5 size-2 rounded-full bg-accent" />
               </div>
 
               <div className="flex flex-col">
@@ -157,8 +155,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     NETRA
                   </span>
                 </div>
-                <span className="hidden sm:inline-block text-[10px] font-mono text-zinc-500 -mt-0.5 uppercase tracking-wider">
-                  The Architecture of Truth
+                <span className="hidden sm:inline-block text-[11px] font-sans text-zinc-400 -mt-0.5 tracking-wide">
+                  मायातीतं सत्यस्य चक्षुः
                 </span>
               </div>
             </Link>

@@ -220,7 +220,7 @@ def generate_clean_forensic_pdf(subject_name, video_filename, top_keyframes,
 
     story = []
     story.append(Paragraph("NETRA FORENSIC CYBERCRIME EVIDENCE DOSSIER", title_s))
-    story.append(Paragraph("NETRA \u2022 BEYOND ILLUSION. THE ARCHITECTURE OF TRUTH.", motto_s))
+    story.append(Paragraph("NETRA \u2022 \u092e\u093e\u092f\u093e\u0924\u0940\u0924\u0902 \u0938\u0924\u094d\u092f\u0938\u094d\u092f \u091a\u0915\u094d\u0937\u0941\u0903 \u2022 THE ARCHITECTURE OF TRUTH", motto_s))
 
     # Verdict banner
     verdict   = pipeline_results.get("verdict", "FACE_SWAP")

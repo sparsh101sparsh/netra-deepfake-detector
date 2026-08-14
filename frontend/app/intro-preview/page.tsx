@@ -42,7 +42,7 @@ function IntroLegacyCyan() {
         <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-neutral-950/90 border border-cyan-500/40 shadow-[0_0_20px_rgba(0,240,255,0.2)] backdrop-blur-md">
           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
           <span className="text-xs font-mono font-bold tracking-widest uppercase text-white">
-            NETRA — <span className="text-amber-400">The Architecture of Truth</span>
+            NETRA — <span className="text-amber-400">मायातीतं सत्यस्य चक्षुः</span>
           </span>
         </div>
 

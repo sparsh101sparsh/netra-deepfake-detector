@@ -223,7 +223,7 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
   const hairlineOpacity = currentFrame < 215 ? 0 : Math.min(1, (currentFrame - 215) / 12);
 
   // ── 7. MOTTO LASER WIPES (Frames 260 to 420) ──
-  // Phase 1: Sanskrit (Frames 260 to 335)
+  // Phase 1: English (Frames 260 to 335)
   const laser1T = Math.min(1, Math.max(0, (currentFrame - 260) / 40));
   const laser1X = (laser1T * 100).toFixed(1);
   const laser1Opacity =
@@ -233,25 +233,25 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
         : 1 - (laser1T - 0.85) / 0.15
       : 0;
 
-  const sanskritRel = currentFrame - 260;
-  let sanskritOpacity = 0;
-  let sanskritBlur = 8;
-  if (sanskritRel >= 0 && sanskritRel < 75) {
-    if (sanskritRel <= 20) {
-      const t = sanskritRel / 20;
-      sanskritOpacity = t;
-      sanskritBlur = 8 * (1 - t);
-    } else if (sanskritRel <= 52) {
-      sanskritOpacity = 1;
-      sanskritBlur = 0;
+  const englishRel = currentFrame - 260;
+  let englishOpacity = 0;
+  let englishBlur = 8;
+  if (englishRel >= 0 && englishRel < 75) {
+    if (englishRel <= 20) {
+      const t = englishRel / 20;
+      englishOpacity = t;
+      englishBlur = 8 * (1 - t);
+    } else if (englishRel <= 52) {
+      englishOpacity = 1;
+      englishBlur = 0;
     } else {
-      const t = (sanskritRel - 52) / 23;
-      sanskritOpacity = 1 - t;
-      sanskritBlur = 6 * t;
+      const t = (englishRel - 52) / 23;
+      englishOpacity = 1 - t;
+      englishBlur = 6 * t;
     }
   }
 
-  // Phase 2: English (Frames 340 to 420 — Final holding state)
+  // Phase 2: Sanskrit — Official Main Slogan (Frames 340 to 420 — Final holding state)
   const laser2T = Math.min(1, Math.max(0, (currentFrame - 340) / 40));
   const laser2X = (laser2T * 100).toFixed(1);
   const laser2Opacity =
@@ -261,17 +261,17 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
         : 1 - (laser2T - 0.85) / 0.15
       : 0;
 
-  const englishRel = currentFrame - 340;
-  let englishOpacity = 0;
-  let englishBlur = 8;
-  if (englishRel >= 0) {
-    if (englishRel <= 24) {
-      const t = englishRel / 24;
-      englishOpacity = t;
-      englishBlur = 8 * (1 - t);
+  const sanskritRel = currentFrame - 340;
+  let sanskritOpacity = 0;
+  let sanskritBlur = 8;
+  if (sanskritRel >= 0) {
+    if (sanskritRel <= 24) {
+      const t = sanskritRel / 24;
+      sanskritOpacity = t;
+      sanskritBlur = 8 * (1 - t);
     } else {
-      englishOpacity = 1;
-      englishBlur = 0;
+      sanskritOpacity = 1;
+      sanskritBlur = 0;
     }
   }
 
