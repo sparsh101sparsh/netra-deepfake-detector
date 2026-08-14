@@ -16,16 +16,16 @@ export async function GET(
 
   // Look in candidate paths
   const candidatePaths = [
+    path.join(process.cwd(), "public", "dataset_100", "videos", safeFilename),
+    path.join(process.cwd(), "public", "dataset_100", safeFilename),
     path.join(process.cwd(), "..", "backend", "media", "videos", "dataset_100", safeFilename),
     path.join(process.cwd(), "..", "generated_100_deepfake_videos", safeFilename),
     path.join("/Users/iamsparsh00321/Desktop/newantigravworkfolder/generated_100_deepfake_videos", safeFilename),
-    path.join(process.cwd(), "public", "dataset_100", safeFilename),
   ];
 
   let videoPath = candidatePaths.find((p) => fs.existsSync(p));
 
   if (!videoPath) {
-    // If on Render or external, redirect to backend media URL
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL || "https://netra-api-pmr7.onrender.com";
     return NextResponse.redirect(`${backendUrl}/api/v1/media/videos/dataset_100/${safeFilename}`);
