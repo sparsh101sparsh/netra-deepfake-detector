@@ -241,12 +241,20 @@ export default function ThreatCatalogPage() {
                       </h3>
 
                       {/* Playable Media Preview Thumbnail */}
-                      {item.media_url && item.type === "video_deepfake" && (
+                      {(item.media_url || item.thumbnail_url) && item.type === "video_deepfake" && (
                         <div className="relative rounded-xl overflow-hidden bg-black/60 border border-white/10 aspect-video flex items-center justify-center group-hover:border-accent/40 transition-colors">
                           <video
-                            src={item.media_url}
+                            src={item.media_url ? (item.media_url.startsWith("http") ? item.media_url : `/api/backend${item.media_url}`) : undefined}
+                            poster={item.thumbnail_url ? (item.thumbnail_url.startsWith("http") ? item.thumbnail_url : `/api/backend${item.thumbnail_url}`) : undefined}
                             preload="metadata"
+                            muted
+                            playsInline
+                            crossOrigin="anonymous"
                             className="w-full h-full object-cover opacity-80"
+                            onError={(e) => {
+                              // If video stream fails to load, gracefully hide video element
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
                           />
                           <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                             <div className="w-10 h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent">
@@ -333,27 +341,33 @@ export default function ThreatCatalogPage() {
               </div>
 
               {/* Playable Media Section */}
-              {activeItem.media_url && (
+              {(activeItem.media_url || activeItem.thumbnail_url) && (
                 <div className="space-y-2">
                   <div className="text-[11px] font-mono font-semibold text-zinc-400 uppercase tracking-wider">
                     Playable Evidence Intercept
                   </div>
                   {activeItem.type === "video_deepfake" && (
                     <video
-                      src={activeItem.media_url}
+                      src={activeItem.media_url ? (activeItem.media_url.startsWith("http") ? activeItem.media_url : `/api/backend${activeItem.media_url}`) : undefined}
+                      poster={activeItem.thumbnail_url ? (activeItem.thumbnail_url.startsWith("http") ? activeItem.thumbnail_url : `/api/backend${activeItem.thumbnail_url}`) : undefined}
                       controls
                       playsInline
+                      crossOrigin="anonymous"
                       className="w-full rounded-xl aspect-video bg-black object-contain border border-line"
                     />
                   )}
-                  {activeItem.type === "audio_clone" && (
+                  {activeItem.type === "audio_clone" && activeItem.media_url && (
                     <div className="p-4 rounded-xl bg-inset border border-line space-y-2">
-                      <audio src={activeItem.media_url} controls className="w-full" />
+                      <audio 
+                        src={activeItem.media_url.startsWith("http") ? activeItem.media_url : `/api/backend${activeItem.media_url}`} 
+                        controls 
+                        className="w-full" 
+                      />
                     </div>
                   )}
-                  {activeItem.type === "image_deepfake" && (
+                  {activeItem.type === "image_deepfake" && activeItem.media_url && (
                     <img
-                      src={activeItem.media_url}
+                      src={activeItem.media_url.startsWith("http") ? activeItem.media_url : `/api/backend${activeItem.media_url}`}
                       alt={activeItem.title}
                       className="w-full rounded-xl max-h-72 object-contain bg-black border border-line"
                     />

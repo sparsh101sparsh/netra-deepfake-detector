@@ -195,52 +195,16 @@ async def get_job_status(job_id: str):
     # Auto-index completed jobs into Threat Catalog for public ledger verification
     if status == "complete" and isinstance(result, dict):
         try:
-            from ..db import insert_threat_item, get_threat_by_id
+            from ..db import get_threat_by_id
             threat_id = f"JOB-{job_id[:8].upper()}"
             if not get_threat_by_id(threat_id):
-                s3_bucket = os.getenv("S3_BUCKET_MEDIA", "netra-media-mumbai-131746731374")
-                region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
-                media_url = f"https://{s3_bucket}.s3.{region}.amazonaws.com/{job_id}/input.mp4"
-                verdict = result.get("verdict", "AUTHENTIC")
-                confidence = float(result.get("confidence", 50)) / 100.0
-                risk_level = result.get("risk_level", "LOW")
-                
-                meta = result.get("metadata") or {}
-                lat = meta.get("lat") or 19.0760
-                lng = meta.get("lng") or 72.8777
-                city = meta.get("city") or "Mumbai"
-                state = meta.get("state") or "Maharashtra"
-                device_model = meta.get("device_model") or "Web Upload Video"
-                software_used = meta.get("software_used") or "NETRA Multi-Modal V5"
-
-                insert_threat_item({
-                    "id": threat_id,
-                    "title": f"Video Forensic Analysis ({verdict.replace('_', ' ')})",
-                    "type": "video_deepfake",
-                    "threat_category": "IMPERSONATION" if verdict != "AUTHENTIC" else "VERIFIED_AUTHENTIC",
-                    "source_platform": "Web Upload",
-                    "fake_probability": confidence,
-                    "verdict": verdict,
-                    "risk_level": risk_level,
-                    "media_url": media_url,
-                    "lat": lat,
-                    "lng": lng,
-                    "city": city,
-                    "state": state,
-                    "location_source": "EXIF_METADATA" if meta.get("lat") else "ESTIMATED_TELECOM",
-                    "device_model": device_model,
-                    "software_used": software_used,
-                    "extracted_iocs": {
-                        "video_duration_sec": result.get("video_duration", 0),
-                        "frames_sampled": len(result.get("frames") or []),
-                    },
-                    "fir_dossier": {
-                        "incident_summary": result.get("forensic_report") or f"Video job {job_id} inspected by NETRA neural ensemble with verdict {verdict}.",
-                        "applicable_laws": ["IT Act 2000 Section 66D", "BNS 2023 Section 318(4)"],
-                        "recommended_action": "Cryptographic SHA-256 registered in threat catalog."
-                    }
-                })
-        except Exception:
+                from netra.services.catalog_hook import auto_catalog_scan
+                auto_catalog_scan(
+                    scan_type="video",
+                    result=result,
+                    explicit_job_id=threat_id
+                )
+        except Exception as cat_err:
             pass
 
     error = parsed.get("error")
@@ -480,12 +444,12 @@ async def get_report_pdf(job_id: str):
             )
 
             use_image = False
-            if img_p and os.path.exists(img_p):
+            if img_p and os.path.isfile(img_p) and os.path.getsize(img_p) > 0:
                 try:
                     from PIL import Image as PILImage
                     with PILImage.open(img_p) as test_im:
                         test_im.verify()
-                    rl_img = RLImage(img_p, width=220, height=145)
+                    rl_img = RLImage(img_p, width=220, height=145, lazy=0)
                     snap_t = Table([[rl_img, Paragraph(cap_text, body_style)]], colWidths=[230, 290])
                     snap_t.setStyle(TableStyle([
                         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#f8fafc")),

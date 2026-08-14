@@ -103,7 +103,7 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_community_created ON community_posts(created_at);")
     
     # Purge legacy mock seed records so catalog and community only show real user submissions
-    cursor.execute("DELETE FROM threat_catalog WHERE id LIKE 'NETRA-SCAM-%';")
+    cursor.execute("DELETE FROM threat_catalog WHERE id LIKE 'NETRA-SCAM-%' OR id LIKE 'THREAT-ADV-%' OR id LIKE 'THREAT-CONCUR-%' OR id LIKE 'TEST-%' OR id LIKE 'E2E-%' OR title LIKE '%Test%';")
     cursor.execute("DELETE FROM community_posts WHERE id LIKE 'post-%';")
 
     # Cloud Rehydration: If local SQLite is fresh/empty, restore records from AWS DynamoDB

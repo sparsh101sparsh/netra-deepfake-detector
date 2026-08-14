@@ -160,8 +160,10 @@ def decode_audio_bytes_pure(input_bytes: bytes, filename: str) -> Tuple[np.ndarr
     return raw_samples, duration
 
 
+from fastapi import Request
+
 @router.post("/detect/audio", response_model=AudioDetectResponse)
-async def detect_audio(file: UploadFile = File(...)):
+async def detect_audio(file: UploadFile = File(...), request: Request = None):
     """
     Direct endpoint for WhatsApp / Telegram Voice Notes and recordings.
     Extracts acoustic frequency anomalies, vocoder pitch flattening, and synthetic voice indicators.
@@ -211,36 +213,25 @@ async def detect_audio(file: UploadFile = File(...)):
     except Exception:
         pass
 
-    # Auto-index into Threat Catalog
+    # Central Auto-Catalog Ingestion Hook with 4-tier Geolocation
     try:
-        from ..db import insert_threat_item
-        aud_id = f"AUD-{uuid.uuid4().hex[:8].upper()}"
-        insert_threat_item({
-            "id": aud_id,
-            "title": f"Audio Deepfake Intercept ({'Synthetic Voice' if is_fake else 'Authentic'})",
-            "type": "audio_clone",
-            "threat_category": "VOICE_CLONE" if is_fake else "VERIFIED_AUTHENTIC",
-            "source_platform": source_platform,
-            "fake_probability": round(score, 2),
-            "verdict": verdict,
-            "risk_level": risk_level,
-            "lat": 19.0760,
-            "lng": 72.8777,
-            "city": "National Telecom Stream",
-            "state": "Cyber Cell Alert",
-            "location_source": "TELECOM_NETWORK",
-            "device_model": "Mobile Audio Encoder (Opus/AAC)",
-            "software_used": "Pure Spectral Acoustic Forensics",
-            "extracted_iocs": {
-                "duration_seconds": round(duration, 2),
-                "acoustic_flags": flags,
+        from netra.services.catalog_hook import auto_catalog_scan
+        auto_catalog_scan(
+            scan_type="audio",
+            result={
+                "fake_probability": score,
+                "verdict": verdict,
+                "risk_level": risk_level,
+                "extracted_iocs": {
+                    "duration_seconds": round(duration, 2),
+                    "acoustic_flags": flags,
+                },
+                "incident_summary": f"Voice recording ({round(duration, 1)}s) analyzed for synthetic speech vocoder artifacts. Result: {verdict} ({confidence}% index)."
             },
-            "fir_dossier": {
-                "incident_summary": f"Voice recording ({round(duration, 1)}s) analyzed for synthetic speech vocoder artifacts. Result: {verdict} ({confidence}% index).",
-                "applicable_laws": ["IT Act 2000 Section 66D", "BNS 2023 Section 318(4)"],
-                "recommended_action": "Retain original audio recording file for acoustic non-repudiation analysis."
-            }
-        })
+            file_bytes=audio_bytes,
+            filename=file.filename or "uploaded_audio.wav",
+            request=request
+        )
     except Exception as e:
         logger.warning(f"Audio catalog auto-index failed: {e}")
 
