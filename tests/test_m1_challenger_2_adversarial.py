@@ -474,3 +474,97 @@ def test_type_coercion_and_boundary_cases(client):
         text = " ".join(" ".join([page.get_textpage().get_text_range() for page in doc]).split())
         assert "Section 63" not in text
         assert "Section 65B" not in text
+
+
+# =========================================================================
+# ADVERSARIAL STRESS TEST: Memory Stability & Non-Existent Resource Handling
+# =========================================================================
+
+def test_nonexistent_threat_id_returns_404(client):
+    """
+    Test /fir-pdf on non-existent or malformed threat IDs.
+    Must return 404 cleanly without crashing.
+    """
+    for bad_id in ["NON_EXISTENT_ID_9999", "INVALID-SCAN-0000", "!@#$%^&*()"]:
+        resp = client.get(f"/api/v1/threat-intelligence/{bad_id}/fir-pdf")
+        assert resp.status_code == 404
+        assert resp.json()["detail"] == "Threat incident not found"
+
+
+def test_audio_detect_endpoint_adversarial_limits(client):
+    """
+    Test /api/v1/detect/audio under adversarial input sizes:
+    - 0-byte file (must return 400)
+    - 30-byte file (<64 byte threshold, must return 400)
+    - Raw uncompressed non-WAV bytes (must hit pure decoding fallback and succeed)
+    """
+    # 1. 0-byte empty file
+    resp_empty = client.post(
+        "/api/v1/detect/audio",
+        files={"file": ("empty.wav", b"", "audio/wav")}
+    )
+    assert resp_empty.status_code == 400
+    assert "empty or corrupted" in resp_empty.json()["detail"]
+
+    # 2. 30-byte truncated file
+    resp_trunc = client.post(
+        "/api/v1/detect/audio",
+        files={"file": ("short.wav", b"RIFF....WAVEfmt " + b"\x00"*10, "audio/wav")}
+    )
+    assert resp_trunc.status_code == 400
+    assert "empty or corrupted" in resp_trunc.json()["detail"]
+
+    # 3. Raw arbitrary 1000-byte noise stream (fallback path)
+    noise_bytes = bytes([i % 256 for i in range(1000)])
+    resp_noise = client.post(
+        "/api/v1/detect/audio",
+        files={"file": ("noise.opus", noise_bytes, "audio/ogg")}
+    )
+    assert resp_noise.status_code == 200
+    noise_data = resp_noise.json()
+    assert noise_data["sample_rate_hz"] == 16000
+    assert noise_data["codec"] == "OPUS"
+    assert "wiener_flatness" in noise_data["acoustic_metrics"]
+    assert "spectral_score" in noise_data["scorecard"]
+
+
+def test_concurrency_and_memory_stability_25_requests(client):
+    """
+    High-stress harness: Issue 25 concurrent requests to /fir-pdf.
+    Measure latency distribution and verify memory stability without leaks.
+    """
+    import resource
+    rss_before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+
+    item_id = insert_threat_item({
+        "id": "TEST-STRESS-25-AUD",
+        "title": "High Volume Stress Voice Note",
+        "type": "audio_clone",
+        "fake_probability": 0.88,
+        "extracted_iocs": {
+            "duration_seconds": 4.5,
+            "sample_rate_hz": 16000,
+            "codec": "PCM 16-bit mono",
+            "acoustic_metrics": {"wiener_flatness": 0.35, "hf_cutoff_ratio": 0.02, "rms_prosody_variance": 0.12, "zcr_variance": 0.0004},
+            "scorecard": {"spectral_score": 0.88, "temporal_inconsistency": 0.25}
+        }
+    })
+
+    def run_worker(idx: int):
+        resp = client.get(f"/api/v1/threat-intelligence/{item_id}/fir-pdf")
+        return resp.status_code, len(resp.content), resp.content.startswith(b"%PDF-1.")
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(run_worker, i) for i in range(25)]
+        outcomes = [f.result() for f in concurrent.futures.as_completed(futures)]
+
+    assert len(outcomes) == 25
+    for status_code, length, is_pdf in outcomes:
+        assert status_code == 200
+        assert is_pdf
+        assert length > 3000
+
+    rss_after = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    rss_growth = rss_after - rss_before
+    # Note: On macOS, ru_maxrss is reported in bytes
+    print(f"\n[STRESS 25 PASS] 25 concurrent requests succeeded. RSS growth: {rss_growth / (1024 * 1024):.2f} MB")

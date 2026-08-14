@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
   Scan, Globe, Database, Cpu, Terminal, Users,
-  Menu, X, Shield, Activity, Sparkles, ChevronDown, Languages 
+  Menu, X, Shield, Activity, Sparkles, ChevronDown 
 } from "lucide-react";
 import { NetraBrandLogo } from "@/components/NetraBrandLogo";
 import { NetraUserAvatar, NETRA_AVATARS } from "@/components/NetraUserAvatar";
@@ -64,23 +64,20 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navContainerRef = useRef<HTMLElement>(null);
   const navItemRefs = useRef<Record<string, HTMLElement | null>>({});
 
-  // Motto / Slogan Translation State & Popover
+  // Motto / Slogan In-Place Translation State with Smooth Transition
   const [sloganTranslation, setSloganTranslation] = useState(false);
-  const [showSloganPopover, setShowSloganPopover] = useState(false);
-  const sloganContainerRef = useRef<HTMLDivElement>(null);
+  const [sloganFading, setSloganFading] = useState(false);
 
-  // Close slogan translation popover on outside click
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (sloganContainerRef.current && !sloganContainerRef.current.contains(e.target as Node)) {
-        setShowSloganPopover(false);
-      }
-    };
-    if (showSloganPopover) {
-      document.addEventListener("mousedown", handleOutsideClick);
-    }
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, [showSloganPopover]);
+  const handleSloganToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (sloganFading) return;
+    setSloganFading(true);
+    setTimeout(() => {
+      setSloganTranslation((prev) => !prev);
+      setSloganFading(false);
+    }, 180);
+  };
 
   // Restore authenticated session from localStorage
   useEffect(() => {
@@ -169,7 +166,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-12 h-16 sm:h-18 flex items-center justify-between gap-4">
           
           {/* Brand Identity & Logo */}
-          <div className="flex items-center gap-3 shrink-0 relative" ref={sloganContainerRef}>
+          <div className="flex items-center gap-3 shrink-0">
             <Link 
               href="/" 
               className="flex items-center gap-3 group focus-visible:outline-none"
@@ -187,93 +184,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setSloganTranslation((prev) => !prev);
-                    setShowSloganPopover((prev) => !prev);
-                  }}
+                  onClick={handleSloganToggle}
                   title={
                     sloganTranslation
-                      ? "Click to switch back to Sanskrit (मायातीतं सत्यस्य चक्षुः)"
-                      : "Click for English translation: 'The Eye of Truth Beyond Illusion'"
+                      ? "Click to switch to Sanskrit (मायातीतं सत्यस्य चक्षुः)"
+                      : "Click to switch to English (The Eye of Truth Beyond Illusion)"
                   }
-                  className="hidden sm:inline-flex items-center gap-1.5 text-[12.5px] sm:text-[13px] font-medium font-sans text-zinc-300 hover:text-cyan-400 transition-colors -mt-0.5 tracking-wide group/slogan text-left focus-visible:outline-none cursor-pointer"
+                  className="hidden sm:inline-block text-[12.5px] sm:text-[13px] font-medium font-sans text-zinc-400 hover:text-white transition-colors -mt-0.5 tracking-wide text-left focus-visible:outline-none cursor-pointer select-none"
                 >
-                  <span className="transition-all duration-200 underline decoration-dotted decoration-white/20 group-hover/slogan:decoration-cyan-400/60 underline-offset-2">
+                  <span
+                    className={cn(
+                      "inline-block transition-all duration-200 ease-out",
+                      sloganFading ? "opacity-0 translate-y-1 blur-[3px]" : "opacity-100 translate-y-0 blur-0"
+                    )}
+                  >
                     {sloganTranslation ? "The Eye of Truth Beyond Illusion" : "मायातीतं सत्यस्य चक्षुः"}
                   </span>
-                  <Languages className="size-3 text-zinc-400 group-hover/slogan:text-cyan-400 transition-colors shrink-0" />
                 </button>
               </div>
             </Link>
-
-            {/* English Translation Popover Dossier Card */}
-            {showSloganPopover && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute top-[calc(100%+8px)] left-0 w-80 p-3.5 rounded-2xl bg-[#0e1117]/95 backdrop-blur-xl border border-cyan-500/30 shadow-[0_12px_40px_rgba(0,0,0,0.8)] z-50 animate-in fade-in zoom-in-95 duration-200 select-text"
-              >
-                <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-400 font-bold flex items-center gap-1.5">
-                    <Languages className="size-3.5" />
-                    Motto Translation
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowSloganPopover(false);
-                    }}
-                    className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 text-xs transition-colors cursor-pointer"
-                    aria-label="Close translation"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                </div>
-
-                <div className="mt-2.5 space-y-2 text-xs">
-                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/5">
-                    <div className="text-[10px] font-mono text-zinc-400 uppercase">Sanskrit Motto</div>
-                    <div className="text-sm font-bold text-white tracking-wide mt-0.5 font-sans">
-                      मायातीतं सत्यस्य चक्षुः
-                    </div>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-                    <div className="text-[10px] font-mono text-cyan-400 uppercase font-semibold">
-                      Literal English Translation
-                    </div>
-                    <div className="text-xs font-semibold text-cyan-200 mt-0.5 leading-relaxed font-sans">
-                      &ldquo;The Eye of Truth Beyond Illusion&rdquo;
-                    </div>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5">
-                    <div className="text-[10px] font-mono text-zinc-400 uppercase">
-                      Official Institutional Tagline
-                    </div>
-                    <div className="text-xs font-medium text-zinc-300 mt-0.5 font-sans">
-                      &ldquo;The Architecture of Truth&rdquo;
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[10.5px] text-zinc-400 font-mono">
-                  <span>Click slogan to toggle</span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSloganTranslation((prev) => !prev);
-                    }}
-                    className="text-cyan-400 hover:underline font-semibold cursor-pointer"
-                  >
-                    Switch to {sloganTranslation ? "Sanskrit" : "English"}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Center Gliding Segmented Navigation Menu (Desktop) */}

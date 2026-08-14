@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { 
-  FileText, Download, ExternalLink, ShieldCheck, 
-  CheckCircle2, ChevronDown
+  FileText, Download, ExternalLink, ChevronDown
 } from "lucide-react";
 
 interface ReportConfig {
@@ -124,57 +123,10 @@ export default function BenchmarkReportsSection() {
         </div>
       </div>
 
-      {/* Main Single Focus Tab: Report Summary, Metrics & Full Embedded PDF Viewer */}
+      {/* Main Single Focus Tab: Full Embedded PDF Viewer */}
       <div className="w-full rounded-card overflow-hidden bg-surface border border-line shadow-card">
-        {/* Report Overview & Forensic Metrics */}
-        <div className="p-5 border-b border-line-soft space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/10 border border-accent/30 text-[10px] font-mono text-accent font-semibold uppercase tracking-wider mb-1">
-                <ShieldCheck size={11} /> {currentReport.badge}
-              </div>
-              <h3 className="text-base font-bold text-ink">{currentReport.title}</h3>
-              <p className="text-xs text-ink-2 mt-0.5">{currentReport.subtitle}</p>
-            </div>
-            <div className="flex items-center gap-3 text-xs font-mono text-ink-3">
-              <span>{currentReport.pages} Pages</span>
-              <span>&bull;</span>
-              <span>{currentReport.size}</span>
-              <span>&bull;</span>
-              <span className="text-green flex items-center gap-1 font-semibold">
-                <CheckCircle2 size={12} /> Verified
-              </span>
-            </div>
-          </div>
-
-          <p className="text-xs text-ink-2 leading-relaxed">{currentReport.summary}</p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
-            <div className="p-2.5 rounded-control bg-field border border-line-soft">
-              <div className="text-[10px] font-mono text-ink-3 uppercase tracking-wider">Corpus Size</div>
-              <div className="text-base font-bold text-ink mt-0.5">{currentReport.stats.datasetSize}</div>
-            </div>
-            <div className="p-2.5 rounded-control bg-field border border-line-soft">
-              <div className="text-[10px] font-mono text-ink-3 uppercase tracking-wider">NETRA Accuracy</div>
-              <div className="text-base font-bold text-green mt-0.5">{currentReport.stats.netraAccuracy}</div>
-            </div>
-            <div className="p-2.5 rounded-control bg-field border border-line-soft">
-              <div className="text-[10px] font-mono text-ink-3 uppercase tracking-wider">MesoNet Baseline</div>
-              <div className="text-base font-bold text-accent mt-0.5">{currentReport.stats.mesonetAccuracy}</div>
-            </div>
-            <div className="p-2.5 rounded-control bg-field border border-line-soft">
-              <div className="text-[10px] font-mono text-ink-3 uppercase tracking-wider">AUC-ROC</div>
-              <div className="text-base font-bold text-ink mt-0.5">{currentReport.stats.aucScore}</div>
-            </div>
-            <div className="p-2.5 rounded-control bg-field border border-line-soft">
-              <div className="text-[10px] font-mono text-ink-3 uppercase tracking-wider">False Positive Rate</div>
-              <div className="text-base font-bold text-ink mt-0.5">{currentReport.stats.fpr}</div>
-            </div>
-          </div>
-        </div>
-
         {/* Fullscreen-height Embedded PDF Viewer */}
-        <div className="w-full h-[850px] bg-neutral-900 border-t border-line">
+        <div className="w-full h-[850px] bg-neutral-900">
           <iframe
             src={`${currentReport.pdfUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
             className="w-full h-full border-0"

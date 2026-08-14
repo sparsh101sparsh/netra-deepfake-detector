@@ -25,3 +25,6 @@ garbage/
 threat_catalog.db
 *.db-shm
 *.db-wal
+backend/media/images/SCAN-*
+backend/media/uploads/SCAN-*
+.agents/

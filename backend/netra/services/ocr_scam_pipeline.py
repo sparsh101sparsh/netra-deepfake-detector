@@ -171,14 +171,38 @@ def run_image_ocr_and_scam_detection(image_bytes: bytes, filename: str = "upload
     ocr_result = extract_text_from_image(image_bytes)
     extracted_text = ocr_result["full_text"]
 
-    # 2. Extract IOCs
-    iocs = extract_iocs_from_text(extracted_text)
+    # 2. Indic Translation Analysis
+    try:
+        from netra.services.indic_translator import indic_translator
+        trans_result = indic_translator.translate_to_english(extracted_text)
+    except Exception as trans_err:
+        logger.warning(f"Indic translation failed: {trans_err}")
+        trans_result = {
+            "has_indic_script": False,
+            "detected_script": "Unknown",
+            "detected_lang_code": "en",
+            "original_text": extracted_text,
+            "translated_text": extracted_text,
+            "translation_engine": "error_fallback",
+            "scam_terms_identified": []
+        }
 
-    # 3. Scam Detection on OCR Text
+    # If regional Indic script is detected, synthesize combined evaluation text
+    if trans_result.get("has_indic_script"):
+        translated_text = trans_result.get("translated_text", "")
+        detection_input = f"{extracted_text}\n\n[FORENSIC ENGLISH TRANSLATION]:\n{translated_text}"
+    else:
+        detection_input = extracted_text
+        translated_text = extracted_text
+
+    # 3. Extract IOCs from both original and translated text
+    iocs = extract_iocs_from_text(f"{extracted_text}\n{translated_text}")
+
+    # 4. Scam Detection on OCR & Translated Text
     from netra.pipeline.scam_detector import scam_detector_engine
     
-    if extracted_text:
-        scam_verdict = scam_detector_engine.detect(extracted_text)
+    if detection_input.strip():
+        scam_verdict = scam_detector_engine.detect(detection_input)
     else:
         scam_verdict = {
             "is_scam": False,
@@ -189,7 +213,7 @@ def run_image_ocr_and_scam_detection(image_bytes: bytes, filename: str = "upload
             "reason": "No legible text detected in image. Please ensure image contains clear, legible text."
         }
 
-    # 4. Synthesize Multi-Modal Verdict
+    # 5. Synthesize Multi-Modal Verdict
     is_scam = scam_verdict.get("is_scam", False)
     risk_score = scam_verdict.get("risk_score", 0)
     matched_rules = scam_verdict.get("matched_rules", [])
@@ -235,6 +259,7 @@ def run_image_ocr_and_scam_detection(image_bytes: bytes, filename: str = "upload
             "lines_count": len(ocr_result["extracted_lines"]),
             "processing_time_ms": ocr_result["processing_time_ms"]
         },
+        "translation_analysis": trans_result,
         "scam_analysis": {
             "is_scam": is_scam,
             "risk_score": risk_score,
