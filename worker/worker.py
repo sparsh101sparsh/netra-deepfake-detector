@@ -26,6 +26,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import boto3
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
+import numpy as np
 
 try:
     import cv2
@@ -697,7 +698,7 @@ def process_job(
                 else:
                     frame_paths = [f["image_path"] for f in frames if "image_path" in f]
                     gend_res = models.gend_engine.analyze_frames(frame_paths)
-                global_gend = gend_res.get("fake_probability")
+                global_gend = gend_res.get("gend_fake_probability") or gend_res.get("fake_probability")
                 logger.info(f"GenD Foundation Analysis fake_probability: {global_gend} (used {len(face_crops)} face crops)")
             except Exception as e:
                 logger.warning(f"GenD analysis failed: {e}")
