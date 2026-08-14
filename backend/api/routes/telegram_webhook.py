@@ -180,7 +180,7 @@ async def telegram_webhook(request: Request):
             "The bot will:\n"
             "• Upload to NETRA's AWS pipeline\n"
             "• Run visual + audio deepfake detection\n"
-            "• Generate a forensic report via Amazon Bedrock\n"
+            "• Generate an institutional forensic report\n"
             "• Return a verdict (AUTHENTIC / SUSPICIOUS / FACE\\_SWAP / VOICE\\_CLONE)"
         )
 

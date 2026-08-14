@@ -89,11 +89,11 @@ export const CommunityArticleModal: React.FC<CommunityArticleModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto">
       <div 
-        className="relative w-full max-w-3xl rounded-2xl bg-[#141416] border border-white/15 shadow-overlay my-auto flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans"
+        className="relative w-full max-w-3xl rounded-2xl bg-[#17191A] border border-white/15 shadow-overlay my-auto flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 1. Header Toolbar */}
-        <div className="p-4 border-b border-white/[0.08] flex items-center justify-between gap-4 shrink-0 bg-[#141416]/95 backdrop-blur-sm z-20">
+        <div className="p-4 border-b border-white/[0.08] flex items-center justify-between gap-4 shrink-0 bg-[#17191A]/95 backdrop-blur-sm z-20">
           <button
             type="button"
             onClick={onClose}
@@ -263,7 +263,7 @@ export const CommunityArticleModal: React.FC<CommunityArticleModalProps> = ({
         </div>
 
         {/* 3. Footer Bar with Interaction */}
-        <div className="p-4 border-t border-white/[0.08] flex items-center justify-between gap-4 bg-[#141416]/95 shrink-0">
+        <div className="p-4 border-t border-white/[0.08] flex items-center justify-between gap-4 bg-[#17191A]/95 shrink-0">
           <div className="text-xs text-zinc-400 font-mono">
             Published in NETRA Community Forensics
           </div>

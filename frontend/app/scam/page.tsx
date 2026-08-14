@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { ShieldAlert, CheckCircle2, AlertTriangle, Fingerprint, Clock, BrainCircuit, Activity } from "lucide-react";
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { GlideMenu } from '@/components/atoms/GlideMenu';
 
 const API_URL = "/api/backend";
 
@@ -16,6 +17,8 @@ interface ScamResult {
   matched_rules: string[];
   analysis_method: string;
   processing_time_ms: number;
+  reason?: string;
+  analysis_reason?: string;
   llm_reason?: string;
 }
 
@@ -93,22 +96,13 @@ export default function ScamPage() {
       setResult(data);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown Error";
-      if (msg.includes("fetch") || msg.includes("Failed") || msg.includes("NetworkError") || msg.includes("ECONNREFUSED") || msg.includes("Server Error") || msg.includes("SERVER ERROR")) {
-        const score = Math.floor(Math.random() * 40) + 55;
-        setResult({
-          is_scam: true,
-          risk_score: score,
-          confidence: score + 10,
-          verdict: "High Risk — Likely Scam",
-          scam_type: "financial fraud",
-          matched_rules: ["urgency trigger", "financial request", "authority impersonation"],
-          analysis_method: "rules and ai analysis",
-          processing_time_ms: 47,
-          llm_reason: "This message contains multiple high-confidence scam indicators: urgency pressure, financial request, and authority impersonation of a known institution.",
-        });
-      } else {
-        setError(msg);
-      }
+      console.warn("Scam detector API error:", msg);
+      setError(
+        msg.includes("fetch") || msg.includes("Failed") || msg.includes("NetworkError") || msg.includes("ECONNREFUSED")
+          ? "Forensic scam analysis node unreachable. Please ensure the backend server is active and retry."
+          : `Forensic analysis error: ${msg}`
+      );
+      setResult(null);
     } finally {
       setIsAnalyzing(false);
     }
@@ -140,15 +134,22 @@ export default function ScamPage() {
           
           <div className="bg-surface border-b border-line px-4 py-3 flex flex-wrap items-center gap-3">
             <span className="text-[11px] font-mono text-ink-3 uppercase tracking-wider mr-2">Try an example:</span>
-            {EXAMPLE_MESSAGES.map((ex) => (
-              <button
-                key={ex.label}
-                onClick={() => loadExample(ex.text)}
-                className="px-3 py-1 text-xs font-medium bg-surface border border-line rounded-lg hover:bg-page transition-colors text-ink-2"
-              >
-                {ex.label}
-              </button>
-            ))}
+            <GlideMenu
+              className="flex items-center gap-2"
+              highlightClassName="inset-0 bg-white/[0.08] rounded-lg border border-white/10"
+              rowSelector="[data-menu-row]"
+            >
+              {EXAMPLE_MESSAGES.map((ex) => (
+                <button
+                  key={ex.label}
+                  data-menu-row
+                  onClick={() => loadExample(ex.text)}
+                  className="relative z-10 px-3 py-1 text-xs font-medium bg-surface border border-line rounded-lg text-ink-2 hover:text-ink transition-colors"
+                >
+                  {ex.label}
+                </button>
+              ))}
+            </GlideMenu>
           </div>
 
           <div className="relative">
@@ -252,13 +253,15 @@ export default function ScamPage() {
               </div>
             )}
 
-            {result.llm_reason && (
+            {(result.analysis_reason || result.reason || result.llm_reason) && (
               <div className="border border-line rounded-xl p-5 bg-surface relative z-10">
                 <div className="flex items-center gap-2 mb-3 border-b border-line pb-3">
                   <BrainCircuit className="w-4 h-4 text-ink-2" />
-                  <span className="text-xs font-semibold text-ink">AI Analysis</span>
+                  <span className="text-xs font-semibold text-ink">Forensic Reasoning</span>
                 </div>
-                <p className="text-ink-2 text-sm leading-relaxed">{result.llm_reason}</p>
+                <p className="text-ink-2 text-sm leading-relaxed">
+                  {result.analysis_reason || result.reason || result.llm_reason}
+                </p>
               </div>
             )}
           </div>

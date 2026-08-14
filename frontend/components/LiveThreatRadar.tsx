@@ -9,6 +9,8 @@ import {
 
 
 import { cn } from "@/lib/utils";
+import { GlidingFilterTabs } from "@/components/atoms/GlidingFilterTabs";
+import { GlideMenu } from "@/components/atoms/GlideMenu";
 
 export interface ThreatMarker {
   id: string;
@@ -38,31 +40,35 @@ export function LiveThreatRadar() {
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
   const [isMapReady, setIsMapReady] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // 1. Fetch live threat markers from backend with realistic fallback
-  useEffect(() => {
+  const fetchRadarData = () => {
+    setIsLoading(true);
+    setFetchError(null);
     fetch("/api/backend/api/v1/threat-intelligence/radar")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.markers && data.markers.length > 0) {
-          setMarkers(data.markers);
-        }
+      .then((res) => {
+        if (!res.ok) throw new Error("Threat radar service unreachable");
+        return res.json();
       })
-      .catch(() => {
-        const demoMarkers: ThreatMarker[] = [
-          { id: "NETRA-DF-001", title: "AI Face-Swap: Celebrity Extortion", type: "video_deepfake", category: "DEEPFAKE", lat: 28.6139, lng: 77.2090, city: "New Delhi", state: "Delhi", location_source: "Reported Submission", confidence_pct: 98.6, risk_level: "CRITICAL", software_used: "InSwapper-128 + CapCut", device_model: "iPhone 15 Pro", upvotes: 142, created_at: "18 mins ago" },
-          { id: "NETRA-DF-002", title: "Digital Arrest Police Video Extortion", type: "video_deepfake", category: "DIGITAL_ARREST", lat: 19.0760, lng: 72.8777, city: "Mumbai", state: "Maharashtra", location_source: "Reported Submission", confidence_pct: 99.2, risk_level: "CRITICAL", software_used: "LivePortrait + Premiere", device_model: "Samsung S24 Ultra", upvotes: 310, created_at: "45 mins ago" },
-          { id: "NETRA-DF-003", title: "Guaranteed Stock Scheme Video", type: "video_deepfake", category: "STOCK_FRAUD", lat: 12.9716, lng: 77.5946, city: "Bengaluru", state: "Karnataka", location_source: "Reported Submission", confidence_pct: 97.4, risk_level: "HIGH", software_used: "Remaker AI", device_model: "MacBook Pro", upvotes: 89, created_at: "1 hour ago" },
-          { id: "NETRA-DF-004", title: "Electricity Bill Disconnection Threat", type: "scam_text", category: "EXTORTION", lat: 17.3850, lng: 78.4867, city: "Hyderabad", state: "Telangana", location_source: "Reported Submission", confidence_pct: 98.5, risk_level: "CRITICAL", software_used: "Automated SMS Gateway", device_model: "Android Gateway", upvotes: 204, created_at: "2 hours ago" },
-          { id: "NETRA-DF-005", title: "Hospital Emergency Voice Clone", type: "audio_clone", category: "VOICE_CLONE", lat: 18.5204, lng: 73.8567, city: "Pune", state: "Maharashtra", location_source: "Reported Submission", confidence_pct: 95.8, risk_level: "HIGH", software_used: "ElevenLabs Voice Clone", device_model: "VoIP Cloud", upvotes: 77, created_at: "3 hours ago" },
-          { id: "NETRA-DF-006", title: "High-Return Trading App Deepfake", type: "video_deepfake", category: "STOCK_FRAUD", lat: 22.5726, lng: 88.3639, city: "Kolkata", state: "West Bengal", location_source: "Reported Submission", confidence_pct: 96.9, risk_level: "HIGH", software_used: "FaceFusion + DaVinci", device_model: "Windows Workstation", upvotes: 115, created_at: "4 hours ago" },
-          { id: "NETRA-DF-007", title: "Part-Time Job Commission Notice", type: "scam_text", category: "EXTORTION", lat: 13.0827, lng: 80.2707, city: "Chennai", state: "Tamil Nadu", location_source: "Reported Submission", confidence_pct: 93.4, risk_level: "MEDIUM", software_used: "Telegram Network", device_model: "Cloud Server", upvotes: 62, created_at: "5 hours ago" },
-          { id: "NETRA-DF-008", title: "Bank KYC Suspension APK Notice", type: "scam_text", category: "EXTORTION", lat: 26.9124, lng: 75.7873, city: "Jaipur", state: "Rajasthan", location_source: "Reported Submission", confidence_pct: 97.8, risk_level: "CRITICAL", software_used: "Bulk SMS Broadcast", device_model: "Android Gateway", upvotes: 188, created_at: "6 hours ago" },
-          { id: "NETRA-DF-009", title: "CBI Notice Fake Video Call", type: "video_deepfake", category: "DIGITAL_ARREST", lat: 26.8467, lng: 80.9462, city: "Lucknow", state: "Uttar Pradesh", location_source: "Reported Submission", confidence_pct: 99.1, risk_level: "CRITICAL", software_used: "SadTalker Video Synthesis", device_model: "Mac Studio", upvotes: 245, created_at: "7 hours ago" },
-          { id: "NETRA-DF-010", title: "Cryptocurrency Investment Pitch Video", type: "video_deepfake", category: "STOCK_FRAUD", lat: 23.0225, lng: 72.5714, city: "Ahmedabad", state: "Gujarat", location_source: "Reported Submission", confidence_pct: 96.2, risk_level: "HIGH", software_used: "HeyGen Video Generator", device_model: "iPhone 14 Pro", upvotes: 94, created_at: "8 hours ago" },
-        ];
-        setMarkers(demoMarkers);
+      .then((data) => {
+        if (data && Array.isArray(data.markers)) {
+          setMarkers(data.markers);
+        } else {
+          setMarkers([]);
+        }
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.warn("LiveThreatRadar fetch error:", err);
+        setMarkers([]);
+        setFetchError("Threat radar node offline; unable to stream live geospatial telemetry.");
+        setIsLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchRadarData();
   }, []);
 
   // 2. Initialize Real Leaflet Map
@@ -205,10 +211,10 @@ export function LiveThreatRadar() {
   });
 
   return (
-    <div className="w-full rounded-2xl overflow-hidden border-[1.5px] border-line bg-[#141416] shadow-card flex flex-col font-sans select-none">
+    <div className="w-full rounded-2xl overflow-hidden border-[1.5px] border-line bg-[#17191A] shadow-card flex flex-col font-sans select-none">
       
       {/* ── 1. TOP HEADER TOOLBAR ── */}
-      <div className="p-4 sm:p-5 border-b border-line bg-[#141416] flex flex-wrap items-center justify-between gap-4 shrink-0">
+      <div className="p-4 sm:p-5 border-b border-line bg-[#17191A] flex flex-wrap items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-3">
 
           <div>
@@ -229,28 +235,18 @@ export function LiveThreatRadar() {
 
         {/* Right Toolbar: Category Filter Pills */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          {/* Category Filter Pills */}
-          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#18181B] border border-white/10 font-mono text-[11px]">
-            {[
+          <GlidingFilterTabs
+            tabs={[
               { id: "ALL", label: "All Incidents" },
               { id: "DEEPFAKE", label: "Deepfakes" },
               { id: "DIGITAL_ARREST", label: "Digital Arrest" },
               { id: "STOCK_FRAUD", label: "Trading Scams" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveFilter(tab.id)}
-                className={cn(
-                  "px-2.5 py-1 rounded-md transition-all",
-                  activeFilter === tab.id
-                    ? "bg-[#27272A] text-white font-semibold shadow-sm"
-                    : "text-zinc-400 hover:text-white"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+            ]}
+            activeId={activeFilter}
+            onChange={setActiveFilter}
+            pillVariant="pill"
+            className="p-0.5 rounded-lg bg-[#18181B] border border-white/10"
+          />
         </div>
       </div>
 
@@ -264,14 +260,41 @@ export function LiveThreatRadar() {
           <div ref={mapContainerRef} className="w-full h-full z-0" />
 
           {/* Floating Map Nodes Chip (Top Left) */}
-          <div className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-xl bg-[#141416]/90 backdrop-blur-md border border-white/10 shadow-card flex items-center gap-2 text-xs font-mono text-zinc-300 pointer-events-none">
-            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>{filteredMarkers.length} Active Submission Nodes</span>
+          <div className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-xl bg-[#17191A]/90 backdrop-blur-md border border-white/10 shadow-card flex items-center gap-2 text-xs font-mono text-zinc-300 pointer-events-none">
+            <span className={cn("size-2 rounded-full", isLoading ? "bg-amber-400 animate-ping" : filteredMarkers.length > 0 ? "bg-emerald-400 animate-pulse" : "bg-zinc-500")} />
+            <span>{isLoading ? "Synchronizing Telemetry..." : `${filteredMarkers.length} Active Submission Nodes`}</span>
           </div>
+
+          {/* Institutional Zero-Marker / Offline Overlay */}
+          {!isLoading && filteredMarkers.length === 0 && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6 pointer-events-auto">
+              <div className="max-w-md p-6 rounded-2xl bg-[#17191A]/95 border border-white/10 shadow-overlay text-center space-y-3">
+                <div className="size-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+                  <Compass className="size-5" />
+                </div>
+                <h4 className="text-sm font-semibold text-white">No Geo-Telemetry Recorded</h4>
+                <p className="text-xs text-zinc-400">
+                  No verified geo-telemetry coordinates recorded in this category.
+                </p>
+                {fetchError && (
+                  <p className="text-[11px] font-mono text-rose-400 pt-1">
+                    {fetchError}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={fetchRadarData}
+                  className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-white font-medium transition-colors"
+                >
+                  Retry Stream Connection
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Selected Marker Detail Overlay (Floating Card) */}
           {selectedMarker && (
-            <div className="absolute bottom-5 left-5 right-5 sm:right-auto sm:max-w-sm z-30 p-4 rounded-2xl bg-[#141416]/95 backdrop-blur-xl border border-white/15 shadow-overlay animate-in fade-in slide-in-from-bottom-3 duration-200 text-xs space-y-3">
+            <div className="absolute bottom-5 left-5 right-5 sm:right-auto sm:max-w-sm z-30 p-4 rounded-2xl bg-[#17191A]/95 backdrop-blur-xl border border-white/15 shadow-overlay animate-in fade-in slide-in-from-bottom-3 duration-200 text-xs space-y-3">
               <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-2.5">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 text-zinc-400 text-[11px] font-mono">
@@ -327,7 +350,7 @@ export function LiveThreatRadar() {
         <div className="lg:col-span-5 xl:col-span-4 border-t lg:border-t-0 lg:border-l border-line flex flex-col h-full bg-[#111113] overflow-hidden">
           
           {/* Feed Header */}
-          <div className="p-4 border-b border-line bg-[#141416] space-y-3 shrink-0">
+          <div className="p-4 border-b border-line bg-[#17191A] space-y-3 shrink-0">
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-semibold text-white tracking-tight flex items-center gap-2">
@@ -365,85 +388,120 @@ export function LiveThreatRadar() {
           </div>
 
           {/* Continuous Vertical Scroll Stream */}
-          <div className="flex-1 overflow-y-auto divide-y divide-white/[0.06] custom-scrollbar">
-            {filteredMarkers.length === 0 ? (
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {isLoading ? (
+              <div className="p-4 space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="p-3.5 rounded-xl bg-[#18181B] border border-white/5 space-y-2 animate-pulse">
+                    <div className="flex justify-between items-center">
+                      <div className="h-3.5 w-24 bg-white/10 rounded" />
+                      <div className="h-3.5 w-16 bg-white/10 rounded" />
+                    </div>
+                    <div className="h-3 w-44 bg-white/10 rounded" />
+                    <div className="flex justify-between items-center pt-1">
+                      <div className="h-2.5 w-28 bg-white/5 rounded" />
+                      <div className="h-2.5 w-14 bg-white/5 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredMarkers.length === 0 ? (
               <div className="p-8 text-center text-xs text-zinc-500 space-y-2">
                 <Compass className="size-6 text-zinc-600 mx-auto" />
-                <p>No locations match your search or filter.</p>
+                <p className="text-zinc-300 font-medium">No verified incident coordinates</p>
+                <p className="text-zinc-500 text-[11px]">
+                  {fetchError || "No verified threat telemetry records match your active search or category filters."}
+                </p>
+                {fetchError && (
+                  <button
+                    type="button"
+                    onClick={fetchRadarData}
+                    className="mt-2 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] transition-colors"
+                  >
+                    Retry Connection
+                  </button>
+                )}
               </div>
             ) : (
-              filteredMarkers.map((marker) => {
-                const isSelected = selectedMarker?.id === marker.id;
-                const isCritical = marker.risk_level === "CRITICAL";
+              <GlideMenu
+                className="flex flex-col divide-y divide-white/[0.06]"
+                highlightClassName="inset-x-0 bg-white/[0.06] rounded-none border-l-2 border-l-white"
+                rowSelector="[data-menu-row]"
+              >
+                {filteredMarkers.map((marker) => {
+                  const isSelected = selectedMarker?.id === marker.id;
+                  const isCritical = marker.risk_level === "CRITICAL";
 
-                return (
-                  <button
-                    key={marker.id}
-                    type="button"
-                    onClick={() => handleSelectLocation(marker)}
-                    className={cn(
-                      "w-full text-left p-3.5 sm:p-4 transition-all duration-150 flex items-start gap-3 group",
-                      isSelected
-                        ? "bg-[#1C1C20] border-l-2 border-l-white"
-                        : "hover:bg-[#18181B]/80 border-l-2 border-l-transparent"
-                    )}
-                  >
-                    {/* Location Icon Container */}
-                    <div className={cn(
-                      "size-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors border",
-                      isSelected
-                        ? "bg-white text-[#0C0C0E] border-white"
-                        : "bg-[#18181B] text-zinc-400 group-hover:text-white border-white/10"
-                    )}>
-                      {marker.type === "video_deepfake" ? (
-                        <Video className="size-3.5" />
-                      ) : marker.type === "audio_clone" ? (
-                        <Mic className="size-3.5" />
-                      ) : (
-                        <MessageSquare className="size-3.5" />
+                  return (
+                    <button
+                      key={marker.id}
+                      data-menu-row
+                      type="button"
+                      onClick={() => handleSelectLocation(marker)}
+                      className={cn(
+                        "relative z-10 w-full text-left p-3.5 sm:p-4 transition-colors duration-150 flex items-start gap-3 group border-l-2",
+                        isSelected
+                          ? "bg-[#1C1C20] border-l-white"
+                          : "border-l-transparent"
                       )}
-                    </div>
+                    >
+                      {/* Location Icon Container */}
+                      <div className={cn(
+                        "size-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors border",
+                        isSelected
+                          ? "bg-white text-[#0C0C0E] border-white"
+                          : "bg-[#18181B] text-zinc-400 group-hover:text-white border-white/10"
+                      )}>
+                        {marker.type === "video_deepfake" ? (
+                          <Video className="size-3.5" />
+                        ) : marker.type === "audio_clone" ? (
+                          <Mic className="size-3.5" />
+                        ) : (
+                          <MessageSquare className="size-3.5" />
+                        )}
+                      </div>
 
-                    {/* Content */}
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-white truncate">
-                          <MapPin className="size-3 text-zinc-400 shrink-0" />
-                          <span className="truncate">{marker.city}, {marker.state}</span>
+                      {/* Content */}
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-white truncate">
+                            <MapPin className="size-3 text-zinc-400 shrink-0" />
+                            <span className="truncate">{marker.city}, {marker.state}</span>
+                          </div>
+                          <span className={cn(
+                            "px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold uppercase shrink-0 border",
+                            isCritical
+                              ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                              : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          )}>
+                            {marker.risk_level}
+                          </span>
                         </div>
-                        <span className={cn(
-                          "px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold uppercase shrink-0 border",
-                          isCritical
-                            ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                            : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                        )}>
-                          {marker.risk_level}
-                        </span>
-                      </div>
 
-                      <p className="text-xs text-zinc-300 leading-snug line-clamp-1 group-hover:text-white transition-colors">
-                        {marker.title}
-                      </p>
+                        <p className="text-xs text-zinc-300 leading-snug line-clamp-1 group-hover:text-white transition-colors">
+                          {marker.title}
+                        </p>
 
-                      <div className="flex items-center justify-between gap-2 pt-0.5 text-[11px] text-zinc-400 font-mono">
-                        <span className="flex items-center gap-1">
-                          <Clock className="size-3 text-zinc-400" />
-                          <span>Submitted {marker.created_at}</span>
-                        </span>
-                        <span className="text-zinc-400 text-[10px] group-hover:text-zinc-300 flex items-center gap-0.5">
-                          <span>Focus Map</span>
-                          <span>↗</span>
-                        </span>
+                        <div className="flex items-center justify-between gap-2 pt-0.5 text-[11px] text-zinc-400 font-mono">
+                          <span className="flex items-center gap-1">
+                            <Clock className="size-3 text-zinc-400" />
+                            <span>Submitted {marker.created_at}</span>
+                          </span>
+                          <span className="text-zinc-400 text-[10px] group-hover:text-zinc-300 flex items-center gap-0.5">
+                            <span>Focus Map</span>
+                            <span>↗</span>
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              })
+                    </button>
+                  );
+                })}
+              </GlideMenu>
             )}
           </div>
 
           {/* Bottom Telemetry Bar */}
-          <div className="p-3 border-t border-line bg-[#141416] text-[11px] font-mono text-zinc-500 flex items-center justify-between shrink-0">
+          <div className="p-3 border-t border-line bg-[#17191A] text-[11px] font-mono text-zinc-500 flex items-center justify-between shrink-0">
             <span>Click any location to focus map</span>
             <span className="text-zinc-400">{filteredMarkers.length} recorded</span>
           </div>

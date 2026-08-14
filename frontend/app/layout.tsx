@@ -1,20 +1,5 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Lexend, JetBrains_Mono } from 'next/font/google'
-
-const lexend = Lexend({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-lexend',
-  weight: ['300', '400', '500', '600', '700', '800'],
-})
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-mono',
-  weight: ['400', '500', '600', '700'],
-})
 
 export const metadata: Metadata = {
   title: 'NETRA — Eyes That See Through | Multi-Modal Forensic AI',
@@ -35,17 +20,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`dark ${lexend.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className="dark font-sans">
       <head>
         <link rel="icon" type="image/svg+xml" href="/netra_favicon.svg" />
         <link rel="alternate icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/netra_favicon.svg" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body className="bg-[var(--page)] text-[var(--ink)] font-sans antialiased min-h-screen flex flex-col selection:bg-accent-tint selection:text-accent-ink">
         {children}
@@ -53,3 +32,4 @@ export default function RootLayout({
     </html>
   )
 }
+

@@ -5,16 +5,26 @@ from datetime import datetime
 
 router = APIRouter()
 
-S3_BUCKET = os.getenv("S3_BUCKET_MEDIA", "netra-media-uploads")
-SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL", "")
-DYNAMO_TABLE = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
+def get_s3_bucket() -> str:
+    return os.getenv("S3_BUCKET_MEDIA", "netra-media-uploads")
+
+def get_sqs_queue_url() -> str:
+    url = os.getenv("SQS_QUEUE_URL")
+    if not url:
+        account_id = os.getenv("AWS_ACCOUNT_ID", "131746731374")
+        region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+        return f"https://sqs.{region}.amazonaws.com/{account_id}/netra-jobs"
+    return url
+
+def get_dynamo_table() -> str:
+    return os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
+
 MAX_FILE_SIZE_MB = 100
+ALLOWED_TYPES = {"video/mp4", "video/quicktime", "video/webm", "video/avi", "video/x-msvideo"}
 
 s3 = boto3.client("s3", region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
 sqs = boto3.client("sqs", region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
 dynamodb = boto3.client("dynamodb", region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
-
-ALLOWED_TYPES = {"video/mp4", "video/quicktime", "video/webm", "video/avi", "video/x-msvideo"}
 
 
 @router.post("/detect/full")
@@ -22,7 +32,6 @@ async def detect_full(file: UploadFile = File(...)):
     """
     Accept video upload, stream to S3, dispatch to SQS worker.
     Returns job_id immediately (non-blocking).
-    NEVER runs ML models here — this is the lightweight t3.micro API only.
     """
     # Validate content type
     if file.content_type not in ALLOWED_TYPES:
@@ -42,15 +51,20 @@ async def detect_full(file: UploadFile = File(...)):
 
     job_id = str(uuid.uuid4())
     s3_key = f"{job_id}/input.mp4"
+    s3_bucket = get_s3_bucket()
+    sqs_url = get_sqs_queue_url()
+    dynamo_table = get_dynamo_table()
 
+    s3_uploaded = False
     try:
         # 1. Upload to S3
         import io
-        s3.upload_fileobj(io.BytesIO(contents), S3_BUCKET, s3_key)
+        s3.upload_fileobj(io.BytesIO(contents), s3_bucket, s3_key)
+        s3_uploaded = True
 
         # 2. Write initial job record to DynamoDB
         dynamodb.put_item(
-            TableName=DYNAMO_TABLE,
+            TableName=dynamo_table,
             Item={
                 "job_id": {"S": job_id},
                 "status": {"S": "queued"},
@@ -63,9 +77,8 @@ async def detect_full(file: UploadFile = File(...)):
         )
 
         # 3. Send to SQS — GPU worker picks this up asynchronously
-        # Standard SQS queue — do NOT use MessageDeduplicationId (FIFO-only param)
         sqs.send_message(
-            QueueUrl=SQS_QUEUE_URL,
+            QueueUrl=sqs_url,
             MessageBody=json.dumps({
                 "job_id": job_id,
                 "s3_key": s3_key,
@@ -74,6 +87,10 @@ async def detect_full(file: UploadFile = File(...)):
         )
 
     except Exception as e:
+        # Rollback S3 object if subsequent enqueue fails to prevent orphaned storage
+        if s3_uploaded:
+            try: s3.delete_object(Bucket=s3_bucket, Key=s3_key)
+            except Exception: pass
         raise HTTPException(status_code=500, detail=f"Failed to dispatch job: {str(e)}")
 
     return {

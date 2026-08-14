@@ -146,41 +146,24 @@ export const CommunityEditorModal: React.FC<CommunityEditorModalProps> = ({
         onClose();
         return;
       }
-    } catch {
-      // Fallback: create post locally and persist to localStorage
+      const errData = await res.json().catch(() => ({}));
+      setErrorMsg(errData.detail || `Failed to publish research paper (Server status ${res.status}).`);
+    } catch (err: any) {
+      console.warn("Community post publishing error:", err);
+      setErrorMsg(err?.message || "Community server unreachable. Please verify backend is running.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Local fallback for offline/sandbox resiliency
-    const words = content.trim().split(/\s+/).length;
-    const fallbackPost: CommunityPost = {
-      id: `post-${Date.now().toString(36)}`,
-      title: title.trim(),
-      category,
-      content: content.trim(),
-      excerpt: content.replace(/[#*`>]/g, "").slice(0, 140) + "...",
-      cover_image: coverImage || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80",
-      embed_url: embedUrl.trim() || undefined,
-      author: authorData,
-      created_at: "Just now",
-      read_time: `${Math.max(1, Math.round(words / 200))} min read`,
-      likes: 1,
-      views: 1,
-      tags: [category.replace("_", " ").toUpperCase()],
-    };
-
-    onPublished(fallbackPost);
-    onClose();
-    setIsSubmitting(false);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto">
       <div 
-        className="relative w-full max-w-4xl rounded-2xl bg-[#141416] border border-white/15 shadow-overlay my-auto flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans"
+        className="relative w-full max-w-4xl rounded-2xl bg-[#17191A] border border-white/15 shadow-overlay my-auto flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 1. Header Bar */}
-        <div className="p-4 sm:p-5 border-b border-white/[0.08] flex items-center justify-between gap-4 shrink-0 bg-[#141416]">
+        <div className="p-4 sm:p-5 border-b border-white/[0.08] flex items-center justify-between gap-4 shrink-0 bg-[#17191A]">
           <div className="flex items-center gap-3 min-w-0">
             <div className="size-9 rounded-xl bg-[#18181B] border border-white/10 flex items-center justify-center text-white shrink-0">
               <Edit3 className="size-4" />

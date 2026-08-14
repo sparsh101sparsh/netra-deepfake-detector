@@ -88,6 +88,14 @@ async def analyze_scam_text(
         
     # Auto-index into Threat Catalog if scam detected
     if scam_detected:
+        city_name = payload.city or "New Delhi"
+        exact_lat, exact_lng, exact_state = 28.6139, 77.2090, "Delhi"
+        from netra.pipeline.exif_engine import INDIAN_METROS
+        for m in INDIAN_METROS:
+            if m["city"].lower() == city_name.lower():
+                exact_lat, exact_lng, exact_state = m["lat"], m["lng"], m["state"]
+                break
+                
         insert_threat_item({
             "title": f"Reported {threat_category.replace('_', ' ').title()}",
             "type": "scam_text",
@@ -96,10 +104,10 @@ async def analyze_scam_text(
             "fake_probability": confidence,
             "verdict": "SCAM_CONFIRMED",
             "risk_level": risk_level,
-            "city": payload.city or "New Delhi",
-            "state": "Delhi",
-            "lat": 28.6139 + (np.random.rand()-0.5)*0.05,
-            "lng": 77.2090 + (np.random.rand()-0.5)*0.05,
+            "city": city_name,
+            "state": exact_state,
+            "lat": exact_lat,
+            "lng": exact_lng,
             "location_source": "ESTIMATED_TELECOM",
             "device_model": "SMS / Messaging Network",
             "software_used": "Social Engineering Script",

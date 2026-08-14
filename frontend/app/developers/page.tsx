@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { SegmentedControl } from "@/components/atoms/SegmentedControl";
+import { GlideMenu } from "@/components/atoms/GlideMenu";
 
 interface ApiKeyItem {
   key_id: string;
@@ -22,7 +24,7 @@ interface ApiKeyItem {
 
 export default function DevelopersPage() {
   const [keys, setKeys] = useState<ApiKeyItem[]>([]);
-  const [activeKey, setActiveKey] = useState<string>("netra_live_d05ffb1af240c7c4f620d6a42371ccc6");
+  const [activeKey, setActiveKey] = useState<string>("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [keyNameInput, setKeyNameInput] = useState("");
   const [isCreatingKey, setIsCreatingKey] = useState(false);
@@ -41,9 +43,10 @@ export default function DevelopersPage() {
       const res = await fetch("/api/backend/api/v1/developers/keys");
       if (res.ok) {
         const data = await res.json();
-        setKeys(data.keys || []);
-        if (data.keys && data.keys.length > 0 && !activeKey) {
-          setActiveKey(data.keys[0].raw_key || data.keys[0].key_prefix);
+        const loadedKeys = data.keys || [];
+        setKeys(loadedKeys);
+        if (loadedKeys.length > 0) {
+          setActiveKey((prev) => prev || loadedKeys[0].raw_key || loadedKeys[0].key_prefix);
         }
       }
     } catch (err) {
@@ -96,6 +99,10 @@ export default function DevelopersPage() {
   };
 
   const runPlaygroundTest = async () => {
+    if (!activeKey) {
+      setPlaygroundResponse({ error: "Please generate an API key to execute sandbox queries." });
+      return;
+    }
     setIsRunningPlayground(true);
     setPlaygroundResponse(null);
     try {
@@ -103,7 +110,7 @@ export default function DevelopersPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": activeKey || "netra_live_demo",
+          "X-API-Key": activeKey,
         },
         body: JSON.stringify({
           message: playgroundText,
@@ -120,12 +127,7 @@ export default function DevelopersPage() {
     }
   };
 
-  const activeKeyData = keys.find((k) => k.raw_key === activeKey || k.key_prefix === activeKey) || keys[0] || {
-    key_prefix: "netra_live_••••••••",
-    monthly_quota: 5000,
-    used_requests: 12,
-    tier: "Developer Access",
-  };
+  const activeKeyData = keys.find((k) => k.raw_key === activeKey || k.key_prefix === activeKey) || keys[0] || null;
 
   return (
     <div className="min-h-screen bg-page text-ink flex flex-col font-sans selection:bg-accent/30 selection:text-accent">
@@ -211,47 +213,54 @@ export default function DevelopersPage() {
                     No keys found. Generate a new key above.
                   </div>
                 ) : (
-                  keys.map((k) => (
-                    <div
-                      key={k.key_id}
-                      className={`p-3.5 rounded-xl border transition-all flex items-center justify-between ${
-                        activeKey === k.raw_key || activeKey === k.key_prefix
-                          ? "bg-accent/5 border-accent/40 shadow-sm"
-                          : "bg-surface border-line hover:border-ink-3"
-                      }`}
-                    >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-ink">{k.name}</span>
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-inset text-ink-2 uppercase">
-                            {k.tier}
-                          </span>
+                  <GlideMenu
+                    className="flex flex-col gap-2"
+                    highlightClassName="inset-0 bg-accent/5 rounded-xl border border-accent/30"
+                    rowSelector="[data-menu-row]"
+                  >
+                    {keys.map((k) => (
+                      <div
+                        key={k.key_id}
+                        data-menu-row
+                        className={`relative z-10 p-3.5 rounded-xl border transition-all flex items-center justify-between ${
+                          activeKey === k.raw_key || activeKey === k.key_prefix
+                            ? "bg-accent/10 border-accent/40 shadow-sm"
+                            : "bg-surface border-line"
+                        }`}
+                      >
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-ink">{k.name}</span>
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-inset text-ink-2 uppercase">
+                              {k.tier}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-ink-3 font-mono">{k.key_prefix}</span>
                         </div>
-                        <span className="text-[11px] text-ink-3 font-mono">{k.key_prefix}</span>
-                      </div>
 
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => copyToClipboard(k.raw_key || k.key_prefix)}
-                          className="p-1.5 text-ink-3 hover:text-ink rounded-lg hover:bg-inset transition-colors"
-                          title="Copy Key"
-                        >
-                          {copiedKey === (k.raw_key || k.key_prefix) ? (
-                            <Check className="w-3.5 h-3.5 text-green-500" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteKey(k.key_id)}
-                          className="p-1.5 text-ink-3 hover:text-red-500 rounded-lg hover:bg-inset transition-colors"
-                          title="Revoke Key"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => copyToClipboard(k.raw_key || k.key_prefix)}
+                            className="p-1.5 text-ink-3 hover:text-ink rounded-lg hover:bg-inset transition-colors"
+                            title="Copy Key"
+                          >
+                            {copiedKey === (k.raw_key || k.key_prefix) ? (
+                              <Check className="w-3.5 h-3.5 text-green-500" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteKey(k.key_id)}
+                            className="p-1.5 text-ink-3 hover:text-red-500 rounded-lg hover:bg-inset transition-colors"
+                            title="Revoke Key"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </GlideMenu>
                 )}
               </div>
             </div>
@@ -264,34 +273,42 @@ export default function DevelopersPage() {
                 </div>
                 <div>
                   <h2 className="font-bold text-sm text-ink">Usage Quota</h2>
-                  <span className="text-[10px] text-green-600 dark:text-green-400">{activeKeyData.tier || "Developer Plan"}</span>
+                  <span className="text-[10px] text-green-600 dark:text-green-400">
+                    {activeKeyData?.tier ? `${activeKeyData.tier.toUpperCase()} TIER` : "No Active Key"}
+                  </span>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs text-ink-2 font-mono">
-                  <span>API Calls Used</span>
-                  <strong>{activeKeyData.used_requests || 12} / {activeKeyData.monthly_quota || 5000}</strong>
+              {activeKeyData ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-ink-2 font-mono">
+                    <span>API Calls Used</span>
+                    <strong>{activeKeyData.used_requests} / {activeKeyData.monthly_quota}</strong>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-inset overflow-hidden border border-line">
+                    <div
+                      className="h-full bg-accent rounded-full transition-all"
+                      style={{
+                        width: `${Math.max(
+                          2,
+                          Math.min(
+                            100,
+                            (activeKeyData.used_requests / (activeKeyData.monthly_quota || 1)) * 100
+                          )
+                        )}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <div className="text-[10px] text-ink-3 flex justify-between pt-1 font-mono">
+                    <span>Rate: 60 req/min</span>
+                    <span>Monthly Quota Active</span>
+                  </div>
                 </div>
-                <div className="w-full h-2 rounded-full bg-inset overflow-hidden border border-line">
-                  <div
-                    className="h-full bg-accent rounded-full transition-all"
-                    style={{
-                      width: `${Math.max(
-                        3,
-                        Math.min(
-                          100,
-                          ((activeKeyData.used_requests || 12) / (activeKeyData.monthly_quota || 5000)) * 100
-                        )
-                      )}%`,
-                    }}
-                  ></div>
+              ) : (
+                <div className="py-4 text-center text-xs text-ink-3">
+                  Generate an API key above to activate and track your quota consumption.
                 </div>
-                <div className="text-[10px] text-ink-3 flex justify-between pt-1">
-                  <span>Limit: 60 / min</span>
-                  <span>Resets in 29 days</span>
-                </div>
-              </div>
+              )}
             </div>
 
           </div>
@@ -395,19 +412,13 @@ export default function DevelopersPage() {
                   <h2 className="font-bold text-sm text-ink">Code Examples</h2>
                 </div>
 
-                <div className="flex items-center gap-1 bg-inset p-1 rounded-xl border border-line text-[11px]">
-                  {(["curl", "python", "javascript"] as const).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveSnippetTab(tab)}
-                      className={`px-3 py-1 rounded-lg uppercase font-bold transition-all ${
-                        activeSnippetTab === tab ? "bg-accent text-white" : "text-ink-3 hover:text-ink"
-                      }`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
+                <SegmentedControl
+                  options={["curl", "python", "javascript"] as const}
+                  value={activeSnippetTab}
+                  onChange={setActiveSnippetTab}
+                  size="sm"
+                  renderOption={(tab) => <span className="uppercase font-bold text-[11px]">{tab}</span>}
+                />
               </div>
 
               {/* Snippet Code View */}

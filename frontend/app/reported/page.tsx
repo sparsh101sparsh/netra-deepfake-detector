@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { GlidingFilterTabs } from "@/components/atoms/GlidingFilterTabs";
 import { cn } from "@/lib/utils";
 
 interface ThreatItem {
@@ -39,218 +40,36 @@ interface ThreatItem {
   created_at: string;
 }
 
-const DEMO_ITEMS: ThreatItem[] = [
-  {
-    id: "NETRA-CAT-001",
-    title: "AI Face-Swap: Celebrity Extortion Campaign",
-    type: "video_deepfake",
-    threat_category: "IMPERSONATION",
-    source_platform: "Instagram / WhatsApp",
-    fake_probability: 0.986,
-    verdict: "DEEPFAKE",
-    risk_level: "CRITICAL",
-    city: "New Delhi",
-    state: "Delhi",
-    location_source: "Reported Submission",
-    device_model: "iPhone 15 Pro",
-    software_used: "InSwapper + FaceFusion",
-    extracted_iocs: {
-      phones: ["+91 98101 23456"],
-      urls: ["https://secure-kyc-update.in"],
-      upis: ["pay-police@okaxis"]
-    },
-    fir_dossier: {
-      incident_summary: "High-conviction face-swap video impersonating high-profile identity to demand urgent wire transfers.",
-      applicable_laws: ["IT Act Sec 66D", "BNS Sec 318"],
-      recommended_action: "Report to 1930 and freeze beneficiary UPI VPA."
-    },
-    upvotes_count: 142,
-    created_at: "18 mins ago"
-  },
-  {
-    id: "NETRA-CAT-002",
-    title: "Digital Arrest Police Video Extortion Call",
-    type: "video_deepfake",
-    threat_category: "DIGITAL_ARREST",
-    source_platform: "Skype / Telegram",
-    fake_probability: 0.992,
-    verdict: "DEEPFAKE",
-    risk_level: "CRITICAL",
-    city: "Mumbai",
-    state: "Maharashtra",
-    location_source: "Reported Submission",
-    device_model: "Samsung S24 Ultra",
-    software_used: "LivePortrait + Skype Overlay",
-    extracted_iocs: {
-      phones: ["+91 99200 88776"],
-      urls: ["https://cbi-investigation-notice.org"],
-      upis: ["cbi-escrow@sbi"]
-    },
-    fir_dossier: {
-      incident_summary: "Victim subjected to 4-hour coercive Skype interrogation by actors in fake police uniform claiming customs drug parcel seizure.",
-      applicable_laws: ["IT Act Sec 66C/D", "BNS Sec 308 Extortion"],
-      recommended_action: "Block caller and file report on cybercrime.gov.in."
-    },
-    upvotes_count: 310,
-    created_at: "45 mins ago"
-  },
-  {
-    id: "NETRA-CAT-003",
-    title: "Guaranteed Stock Trading App Deepfake",
-    type: "video_deepfake",
-    threat_category: "STOCK_FRAUD",
-    source_platform: "Facebook / YouTube",
-    fake_probability: 0.974,
-    verdict: "DEEPFAKE",
-    risk_level: "HIGH",
-    city: "Bengaluru",
-    state: "Karnataka",
-    location_source: "Reported Submission",
-    device_model: "MacBook Pro",
-    software_used: "SadTalker + HeyGen",
-    extracted_iocs: {
-      urls: ["https://quant-wealth-india.cc"],
-      apks: ["WealthQuant_v2.apk"]
-    },
-    fir_dossier: {
-      incident_summary: "Deepfake video of business leaders promising 400% weekly return through unauthorized trading app APK.",
-      applicable_laws: ["SEBI Act", "IT Act Sec 66D"],
-      recommended_action: "Report domain to registrar and RBI Sachet."
-    },
-    upvotes_count: 89,
-    created_at: "1 hour ago"
-  },
-  {
-    id: "NETRA-CAT-004",
-    title: "Electricity Bill Disconnection Threat SMS",
-    type: "scam_text",
-    threat_category: "ELECTRICITY_KYC",
-    source_platform: "SMS Gateway",
-    fake_probability: 0.985,
-    verdict: "SCAM",
-    risk_level: "CRITICAL",
-    city: "Hyderabad",
-    state: "Telangana",
-    location_source: "Reported Submission",
-    device_model: "Modem Pool",
-    software_used: "SMS Phishing Gateway",
-    extracted_iocs: {
-      phones: ["+91 88765 43210"],
-      urls: ["https://power-bill-update.in"]
-    },
-    fir_dossier: {
-      incident_summary: "Automated SMS threatening electricity disconnection at 9:30 PM tonight unless bill is verified via link.",
-      applicable_laws: ["IT Act Sec 66D"],
-      recommended_action: "Report number to DoT Chakshu."
-    },
-    upvotes_count: 204,
-    created_at: "2 hours ago"
-  },
-  {
-    id: "NETRA-CAT-005",
-    title: "Hospital Emergency Voice Clone Extortion",
-    type: "audio_clone",
-    threat_category: "VOICE_CLONE",
-    source_platform: "WhatsApp Voice Note",
-    fake_probability: 0.958,
-    verdict: "AUDIO_CLONE",
-    risk_level: "HIGH",
-    city: "Pune",
-    state: "Maharashtra",
-    location_source: "Reported Submission",
-    device_model: "VoIP Cloud",
-    software_used: "ElevenLabs Voice Clone",
-    extracted_iocs: {
-      phones: ["+91 91234 56789"],
-      upis: ["emergency-hospital@icici"]
-    },
-    fir_dossier: {
-      incident_summary: "Synthesized distress audio replicating victim's child crying for emergency bail/hospital deposit.",
-      applicable_laws: ["BNS Sec 318", "IT Act Sec 66D"],
-      recommended_action: "Call family member directly on primary phone."
-    },
-    upvotes_count: 77,
-    created_at: "3 hours ago"
-  },
-  {
-    id: "NETRA-CAT-006",
-    title: "Part-Time Review Scam & Telegram Bot Network",
-    type: "scam_text",
-    threat_category: "JOB_SCAM",
-    source_platform: "Telegram / WhatsApp",
-    fake_probability: 0.934,
-    verdict: "SCAM",
-    risk_level: "MEDIUM",
-    city: "Chennai",
-    state: "Tamil Nadu",
-    location_source: "Reported Submission",
-    device_model: "Cloud Server",
-    software_used: "Telegram Network",
-    extracted_iocs: {
-      phones: ["+91 70000 11223"],
-      urls: ["https://hotel-ratings-pay.net"]
-    },
-    fir_dossier: {
-      incident_summary: "Offer to pay Rs. 150 per Google Maps rating, leading to prepaid task investment trap.",
-      applicable_laws: ["IT Act Sec 66D"],
-      recommended_action: "Do not send funds; report to 1930."
-    },
-    upvotes_count: 62,
-    created_at: "5 hours ago"
-  }
-];
-
 export default function ThreatCatalogPage() {
-  const [items, setItems] = useState<ThreatItem[]>(DEMO_ITEMS);
+  const [items, setItems] = useState<ThreatItem[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [selectedType, setSelectedType] = useState("ALL");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<ThreatItem | null>(null);
 
   const fetchItems = () => {
     setLoading(true);
+    setError(null);
     let url = `/api/backend/api/v1/threat-intelligence/catalog?limit=50`;
     if (selectedCategory !== "ALL") url += `&category=${selectedCategory}`;
-    if (selectedType !== "ALL") url += `&type=${selectedType}`;
+    if (selectedType !== "ALL") url += `&media_type=${selectedType}`;
     if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
 
     fetch(url)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.items && data.items.length > 0) {
-          setItems(data.items);
-        } else {
-          // Filter demo items locally by category/search
-          let filtered = DEMO_ITEMS;
-          if (selectedCategory !== "ALL") {
-            filtered = filtered.filter((i) => i.threat_category === selectedCategory);
-          }
-          if (search.trim()) {
-            const q = search.toLowerCase();
-            filtered = filtered.filter((i) => 
-              i.title.toLowerCase().includes(q) || 
-              i.city.toLowerCase().includes(q) ||
-              i.state.toLowerCase().includes(q)
-            );
-          }
-          setItems(filtered);
-        }
+      .then((res) => {
+        if (!res.ok) throw new Error(`Catalog server returned ${res.status}`);
+        return res.json();
       })
-      .catch(() => {
-        let filtered = DEMO_ITEMS;
-        if (selectedCategory !== "ALL") {
-          filtered = filtered.filter((i) => i.threat_category === selectedCategory);
-        }
-        if (search.trim()) {
-          const q = search.toLowerCase();
-          filtered = filtered.filter((i) => 
-            i.title.toLowerCase().includes(q) || 
-            i.city.toLowerCase().includes(q) ||
-            i.state.toLowerCase().includes(q)
-          );
-        }
-        setItems(filtered);
+      .then((data) => {
+        const fetchedItems = data?.results || data?.items || [];
+        setItems(fetchedItems);
+      })
+      .catch((err) => {
+        console.warn("Threat catalog fetch error:", err);
+        setError("Threat catalog node unreachable. Please check network connection or retry.");
+        setItems([]);
       })
       .finally(() => setLoading(false));
   };
@@ -295,22 +114,12 @@ export default function ThreatCatalogPage() {
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
               
               {/* Category Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={cn(
-                      "px-3.5 py-1.5 rounded-xl text-xs font-mono font-medium transition-all shrink-0 border",
-                      selectedCategory === cat.id
-                        ? "bg-white text-[#0C0C0E] border-white font-semibold shadow-sm"
-                        : "bg-[#141416] text-zinc-400 hover:text-white border-white/[0.08]"
-                    )}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
+              <GlidingFilterTabs
+                tabs={categories}
+                activeId={selectedCategory}
+                onChange={setSelectedCategory}
+                pillVariant="rounded-xl"
+              />
 
               {/* Instant Search Bar */}
               <div className="relative w-full md:w-80 shrink-0">
@@ -320,7 +129,7 @@ export default function ThreatCatalogPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search incidents, cities, IOCs..."
-                  className="w-full text-xs text-white bg-[#141416] border border-white/[0.08] rounded-xl pl-9 pr-8 py-2.5 placeholder:text-zinc-500 focus:outline-none focus:border-white/20 transition-colors"
+                  className="w-full text-xs text-white bg-[#17191A] border border-white/[0.08] rounded-xl pl-9 pr-8 py-2.5 placeholder:text-zinc-500 focus:outline-none focus:border-white/20 transition-colors"
                 />
                 {search && (
                   <button
@@ -336,10 +145,41 @@ export default function ThreatCatalogPage() {
 
             {/* Catalog Grid */}
             {loading ? (
-              <div className="p-16 text-center text-zinc-500 font-mono text-xs">Loading incident records…</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {[1, 2, 3, 4, 5, 6].map((idx) => (
+                  <div key={idx} className="rounded-2xl bg-[#17191A] border border-white/[0.08] p-5 space-y-4 animate-pulse">
+                    <div className="flex justify-between items-center">
+                      <div className="h-4 w-28 bg-white/10 rounded-full" />
+                      <div className="h-4 w-16 bg-white/10 rounded-full" />
+                    </div>
+                    <div className="h-5 w-4/5 bg-white/10 rounded" />
+                    <div className="space-y-1.5">
+                      <div className="h-3 w-full bg-white/5 rounded" />
+                      <div className="h-3 w-3/4 bg-white/5 rounded" />
+                    </div>
+                    <div className="pt-2 flex justify-between items-center">
+                      <div className="h-3 w-24 bg-white/5 rounded" />
+                      <div className="h-3 w-20 bg-white/5 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : items.length === 0 ? (
-              <div className="p-16 text-center text-zinc-400 text-xs rounded-2xl bg-[#141416] border border-white/[0.08]">
-                No incidents match your current filter.
+              <div className="p-16 text-center text-xs rounded-2xl bg-[#17191A] border border-white/[0.08] space-y-3">
+                <ShieldAlert className="size-8 text-zinc-600 mx-auto" />
+                <h4 className="text-sm font-semibold text-white">No Incident Dossiers Found</h4>
+                <p className="text-zinc-400 max-w-md mx-auto">
+                  {error || "No verified incident dossiers match the selected threat filters."}
+                </p>
+                {error && (
+                  <button
+                    type="button"
+                    onClick={fetchItems}
+                    className="mt-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors"
+                  >
+                    Retry Catalog Query
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -357,7 +197,7 @@ export default function ThreatCatalogPage() {
                     <article
                       key={item.id}
                       onClick={() => setActiveItem(item)}
-                      className="group rounded-2xl bg-[#141416] border border-white/[0.08] hover:border-white/20 p-5 shadow-card hover:shadow-overlay transition-all duration-200 flex flex-col justify-between space-y-4 cursor-pointer"
+                      className="group rounded-2xl bg-[#17191A] border border-white/[0.08] hover:border-white/20 p-5 shadow-card hover:shadow-overlay transition-all duration-200 flex flex-col justify-between space-y-4 cursor-pointer"
                     >
                       {/* Top Row: Category Tag + Severity Pill */}
                       <div className="space-y-2.5">

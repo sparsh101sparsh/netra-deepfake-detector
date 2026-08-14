@@ -208,17 +208,21 @@ class ForensicMetadataExtractor:
         return best_city
 
     def _get_fallback_location(self, city_name: Optional[str] = None, reason: str = "NO_GPS") -> Dict:
-        import random
         if city_name:
             for c in INDIAN_METROS:
                 if c["city"].lower() == city_name.lower():
-                    return c
-        # Pick prominent Indian metro hotspot
-        chosen = random.choice(INDIAN_METROS)
+                    return {
+                        "city": c["city"],
+                        "state": c["state"],
+                        "lat": c["lat"],
+                        "lng": c["lng"]
+                    }
+        # Use default prominent Indian metro centroid (New Delhi)
+        chosen = INDIAN_METROS[0]
         return {
             "city": chosen["city"],
             "state": chosen["state"],
-            "lat": round(chosen["lat"] + (random.random()-0.5)*0.06, 6),
-            "lng": round(chosen["lng"] + (random.random()-0.5)*0.06, 6)
+            "lat": chosen["lat"],
+            "lng": chosen["lng"]
         }
 

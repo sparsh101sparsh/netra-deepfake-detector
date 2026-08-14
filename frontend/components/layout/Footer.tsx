@@ -9,6 +9,7 @@ import {
   Video, Mic, FileText, CheckCircle2, Shield
 } from "lucide-react";
 import { NetraBrandLogo } from "@/components/NetraBrandLogo";
+import { GlideMenu } from "@/components/atoms/GlideMenu";
 import { cn } from "@/lib/utils";
 
 export interface FooterProps {
@@ -83,34 +84,55 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
               </div>
             </div>
 
-            {/* ── COL 2: FORENSIC ENGINES (3 columns) ── */}
+            {/* ── COL 2: FORENSIC CAPABILITIES (3 columns) ── */}
             <div className="lg:col-span-3 space-y-3.5">
               <div className="flex items-center gap-2 pb-1 border-b border-line">
                 <div className="size-7 rounded-lg bg-inset border border-line flex items-center justify-center text-ink shrink-0">
                   <Scan className="size-3.5" />
                 </div>
                 <h4 className="text-xs font-mono uppercase tracking-wider text-ink font-semibold">
-                  Forensic Engines
+                  Forensic Capabilities
                 </h4>
               </div>
 
-              <ul className="space-y-1 text-xs w-full">
+              <GlideMenu
+                className="flex flex-col gap-0.5 text-xs w-full"
+                highlightClassName="inset-x-0 rounded-lg bg-white/[0.08]"
+                rowSelector="[data-menu-row]"
+              >
                 {forensicEngines.map((item) => (
-                  <li key={item.label} className="w-full">
-                    <Link
-                      href={item.href}
-                      className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg hover:bg-hover text-ink-2 hover:text-ink transition-colors duration-150"
-                    >
-                      <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
-                        {item.label}
-                      </span>
-                      <span className="w-[74px] shrink-0 text-center text-[10px] font-mono py-0.5 rounded bg-inset border border-line text-ink-3 group-hover:text-ink group-hover:border-line-hover transition-colors">
-                        {item.badge}
-                      </span>
-                    </Link>
-                  </li>
+                  <div key={item.label} data-menu-row className="relative z-10 w-full">
+                    {item.external ? (
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg text-ink-2 hover:text-ink transition-colors duration-150"
+                      >
+                        <span className="flex items-center gap-1 group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
+                          <span className="truncate">{item.label}</span>
+                          <ExternalLink className="size-2.5 opacity-60 shrink-0" />
+                        </span>
+                        <span className="w-[74px] shrink-0 text-center text-[10px] font-mono py-0.5 rounded bg-inset border border-line text-ink-3 group-hover:text-ink group-hover:border-line-hover transition-colors">
+                          {item.badge}
+                        </span>
+                      </a>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg text-ink-2 hover:text-ink transition-colors duration-150"
+                      >
+                        <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
+                          {item.label}
+                        </span>
+                        <span className="w-[74px] shrink-0 text-center text-[10px] font-mono py-0.5 rounded bg-inset border border-line text-ink-3 group-hover:text-ink group-hover:border-line-hover transition-colors">
+                          {item.badge}
+                        </span>
+                      </Link>
+                    )}
+                  </div>
                 ))}
-              </ul>
+              </GlideMenu>
             </div>
 
             {/* ── COL 3: THREAT INTELLIGENCE (3 columns) ── */}
@@ -124,15 +146,19 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
                 </h4>
               </div>
 
-              <ul className="space-y-1 text-xs w-full">
+              <GlideMenu
+                className="flex flex-col gap-0.5 text-xs w-full"
+                highlightClassName="inset-x-0 rounded-lg bg-white/[0.08]"
+                rowSelector="[data-menu-row]"
+              >
                 {threatIntelligence.map((item) => (
-                  <li key={item.label} className="w-full">
+                  <div key={item.label} data-menu-row className="relative z-10 w-full">
                     {item.external ? (
                       <a
                         href={item.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg hover:bg-hover text-ink-2 hover:text-ink transition-colors duration-150"
+                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg text-ink-2 hover:text-ink transition-colors duration-150"
                       >
                         <span className="flex items-center gap-1 group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
                           <span className="truncate">{item.label}</span>
@@ -145,7 +171,7 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
                     ) : (
                       <Link
                         href={item.href}
-                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg hover:bg-hover text-ink-2 hover:text-ink transition-colors duration-150"
+                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg text-ink-2 hover:text-ink transition-colors duration-150"
                       >
                         <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
                           {item.label}
@@ -155,9 +181,9 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
                         </span>
                       </Link>
                     )}
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </GlideMenu>
             </div>
 
             {/* ── COL 4: DEVELOPERS & SAFETY (2 columns) ── */}
@@ -171,15 +197,19 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
                 </h4>
               </div>
 
-              <ul className="space-y-1 text-xs w-full">
+              <GlideMenu
+                className="flex flex-col gap-0.5 text-xs w-full"
+                highlightClassName="inset-x-0 rounded-lg bg-white/[0.08]"
+                rowSelector="[data-menu-row]"
+              >
                 {developersAndSafety.map((item) => (
-                  <li key={item.label} className="w-full">
+                  <div key={item.label} data-menu-row className="relative z-10 w-full">
                     {item.external ? (
                       <a
                         href={item.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg hover:bg-hover text-ink-2 hover:text-ink transition-colors duration-150"
+                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg text-ink-2 hover:text-ink transition-colors duration-150"
                       >
                         <span className="flex items-center gap-1 group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
                           <span className="truncate">{item.label}</span>
@@ -192,7 +222,7 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
                     ) : (
                       <Link
                         href={item.href}
-                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg hover:bg-hover text-ink-2 hover:text-ink transition-colors duration-150"
+                        className="group flex w-full items-center justify-between py-1.5 px-2 rounded-lg text-ink-2 hover:text-ink transition-colors duration-150"
                       >
                         <span className="group-hover:translate-x-0.5 transition-transform duration-150 font-medium truncate pr-2">
                           {item.label}
@@ -202,9 +232,9 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
                         </span>
                       </Link>
                     )}
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </GlideMenu>
             </div>
 
           </div>

@@ -401,7 +401,7 @@ export default function BlogWriterPage() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="text-xs bg-[#141416] text-zinc-300 border border-white/[0.08] rounded-lg px-2.5 py-1.5 outline-none hover:border-white/20 focus:border-[#0084ff]/60 transition-colors cursor-pointer"
+                className="text-xs bg-[#17191A] text-zinc-300 border border-white/[0.08] rounded-lg px-2.5 py-1.5 outline-none hover:border-white/20 focus:border-[#0084ff]/60 transition-colors cursor-pointer"
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat.id} value={cat.id}>
@@ -422,7 +422,7 @@ export default function BlogWriterPage() {
             </span>
 
             {/* [Rich] / Preview Switcher */}
-            <div className="flex items-center p-0.5 rounded-lg bg-[#141416] border border-white/[0.08]">
+            <div className="flex items-center p-0.5 rounded-lg bg-[#17191A] border border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => setEditorMode("rich")}
@@ -540,7 +540,7 @@ export default function BlogWriterPage() {
                 value={customCoverUrl}
                 onChange={(e) => setCustomCoverUrl(e.target.value)}
                 placeholder="Paste image URL..."
-                className="text-xs text-white bg-[#141416] border border-white/10 rounded-lg px-3 py-1.5 w-full sm:w-64 outline-none focus:border-[#0084ff]"
+                className="text-xs text-white bg-[#17191A] border border-white/10 rounded-lg px-3 py-1.5 w-full sm:w-64 outline-none focus:border-[#0084ff]"
               />
               <button
                 type="button"
@@ -664,7 +664,7 @@ export default function BlogWriterPage() {
                   ref={slashMenuRef}
                   className={cn(
                     "absolute left-0 bottom-12 sm:bottom-auto sm:top-10 z-50",
-                    "w-72 max-h-80 overflow-y-auto rounded-2xl bg-[#141416] border border-white/10 shadow-2xl p-1.5",
+                    "w-72 max-h-80 overflow-y-auto rounded-2xl bg-[#17191A] border border-white/10 shadow-2xl p-1.5",
                     "backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-150 custom-scrollbar"
                   )}
                 >
@@ -729,7 +729,7 @@ export default function BlogWriterPage() {
                     value={tagsInput}
                     onChange={(e) => setTagsInput(e.target.value)}
                     placeholder="e.g. Digital Arrest, Skype, Face-Swap"
-                    className="w-full text-xs text-white bg-[#141416] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-[#0084ff]"
+                    className="w-full text-xs text-white bg-[#17191A] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-[#0084ff]"
                   />
                 </div>
 
@@ -742,7 +742,7 @@ export default function BlogWriterPage() {
                     value={embedUrl}
                     onChange={(e) => setEmbedUrl(e.target.value)}
                     placeholder="https://www.youtube.com/watch?v=..."
-                    className="w-full text-xs text-white bg-[#141416] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-[#0084ff]"
+                    className="w-full text-xs text-white bg-[#17191A] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-[#0084ff]"
                   />
                 </div>
               </div>
@@ -752,7 +752,7 @@ export default function BlogWriterPage() {
           /* PREVIEW MODE */
           <article className="space-y-6 animate-in fade-in duration-200">
             {/* Category Pill */}
-            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-medium bg-[#141416] border border-white/10 text-[#0084ff]">
+            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-medium bg-[#17191A] border border-white/10 text-[#0084ff]">
               {CATEGORIES.find((c) => c.id === category)?.label || category}
             </div>
 
@@ -790,7 +790,7 @@ export default function BlogWriterPage() {
 
             {/* Video Embed in Preview */}
             {embedUrl && (
-              <div className="p-4 rounded-xl bg-[#141416] border border-white/10 flex items-center gap-3 text-xs text-zinc-300">
+              <div className="p-4 rounded-xl bg-[#17191A] border border-white/10 flex items-center gap-3 text-xs text-zinc-300">
                 <Film className="size-4 text-[#0084ff] shrink-0" />
                 <span className="truncate">Attached Media: <a href={embedUrl} target="_blank" rel="noreferrer" className="text-[#0084ff] underline">{embedUrl}</a></span>
               </div>

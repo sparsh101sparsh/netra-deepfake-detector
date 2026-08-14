@@ -24,7 +24,8 @@ const STAGE_LABELS: Record<string, string> = {
   "Analyzing metadata and auxiliary signals": "Checking file metadata…",
   "Fusing detector scores": "Combining analysis results…",
   "Building evidence bundle": "Preparing evidence package…",
-  "Generating forensic report via Amazon Bedrock": "Writing detailed report…",
+  "Synthesizing forensic dossier": "Writing detailed report…",
+  "Generating forensic report": "Writing detailed report…",
   "Finalizing results": "Almost done…",
 };
 

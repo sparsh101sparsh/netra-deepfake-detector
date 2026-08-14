@@ -1,6 +1,6 @@
 "use client";
 
-import React, { KeyboardEvent, ReactNode } from "react";
+import React, { KeyboardEvent, ReactNode, useState, useRef, useLayoutEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export interface SegmentedControlProps<T extends string> {
@@ -23,6 +23,31 @@ export function SegmentedControl<T extends string>({
   className,
 }: SegmentedControlProps<T>) {
   const selectedIndex = Math.max(0, options.indexOf(value));
+  const [hoveredOption, setHoveredOption] = useState<T | null>(null);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const optionRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [hoverHighlight, setHoverHighlight] = useState<{
+    left: number;
+    width: number;
+  } | null>(null);
+
+  useLayoutEffect(() => {
+    if (hoveredOption && hoveredOption !== value) {
+      const targetElement = optionRefs.current[hoveredOption];
+      const container = containerRef.current;
+      if (targetElement && container) {
+        const cRect = container.getBoundingClientRect();
+        const tRect = targetElement.getBoundingClientRect();
+        setHoverHighlight({
+          left: tRect.left - cRect.left,
+          width: tRect.width,
+        });
+        return;
+      }
+    }
+    setHoverHighlight(null);
+  }, [hoveredOption, value]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (disabled) return;
@@ -53,10 +78,12 @@ export function SegmentedControl<T extends string>({
 
   return (
     <div
+      ref={containerRef}
       role="tablist"
       aria-orientation="horizontal"
       tabIndex={disabled ? -1 : 0}
       onKeyDown={handleKeyDown}
+      onMouseLeave={() => setHoveredOption(null)}
       className={cn(
         "relative inline-grid select-none items-center rounded-full bg-inset border-[1.5px] border-line focus-visible:ring-1 focus-visible:ring-accent",
         sizeClasses[size],
@@ -65,10 +92,25 @@ export function SegmentedControl<T extends string>({
       )}
       style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}
     >
-      {/* Animated sliding thumb indicator */}
+      {/* Gliding Hover Pill Indicator */}
       <span
         aria-hidden="true"
-        className="absolute rounded-full bg-surface shadow-card border border-white/[0.06] pointer-events-none transition-transform duration-200"
+        className="pointer-events-none absolute rounded-full bg-white/[0.08] z-0"
+        style={{
+          top: thumbPadding,
+          bottom: thumbPadding,
+          left: hoverHighlight?.left ?? 0,
+          width: hoverHighlight?.width ?? 0,
+          opacity: hoverHighlight ? 1 : 0,
+          transition:
+            "left 220ms cubic-bezier(0.23, 1, 0.32, 1), width 220ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease",
+        }}
+      />
+
+      {/* Animated sliding thumb indicator for active selection */}
+      <span
+        aria-hidden="true"
+        className="absolute rounded-full bg-surface shadow-card border border-white/[0.08] pointer-events-none transition-transform duration-240"
         style={{
           top: thumbPadding,
           bottom: thumbPadding,
@@ -84,11 +126,15 @@ export function SegmentedControl<T extends string>({
         return (
           <button
             key={opt}
+            ref={(el) => {
+              optionRefs.current[opt] = el;
+            }}
             type="button"
             role="tab"
             aria-selected={isSelected}
             disabled={disabled}
             tabIndex={-1}
+            onMouseEnter={() => setHoveredOption(opt)}
             onClick={() => onChange(opt)}
             className={cn(
               "relative z-10 flex items-center justify-center rounded-full px-3 font-medium transition-colors duration-150 truncate focus-visible:outline-none",

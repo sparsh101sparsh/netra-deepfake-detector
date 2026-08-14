@@ -18,6 +18,8 @@ class ScamResponse(BaseModel):
     matched_rules: List[str] = []
     analysis_method: str
     processing_time_ms: int
+    reason: Optional[str] = None
+    analysis_reason: Optional[str] = None
     llm_reason: Optional[str] = None
 
 @router.post("/detect/scam", response_model=ScamResponse)
@@ -39,22 +41,22 @@ async def detect_scam(request: ScamRequest):
     is_scam = raw.get("is_scam", False)
     confidence = raw.get("confidence", 0)
     matched = raw.get("matched_rules", [])
-    method = raw.get("analysis_method", "rule_engine")
+    method = raw.get("analysis_method", "random_forest_ml + heuristic_rule_matrix")
+    reason = raw.get("reason") or raw.get("analysis_reason")
 
     # Determine verdict label
-    if score >= 70:
-        verdict = "CRITICAL — Almost Certainly a Scam"
-    elif score >= 40:
-        verdict = "HIGH RISK — Likely Scam"
-    elif score >= 15:
-        verdict = "CAUTION — Suspicious Patterns Found"
+    if is_scam:
+        if score >= 70:
+            verdict = "CRITICAL — Almost Certainly a Scam"
+        elif score >= 40:
+            verdict = "HIGH RISK — Likely Scam"
+        else:
+            verdict = "CAUTION — Suspicious Patterns Found"
     else:
-        verdict = "SAFE — No Suspicious Patterns"
-
-    # Map reason → llm_reason for frontend
-    llm_reason = raw.get("llm_reason") or raw.get("reason")
-    if llm_reason in ("No suspicious patterns detected.", None):
-        llm_reason = None
+        if score >= 40:
+            verdict = "CAUTION — Low Risk / Inconclusive"
+        else:
+            verdict = "SAFE — No Suspicious Patterns"
 
     return ScamResponse(
         is_scam=is_scam,
@@ -65,5 +67,7 @@ async def detect_scam(request: ScamRequest):
         matched_rules=matched,
         analysis_method=method,
         processing_time_ms=elapsed_ms,
-        llm_reason=llm_reason,
+        reason=reason,
+        analysis_reason=reason,
+        llm_reason=reason,
     )

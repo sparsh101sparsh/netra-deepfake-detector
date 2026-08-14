@@ -71,7 +71,7 @@ export default function ForensicHub() {
       {introStage !== "ready" && (
         <div
           onClick={handleSkipIntro}
-          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#030712] select-none cursor-pointer overflow-hidden ${
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#000000] select-none cursor-pointer overflow-hidden ${
             isMorphing
               ? "opacity-0 scale-[0.22] translate-x-[26vw] -translate-y-[8vh] pointer-events-none"
               : "opacity-100 scale-100 translate-x-0 translate-y-0"
@@ -87,41 +87,28 @@ export default function ForensicHub() {
         >
           {/* Ambient Multi-Layer Radial Glow */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-[min(90vw,700px)] h-[min(90vw,700px)] rounded-full bg-gradient-to-r from-accent/10 via-sky-500/10 to-transparent blur-[120px]" />
+            <div className="w-[600px] h-[600px] rounded-full bg-gradient-to-r from-cyan-500/20 via-sky-500/10 to-transparent blur-3xl" />
           </div>
 
-          <div className="flex flex-col items-center justify-center relative z-20 space-y-2 sm:space-y-4">
-            {/* Top Motto Header: Pure Large Text Without Borders */}
-            <div
-              className={`text-center transition-all duration-700 ${
-                isMorphing ? "opacity-0 -translate-y-6 scale-90" : "opacity-100 translate-y-0 scale-100"
-              }`}
-            >
-              <div className="text-xl sm:text-3xl font-bold tracking-tight text-white font-sans">
-                NETRA: <span className="text-accent">Eyes that see through</span>
-              </div>
-            </div>
-
+          <div className="flex flex-col items-center justify-center relative z-20">
             {/* Master Eye Vector with Dashed Outer Scanning Orbit */}
-            <div className="w-[min(72vw,72vh)] h-[min(72vw,72vh)] max-w-[500px] max-h-[500px] flex items-center justify-center">
+            <div className="w-[min(75vw,75vh)] h-[min(75vw,75vh)] max-w-[520px] max-h-[520px] flex items-center justify-center">
               <NetraEyeScanner size="100%" />
             </div>
 
-            {/* Precision Loading Bar */}
+            {/* Precision Cyan Loading Bar */}
             <div
-              className={`-mt-4 sm:-mt-6 flex flex-col items-center w-60 sm:w-80 transition-opacity duration-300 ${
+              className={`-mt-6 sm:-mt-10 w-44 sm:w-60 h-[2.5px] bg-neutral-950 rounded-full overflow-hidden border border-cyan-500/20 shadow-[0_0_15px_rgba(0,240,255,0.15)] relative transition-opacity duration-300 ${
                 isMorphing ? "opacity-0" : "opacity-100"
               }`}
             >
-              <div className="w-full h-[3px] bg-inset rounded-full overflow-hidden border border-line shadow-hairline relative">
-                <div
-                  className="h-full bg-gradient-to-r from-accent via-sky-400 to-white shadow-[0_0_12px_rgba(245,158,11,0.5)] rounded-full"
-                  style={{
-                    width: `${introProgress}%`,
-                    transition: `width 10400ms cubic-bezier(0.16, 1, 0.3, 1)`,
-                  }}
-                />
-              </div>
+              <div
+                className="h-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-sky-300 shadow-[0_0_10px_#00f0ff] rounded-full"
+                style={{
+                  width: `${introProgress}%`,
+                  transition: `width 10400ms cubic-bezier(0.16, 1, 0.3, 1)`,
+                }}
+              />
             </div>
           </div>
         </div>
