@@ -66,8 +66,8 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
                         NETRA
                       </span>
                     </div>
-                    <div className="text-[10.5px] font-mono text-ink-3 tracking-wider uppercase">
-                      Beyond Illusion. The Architecture of Truth.
+                    <div className="text-[11px] font-sans text-ink-3 tracking-wide">
+                      मायातीतं सत्यस्य चक्षुः
                     </div>
                   </div>
                 </div>

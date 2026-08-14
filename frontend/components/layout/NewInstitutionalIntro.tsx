@@ -161,10 +161,10 @@ export const NewInstitutionalIntro: React.FC<NewInstitutionalIntroProps> = ({
         {/* Brand Tagline */}
         <div className="text-center space-y-1.5">
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">
-            Beyond Illusion. The Architecture of Truth.
+            मायातीतं सत्यस्य चक्षुः
           </h2>
           <p className="text-xs text-zinc-400 font-mono tracking-wide">
-            मायातीतं सत्यस्य चक्षुः • Defending India&apos;s Digital Media Integrity
+            The Architecture of Truth • Defending India&apos;s Digital Media Integrity
           </p>
         </div>
       </div>

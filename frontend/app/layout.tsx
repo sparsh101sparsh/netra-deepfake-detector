@@ -2,8 +2,8 @@ import './globals.css'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'NETRA — Beyond Illusion. The Architecture of Truth | Multi-Modal Forensic AI',
-  description: 'Beyond Illusion. The Architecture of Truth — Real-Time Multi-Modal AI Forensic Engine Defending India\'s Digital Media Integrity',
+  title: 'NETRA — मायातीतं सत्यस्य चक्षुः (The Architecture of Truth) | Multi-Modal Forensic AI',
+  description: 'मायातीतं सत्यस्य चक्षुः — Real-Time Multi-Modal AI Forensic Engine Defending India\'s Digital Media Integrity',
   icons: {
     icon: [
       { url: '/netra_favicon.svg?v=5', type: 'image/svg+xml' },
