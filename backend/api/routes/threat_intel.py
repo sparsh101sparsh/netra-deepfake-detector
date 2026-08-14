@@ -108,7 +108,7 @@ async def upvote_threat(threat_id: str):
 @router.post("/threat-intelligence/report")
 async def report_new_threat(payload: ReportThreatRequest):
     """Submit a verified scam or deepfake to the public catalog."""
-    item_id = insert_threat_item(payload.dict())
+    item_id = insert_threat_item(payload.model_dump())
     return {
         "status": "success",
         "message": "Threat successfully indexed in NETRA Global Catalog.",

@@ -9,7 +9,7 @@ import sqlite3
 import logging
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any
 import hashlib
 import requests
@@ -94,7 +94,7 @@ def execute_tavily_crawl() -> Dict[str, Any]:
                         "Ongoing Investigation",
                         "India",
                         "Extracted via 24h Tavily Autonomous Cyber Threat Engine",
-                        datetime.utcnow().strftime("%Y-%m-%d")
+                        datetime.now(timezone.utc).strftime("%Y-%m-%d")
                     ))
                     crawled_count += 1
                 conn.commit()
@@ -105,7 +105,7 @@ def execute_tavily_crawl() -> Dict[str, Any]:
     return {
         "status": "success",
         "crawled_count": crawled_count,
-        "synced_at": datetime.utcnow().isoformat(),
+        "synced_at": datetime.now(timezone.utc).isoformat(),
         "total_active_news": len(get_latest_scam_news(50))
     }
 

@@ -178,6 +178,8 @@ async def get_job_status(job_id: str):
         "result": result,
         "error": error,
         "created_at": parsed.get("created_at"),
+        "updated_at": parsed.get("updated_at"),
+        "completed_at": parsed.get("completed_at"),
     }
 
 
@@ -232,7 +234,8 @@ async def get_video_presigned_url(job_id: str):
     Returns a presigned S3 URL for the job's input video.
     Used by frontend Evidence Timeline click-to-seek feature.
     """
-    s3 = boto3.client("s3", region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
+    from .detect import get_boto3_client as get_s3_client  # reuse detect's cred-injecting helper
+    s3 = get_s3_client("s3")
     s3_bucket = os.getenv("S3_BUCKET_MEDIA", "netra-media-uploads")
     s3_key = f"{job_id}/input.mp4"
 

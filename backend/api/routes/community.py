@@ -83,7 +83,7 @@ async def create_community_post(post: CommunityPostCreate):
     """
     Publishes a new blog post to the public community SQLite database.
     """
-    saved_post = db_insert_community_post(post.dict())
+    saved_post = db_insert_community_post(post.model_dump())
     return {
         "status": "success",
         "message": "Post published successfully to the community.",
