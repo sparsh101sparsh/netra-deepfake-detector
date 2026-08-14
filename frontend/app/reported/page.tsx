@@ -9,6 +9,7 @@ import {
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { GlidingFilterTabs } from "@/components/atoms/GlidingFilterTabs";
+import { ResilientVideoPlayer } from "@/components/player/ResilientVideoPlayer";
 import { generateForensicPDF } from "@/lib/pdfReportGenerator";
 import { cn } from "@/lib/utils";
 
@@ -347,14 +348,14 @@ export default function ThreatCatalogPage() {
                     Playable Evidence Intercept
                   </div>
                   {activeItem.type === "video_deepfake" && (
-                    <video
-                      src={activeItem.media_url ? (activeItem.media_url.startsWith("http") ? activeItem.media_url : `/api/backend${activeItem.media_url}`) : undefined}
-                      poster={activeItem.thumbnail_url ? (activeItem.thumbnail_url.startsWith("http") ? activeItem.thumbnail_url : `/api/backend${activeItem.thumbnail_url}`) : undefined}
-                      controls
-                      playsInline
-                      crossOrigin="anonymous"
-                      className="w-full rounded-xl aspect-video bg-black object-contain border border-line"
-                    />
+                    <div className="w-full rounded-xl aspect-video overflow-hidden border border-line bg-black">
+                      <ResilientVideoPlayer
+                        primaryUrl={activeItem.media_url ? (activeItem.media_url.startsWith("http") ? activeItem.media_url : `/api/backend${activeItem.media_url}`) : undefined}
+                        fallbackUrl={activeItem.id ? `/api/backend/api/v1/jobs/${activeItem.id}/stream` : (activeItem.media_url ? `/api/backend${activeItem.media_url}` : undefined)}
+                        poster={activeItem.thumbnail_url ? (activeItem.thumbnail_url.startsWith("http") ? activeItem.thumbnail_url : `/api/backend${activeItem.thumbnail_url}`) : undefined}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
                   )}
                   {activeItem.type === "audio_clone" && activeItem.media_url && (
                     <div className="p-4 rounded-xl bg-inset border border-line space-y-2">
