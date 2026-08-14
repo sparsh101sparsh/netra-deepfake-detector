@@ -38,8 +38,14 @@ function ScoreBar({ score, color }: { score: number; color: string }) {
   );
 }
 
-function getScoreColor(score: number): string {
-  if (score > 0.75) return "#ef4444"; // Red
+function getScoreColor(score: number, verdict?: string): string {
+  if (verdict === "AUTHENTIC") {
+    // When official verdict is Authentic, neural activations from glasses/lighting are moderated anomalies
+    if (score > 0.75) return "#f59e0b"; // Amber (lighting/specular glare)
+    if (score > 0.40) return "#eab308"; // Yellow-amber
+    return "#10b981"; // Emerald green
+  }
+  if (score > 0.75) return "#ef4444"; // Red (confirmed fake)
   if (score > 0.55) return "#f97316"; // Orange
   if (score > 0.35) return "#f59e0b"; // Amber
   return "#10b981"; // Emerald green
@@ -160,7 +166,7 @@ export default function DetectorScorecard({
                   {item.score !== null ? (
                     <span
                       className="text-xs sm:text-sm font-mono font-bold tabular-nums"
-                      style={{ color: getScoreColor(item.score) }}
+                      style={{ color: getScoreColor(item.score, verdict) }}
                     >
                       {(item.score * 100).toFixed(0)}%
                     </span>
@@ -173,7 +179,7 @@ export default function DetectorScorecard({
               </div>
 
               {item.score !== null && (
-                <ScoreBar score={item.score} color={getScoreColor(item.score)} />
+                <ScoreBar score={item.score} color={getScoreColor(item.score, verdict)} />
               )}
             </div>
           );
