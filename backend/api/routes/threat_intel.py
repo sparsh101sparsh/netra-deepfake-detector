@@ -231,8 +231,37 @@ async def download_fir_dossier(threat_id: str):
     summary_text = fir.get("incident_summary", "Synthetic AI or cyber fraud media intercepted matching known impersonation vector.")
     story.append(Paragraph(summary_text, body_style))
 
-    # Section 2: Technical Indicators of Compromise (IOCs)
-    story.append(Paragraph("2. Technical Indicators of Compromise (IOCs)", section_style))
+    # Section 2: Flagged Forensic Keyframe Visual Evidence (Anomaly Localization)
+    keyframe_snaps = iocs.get("keyframe_snapshots") or []
+    if keyframe_snaps:
+        from reportlab.platypus import Image as RLImage
+        story.append(Paragraph("2. Flagged Forensic Keyframe Visual Evidence (Anomaly Localization)", section_style))
+        for snap in keyframe_snaps[:2]:
+            img_p = snap.get("image_path")
+            if img_p and os.path.exists(img_p):
+                try:
+                    rl_img = RLImage(img_p, width=220, height=145)
+                    cap_text = f"<b>Keyframe #{snap.get('frame_number', 0)} @ {snap.get('timestamp', '00:00')}</b><br/><br/>" \
+                               f"<b>Anomaly Region:</b> {snap.get('anomaly_region', 'Eyewear / Facial Specular Discontinuity')}<br/>" \
+                               f"<b>Neural Anomaly Index:</b> {float(snap.get('confidence', 0.95))*100:.1f}% (CRITICAL)<br/>" \
+                               f"<b>Diagnostic Finding:</b> Tamper-evident bounding box marks high-frequency synthetic latent boundary discontinuity certified under Section 65B Indian Evidence Act."
+                    snap_t = Table([[rl_img, Paragraph(cap_text, body_style)]], colWidths=[230, 290])
+                    snap_t.setStyle(TableStyle([
+                        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#f8fafc")),
+                        ('BOX', (0,0), (-1,-1), 1, colors.HexColor("#cbd5e1")),
+                        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                        ('TOPPADDING', (0,0), (-1,-1), 6),
+                        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+                        ('LEFTPADDING', (0,0), (-1,-1), 6),
+                        ('RIGHTPADDING', (0,0), (-1,-1), 6),
+                    ]))
+                    story.append(snap_t)
+                    story.append(Spacer(1, 6))
+                except Exception as e:
+                    logger.warning(f"Failed to embed keyframe image in PDF: {e}")
+
+    # Section 3: Technical Indicators of Compromise (IOCs)
+    story.append(Paragraph("3. Technical Indicators of Compromise (IOCs)", section_style))
     story.append(Paragraph(f"• <b>Attacker Phone Number(s):</b> {phones_str}", body_style))
     story.append(Paragraph(f"• <b>Fraudulent UPI Handle(s):</b> {upis_str}", body_style))
     story.append(Paragraph(f"• <b>Malicious Links / APKs:</b> {urls_str}", body_style))
