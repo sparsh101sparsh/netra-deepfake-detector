@@ -8,9 +8,10 @@ export const metadata: Metadata = {
     icon: [
       { url: '/netra_favicon.svg', type: 'image/svg+xml' },
       { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
     ],
     shortcut: '/netra_favicon.svg',
-    apple: '/netra_favicon.svg',
+    apple: '/apple-touch-icon.png',
   },
 }
 
@@ -23,8 +24,8 @@ export default function RootLayout({
     <html lang="en" className="dark font-sans" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/svg+xml" href="/netra_favicon.svg" />
-        <link rel="alternate icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/netra_favicon.svg" />
+        <link rel="icon" sizes="any" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body suppressHydrationWarning className="bg-[var(--page)] text-[var(--ink)] font-sans antialiased min-h-screen flex flex-col selection:bg-accent-tint selection:text-accent-ink">
         {children}
