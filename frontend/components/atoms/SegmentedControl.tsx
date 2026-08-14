@@ -22,33 +22,41 @@ export function SegmentedControl<T extends string>({
   disabled = false,
   className,
 }: SegmentedControlProps<T>) {
-  const selectedIndex = Math.max(0, options.indexOf(value));
   const [hoveredOption, setHoveredOption] = useState<T | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [hoverHighlight, setHoverHighlight] = useState<{
+  const [indicatorStyle, setIndicatorStyle] = useState<{
     left: number;
+    top: number;
     width: number;
+    height: number;
   } | null>(null);
 
+  const targetOption = hoveredOption ?? value;
+
   useLayoutEffect(() => {
-    if (hoveredOption && hoveredOption !== value) {
-      const targetElement = optionRefs.current[hoveredOption];
+    const updatePosition = () => {
+      const targetElement = optionRefs.current[targetOption];
       const container = containerRef.current;
       if (targetElement && container) {
         const cRect = container.getBoundingClientRect();
         const tRect = targetElement.getBoundingClientRect();
-        setHoverHighlight({
+        setIndicatorStyle({
           left: tRect.left - cRect.left,
+          top: tRect.top - cRect.top,
           width: tRect.width,
+          height: tRect.height,
         });
-        return;
       }
-    }
-    setHoverHighlight(null);
-  }, [hoveredOption, value]);
+    };
 
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    return () => window.removeEventListener("resize", updatePosition);
+  }, [targetOption, value, options]);
+
+  const selectedIndex = Math.max(0, options.indexOf(value));
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (disabled) return;
     if (e.key === "ArrowRight" || e.key === "ArrowDown") {
@@ -69,12 +77,10 @@ export function SegmentedControl<T extends string>({
   };
 
   const sizeClasses = {
-    sm: "h-7 p-0.5 text-[12px]",
-    md: "h-8.5 p-0.5 text-[12.5px]",
-    lg: "h-10 p-1 text-[13.5px]",
+    sm: "h-7 p-0.5 text-[11.5px]",
+    md: "h-8.5 p-0.5 text-[12px]",
+    lg: "h-10 p-1 text-[13px]",
   };
-
-  const thumbPadding = size === "lg" ? 4 : 2;
 
   return (
     <div
@@ -85,44 +91,32 @@ export function SegmentedControl<T extends string>({
       onKeyDown={handleKeyDown}
       onMouseLeave={() => setHoveredOption(null)}
       className={cn(
-        "relative inline-grid select-none items-center rounded-full bg-inset border-[1.5px] border-line focus-visible:ring-1 focus-visible:ring-accent",
+        "relative inline-grid select-none items-center rounded-full bg-[#17191A] border border-white/10 shadow-card",
         sizeClasses[size],
         disabled && "opacity-50 pointer-events-none",
         className
       )}
       style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}
     >
-      {/* Gliding Hover Pill Indicator */}
+      {/* Gliding Blue Indicator Pill with Beautiful-UI bezier curve */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute rounded-full bg-white/[0.08] z-0"
+        className="pointer-events-none absolute rounded-full z-0 bg-[#0084ff] shadow-sm shadow-[#0084ff]/20"
         style={{
-          top: thumbPadding,
-          bottom: thumbPadding,
-          left: hoverHighlight?.left ?? 0,
-          width: hoverHighlight?.width ?? 0,
-          opacity: hoverHighlight ? 1 : 0,
+          left: indicatorStyle?.left ?? 0,
+          top: indicatorStyle?.top ?? 0,
+          width: indicatorStyle?.width ?? 0,
+          height: indicatorStyle?.height ?? 0,
+          opacity: indicatorStyle ? 1 : 0,
           transition:
-            "left 220ms cubic-bezier(0.23, 1, 0.32, 1), width 220ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease",
-        }}
-      />
-
-      {/* Animated sliding thumb indicator for active selection */}
-      <span
-        aria-hidden="true"
-        className="absolute rounded-full bg-surface shadow-card border border-white/[0.08] pointer-events-none transition-transform duration-240"
-        style={{
-          top: thumbPadding,
-          bottom: thumbPadding,
-          width: `calc((100% - ${thumbPadding * 2}px) / ${options.length})`,
-          left: thumbPadding,
-          transform: `translateX(${selectedIndex * 100}%)`,
-          transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)",
+            "left 240ms cubic-bezier(0.23, 1, 0.32, 1), top 240ms cubic-bezier(0.23, 1, 0.32, 1), width 240ms cubic-bezier(0.23, 1, 0.32, 1), height 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease",
         }}
       />
 
       {options.map((opt) => {
         const isSelected = opt === value;
+        const hasPill = opt === targetOption;
+
         return (
           <button
             key={opt}
@@ -137,10 +131,10 @@ export function SegmentedControl<T extends string>({
             onMouseEnter={() => setHoveredOption(opt)}
             onClick={() => onChange(opt)}
             className={cn(
-              "relative z-10 flex items-center justify-center rounded-full px-3 font-medium transition-colors duration-150 truncate focus-visible:outline-none",
-              isSelected
-                ? "text-ink font-semibold"
-                : "text-ink-3 hover:text-ink-2"
+              "relative z-10 flex h-full items-center justify-center rounded-full px-3 font-semibold transition-colors duration-150 truncate focus-visible:outline-none cursor-pointer",
+              hasPill
+                ? "text-white"
+                : "text-zinc-400 hover:text-white"
             )}
           >
             {renderOption ? renderOption(opt, isSelected) : opt}
