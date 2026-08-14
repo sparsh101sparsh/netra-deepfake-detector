@@ -25,6 +25,7 @@ async def get_cyber_scam_news_feed(
         "status": "success",
         "count": len(news_items),
         "crawler_status": "24H_TAVILY_ACTIVE",
+        "crawler_source": "cyber_scam_feed/ScamFeedPipeline",
         "feed": news_items
     }
 
