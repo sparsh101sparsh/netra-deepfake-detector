@@ -11,7 +11,6 @@ Validates:
 
 import time
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 
 from backend.api.server import app
@@ -23,25 +22,10 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def clean_stores():
-    """Clear memory stores before each test and mock DynamoDB so live AWS data never leaks."""
+    """Clear memory stores before each test execution (DynamoDB isolation is in conftest.py)."""
     _local_jobs_store.clear()
     _local_worker_registry.clear()
-
-    # Mock DynamoDB clients so tests are fully isolated from live AWS
-    mock_dynamo_workers = MagicMock()
-    mock_dynamo_workers.scan.return_value = {"Items": []}
-    mock_dynamo_workers.put_item.return_value = {}
-    mock_dynamo_workers.update_item.return_value = {}
-
-    mock_dynamo_jobs = MagicMock()
-    mock_dynamo_jobs.get_item.return_value = {"Item": None}
-    mock_dynamo_jobs.put_item.return_value = {}
-    mock_dynamo_jobs.update_item.return_value = {}
-
-    with patch("backend.api.routes.workers.get_dynamo_client", return_value=mock_dynamo_workers), \
-         patch("backend.api.routes.jobs.get_dynamo_client", return_value=mock_dynamo_jobs):
-        yield
-
+    yield
     _local_jobs_store.clear()
     _local_worker_registry.clear()
 
