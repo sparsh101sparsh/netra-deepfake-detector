@@ -21,7 +21,7 @@ _local_worker_registry: Dict[str, Dict[str, Any]] = {}
 
 
 def get_dynamo_client():
-    kwargs = {"region_name": os.getenv("AWS_DEFAULT_REGION", "us-east-1")}
+    kwargs = {"region_name": os.getenv("AWS_DEFAULT_REGION", "ap-south-1")}
     ak = os.getenv("AWS_ACCESS_KEY_ID")
     sk = os.getenv("AWS_SECRET_ACCESS_KEY")
     if ak and sk:

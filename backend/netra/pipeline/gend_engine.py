@@ -49,11 +49,17 @@ class GenDForensicEngine:
     def _init_model(self):
         """Attempts to load weights from Hugging Face or initializes local hypersphere head."""
         try:
-            from transformers import AutoModelForImageClassification
+            import importlib.util
+            from huggingface_hub import hf_hub_download
+
             logger.info(f"Loading GenD foundation model from Hugging Face: {self.model_name}")
-            self.model = AutoModelForImageClassification.from_pretrained(
+            py_path = hf_hub_download(self.model_name, "modeling_gend.py")
+            spec = importlib.util.spec_from_file_location("modeling_gend", py_path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+
+            self.model = mod.GenD.from_pretrained(
                 self.model_name,
-                trust_remote_code=True,
                 torch_dtype=torch.float16 if self.use_half_precision else torch.float32,
             )
             self.model.to(self.device)

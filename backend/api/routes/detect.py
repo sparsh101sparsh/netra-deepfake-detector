@@ -13,14 +13,14 @@ ALLOWED_TYPES = {"video/mp4", "video/quicktime", "video/webm", "video/avi", "vid
 
 
 def get_s3_bucket() -> str:
-    return os.getenv("S3_BUCKET_MEDIA", "netra-media-uploads")
+    return os.getenv("S3_BUCKET_MEDIA", "netra-media-mumbai-131746731374")
 
 
 def get_sqs_queue_url() -> str:
     url = os.getenv("SQS_QUEUE_URL")
     if not url:
         account_id = os.getenv("AWS_ACCOUNT_ID", "131746731374")
-        region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+        region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
         return f"https://sqs.{region}.amazonaws.com/{account_id}/netra-jobs"
     return url
 
