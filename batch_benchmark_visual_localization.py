@@ -337,11 +337,6 @@ def generate_clean_forensic_pdf(subject_name, video_name, top_keyframes, all_fra
     story.append(t_log)
     story.append(Spacer(1, 3))
     
-    # 6. FOOTER
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=2))
-    foot_style = ParagraphStyle('Foot', fontName='Helvetica', fontSize=6.2, leading=8, alignment=1, textColor=colors.HexColor("#64748b"))
-    story.append(Paragraph("Digitally Signed by NETRA Autonomous Forensic Intelligence Engine &bull; Non-Repudiation Cryptographic SHA-256 Ledger Verified", foot_style))
-    
     doc.build(story)
     
     pdf = pypdfium2.PdfDocument(out_pdf_path)
