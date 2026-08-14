@@ -217,6 +217,20 @@ async def detect_image_ocr(file: UploadFile = File(...)):
         except Exception:
             pass
 
+        # Real-time Tavily Cross-Check for extracted image text & IOCs
+        try:
+            from netra.services.tavily_cross_check import cross_check_scam_with_tavily
+            tavily_intel = cross_check_scam_with_tavily(
+                text=result.get("extracted_text", ""),
+                iocs={
+                    "phones": result.get("extracted_phones", []),
+                    "upis": result.get("extracted_upis", [])
+                }
+            )
+            result["tavily_threat_intel"] = tavily_intel
+        except Exception:
+            result["tavily_threat_intel"] = None
+
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Image OCR scam analysis failed: {str(e)}")

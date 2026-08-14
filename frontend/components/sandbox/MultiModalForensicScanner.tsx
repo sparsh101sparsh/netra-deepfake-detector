@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useCallback, useId } from "react";
+import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Scan, RefreshCw, Sparkles, Phone, CreditCard, Link2, Box, 
-  Check, Copy, ShieldAlert, FileText, Send, AlertTriangle, ArrowRight, Zap, Play, CheckCircle2 
+  Check, Copy, ShieldAlert, FileText, Send, AlertTriangle, ArrowRight, Zap, Play, CheckCircle2,
+  Mic, Volume2, Globe, ExternalLink, Download
 } from "lucide-react";
 import { CyberIcon, CyberIconType } from "@/components/CyberIcons";
 import { SegmentedControl } from "@/components/atoms/SegmentedControl";
@@ -12,16 +13,34 @@ import { StatusPill, StatusPillTone } from "@/components/atoms/StatusPill";
 import { Chip } from "@/components/atoms/Chip";
 import { Button } from "@/components/atoms/Button";
 import { StreamText } from "@/components/primitives/StreamText";
-import { ThinkingState, ThinkingRow } from "@/components/primitives/ThinkingState";
-import { LoadingState } from "@/components/primitives/LoadingState";
-import { TaskRows, TaskRow } from "@/components/primitives/TaskRows";
+import { ThinkingState } from "@/components/primitives/ThinkingState";
 import { DropZone, SandboxModality } from "./DropZone";
 import { OCRDossier, OCRDossierResult } from "./OCRDossier";
+import { generateForensicPDF } from "@/lib/pdfReportGenerator";
 import { cn } from "@/lib/utils";
 
 export type ScannerModality = "video" | "image" | "audio" | "text";
 
 const MODALITIES: readonly ScannerModality[] = ["video", "image", "audio", "text"];
+
+export interface AudioDossierResult {
+  is_fake: boolean;
+  fake_probability: number;
+  confidence: number;
+  verdict: string;
+  risk_level: string;
+  speech_duration_seconds: number;
+  flags: string[];
+  processing_time_ms: number;
+  source_platform: string;
+  tavily_threat_intel?: {
+    verified_threat: boolean;
+    query_used?: string;
+    matches_count: number;
+    articles: Array<{ title: string; url: string; snippet?: string }>;
+    intel_summary: string;
+  } | null;
+}
 
 export interface MultiModalScannerProps {
   onScanComplete?: (result: any) => void;
@@ -37,8 +56,9 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // Image OCR Dossier State
+  // Result States for Non-Redirecting Modalities
   const [imageOcrResult, setImageOcrResult] = useState<OCRDossierResult | null>(null);
+  const [audioResult, setAudioResult] = useState<AudioDossierResult | null>(null);
 
   // Text Threat Triage State
   const [rawText, setRawText] = useState("");
@@ -59,6 +79,12 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
       urls: string[];
       apks: string[];
     };
+    tavily_threat_intel?: {
+      verified_threat: boolean;
+      matches_count: number;
+      articles: Array<{ title: string; url: string; snippet?: string }>;
+      intel_summary: string;
+    } | null;
   } | null>(null);
   const [copiedIocKey, setCopiedIocKey] = useState<string | null>(null);
 
@@ -76,6 +102,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
     async (file: File) => {
       setUploadError(null);
       setImageOcrResult(null);
+      setAudioResult(null);
       setIsUploading(true);
       setUploadProgress(0);
 
@@ -116,7 +143,37 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
         return;
       }
 
-      // ── 2. VIDEO / AUDIO MODALITY: Route to /detect/full ──
+      // ── 2. AUDIO MODALITY: Route to Dedicated /detect/audio ──
+      if (activeModality === "audio") {
+        try {
+          const res = await fetch("/api/backend/api/v1/detect/audio", {
+            method: "POST",
+            body: formData,
+          });
+
+          clearInterval(progressInterval);
+          setUploadProgress(100);
+
+          if (res.ok) {
+            const data: AudioDossierResult = await res.json();
+            setAudioResult(data);
+            onScanComplete?.(data);
+            return;
+          }
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `Audio detection returned status ${res.status}`);
+        } catch (err: any) {
+          clearInterval(progressInterval);
+          console.warn("Audio detection error:", err);
+          setUploadError(err?.message || "Audio voice clone analyzer failed. Verify audio file format.");
+          setAudioResult(null);
+        } finally {
+          setIsUploading(false);
+        }
+        return;
+      }
+
+      // ── 3. VIDEO MODALITY: Route to /detect/full (GPU Queue) ──
       try {
         const res = await fetch("/api/backend/api/v1/detect/full", {
           method: "POST",
@@ -137,7 +194,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
         throw new Error(errData.detail || `Detection engine returned status ${res.status}`);
       } catch (err: any) {
         clearInterval(progressInterval);
-        console.warn("Video/Audio detection dispatch error:", err);
+        console.warn("Video detection dispatch error:", err);
         setUploadError(err?.message || "Forensic pipeline node unreachable. Please ensure backend GPU worker is active.");
       } finally {
         setIsUploading(false);
@@ -146,7 +203,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
     [activeModality, router, onScanComplete]
   );
 
-  // ── 3. TEXT THREAT TRIAGE HANDLER ──
+  // ── 4. TEXT THREAT TRIAGE HANDLER ──
   const handleTextTriage = async () => {
     const trimmed = rawText.trim();
     if (!trimmed) return;
@@ -164,78 +221,95 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
         body: JSON.stringify({ text: trimmed }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setTextResult({
-          ...data,
-          extracted_iocs: iocs,
-        });
-        onScanComplete?.(data);
-        return;
+      if (!res.ok) {
+        throw new Error(`Scam classifier returned ${res.status}`);
       }
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.detail || `Scam detection returned status ${res.status}`);
+
+      const data = await res.json();
+      setTextResult({
+        is_scam: data.is_scam,
+        risk_score: data.risk_score,
+        confidence: data.confidence,
+        verdict: data.verdict,
+        scam_type: data.scam_type,
+        matched_rules: data.matched_rules || [],
+        analysis_reason: data.analysis_reason || data.reason,
+        llm_reason: data.llm_reason || data.reason,
+        extracted_iocs: iocs,
+        tavily_threat_intel: data.tavily_threat_intel,
+      });
+
+      onScanComplete?.(data);
     } catch (err: any) {
-      console.warn("Text scam detection error:", err);
-      setUploadError(err?.message || "Scam detection engine unreachable. Ensure backend server is running.");
-      setTextResult(null);
+      console.warn("Text analysis failed:", err);
+      setUploadError(err?.message || "Text classification node unreachable. Please retry.");
     } finally {
       setIsAnalyzingText(false);
     }
   };
 
-
-
   const handleCopyIoc = (val: string, key: string) => {
-    if (navigator?.clipboard) {
-      navigator.clipboard.writeText(val);
-      setCopiedIocKey(key);
-      setTimeout(() => setCopiedIocKey(null), 2000);
-    }
+    navigator.clipboard?.writeText(val);
+    setCopiedIocKey(key);
+    setTimeout(() => setCopiedIocKey(null), 1800);
+  };
+
+  const handleDownloadAudioPDF = () => {
+    if (!audioResult) return;
+    generateForensicPDF({
+      id: `AUD-${Date.now().toString(36).toUpperCase()}`,
+      title: "Audio Deepfake & Voice Clone Verification Certificate",
+      verdict: audioResult.verdict,
+      confidence: audioResult.confidence,
+      riskLevel: audioResult.risk_level,
+      city: "National Telecom Intercept",
+      state: "India",
+      locationSource: "TELECOM_NETWORK",
+      scores: {
+        audioScore: audioResult.fake_probability,
+      },
+      summary: `Audio recording duration: ${audioResult.speech_duration_seconds}s. Acoustic spectral flags: ${audioResult.flags.join(", ")}.`,
+      tavilyMatches: audioResult.tavily_threat_intel?.articles,
+    });
   };
 
   return (
     <div
       className={cn(
-        "rounded-2xl bg-surface border-[1.5px] border-line shadow-card p-5 sm:p-6 flex flex-col justify-between h-full font-sans gap-5",
+        "rounded-2xl bg-surface border-[1.5px] border-line p-5 sm:p-6",
+        "flex flex-col justify-between shadow-card relative",
         className
       )}
     >
-      {/* ── 1. HEADER WITH MODE SWITCHER (SegmentedControl) ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-4 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="size-9 sm:size-10 rounded-xl bg-[#18181B] border border-white/10 flex items-center justify-center text-white shrink-0 shadow-card">
-            <CyberIcon name="eye" size={20} />
+      {/* ── 1. HEADER & MODALITY SELECTOR ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-accent/10 border-[1.5px] border-accent/40 flex items-center justify-center text-accent">
+            <Scan className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-semibold text-base sm:text-lg text-ink tracking-tight">
-              Forensic Detection Sandbox
-            </h3>
-            <p className="text-xs text-ink-2 mt-0.5 line-clamp-1">
-              {activeModality === "image"
-                ? "Text extraction and threat detection from screenshots & images"
-                : activeModality === "text"
-                ? "Scam message analysis and legal evidence report generation"
-                : activeModality === "audio"
-                ? "Voice clone and synthetic audio detection"
-                : "Deepfake video and facial manipulation detection"}
+            <h2 className="text-sm sm:text-base font-bold text-ink tracking-tight flex items-center gap-2">
+              Multi-Modal Forensic Sandbox
+              <Chip tone="accent" size="sm">V5.1</Chip>
+            </h2>
+            <p className="text-xs text-ink-3">
+              Deepfake video, audio voice notes, image OCR, and text fraud verification
             </p>
           </div>
         </div>
 
-        {/* 4-Tab Mode Switcher using SegmentedControl */}
+        {/* Segmented Modality Selector */}
         <div className="self-start sm:self-auto">
           <SegmentedControl
             options={MODALITIES}
             value={activeModality}
-            onChange={(val) => {
-              setActiveModality(val);
+            onChange={(mod) => {
+              setActiveModality(mod);
               setUploadError(null);
               setImageOcrResult(null);
-              setTextResult(null);
+              setAudioResult(null);
             }}
-            size="md"
-            renderOption={(opt, isSelected) => {
+            renderOption={(opt) => {
               const iconMap: Record<ScannerModality, CyberIconType> = {
                 video: "video",
                 image: "image",
@@ -253,8 +327,8 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
         </div>
       </div>
 
-      {/* ── 2. MAIN WORKSPACE (MODALITY-DEPENDENT) ── */}
-      <div className="flex-1 flex flex-col justify-center space-y-4">
+      {/* ── 2. MAIN WORKSPACE ── */}
+      <div className="flex-1 flex flex-col justify-center space-y-4 pt-4">
         {activeModality === "text" ? (
           /* ── TEXT THREAT TRIAGE WORKSPACE ── */
           <div className="space-y-4 flex flex-col justify-center animate-in fade-in duration-200">
@@ -269,7 +343,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                     {rawText.length} characters
                   </span>
                   <StatusPill tone="neutral" size="sm">
-                    Smart Scan Active
+                    Tavily Sync Active
                   </StatusPill>
                 </div>
               </div>
@@ -278,7 +352,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                 rows={4}
                 value={rawText}
                 onChange={(e) => setRawText(e.target.value)}
-                placeholder="Paste suspicious message, SMS, or notice text here..."
+                placeholder="Paste suspicious message, WhatsApp forward, or threat notice here..."
                 className={cn(
                   "w-full rounded-xl bg-canvas border-[1.5px] border-line p-4",
                   "text-xs sm:text-sm text-ink placeholder:text-ink-3 leading-relaxed",
@@ -291,7 +365,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             {/* Jurisdiction & Action Toolbar */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs text-ink-2">
-                <span className="font-medium">City or Region (optional):</span>
+                <span className="font-medium">Origin City (optional):</span>
                 <input
                   type="text"
                   value={textCity}
@@ -301,25 +375,47 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                 />
               </div>
 
-              <Button
-                variant="primary"
-                size="sm"
-                loading={isAnalyzingText}
-                leftIcon={<Zap className="w-3.5 h-3.5" />}
-                onClick={handleTextTriage}
-                disabled={!rawText.trim()}
-              >
-                Check for Scam
-              </Button>
+              <div className="flex items-center gap-2">
+                {rawText && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setRawText("");
+                      setTextResult(null);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={!rawText.trim() || isAnalyzingText}
+                  onClick={handleTextTriage}
+                  className="w-full sm:w-auto"
+                >
+                  {isAnalyzingText ? (
+                    <span className="flex items-center gap-1.5">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      Scanning ML & Tavily...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5" />
+                      Analyze Threat
+                    </span>
+                  )}
+                </Button>
+              </div>
             </div>
 
-            {/* Text Threat Result Dossier */}
+            {/* ── TEXT SCAN RESULTS & TAVILY INTEL ── */}
             {textResult && (
-              <div className="rounded-xl bg-[var(--surface)] border-[1.5px] border-[var(--border)] shadow-card p-4 space-y-3.5 text-xs animate-in fade-up duration-300">
-                {/* Result Header */}
-                <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
+              <div className="rounded-xl bg-canvas border-[1.5px] border-line p-4 space-y-3.5 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between border-b border-line pb-3">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono uppercase font-bold text-[11px] text-[var(--accent)]">
+                    <span className="font-mono uppercase font-bold text-[11px] text-accent">
                       {textResult.scam_type || "SUSPICIOUS_MESSAGE"}
                     </span>
                     <span className="text-[11px] text-ink-3">• AI Verified</span>
@@ -330,25 +426,11 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                     size="sm"
                     pulse={textResult.is_scam}
                   >
-                    {textResult.risk_score}% Risk Level • {textResult.is_scam ? "SCAM DETECTED" : "SAFE"}
+                    {textResult.risk_score}% Risk • {textResult.is_scam ? "SCAM DETECTED" : "SAFE"}
                   </StatusPill>
                 </div>
 
-                {/* Thinking Trace (Collapsible Reasoning Tree) */}
-                <ThinkingState
-                  variant="Reasoning"
-                  isProcessing={false}
-                  activeLabel="Analyzing message details"
-                  doneLabel="Analysis complete"
-                  rows={[
-                    { primary: "Checking message urgency and pressure tactics", secondary: "Pattern check" },
-                    { primary: "Extracting contact numbers, UPI handles & links", secondary: `${(textResult.extracted_iocs?.phones?.length || 0) + (textResult.extracted_iocs?.upis?.length || 0)} details` },
-                    { primary: "Cross-referencing known reported scams", secondary: "Scam database" },
-                    { primary: "Generating scam risk assessment", secondary: `${textResult.risk_score}% risk` },
-                  ]}
-                />
-
-                <div className="space-y-1 pt-1 border-t border-line">
+                <div className="space-y-1 pt-1">
                   <div className="font-semibold text-xs text-ink">{textResult.verdict}</div>
                   {textResult.llm_reason && (
                     <div className="text-[12px] text-ink-2 leading-relaxed pt-1 bg-inset/60 p-3 rounded-lg border border-line">
@@ -357,10 +439,46 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                   )}
                 </div>
 
+                {/* Tavily Live Threat Intelligence Cross-Check Alert */}
+                {textResult.tavily_threat_intel?.verified_threat && (
+                  <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5" />
+                        Tavily Live Threat Cross-Check Match
+                      </span>
+                      <span className="text-[10px] text-zinc-400 font-mono">
+                        {textResult.tavily_threat_intel.matches_count} Active Advisory
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {textResult.tavily_threat_intel.articles?.map((art, idx) => (
+                        <a
+                          key={idx}
+                          href={art.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block p-2 rounded-lg bg-surface/80 border border-line hover:border-amber-500/40 transition-colors"
+                        >
+                          <div className="text-xs font-semibold text-zinc-200 flex items-center justify-between">
+                            <span>{art.title}</span>
+                            <ExternalLink className="w-3 h-3 text-zinc-400 flex-shrink-0" />
+                          </div>
+                          {art.snippet && (
+                            <div className="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                              {art.snippet}
+                            </div>
+                          )}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Extracted Details Chips */}
                 {textResult.extracted_iocs && (
                   <div className="space-y-1.5 pt-1">
-                    <span className="text-[11px] font-semibold text-ink-2">Detected Scam Details (Phone, UPI, Links):</span>
+                    <span className="text-[11px] font-semibold text-ink-2">Extracted IOC Tokens:</span>
                     <div className="flex flex-wrap gap-1.5">
                       {textResult.extracted_iocs.phones?.map((p) => (
                         <button
@@ -371,11 +489,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                         >
                           <Phone className="w-3 h-3" />
                           <span>{p}</span>
-                          {copiedIocKey === `txt-phone-${p}` ? (
-                            <Check className="w-3 h-3 text-green" />
-                          ) : (
-                            <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100" />
-                          )}
+                          {copiedIocKey === `txt-phone-${p}` ? <Check className="w-3 h-3 text-green" /> : <Copy className="w-3 h-3 opacity-50" />}
                         </button>
                       ))}
 
@@ -388,28 +502,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                         >
                           <CreditCard className="w-3 h-3" />
                           <span>{upi}</span>
-                          {copiedIocKey === `txt-upi-${upi}` ? (
-                            <Check className="w-3 h-3 text-green" />
-                          ) : (
-                            <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100" />
-                          )}
-                        </button>
-                      ))}
-
-                      {textResult.extracted_iocs.apks?.map((apk) => (
-                        <button
-                          key={`txt-apk-${apk}`}
-                          type="button"
-                          onClick={() => handleCopyIoc(apk, `txt-apk-${apk}`)}
-                          className="group inline-flex items-center gap-1.5 rounded-lg bg-purple-tint border-[1.5px] border-purple/30 px-2 py-0.5 text-[11px] font-mono text-purple hover:bg-purple/20 transition-colors"
-                        >
-                          <Box className="w-3 h-3" />
-                          <span>{apk}</span>
-                          {copiedIocKey === `txt-apk-${apk}` ? (
-                            <Check className="w-3 h-3 text-green" />
-                          ) : (
-                            <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100" />
-                          )}
+                          {copiedIocKey === `txt-upi-${upi}` ? <Check className="w-3 h-3 text-green" /> : <Copy className="w-3 h-3 opacity-50" />}
                         </button>
                       ))}
 
@@ -418,15 +511,11 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                           key={`txt-url-${url}`}
                           type="button"
                           onClick={() => handleCopyIoc(url, `txt-url-${url}`)}
-                          className="group inline-flex items-center gap-1.5 rounded-lg bg-accent-tint border-[1.5px] border-[var(--accent)]/30 px-2 py-0.5 text-[11px] font-mono text-[var(--accent-ink)] hover:bg-[var(--accent)]/20 transition-colors"
+                          className="group inline-flex items-center gap-1.5 rounded-lg bg-accent-tint border-[1.5px] border-accent/30 px-2 py-0.5 text-[11px] font-mono text-accent hover:bg-accent/20 transition-colors"
                         >
                           <Link2 className="w-3 h-3" />
                           <span className="truncate max-w-[180px]">{url}</span>
-                          {copiedIocKey === `txt-url-${url}` ? (
-                            <Check className="w-3 h-3 text-green" />
-                          ) : (
-                            <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100" />
-                          )}
+                          {copiedIocKey === `txt-url-${url}` ? <Check className="w-3 h-3 text-green" /> : <Copy className="w-3 h-3 opacity-50" />}
                         </button>
                       ))}
                     </div>
@@ -441,6 +530,98 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             data={imageOcrResult}
             onReset={() => setImageOcrResult(null)}
           />
+        ) : activeModality === "audio" && audioResult ? (
+          /* ── DEDICATED AUDIO DEEPFAKE DOSSIER VIEW ── */
+          <div className="rounded-xl bg-canvas border-[1.5px] border-line p-5 space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center text-accent">
+                  <Volume2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-mono uppercase font-bold text-xs text-ink block">
+                    {audioResult.verdict.replace(/_/g, " ")}
+                  </span>
+                  <span className="text-[11px] text-ink-3">
+                    {audioResult.source_platform} • {audioResult.speech_duration_seconds}s Audio
+                  </span>
+                </div>
+              </div>
+
+              <StatusPill
+                tone={audioResult.is_fake ? "critical" : "active"}
+                size="sm"
+                pulse={audioResult.is_fake}
+              >
+                {audioResult.confidence}% Voice Clone Anomaly
+              </StatusPill>
+            </div>
+
+            {/* Neural Acoustic Flags */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-semibold text-ink-2">Acoustic Spectral Forensics:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {audioResult.flags.map((flag, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1 rounded-md bg-inset border border-line px-2 py-0.5 text-[10.5px] font-mono text-ink-2"
+                  >
+                    <Mic className="w-3 h-3 text-accent" />
+                    {flag}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Tavily Match for Audio Impersonation */}
+            {audioResult.tavily_threat_intel?.verified_threat && (
+              <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5" />
+                    Tavily Live Voice Clone News Advisories
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {audioResult.tavily_threat_intel.articles?.slice(0, 2).map((art, idx) => (
+                    <a
+                      key={idx}
+                      href={art.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block p-2 rounded-lg bg-surface/80 border border-line hover:border-amber-500/40 transition-colors"
+                    >
+                      <div className="text-xs font-semibold text-zinc-200 flex items-center justify-between">
+                        <span>{art.title}</span>
+                        <ExternalLink className="w-3 h-3 text-zinc-400" />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between pt-2 border-t border-line">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAudioResult(null)}
+              >
+                <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                Scan Another Voice Note
+              </Button>
+
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleDownloadAudioPDF}
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                Download Court Evidence PDF
+              </Button>
+            </div>
+          </div>
         ) : (
           /* ── VIDEO / AUDIO / IMAGE DROPZONE ── */
           <DropZone

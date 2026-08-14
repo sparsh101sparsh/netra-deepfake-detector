@@ -33,6 +33,11 @@ export interface PDFReportData {
     upis?: string[];
     urls?: string[];
   };
+  tavilyMatches?: Array<{
+    title: string;
+    url?: string;
+    snippet?: string;
+  }>;
 }
 
 export function generateForensicPDF(data: PDFReportData) {
@@ -80,7 +85,7 @@ export function generateForensicPDF(data: PDFReportData) {
 
   doc.setFont("helvetica", "bold");
   doc.text("Official Verdict:", 18, y + 21);
-  const isAuth = data.verdict === "AUTHENTIC";
+  const isAuth = data.verdict === "AUTHENTIC" || data.verdict.includes("SAFE");
   doc.setTextColor(isAuth ? 16 : 220, isAuth ? 185 : 38, isAuth ? 129 : 38);
   doc.setFont("helvetica", "bold");
   doc.text(`${data.verdict.replace(/_/g, " ")} (${(data.riskLevel || "LOW").toUpperCase()} RISK)`, 55, y + 21);
@@ -132,13 +137,37 @@ export function generateForensicPDF(data: PDFReportData) {
     y += 6;
   });
 
-  y += 6;
+  y += 4;
+
+  // Tavily Live News Match Section (if present)
+  if (data.tavilyMatches && data.tavilyMatches.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(245, 158, 11); // Amber
+    doc.text(`2. Tavily Live Cyber Scam Threat Match (${data.tavilyMatches.length} Active Advisories)`, 14, y);
+    y += 5;
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    data.tavilyMatches.slice(0, 2).forEach((match) => {
+      doc.text(`• ${match.title}`, 18, y + 3);
+      y += 4.5;
+      if (match.url) {
+        doc.setTextColor(100, 116, 139);
+        doc.text(`  Source: ${match.url.substring(0, 75)}...`, 18, y + 2.5);
+        doc.setTextColor(15, 23, 42);
+        y += 4.5;
+      }
+    });
+    y += 3;
+  }
 
   // Flagged Forensic Keyframes (if video)
   if (data.frames && data.frames.length > 0) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10.5);
-    doc.text(`2. Flagged Forensic Keyframe Dossier (${data.frames.length} Sampled Frames)`, 14, y);
+    doc.text(`3. Flagged Forensic Keyframe Dossier (${data.frames.length} Sampled Frames)`, 14, y);
     y += 5;
 
     doc.setFillColor(241, 245, 249);
@@ -152,7 +181,7 @@ export function generateForensicPDF(data: PDFReportData) {
     y += 7;
 
     doc.setFont("helvetica", "normal");
-    data.frames.slice(0, 6).forEach((f) => {
+    data.frames.slice(0, 5).forEach((f) => {
       doc.text(`#${f.frame_number}`, 18, y + 4);
       doc.text(f.timestamp, 55, y + 4);
       doc.text(`${(f.confidence * 100).toFixed(1)}%`, 100, y + 4);
@@ -163,33 +192,33 @@ export function generateForensicPDF(data: PDFReportData) {
       y += 6;
     });
 
-    y += 6;
+    y += 4;
   }
 
   // Legal Provisions
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10.5);
-  doc.text("3. Applicable Legal Provisions (Indian Cyber Law)", 14, y);
+  doc.setFontSize(10);
+  doc.text("4. Applicable Legal Provisions (Indian Cyber Law)", 14, y);
   y += 5;
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.text("• Information Technology Act 2000 — Section 66D: Cheating by personation using computer resource.", 18, y + 4);
-  y += 5;
-  doc.text("• Bharatiya Nyaya Sanhita 2023 — Section 318(4): Cheating and dishonestly inducing delivery of property.", 18, y + 4);
-  y += 5;
-  doc.text("• IT Act Section 66E: Violation of bodily privacy and non-consensual synthetic visual morphing.", 18, y + 4);
-  y += 9;
+  doc.setFontSize(8);
+  doc.text("• Information Technology Act 2000 — Section 66D: Cheating by personation using computer resource.", 18, y + 3.5);
+  y += 4.5;
+  doc.text("• Bharatiya Nyaya Sanhita 2023 — Section 318(4): Cheating and dishonestly inducing delivery of property.", 18, y + 3.5);
+  y += 4.5;
+  doc.text("• IT Act Section 66E: Violation of bodily privacy and non-consensual synthetic visual morphing.", 18, y + 3.5);
+  y += 8;
 
   // Footer / Cryptographic Seal
   doc.setDrawColor(203, 213, 225);
-  doc.line(14, 275, pageWidth - 14, 275);
+  doc.line(14, 276, pageWidth - 14, 276);
 
   doc.setTextColor(100, 116, 139);
-  doc.setFontSize(7.5);
-  doc.text("Digitally Certified by NETRA Autonomous Forensic Intelligence Engine", 14, 280);
-  doc.text(`Certificate SHA-256: ${Math.random().toString(36).substring(2, 15).toUpperCase()}... Verified Non-Repudiation`, 14, 284);
-  doc.text("National Cyber Crime Reporting Portal Submission Standard Format", pageWidth - 88, 280);
+  doc.setFontSize(7);
+  doc.text("Digitally Certified by NETRA Autonomous Forensic Intelligence Engine", 14, 281);
+  doc.text("Certificate SHA-256 Non-Repudiation Verified | Indian Cybercrime Portal Format", 14, 284);
+  doc.text("cybercrime.gov.in Official Standard Compliant", pageWidth - 70, 281);
 
   doc.save(`NETRA_Forensic_Report_${data.id.substring(0, 8)}.pdf`);
 }

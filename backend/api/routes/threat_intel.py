@@ -24,6 +24,8 @@ class ReportThreatRequest(BaseModel):
     threat_category: str = "IMPERSONATION"
     source_platform: str = "WhatsApp"
     fake_probability: float = 0.95
+    thumbnail_url: Optional[str] = None
+    media_url: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
     lat: Optional[float] = None
@@ -41,12 +43,14 @@ class CreateKeyRequest(BaseModel):
 async def fetch_threat_catalog(
     search: Optional[str] = Query(None, description="Search keyword, phone number, UPI ID, or city"),
     category: Optional[str] = Query(None, description="Filter by scam category"),
-    media_type: Optional[str] = Query(None, alias="type", description="Filter by media type"),
+    media_type: Optional[str] = Query(None, description="Filter by media type"),
+    type: Optional[str] = Query(None, description="Filter by media type (legacy alias)"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0)
 ):
     """Fetch paginated threat catalog with search and filters."""
-    items = get_threat_catalog(search=search, category=category, media_type=media_type, limit=limit, offset=offset)
+    effective_media_type = media_type or type
+    items = get_threat_catalog(search=search, category=category, media_type=effective_media_type, limit=limit, offset=offset)
     return {
         "status": "success",
         "total_returned": len(items),
