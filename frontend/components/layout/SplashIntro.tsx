@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { NetraEyeScanner } from "@/components/NetraEyeScanner";
+import { NetraTruthMarkIcon } from "@/components/icons/NetraTruthMarkIcon";
 import { Sparkles, ArrowRight, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -131,7 +131,7 @@ export const SplashIntro: React.FC<SplashIntroProps> = ({
 
         {/* Master Eye Scanner Vector */}
         <div className="w-[min(70vw,70vh)] h-[min(70vw,70vh)] max-w-[420px] max-h-[420px] flex items-center justify-center animate-fade-in">
-          <NetraEyeScanner size="100%" />
+          <NetraTruthMarkIcon size={280} color="#f59e0b" glow={true} withGridDots={true} />
         </div>
 
         {/* Horizontal Precision Progress Bar */}
