@@ -34,6 +34,8 @@ class VisualAnomalyLocalizer:
     # Exact OpenCV BGR color definitions (OpenCV uses BGR channel order)
     # Hex #f59e0b -> RGB(245, 158, 11) -> BGR(11, 158, 245)
     AMBER_BGR: Tuple[int, int, int] = (11, 158, 245)
+    # Hex #10b981 -> RGB(16, 185, 129) -> BGR(129, 185, 16) Emerald Green
+    GREEN_BGR: Tuple[int, int, int] = (129, 185, 16)
     # Hex #0f172a -> RGB(15, 23, 42) -> BGR(42, 23, 15)
     DARK_BG_BGR: Tuple[int, int, int] = (42, 23, 15)
     # Hex #1e3a5f -> RGB(30, 58, 95) -> BGR(95, 58, 30)
@@ -338,7 +340,8 @@ class VisualAnomalyLocalizer:
         face_bbox: Optional[Tuple[int, int, int, int]] = None,
         prefer_region: Optional[str] = None,
         forced_region: Optional[str] = None,
-        detector_subsystem: str = "GenD Foundation Model ViT-L/14 + Spatial SBI"
+        detector_subsystem: str = "GenD Foundation Model ViT-L/14 + Spatial SBI",
+        is_authentic: bool = False,
     ) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Locates the region of highest spatial generative anomaly on the frame,
@@ -398,11 +401,14 @@ class VisualAnomalyLocalizer:
         bw = max(20, min(img_w - bx, int(bw)))
         bh = max(20, min(img_h - by, int(bh)))
 
-        # 1. Bounding box outline with signature 3px amber stroke (#f59e0b -> BGR 11, 158, 245)
-        cv2.rectangle(annotated, (bx, by), (bx + bw, by + bh), cls.AMBER_BGR, 3)
+        is_clean = is_authentic or (anomaly_score is not None and anomaly_score < 0.45)
+        box_color = cls.GREEN_BGR if is_clean else cls.AMBER_BGR
+        badge_text = "COHERENCE VERIFIED" if is_clean else "ANOMALY DETECTED HERE"
+
+        # 1. Bounding box outline with 3px stroke (Emerald green for clean, signature amber for anomaly)
+        cv2.rectangle(annotated, (bx, by), (bx + bw, by + bh), box_color, 3)
 
         # 2. Institutional Forensic Badge
-        badge_text = "ANOMALY DETECTED HERE"
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = max(0.42, min(0.68, img_w / 1400.0))
         thickness = 2
@@ -425,11 +431,12 @@ class VisualAnomalyLocalizer:
 
         # Draw dark badge background (#0f172a -> BGR 42, 23, 15)
         cv2.rectangle(annotated, (tag_x1, tag_y1), (tag_x2, tag_y2), cls.DARK_BG_BGR, -1)
-        # Draw 1px amber border on badge
-        cv2.rectangle(annotated, (tag_x1, tag_y1), (tag_x2, tag_y2), cls.AMBER_BGR, 1)
+        # Draw 1px border on badge (green or amber matching status)
+        cv2.rectangle(annotated, (tag_x1, tag_y1), (tag_x2, tag_y2), box_color, 1)
         # Draw crisp high-contrast white text
         text_x = tag_x1 + 8
         text_y = tag_y2 - (baseline + 3)
+
         cv2.putText(
             annotated,
             badge_text,
