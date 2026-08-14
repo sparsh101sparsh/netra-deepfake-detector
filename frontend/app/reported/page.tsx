@@ -66,7 +66,31 @@ export default function ThreatCatalogPage() {
         return res.json();
       })
       .then((data) => {
-        const fetchedItems = data?.results || data?.items || [];
+        const rawItems: ThreatItem[] = data?.results || data?.items || [];
+        // Strict defense-in-depth filter against any dummy/synthetic test scans
+        const fetchedItems = rawItems.filter((it) => {
+          const id = (it.id || "").toUpperCase();
+          const title = (it.title || "").toLowerCase();
+          if (id.startsWith("SCAN-") || id.startsWith("JOB-") || id.startsWith("TEST-") || id.startsWith("DEMO-") || id.startsWith("NETRA-SCAM-") || id.startsWith("THREAT-")) {
+            return false;
+          }
+          if (
+            title.includes("analysis:") ||
+            title.includes("video forensic analysis") ||
+            title.includes("faint_text") ||
+            title.includes("faces_") ||
+            title.includes("banner_art") ||
+            title.includes("color_discrepancy") ||
+            title.includes("numerical_audit") ||
+            title.includes("authentic_canvas") ||
+            title.includes("arbitrary_") ||
+            title.includes("adversarial") ||
+            title.includes("cbi / trai digital arrest")
+          ) {
+            return false;
+          }
+          return true;
+        });
         setItems(fetchedItems);
       })
       .catch((err) => {

@@ -382,6 +382,23 @@ def get_threat_catalog(
         term = f"%{search}%"
         params.extend([term, term, term, term])
         
+    # Strict filter against any dummy test data
+    query += """ AND id NOT LIKE 'SCAN-%' 
+                 AND id NOT LIKE 'JOB-%' 
+                 AND id NOT LIKE 'TEST-%' 
+                 AND id NOT LIKE 'DEMO-%' 
+                 AND title NOT LIKE '%Analysis:%' 
+                 AND title NOT LIKE '%Video Forensic Analysis%' 
+                 AND title NOT LIKE '%faint_text%' 
+                 AND title NOT LIKE '%faces_%' 
+                 AND title NOT LIKE '%banner_art%' 
+                 AND title NOT LIKE '%color_discrepancy%' 
+                 AND title NOT LIKE '%numerical_audit%' 
+                 AND title NOT LIKE '%authentic_canvas%' 
+                 AND title NOT LIKE '%arbitrary_%' 
+                 AND title NOT LIKE '%adversarial%' 
+                 AND title NOT LIKE '%CBI / TRAI Digital Arrest%'"""
+
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
     
