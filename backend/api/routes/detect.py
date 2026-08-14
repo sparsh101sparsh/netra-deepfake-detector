@@ -1,11 +1,12 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
-import uuid, boto3, json, os, io
+import uuid, boto3, json, os, io, logging
 from datetime import datetime, timezone
 from typing import Optional
 
 from .jobs import save_local_job, get_job_status
 
+logger = logging.getLogger("netra.api.detect")
 router = APIRouter()
 
 MAX_FILE_SIZE_MB = 100
@@ -134,59 +135,38 @@ async def detect_full(file: UploadFile = File(...)):
     }
 
 
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Request
-
 @router.post("/detect/image-ocr")
-async def detect_image_ocr(request: Request, file: UploadFile = File(...)):
+@router.post("/detect/image")
+async def detect_image_unified(request: Request, file: UploadFile = File(...)):
     """
-    Accepts an uploaded image / screenshot, runs it through PaddleOCR / EasyOCR,
-    and analyzes the extracted text with NETRA's Scam & Threat Detection engine.
+    Accepts an uploaded image, routes intelligently through NETRA's Dual-Branch Router:
+    - Branch A (Pure Face): Multi-face localization, EfficientNet-B4 + SBI deepfake detection, VisualAnomalyLocalizer
+    - Branch B (Document): RapidOCR text extraction, IOC identification, Random Forest scam classification, Tavily cross-check
+    - Branch C (Hybrid): Full execution of both pipelines with unified composite risk dossier
+    Preserves 100% backward compatibility with existing image-ocr schema and consumers.
     """
     allowed_image_types = {"image/jpeg", "image/png", "image/webp", "image/jpg", "image/bmp"}
     if file.content_type and file.content_type not in allowed_image_types:
         raise HTTPException(
             status_code=415,
-            detail=f"Unsupported image type: {file.content_type}. Allowed: jpeg, png, webp"
+            detail=f"Unsupported image type: {file.content_type}. Allowed: jpeg, png, webp, jpg, bmp"
         )
 
     contents = await file.read()
     if len(contents) > 50 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="Image exceeds maximum size of 50MB.")
 
-    from netra.services.ocr_scam_pipeline import run_image_ocr_and_scam_detection
+    from netra.pipeline.dual_branch_router import process_image_forensics
     try:
-        result = run_image_ocr_and_scam_detection(contents, filename=file.filename or "uploaded_image.png")
-        
-        # Central Auto-Catalog Ingestion Hook with 4-tier Geolocation
-        try:
-            from netra.services.catalog_hook import auto_catalog_scan
-            auto_catalog_scan(
-                scan_type="image",
-                result=result,
-                file_bytes=contents,
-                filename=file.filename or "uploaded_image.png",
-                request=request
-            )
-        except Exception as cat_err:
-            logger.warning(f"Image auto-cataloging failed: {cat_err}")
-
-        # Real-time Tavily Cross-Check for extracted image text & IOCs
-        try:
-            from netra.services.tavily_cross_check import cross_check_scam_with_tavily
-            tavily_intel = cross_check_scam_with_tavily(
-                text=result.get("extracted_text", ""),
-                iocs={
-                    "phones": result.get("extracted_phones", []),
-                    "upis": result.get("extracted_upis", [])
-                }
-            )
-            result["tavily_threat_intel"] = tavily_intel
-        except Exception:
-            result["tavily_threat_intel"] = None
-
+        result = process_image_forensics(
+            image_bytes=contents,
+            filename=file.filename or "uploaded_image.png",
+            request=request
+        )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Image OCR scam analysis failed: {str(e)}")
+        logger.error(f"Image dual-branch forensics analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Image forensics analysis failed: {str(e)}")
 
 
 @router.get("/detect/health")

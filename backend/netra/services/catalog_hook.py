@@ -57,10 +57,10 @@ def auto_catalog_scan(
         risk_level = "CRITICAL" if fake_prob >= 0.75 else ("HIGH" if fake_prob >= 0.50 else "LOW")
     elif scan_type == "image":
         is_scam = result.get("is_scam", False)
-        risk_score = result.get("risk_score", 0)
+        risk_score = result.get("composite_risk_score", result.get("risk_score", 0))
         fake_prob = round(float(risk_score) / 100.0, 2)
-        verdict = "CONFIRMED_FRAUD" if is_scam else "AUTHENTIC"
-        risk_level = "CRITICAL" if fake_prob >= 0.75 else ("HIGH" if fake_prob >= 0.50 else "LOW")
+        verdict = result.get("composite_verdict") or result.get("verdict") or ("CONFIRMED_FRAUD" if is_scam else "AUTHENTIC")
+        risk_level = result.get("composite_risk_level") or result.get("risk_level") or ("CRITICAL" if fake_prob >= 0.75 else ("HIGH" if fake_prob >= 0.50 else "LOW"))
     elif scan_type == "audio":
         fake_prob = round(float(result.get("fake_probability", 0.5)), 2)
         verdict = result.get("verdict", "VOICE_CLONE" if fake_prob >= 0.60 else "AUTHENTIC")
@@ -82,7 +82,11 @@ def auto_catalog_scan(
 
     scam_category = result.get("scam_type") or result.get("threat_category")
     if not scam_category:
-        if verdict in ("AUTHENTIC", "VERIFIED_AUTHENTIC"):
+        if result.get("analysis_mode") == "hybrid":
+            scam_category = "HYBRID_SCAM_DEEPFAKE"
+        elif result.get("analysis_mode") == "pure_face":
+            scam_category = "FACE_SWAP" if fake_prob >= 0.50 else "AUTHENTIC_PORTRAIT"
+        elif verdict in ("AUTHENTIC", "VERIFIED_AUTHENTIC", "AUTHENTIC / LOW RISK MEDIA"):
             scam_category = "VERIFIED_AUTHENTIC"
         elif media_type == "audio_clone":
             scam_category = "VOICE_CLONE"
@@ -173,7 +177,10 @@ def auto_catalog_scan(
         with open(saved_path, "wb") as f:
             f.write(file_bytes)
         media_url = f"/api/v1/media/uploads/{img_filename}"
-        thumbnail_url = media_url
+        if result.get("facial_analysis") and result["facial_analysis"].get("annotated_preview_url"):
+            thumbnail_url = result["facial_analysis"]["annotated_preview_url"]
+        else:
+            thumbnail_url = media_url
     elif scan_type == "audio" and file_bytes:
         ext = Path(filename or "sample.wav").suffix or ".wav"
         aud_filename = f"{item_id}{ext}"

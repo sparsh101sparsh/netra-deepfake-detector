@@ -1,0 +1,199 @@
+{
+  "timestamp": "2026-09-03T23:08:11.372459+00:00",
+  "milestone": "M9 - Visual Verification & 20-Video Benchmark Suite (R4)",
+  "benchmark_dataset": "generated_100_deepfake_videos",
+  "total_videos_analyzed": 20,
+  "total_frames_analyzed": 60,
+  "unhandled_exceptions": 0,
+  "sla_compliance_rate_percent": 100.0,
+  "latency_metrics_ms": {
+    "mean": 4.59,
+    "median": 4.56,
+    "p90": 4.87,
+    "p99": 5.19,
+    "min": 4.26,
+    "max": 5.42
+  },
+  "visual_annotations": {
+    "border_color": "#f59e0b (amber)",
+    "border_bgr": [
+      11,
+      158,
+      245
+    ],
+    "border_rgb": [
+      245,
+      158,
+      11
+    ],
+    "badge_text": "ANOMALY DETECTED HERE",
+    "table_layout": "Section 2 Side-by-Side (Image Left, Telemetry Right)"
+  },
+  "statutory_compliance": [
+    "Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023",
+    "Section 66D Information Technology Act 2000",
+    "Section 318(4) Bharatiya Nyaya Sanhita 2023"
+  ],
+  "video_telemetry": [
+    {
+      "video": "deepfake_Ajit_Doval.mp4",
+      "slug": "deepfake_Ajit_Doval",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.58,
+      "max_latency_ms": 4.74,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Arvind_Kejriwal.mp4",
+      "slug": "deepfake_Arvind_Kejriwal",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.85,
+      "max_latency_ms": 5.03,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Nirmala_Sitharaman.mp4",
+      "slug": "deepfake_Nirmala_Sitharaman",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.77,
+      "max_latency_ms": 4.95,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Peyush_Bansal.mp4",
+      "slug": "deepfake_Peyush_Bansal",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.48,
+      "max_latency_ms": 4.6,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_S_Jaishankar.mp4",
+      "slug": "deepfake_S_Jaishankar",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.53,
+      "max_latency_ms": 4.59,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Alia_Bhatt.mp4",
+      "slug": "deepfake_Alia_Bhatt",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.91,
+      "max_latency_ms": 5.42,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Deepika_Padukone.mp4",
+      "slug": "deepfake_Deepika_Padukone",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.7,
+      "max_latency_ms": 4.98,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Gautam_Adani.mp4",
+      "slug": "deepfake_Gautam_Adani",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.68,
+      "max_latency_ms": 4.99,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_MS_Dhoni.mp4",
+      "slug": "deepfake_MS_Dhoni",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.5,
+      "max_latency_ms": 4.59,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Shah_Rukh_Khan.mp4",
+      "slug": "deepfake_Shah_Rukh_Khan",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.57,
+      "max_latency_ms": 4.68,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Narendra_Modi.mp4",
+      "slug": "deepfake_Narendra_Modi",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.56,
+      "max_latency_ms": 4.77,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Amitabh_Bachchan.mp4",
+      "slug": "deepfake_Amitabh_Bachchan",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.56,
+      "max_latency_ms": 4.84,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Rahul_Gandhi.mp4",
+      "slug": "deepfake_Rahul_Gandhi",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.45,
+      "max_latency_ms": 4.62,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Shashi_Tharoor.mp4",
+      "slug": "deepfake_Shashi_Tharoor",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.56,
+      "max_latency_ms": 4.61,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Rajinikanth.mp4",
+      "slug": "deepfake_Rajinikanth",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.51,
+      "max_latency_ms": 4.68,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Amit_Shah.mp4",
+      "slug": "deepfake_Amit_Shah",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.52,
+      "max_latency_ms": 4.87,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Mukesh_Ambani.mp4",
+      "slug": "deepfake_Mukesh_Ambani",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.5,
+      "max_latency_ms": 4.6,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Ritesh_Agarwal.mp4",
+      "slug": "deepfake_Ritesh_Agarwal",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.53,
+      "max_latency_ms": 4.58,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_S_Somanath.mp4",
+      "slug": "deepfake_S_Somanath",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.52,
+      "max_latency_ms": 4.65,
+      "status": "SUCCESS"
+    },
+    {
+      "video": "deepfake_Virat_Kohli.mp4",
+      "slug": "deepfake_Virat_Kohli",
+      "frames_sampled": 3,
+      "mean_latency_ms": 4.42,
+      "max_latency_ms": 4.51,
+      "status": "SUCCESS"
+    }
+  ]
+}

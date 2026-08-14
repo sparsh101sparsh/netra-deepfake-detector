@@ -1,0 +1,161 @@
+{
+  "challenger": "Challenger M9-1",
+  "timestamp": "2026-09-03T23:09:01.541347+00:00",
+  "sample_count": 100,
+  "unhandled_exceptions": 0,
+  "sla_verification": {
+    "per_frame_max_sla_ms": 200.0,
+    "per_frame_mean_sla_ms": 50.0,
+    "max_observed_ms": 5.84,
+    "mean_observed_ms": 4.36,
+    "median_observed_ms": 4.36,
+    "p90_observed_ms": 4.59,
+    "p95_observed_ms": 4.64,
+    "p99_observed_ms": 5.27,
+    "min_observed_ms": 3.96,
+    "std_dev_ms": 0.24,
+    "sla_pass_rate_percent": 100.0
+  },
+  "video_details": [
+    {
+      "video": "deepfake_Ajit_Doval.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.68,
+      "max_ms": 5.84,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Arvind_Kejriwal.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.43,
+      "max_ms": 4.69,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Nirmala_Sitharaman.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.34,
+      "max_ms": 4.64,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Peyush_Bansal.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.25,
+      "max_ms": 4.47,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_S_Jaishankar.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.3,
+      "max_ms": 4.4,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Alia_Bhatt.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.37,
+      "max_ms": 4.71,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Deepika_Padukone.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.31,
+      "max_ms": 4.48,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Gautam_Adani.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.46,
+      "max_ms": 5.26,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_MS_Dhoni.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.38,
+      "max_ms": 4.61,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Shah_Rukh_Khan.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.38,
+      "max_ms": 4.62,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Narendra_Modi.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.28,
+      "max_ms": 4.43,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Amitabh_Bachchan.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.38,
+      "max_ms": 4.63,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Rahul_Gandhi.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.4,
+      "max_ms": 4.73,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Shashi_Tharoor.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.29,
+      "max_ms": 4.48,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Rajinikanth.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.26,
+      "max_ms": 4.37,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Amit_Shah.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.27,
+      "max_ms": 4.38,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Mukesh_Ambani.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.32,
+      "max_ms": 4.59,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Ritesh_Agarwal.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.38,
+      "max_ms": 4.55,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_S_Somanath.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.3,
+      "max_ms": 4.46,
+      "status": "PASS"
+    },
+    {
+      "video": "deepfake_Virat_Kohli.mp4",
+      "frames_tested": 5,
+      "mean_ms": 4.33,
+      "max_ms": 4.51,
+      "status": "PASS"
+    }
+  ]
+}
