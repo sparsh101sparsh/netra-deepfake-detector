@@ -65,9 +65,15 @@ class ScamStorage:
                     metadata_json TEXT
                 )
             """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_category ON scam_reports(category)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_severity ON scam_reports(severity)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_created_at ON scam_reports(created_at)")
+            # Indexes for ultra-fast deduplication and recency slicing
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_scam_reports_pub ON scam_reports(published_date DESC);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_scam_reports_cat ON scam_reports(category);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_scam_reports_sev ON scam_reports(severity);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_scam_reports_url ON scam_reports(url);")
+            # Purge any legacy generic stock photo URLs so only authentic scraped news images or clean badges are served
+            cursor.execute("UPDATE scam_reports SET image_url = '' WHERE image_url LIKE '%unsplash.com%';")
+            # Remove non-article aggregation pages
+            cursor.execute("DELETE FROM scam_reports WHERE url LIKE '%/topic/%' OR url LIKE '%/tag/%';")
             cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_scam_reports_url ON scam_reports(url) WHERE url IS NOT NULL AND url != ''")
             conn.commit()
 
@@ -86,10 +92,16 @@ class ScamStorage:
                     cursor.execute("SELECT id FROM scam_reports WHERE id = ? OR url = ?", (report.id, clean_url))
                 else:
                     cursor.execute("SELECT id FROM scam_reports WHERE id = ?", (report.id,))
-                existing = cursor.fetchone()
                 if existing:
-                    # Already exists - update last_synced_at only
-                    cursor.execute("UPDATE scam_reports SET last_synced_at = ? WHERE id = ?", (now, existing["id"]))
+                    # If incoming report has an authentic scraped image and existing is missing or unsplash, update it
+                    if report.image_url and "unsplash.com" not in report.image_url:
+                        cursor.execute("""
+                            UPDATE scam_reports 
+                            SET image_url = ?, last_synced_at = ?, published_date = COALESCE(?, published_date)
+                            WHERE id = ?
+                        """, (report.image_url, now, report.published_date, existing["id"]))
+                    else:
+                        cursor.execute("UPDATE scam_reports SET last_synced_at = ? WHERE id = ?", (now, existing["id"]))
                     conn.commit()
                     return False
 
