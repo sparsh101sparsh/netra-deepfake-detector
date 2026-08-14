@@ -5,7 +5,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { LiveCyberScamNewsFeed } from "@/components/feed";
 import { MultiModalForensicScanner } from "@/components/sandbox";
-import { NetraArchitectureIntro } from "@/components/NetraArchitectureIntro";
+import { UltraFrameIntro } from "@/components/UltraFrameIntro";
 
 export default function ForensicHub() {
   // ── Architecture of Truth Intro Animation (7.00s sequence + 0.75s hold) ──
@@ -78,7 +78,7 @@ export default function ForensicHub() {
             transformStyle: "preserve-3d",
           }}
         >
-          <NetraArchitectureIntro onSkip={handleSkipIntro} />
+          <UltraFrameIntro onComplete={handleSkipIntro} showControls={false} />
         </div>
       )}
 
