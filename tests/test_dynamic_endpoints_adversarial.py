@@ -18,9 +18,24 @@ from fastapi.testclient import TestClient
 from backend.api.server import app
 from backend.api.db import init_db
 
+import tempfile
+import atexit
+
+# Use isolated temp database for tests to prevent polluting production netra.db
+_test_db_path = tempfile.mktemp(suffix="_test_netra.db")
+os.environ["NETRA_DB_PATH"] = _test_db_path
+
+@atexit.register
+def _cleanup_test_db():
+    if os.path.exists(_test_db_path):
+        try:
+            os.remove(_test_db_path)
+        except OSError:
+            pass
+
 @pytest.fixture(scope="session")
 def client():
-    # Ensure fresh DB state if needed
+    # Ensure fresh isolated DB state for tests
     init_db()
     with TestClient(app) as c:
         yield c
