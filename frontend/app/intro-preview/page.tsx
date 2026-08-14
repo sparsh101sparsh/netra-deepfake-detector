@@ -7,6 +7,7 @@
  */
 
 import React, { useState } from "react";
+import { NetraArchitectureIntro } from "@/components/NetraArchitectureIntro";
 import { NetraEyeScanner } from "@/components/NetraEyeScanner";
 import { NetraBrandLogo } from "@/components/NetraBrandLogo";
 import { InstitutionalEyeScanner } from "@/components/InstitutionalEyeScanner";
@@ -14,17 +15,13 @@ import { NewInstitutionalIntro } from "@/components/layout/NewInstitutionalIntro
 import { ArrowLeft, Sparkles, Check, Play, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
-// ── Option 1 (RECOMMENDED): Institutional Forensic Suite (New Redesign) ──
+// ── Option 1 (RECOMMENDED): Architecture of Truth (Final Production Intro) ──
 function IntroNewRedesign() {
   const [key, setKey] = useState(0);
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#0C0C0E] overflow-hidden">
-      <NewInstitutionalIntro
-        key={key}
-        durationMs={8000}
-        interactivePreview={true}
-      />
+    <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#060608] overflow-hidden">
+      <NetraArchitectureIntro key={key} onSkip={() => setKey((k) => k + 1)} />
       <button
         onClick={(e) => {
           e.stopPropagation();
