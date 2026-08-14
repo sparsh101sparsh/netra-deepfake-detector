@@ -66,14 +66,14 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
                         NETRA
                       </span>
                     </div>
-                    <div className="text-[10.5px] font-mono text-ink-3 tracking-wider">
-                      Eyes that see through
+                    <div className="text-[10.5px] font-mono text-ink-3 tracking-wider uppercase">
+                      Beyond Illusion. The Architecture of Truth.
                     </div>
                   </div>
                 </div>
 
                 <p className="text-xs text-ink-2 leading-relaxed max-w-sm">
-                  Open-access multi-modal artificial intelligence platform engineered to detect deepfakes, synthetic voice clones, and deceptive scam communications in real time.
+                  Defending India&apos;s digital media integrity with real-time multi-modal AI detection for deepfakes, synthetic voice clones, and deceptive scam communications.
                 </p>
               </div>
 

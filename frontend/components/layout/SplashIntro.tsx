@@ -126,7 +126,7 @@ export const SplashIntro: React.FC<SplashIntroProps> = ({
         
         {/* Top Header Motto: Pure large text without borders */}
         <div className="text-xl sm:text-3xl font-bold tracking-tight text-white font-sans animate-fade-in text-center">
-          NETRA: <span className="text-accent">Eyes that see through</span>
+          NETRA: <span className="text-accent">Beyond Illusion. The Architecture of Truth.</span>
         </div>
 
         {/* Master Eye Scanner Vector */}
