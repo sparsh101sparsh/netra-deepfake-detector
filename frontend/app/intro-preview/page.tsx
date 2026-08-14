@@ -8,6 +8,7 @@
 
 import React, { useState } from "react";
 import { NetraArchitectureIntro } from "@/components/NetraArchitectureIntro";
+import { UltraFrameIntro } from "@/components/UltraFrameIntro";
 import { NetraEyeScanner } from "@/components/NetraEyeScanner";
 import { NetraBrandLogo } from "@/components/NetraBrandLogo";
 import { InstitutionalEyeScanner } from "@/components/InstitutionalEyeScanner";
@@ -20,18 +21,8 @@ function IntroNewRedesign() {
   const [key, setKey] = useState(0);
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#060608] overflow-hidden">
-      <NetraArchitectureIntro key={key} onSkip={() => setKey((k) => k + 1)} />
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setKey((k) => k + 1);
-        }}
-        className="absolute top-4 right-4 z-30 px-3 py-1.5 rounded-lg bg-[#18181B]/80 hover:bg-[#27272A] border border-white/10 text-xs font-mono text-zinc-300 flex items-center gap-1.5 backdrop-blur-md transition-colors shadow-sm"
-      >
-        <RefreshCw className="size-3" />
-        <span>Replay</span>
-      </button>
+    <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#060608] overflow-y-auto p-4">
+      <UltraFrameIntro key={key} showControls={true} onComplete={() => setKey((k) => k + 1)} />
     </div>
   );
 }
