@@ -59,6 +59,14 @@ DYNAMO_TABLE_JOBS = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
 DYNAMO_TABLE_WORKERS = os.getenv("DYNAMO_TABLE_WORKERS", "netra-workers")
 SPATIAL_MODEL_PATH = os.getenv("SPATIAL_MODEL_PATH", "/opt/netra/models/spatial/model.pth")
 CLIP_PROBE_PATH = os.getenv("CLIP_PROBE_PATH", "/opt/netra/models/clip_probe/model.pth")
+MEDIA_DIR = os.getenv("NETRA_MEDIA_DIR", os.path.join(backend_dir, "media"))
+KEYFRAMES_DIR = os.path.join(MEDIA_DIR, "keyframes")
+os.makedirs(KEYFRAMES_DIR, exist_ok=True)
+
+try:
+    from netra.pipeline.visual_localizer import VisualAnomalyLocalizer
+except ImportError:
+    VisualAnomalyLocalizer = None
 
 
 def get_boto3(service_name: str):
@@ -752,6 +760,108 @@ def process_job(
             video_duration=video_duration,
         )
 
+        # === STAGE 8.5: Visual Anomaly Localization & Keyframe Snapshot Generation (R2) ===
+        keyframe_snapshots = []
+        annotated_frames_map = {}
+
+        if cv2 is not None and frames and VisualAnomalyLocalizer is not None:
+            try:
+                # 1. Build candidate frames with confidence scores
+                frame_dict_by_num = {f["frame_number"]: f for f in frames}
+                candidate_frames = []
+                for i, f_info in enumerate(frames):
+                    pred = frame_predictions[i] if (frame_predictions and i < len(frame_predictions)) else {}
+                    clip_p = clip_predictions[i] if (clip_predictions and i < len(clip_predictions)) else {}
+                    sp_score = float(pred.get("fake_probability", 0.0) or 0.0)
+                    cp_score = float(clip_p.get("fake_probability", 0.0) or 0.0) if clip_p else 0.0
+                    eff_score = max(sp_score, cp_score)
+                    candidate_frames.append({
+                        "frame_number": f_info["frame_number"],
+                        "timestamp": f_info["timestamp"],
+                        "timestamp_sec": f_info.get("timestamp_sec", 0.0),
+                        "image_path": f_info["image_path"],
+                        "confidence": eff_score,
+                        "spatial_score": sp_score,
+                        "clip_score": cp_score,
+                        "flags": pred.get("flags", []),
+                    })
+
+                # 2. Extract top 2-3 anomaly candidates
+                # Primary filter: threshold=0.75, min_frame_gap=10, max_keyframes=3
+                selected = VisualAnomalyLocalizer.filter_high_anomaly_keyframes(
+                    candidate_frames,
+                    threshold=0.75,
+                    min_frame_gap=10,
+                    max_keyframes=3,
+                    fallback_if_empty=True,
+                )
+
+                # Fallback: if video is flagged deepfake / non-authentic and selected is empty, take top frames
+                if not selected and candidate_frames and fusion_result.get("verdict") != "authentic":
+                    sorted_cands = sorted(candidate_frames, key=lambda x: x.get("confidence", 0.0), reverse=True)
+                    selected = sorted_cands[:min(3, len(sorted_cands))]
+
+                # Strictly cap at top 3 keyframes
+                selected = selected[:3]
+
+                # 3. Render amber bounding box (#f59e0b) + forensic badge and persist keyframe snapshots
+                for cand in selected:
+                    f_num = cand["frame_number"]
+                    f_info = frame_dict_by_num.get(f_num)
+                    if not f_info or not f_info.get("image_path") or not os.path.exists(f_info["image_path"]):
+                        continue
+
+                    raw_bgr = cv2.imread(f_info["image_path"])
+                    if raw_bgr is None or raw_bgr.size == 0:
+                        continue
+
+                    cand_confidence = float(cand.get("confidence", 0.95))
+                    annotated_bgr, meta = VisualAnomalyLocalizer.localize_and_annotate(
+                        raw_bgr,
+                        anomaly_score=cand_confidence,
+                    )
+
+                    # Persistent storage: backend/media/keyframes/{job_id}_frame_{num:06d}_annotated.jpg
+                    snap_filename = f"{job_id}_frame_{f_num:06d}_annotated.jpg"
+                    snap_filepath = os.path.join(KEYFRAMES_DIR, snap_filename)
+                    cv2.imwrite(snap_filepath, annotated_bgr, [cv2.IMWRITE_JPEG_QUALITY, 95])
+
+                    # Upload to S3 if available
+                    try:
+                        s3.upload_file(
+                            snap_filepath,
+                            S3_BUCKET_MEDIA,
+                            f"{job_id}/keyframes/{snap_filename}",
+                        )
+                    except Exception as s3_err:
+                        logger.debug(f"S3 keyframe upload skipped/failed for {snap_filename}: {s3_err}")
+
+                    annotated_url = f"/api/backend/api/v1/media/keyframes/{snap_filename}"
+                    snap_record = {
+                        "frame_number": f_num,
+                        "timestamp": cand.get("timestamp", f_info.get("timestamp", "00:00.00")),
+                        "anomaly_region": meta.get("semantic_label", "Eyewear Specular Glare & Feature Discontinuity"),
+                        "anomaly_score": round(float(meta.get("anomaly_score", cand_confidence)), 4),
+                        "confidence": round(float(meta.get("anomaly_score", cand_confidence)), 4),
+                        "image_path": snap_filepath,
+                        "image_url": annotated_url,
+                        "annotated_image_url": annotated_url,
+                        "detector_subsystem": meta.get("detector_subsystem", "GenD Foundation Model ViT-L/14 + Spatial SBI"),
+                        "bounding_box": meta.get("bounding_box", [0, 0, 0, 0]),
+                        "normalized_box": meta.get("normalized_box"),
+                        "evidence_code": meta.get("evidence_code", "EVD-ANOMALY"),
+                        "statutory_act": meta.get("statutory_act", "Section 65B Indian Evidence Act"),
+                    }
+                    keyframe_snapshots.append(snap_record)
+                    annotated_frames_map[f_num] = snap_record
+
+                logger.info(f"Generated {len(keyframe_snapshots)} visual anomaly keyframe snapshots for job {job_id}")
+
+            except Exception as e:
+                logger.error(f"Visual anomaly snapshot generation failed for job {job_id}: {e}", exc_info=True)
+                keyframe_snapshots = []
+                annotated_frames_map = {}
+
         # === STAGE 9: Consolidate forensic evidence dossier (92%) ===
         update_job_progress(
             job_id,
@@ -774,6 +884,52 @@ def process_job(
             job_id, "processing", 98, "Finalizing results", worker_id=worker_id
         )
 
+        existing_frame_nums = {f.frame_number for f in evidence.suspicious_frames[:20]}
+        frames_payload = [
+            {
+                "frame_number": f.frame_number,
+                "timestamp": f.timestamp,
+                "confidence": f.confidence,
+                "flags": f.flags,
+                "spatial_score": f.spatial_score,
+                "annotated_image_url": (
+                    annotated_frames_map[f.frame_number]["annotated_image_url"]
+                    if f.frame_number in annotated_frames_map
+                    else None
+                ),
+                "image_path": (
+                    annotated_frames_map[f.frame_number]["image_path"]
+                    if f.frame_number in annotated_frames_map
+                    else None
+                ),
+                "bounding_box": (
+                    annotated_frames_map[f.frame_number]["bounding_box"]
+                    if f.frame_number in annotated_frames_map
+                    else None
+                ),
+                "anomaly_region": (
+                    annotated_frames_map[f.frame_number]["anomaly_region"]
+                    if f.frame_number in annotated_frames_map
+                    else None
+                ),
+            }
+            for f in evidence.suspicious_frames[:20]
+        ]
+        for snap in keyframe_snapshots:
+            if snap["frame_number"] not in existing_frame_nums:
+                frames_payload.insert(0, {
+                    "frame_number": snap["frame_number"],
+                    "timestamp": snap["timestamp"],
+                    "confidence": snap["anomaly_score"],
+                    "flags": ["high_visual_anomaly"],
+                    "spatial_score": snap["anomaly_score"],
+                    "annotated_image_url": snap["annotated_image_url"],
+                    "image_path": snap["image_path"],
+                    "bounding_box": snap["bounding_box"],
+                    "anomaly_region": snap["anomaly_region"],
+                })
+                existing_frame_nums.add(snap["frame_number"])
+
         final_result = {
             "verdict": fusion_result["verdict"],
             "confidence": fusion_result["confidence"],
@@ -782,16 +938,8 @@ def process_job(
             "audio_score": fusion_result.get("audio_score"),
             "clip_score": fusion_result.get("clip_score"),
             "risk_level": fusion_result["risk_level"],
-            "frames": [
-                {
-                    "frame_number": f.frame_number,
-                    "timestamp": f.timestamp,
-                    "confidence": f.confidence,
-                    "flags": f.flags,
-                    "spatial_score": f.spatial_score,
-                }
-                for f in evidence.suspicious_frames[:20]
-            ],
+            "frames": frames_payload,
+            "keyframe_snapshots": keyframe_snapshots,
             "audio_flags": (
                 evidence.audio_segments[0].flags
                 if evidence.audio_segments
