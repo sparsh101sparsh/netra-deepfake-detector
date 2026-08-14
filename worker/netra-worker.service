@@ -1,0 +1,42 @@
+# ──────────────────────────────────────────────────────────────────────
+# NETRA Forensic Worker — systemd service for EC2 / Linux production
+#
+# Install:
+#   sudo cp netra-worker.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable netra-worker
+#   sudo systemctl start netra-worker
+#
+# Logs:
+#   sudo journalctl -u netra-worker -f
+# ──────────────────────────────────────────────────────────────────────
+[Unit]
+Description=NETRA Forensic AI Worker Daemon
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=netra
+Group=netra
+WorkingDirectory=/opt/netra
+EnvironmentFile=/opt/netra/.env
+ExecStart=/opt/netra/venv/bin/python -m worker.worker
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=netra-worker
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+PrivateTmp=true
+ReadWritePaths=/tmp /opt/netra
+
+[Install]
+WantedBy=multi-user.target

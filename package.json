@@ -1,0 +1,35 @@
+{
+  "name": "netra",
+  "version": "5.1.0",
+  "description": "NETRA Autonomous Multi-Modal Deepfake & Cyber Threat Triage Grid",
+  "private": true,
+  "scripts": {
+    "worker": "bash scripts/run_worker.sh",
+    "worker:dev": "bash scripts/run_worker.sh --dev",
+    "worker:check": "bash scripts/run_worker.sh --check",
+    "dev": "npm --prefix frontend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "bash -c 'cd backend && (source ../venv/bin/activate 2>/dev/null || true) && python -m uvicorn api.server:app --reload --port 8000'",
+    "dev:worker": "bash scripts/run_worker.sh --dev",
+    "dev:all": "npx concurrently -k -n \"FRONTEND,BACKEND,WORKER\" -c \"cyan,magenta,green\" \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run worker:dev\"",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "test": "pytest",
+    "test:worker": "pytest tests/test_sqs_worker_e2e.py -v",
+    "test:all": "pytest -v"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "deepfake-detection",
+    "forensics",
+    "sqs-worker",
+    "fastapi",
+    "nextjs",
+    "pytorch",
+    "aws"
+  ],
+  "author": "NETRA Autonomous Forensics Team",
+  "license": "Apache-2.0"
+}
