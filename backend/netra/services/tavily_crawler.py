@@ -1,188 +1,110 @@
 """
-NETRA 24-Hour Tavily Cyber Scam & Deepfake News Intelligence Crawler
-Fetches live Indian cybercrime incidents, police advisories, and deepfake scam news.
+NETRA — Tavily Cyber Scam Intelligence Crawler
+Thin adapter layer that delegates entirely to the production cyber_scam_feed package.
+
+The cyber_scam_feed package (34/34 adversarial tests passing) provides:
+  - TavilySearchEngine    — multi-vector concurrent search, rate-limit backoff
+  - NLP Entity Extractor  — Rs-loss parsing, location, MO, severity classification
+  - ScamStorage           — WAL-mode SQLite, threading.Lock(), zero-duplicate guarantee
+  - ScamFeedPipeline      — full orchestration end-to-end
 """
 
 import os
-import json
-import sqlite3
+import sys
 import logging
-import threading
-import time
-from datetime import datetime, timezone
+from pathlib import Path
 from typing import List, Dict, Any
-import hashlib
-import requests
 
 logger = logging.getLogger("netra.tavily_crawler")
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "threat_catalog.db")
 
-def init_news_table():
-    """Initializes the scam_news table in SQLite."""
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS scam_news (
-            id TEXT PRIMARY KEY,
-            title TEXT NOT NULL,
-            summary TEXT NOT NULL,
-            category TEXT NOT NULL,
-            risk_level TEXT NOT NULL,
-            source_name TEXT NOT NULL,
-            source_url TEXT NOT NULL,
-            financial_loss TEXT,
-            affected_region TEXT,
-            modus_operandi TEXT,
-            published_at TEXT NOT NULL,
-            crawled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-    conn.close()
+# Resolve the cyber_scam_feed package (lives at repo root, not inside netra/)
+_REPO_ROOT = Path(__file__).resolve().parents[4]  # …/newantigravworkfolder
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+try:
+    from cyber_scam_feed.storage import ScamStorage
+    from cyber_scam_feed.pipeline import ScamFeedPipeline
+    from cyber_scam_feed.config import DEFAULT_DB_PATH
+    _ENGINE_OK = True
+    logger.info("cyber_scam_feed production engine loaded successfully.")
+except ImportError as e:
+    _ENGINE_OK = False
+    logger.warning(f"cyber_scam_feed not importable — empty feed. Error: {e}")
+
+_storage = None
+
+def _get_storage():
+    global _storage
+    if _storage is None:
+        if not _ENGINE_OK:
+            raise RuntimeError("cyber_scam_feed not available")
+        _storage = ScamStorage(db_path=DEFAULT_DB_PATH)
+    return _storage
+
 
 def get_latest_scam_news(limit: int = 15) -> List[Dict[str, Any]]:
-    """Fetches latest crawled cyber scam news from SQLite."""
-    init_news_table()
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM scam_news ORDER BY published_at DESC, crawled_at DESC LIMIT ?", (limit,))
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    """
+    Returns latest verified cyber scam news from the production WAL-mode SQLite store.
+    Field names remapped to match both old backend schema and new enriched ArticleCard fields.
+    """
+    if not _ENGINE_OK:
+        return []
+    try:
+        storage = _get_storage()
+        summary = storage.get_summary()
+        reports = summary.reports[:limit]
+        feed = []
+        for r in reports:
+            feed.append({
+                "id":                 r.id,
+                "title":              r.title,
+                "summary":            r.summary or "",
+                "category":           r.category or "CYBER_FRAUD",
+                # Both key names for frontend compatibility
+                "risk_level":         r.severity or "HIGH",
+                "severity":           r.severity or "HIGH",
+                "source_name":        r.source_display or "Verified Source",
+                "source_url":         r.url or "",
+                "url":                r.url or "",
+                "financial_loss":     r.financial_loss_str or "",
+                "financial_loss_str": r.financial_loss_str or "",
+                "affected_region":    r.location or "India",
+                "location":           r.location or "India",
+                "modus_operandi":     "",
+                "published_at":       r.published_date or "",
+                "published_date":     r.published_date or "",
+                "image_url":          r.image_url or "",
+                "verified":           bool(r.verified),
+            })
+        return feed
+    except Exception as e:
+        logger.error(f"get_latest_scam_news error: {e}", exc_info=True)
+        return []
+
 
 def execute_tavily_crawl() -> Dict[str, Any]:
     """
-    Executes a real-time live search query using Tavily API if key is set,
-    or merges live intelligence into the SQLite store.
+    Triggers a live multi-vector Tavily crawl via ScamFeedPipeline.
+    Runs in FastAPI BackgroundTasks. Requires TAVILY_API_KEY env variable.
     """
-    init_news_table()
-    tavily_api_key = os.getenv("TAVILY_API_KEY", "")
-    
-    crawled_count = 0
-    if tavily_api_key:
-        try:
-            url = "https://api.tavily.com/search"
-            payload = {
-                "api_key": tavily_api_key,
-                "query": "India cyber crime digital arrest deepfake scam news police advisory",
-                "search_depth": "advanced",
-                "max_results": 10,
-                "include_domains": ["thehindu.com", "timesofindia.indiatimes.com", "financialexpress.com", "indianexpress.com", "ndtv.com"]
-            }
-            res = requests.post(url, json=payload, timeout=15)
-            if res.status_code == 200:
-                data = res.json()
-                conn = sqlite3.connect(DB_PATH)
-                cursor = conn.cursor()
-                for idx, r in enumerate(data.get("results", [])):
-                    article_url = r.get("url", "")
-                    url_hash = hashlib.sha256(article_url.encode("utf-8")).hexdigest()[:12].upper() if article_url else f"{idx}"
-                    news_id = f"TAVILY-{url_hash}"
-                    cursor.execute("""
-                        INSERT OR REPLACE INTO scam_news 
-                        (id, title, summary, category, risk_level, source_name, source_url, financial_loss, affected_region, modus_operandi, published_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (
-                        news_id,
-                        r.get("title", "Cyber Crime Incident"),
-                        r.get("content", "")[:300] + "...",
-                        "DIGITAL_ARREST" if "arrest" in r.get("title", "").lower() else "DEEPFAKE_IMPERSONATION" if "deepfake" in r.get("title", "").lower() else "INVESTMENT_FRAUD",
-                        "CRITICAL",
-                        r.get("url", "News Source").split("//")[-1].split("/")[0],
-                        r.get("url", "#"),
-                        "Ongoing Investigation",
-                        "India",
-                        "Extracted via 24h Tavily Autonomous Cyber Threat Engine",
-                        datetime.now(timezone.utc).strftime("%Y-%m-%d")
-                    ))
-                    crawled_count += 1
-                conn.commit()
-                conn.close()
-        except Exception as e:
-            logger.error("Tavily API crawl error: %s", str(e))
+    if not _ENGINE_OK:
+        return {"status": "skipped", "reason": "cyber_scam_feed not available"}
 
-    # Broadcast intelligence digest to Telegram and WhatsApp bots
+    api_key = os.getenv("TAVILY_API_KEY", "")
+    if not api_key:
+        logger.warning("TAVILY_API_KEY not set — live crawl skipped.")
+        return {"status": "skipped", "reason": "TAVILY_API_KEY not configured"}
+
     try:
-        broadcast_daily_threat_intelligence()
-    except Exception as e:
-        logger.warning("Broadcast trigger warning: %s", str(e))
-
-    return {
-        "status": "success",
-        "crawled_count": crawled_count,
-        "synced_at": datetime.now(timezone.utc).isoformat(),
-        "total_active_news": len(get_latest_scam_news(50))
-    }
-
-def broadcast_daily_threat_intelligence():
-    """Broadcasts 24-hour top cyber threat advisories to Telegram bot and WhatsApp bot."""
-    try:
-        articles = get_latest_scam_news(3)
-        if not articles:
-            return
-
-        telegram_text = (
-            "🚨 *NETRA 24-Hour Autonomous Threat Intelligence Brief*\n\n"
-            "Top verified cyber threats and scams detected in the last 24 hours:\n\n"
+        pipeline = ScamFeedPipeline(api_key=api_key, db_path=DEFAULT_DB_PATH)
+        result = pipeline.run_sync()
+        logger.info(
+            f"Tavily crawl complete: {result['new_reports_ingested']} new, "
+            f"{result['duplicate_reports_skipped']} duplicates, "
+            f"{result['total_verified_reports']} total."
         )
-        for i, a in enumerate(articles, 1):
-            telegram_text += (
-                f"{i}. *{a.get('title')}*\n"
-                f"   • *Category:* {a.get('category', 'CYBER_SCAM')}\n"
-                f"   • *Impact:* {a.get('reported_loss', 'Financial Fraud')}\n"
-                f"   • *Region:* {a.get('city', 'India')}\n"
-                f"   • [Read Advisory]({a.get('url', '#')})\n\n"
-            )
-        telegram_text += "🛡️ _Report threats or verify media via @netra_aibot or netra.ai_"
-
-        # 1. Telegram Dispatch
-        bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "8708018934:AAGcftsAgA02vlp9oBIAxM10bq4G29ucQWo")
-        admin_chat_id = os.getenv("TELEGRAM_ADMIN_CHAT_ID")
-        if bot_token and admin_chat_id:
-            try:
-                url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                requests.post(url, json={
-                    "chat_id": admin_chat_id,
-                    "text": telegram_text,
-                    "parse_mode": "Markdown",
-                    "disable_web_page_preview": True
-                }, timeout=10)
-                logger.info("Dispatched 24h intelligence digest to Telegram chat %s", admin_chat_id)
-            except Exception as e:
-                logger.warning("Telegram broadcast notice: %s", str(e))
-
-        # 2. WhatsApp Webhook Dispatch
-        whatsapp_webhook_url = os.getenv("WHATSAPP_DIGEST_WEBHOOK_URL")
-        if whatsapp_webhook_url:
-            try:
-                requests.post(whatsapp_webhook_url, json={
-                    "event": "daily_threat_digest",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "articles": articles
-                }, timeout=10)
-                logger.info("Dispatched 24h intelligence digest to WhatsApp webhook")
-            except Exception as e:
-                logger.warning("WhatsApp broadcast notice: %s", str(e))
-
+        return result
     except Exception as e:
-        logger.error("Failed to execute daily threat digest broadcast: %s", str(e))
-
-def start_24h_background_worker():
-    """Starts a daemon thread that runs Tavily crawl every 24 hours."""
-    def worker():
-        while True:
-            try:
-                logger.info("Executing scheduled 24-hour Tavily cyber scam intelligence crawl...")
-                execute_tavily_crawl()
-            except Exception as e:
-                logger.error("Background crawler error: %s", str(e))
-            # Sleep 24 hours (86,400 seconds)
-            time.sleep(86400)
-
-    t = threading.Thread(target=worker, daemon=True)
-    t.start()
-    logger.info("24-Hour Tavily Cyber Scam Background Crawler active.")
-
-# Initialize database table on import
-init_news_table()
+        logger.error(f"execute_tavily_crawl error: {e}", exc_info=True)
+        return {"status": "error", "reason": str(e)}
