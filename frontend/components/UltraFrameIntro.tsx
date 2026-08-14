@@ -7,7 +7,6 @@ import {
   RotateCcw,
   ChevronLeft,
   ChevronRight,
-  Crosshair,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -43,7 +42,6 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [isZoomedOnKite, setIsZoomedOnKite] = useState<boolean>(false);
-  const [showTelemetryHUD] = useState<boolean>(true);
   const [isHoldingFinal, setIsHoldingFinal] = useState<boolean>(false);
 
   const requestRef = useRef<number | null>(null);
@@ -468,25 +466,6 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
           }}
         />
 
-        {/* Telemetry HUD */}
-        {showTelemetryHUD && !isZoomedOnKite && (
-          <>
-            <div className="absolute top-6 left-6 font-mono text-[10px] text-zinc-500 space-y-0.5 pointer-events-none">
-              <div className="text-zinc-400 font-bold flex items-center gap-1.5">
-                <Crosshair className="size-3 text-cyan-400" />
-                <span>MORPH ENGINE: CUBIC POLYGON INTERPOLATION</span>
-              </div>
-              <div>KITE VERTEX PROGRESS: {(easedMorph * 100).toFixed(1)}%</div>
-              <div>RESOLUTION: 420 DISCRETE FRAMES @ 60 FPS</div>
-            </div>
-
-            <div className="absolute top-6 right-6 font-mono text-[10px] text-zinc-500 text-right space-y-0.5 pointer-events-none">
-              <div className="text-amber-400 font-bold">STATUS: FLUID METAMORPHOSIS</div>
-              <div>CENTER: (100, 100) &bull; TOP: (100, {topVertex.y.toFixed(1)})</div>
-              <div>BOTTOM: (100, {bottomVertex.y.toFixed(1)})</div>
-            </div>
-          </>
-        )}
 
         {/* STAGE RIG */}
         <div
@@ -783,13 +762,6 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
           )}
         </div>
 
-        {/* Live Ticker */}
-        <div className="absolute bottom-4 right-6 text-[10px] font-mono text-zinc-500 flex items-center gap-2 pointer-events-none">
-          <span>PIPELINE:</span>
-          <span className="text-cyan-400 font-bold">420 DISCRETE FRAMES</span>
-          <span className="text-zinc-600">&bull;</span>
-          <span>STEP: 1/60s</span>
-        </div>
       </div>
     </div>
   );
