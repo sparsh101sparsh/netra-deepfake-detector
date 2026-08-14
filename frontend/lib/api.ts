@@ -260,6 +260,30 @@ export async function getWorkerFleetStatus(): Promise<WorkerFleetStatusResponse 
   }
 }
 
+export interface VideoMediaSources {
+  primaryUrl: string | null;
+  streamUrl: string;
+}
+
+/** Get S3 presigned URL and streaming proxy URL for resilient video playback. */
+export async function getVideoMediaSources(jobId: string): Promise<VideoMediaSources> {
+  const fallbackStream = `${API_BASE}/api/v1/jobs/${jobId}/stream`;
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/jobs/${jobId}/video-url`, {
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      return { primaryUrl: fallbackStream, streamUrl: fallbackStream };
+    }
+    const data = await res.json();
+    const primary = data.url || fallbackStream;
+    const stream = data.stream_url ? `${API_BASE}${data.stream_url}` : fallbackStream;
+    return { primaryUrl: primary, streamUrl: stream };
+  } catch {
+    return { primaryUrl: fallbackStream, streamUrl: fallbackStream };
+  }
+}
+
 /** Get presigned S3 URL for video playback. */
 export async function getVideoUrl(jobId: string): Promise<string | null> {
   try {

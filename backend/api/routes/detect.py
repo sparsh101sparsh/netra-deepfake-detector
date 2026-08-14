@@ -30,7 +30,7 @@ def get_dynamo_table() -> str:
 
 
 def get_boto3_client(service_name: str):
-    kwargs = {"region_name": os.getenv("AWS_DEFAULT_REGION", "us-east-1")}
+    kwargs = {"region_name": os.getenv("AWS_DEFAULT_REGION", "ap-south-1")}
     ak = os.getenv("AWS_ACCESS_KEY_ID")
     sk = os.getenv("AWS_SECRET_ACCESS_KEY")
     if ak and sk:
@@ -86,7 +86,13 @@ async def detect_full(file: UploadFile = File(...)):
     # Try AWS services; handle sandbox / offline gracefully
     try:
         s3 = get_boto3_client("s3")
-        s3.upload_fileobj(io.BytesIO(contents), s3_bucket, s3_key)
+        content_type = file.content_type or "video/mp4"
+        s3.upload_fileobj(
+            io.BytesIO(contents),
+            s3_bucket,
+            s3_key,
+            ExtraArgs={"ContentType": content_type}
+        )
     except Exception:
         pass
 

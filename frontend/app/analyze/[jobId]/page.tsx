@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   pollJobStatus,
   getVideoUrl,
+  getVideoMediaSources,
   JobStatusResponse,
   DetectionResult,
   WorkerTelemetry,
@@ -15,6 +16,7 @@ import {
 import EvidenceTimeline from "@/components/EvidenceTimeline";
 import ConfidenceMeter from "@/components/ConfidenceMeter";
 import DetectorScorecard from "@/components/DetectorScorecard";
+import { ResilientVideoPlayer } from "@/components/player/ResilientVideoPlayer";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { StatusPill } from "@/components/atoms/StatusPill";
@@ -78,6 +80,10 @@ export default function AnalysisPage({ params }: Props) {
   const { jobId } = params;
   const [jobStatus, setJobStatus] = useState<JobStatusResponse | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoSources, setVideoSources] = useState<{ primaryUrl: string | null; streamUrl: string }>({
+    primaryUrl: null,
+    streamUrl: `/api/backend/api/v1/jobs/${jobId}/stream`,
+  });
   const [error, setError] = useState<string | null>(null);
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
   const [copiedReport, setCopiedReport] = useState<boolean>(false);
@@ -125,8 +131,11 @@ export default function AnalysisPage({ params }: Props) {
             if (status.status === "error") {
               setError(status.error || "Analysis failed. Please try again.");
             } else {
-              const url = await getVideoUrl(jobId);
-              if (!cancelled) setVideoUrl(url);
+              const sources = await getVideoMediaSources(jobId);
+              if (!cancelled) {
+                setVideoSources(sources);
+                setVideoUrl(sources.primaryUrl || sources.streamUrl);
+              }
             }
           }
         }
@@ -638,18 +647,15 @@ export default function AnalysisPage({ params }: Props) {
                 </span>
               </div>
 
-              {videoUrl && (
-                <div className="rounded-xl overflow-hidden border border-line bg-black flex justify-center items-center shadow-inner relative max-w-2xl mx-auto aspect-video">
-                  <video
-                    ref={videoRef}
-                    src={videoUrl}
-                    controls
-                    playsInline
-                    onLoadedMetadata={(e) => setVideoDuration(e.currentTarget.duration)}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              )}
+              <div className="rounded-xl overflow-hidden border border-line bg-black flex justify-center items-center shadow-inner relative max-w-2xl mx-auto aspect-video">
+                <ResilientVideoPlayer
+                  videoRef={videoRef}
+                  primaryUrl={videoSources.primaryUrl}
+                  fallbackUrl={videoSources.streamUrl}
+                  onLoadedMetadata={(e) => setVideoDuration(e.currentTarget.duration)}
+                  className="w-full h-full object-contain"
+                />
+              </div>
 
               <div className="p-4 rounded-xl bg-inset border border-line">
                 <EvidenceTimeline

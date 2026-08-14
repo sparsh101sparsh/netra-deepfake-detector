@@ -4,8 +4,8 @@ Exposes /api/v1/jobs/{job_id}, /api/v1/detect/status/{job_id}, and WebSocket pro
 enriched with real-time worker fleet presence and forensic stage telemetry.
 """
 
-from fastapi import APIRouter, HTTPException, WebSocket
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, WebSocket, Header, Request
+from fastapi.responses import JSONResponse, StreamingResponse
 import boto3
 import json
 import os
@@ -271,24 +271,163 @@ async def websocket_progress(ws: WebSocket, job_id: str):
 @router.get("/jobs/{job_id}/video-url")
 async def get_video_presigned_url(job_id: str):
     """
-    Returns a presigned S3 URL for the job's input video.
-    Used by frontend Evidence Timeline click-to-seek feature.
+    Returns a presigned S3 URL for the job's input video with video/mp4 Content-Type override.
+    Also returns a fallback proxy streaming route.
     """
-    from .detect import get_boto3_client as get_s3_client  # reuse detect's cred-injecting helper
-    s3 = get_s3_client("s3")
-    s3_bucket = os.getenv("S3_BUCKET_MEDIA", "netra-media-uploads")
+    from .detect import get_boto3_client as get_s3_client, get_s3_bucket
+    s3_bucket = get_s3_bucket()
     s3_key = f"{job_id}/input.mp4"
+    stream_url = f"/api/v1/jobs/{job_id}/stream"
 
     try:
+        s3 = get_s3_client("s3")
         url = s3.generate_presigned_url(
             "get_object",
-            Params={"Bucket": s3_bucket, "Key": s3_key},
+            Params={
+                "Bucket": s3_bucket,
+                "Key": s3_key,
+                "ResponseContentType": "video/mp4",
+                "ResponseContentDisposition": "inline",
+            },
             ExpiresIn=3600  # 1 hour
         )
-        return {"url": url, "expires_in": 3600}
+        return {"url": url, "stream_url": stream_url, "expires_in": 3600}
     except Exception as e:
-        # Fallback local URL if S3 presigned generation fails in dev/offline mode
-        return {"url": f"/media/{job_id}/input.mp4", "expires_in": 3600}
+        logger.warning(f"S3 presigned URL generation failed for job {job_id}: {e}")
+        # Fallback local/proxy URL if S3 presigned generation fails in dev/offline mode
+        return {"url": stream_url, "stream_url": stream_url, "expires_in": 3600}
+
+
+@router.get("/jobs/{job_id}/stream")
+async def stream_video(job_id: str, request: Request, range: Optional[str] = Header(None)):
+    """
+    HTTP 206 Partial Content / Range video streaming proxy.
+    Streams directly from local media storage or proxies S3 byte chunks
+    with proper video/mp4 MIME type and Accept-Ranges headers.
+    """
+    from .detect import get_boto3_client as get_s3_client, get_s3_bucket
+
+    # 1. Check local media storage first
+    local_candidates = [
+        os.path.join(MEDIA_DIR, f"{job_id}.mp4"),
+        os.path.join(MEDIA_DIR, "videos", f"{job_id}.mp4"),
+        os.path.join(MEDIA_DIR, job_id, "input.mp4"),
+        os.path.join("/tmp", f"{job_id}.mp4"),
+    ]
+    local_path = None
+    for cand in local_candidates:
+        if os.path.exists(cand) and os.path.getsize(cand) > 0:
+            local_path = cand
+            break
+
+    if local_path:
+        file_size = os.path.getsize(local_path)
+        if range:
+            try:
+                range_str = range.replace("bytes=", "").strip()
+                parts = range_str.split("-")
+                start = int(parts[0]) if parts[0] else 0
+                end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1
+                end = min(end, file_size - 1)
+                chunk_len = max(0, end - start + 1)
+            except Exception:
+                start = 0
+                end = file_size - 1
+                chunk_len = file_size
+
+            def local_chunk_generator():
+                with open(local_path, "rb") as f:
+                    f.seek(start)
+                    remaining = chunk_len
+                    while remaining > 0:
+                        read_len = min(64 * 1024, remaining)
+                        data = f.read(read_len)
+                        if not data:
+                            break
+                        remaining -= len(data)
+                        yield data
+
+            headers = {
+                "Content-Range": f"bytes {start}-{end}/{file_size}",
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(chunk_len),
+                "Content-Type": "video/mp4",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
+            }
+            return StreamingResponse(local_chunk_generator(), status_code=206, headers=headers, media_type="video/mp4")
+        else:
+            def full_local_generator():
+                with open(local_path, "rb") as f:
+                    while True:
+                        data = f.read(64 * 1024)
+                        if not data:
+                            break
+                        yield data
+
+            headers = {
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(file_size),
+                "Content-Type": "video/mp4",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
+            }
+            return StreamingResponse(full_local_generator(), status_code=200, headers=headers, media_type="video/mp4")
+
+    # 2. Stream from AWS S3
+    s3_bucket = get_s3_bucket()
+    s3_key = f"{job_id}/input.mp4"
+    try:
+        s3 = get_s3_client("s3")
+        head = s3.head_object(Bucket=s3_bucket, Key=s3_key)
+        file_size = head["ContentLength"]
+
+        if range:
+            try:
+                range_str = range.replace("bytes=", "").strip()
+                parts = range_str.split("-")
+                start = int(parts[0]) if parts[0] else 0
+                end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1
+                end = min(end, file_size - 1)
+                chunk_len = max(0, end - start + 1)
+            except Exception:
+                start = 0
+                end = file_size - 1
+                chunk_len = file_size
+
+            s3_resp = s3.get_object(Bucket=s3_bucket, Key=s3_key, Range=f"bytes={start}-{end}")
+            headers = {
+                "Content-Range": f"bytes {start}-{end}/{file_size}",
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(chunk_len),
+                "Content-Type": "video/mp4",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
+            }
+            return StreamingResponse(
+                s3_resp["Body"].iter_chunks(chunk_size=64 * 1024),
+                status_code=206,
+                headers=headers,
+                media_type="video/mp4"
+            )
+        else:
+            s3_resp = s3.get_object(Bucket=s3_bucket, Key=s3_key)
+            headers = {
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(file_size),
+                "Content-Type": "video/mp4",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
+            }
+            return StreamingResponse(
+                s3_resp["Body"].iter_chunks(chunk_size=64 * 1024),
+                status_code=200,
+                headers=headers,
+                media_type="video/mp4"
+            )
+    except Exception as e:
+        logger.error(f"Error streaming video for job {job_id}: {e}")
+        raise HTTPException(status_code=404, detail=f"Video stream unavailable for job {job_id}: {str(e)}")
 
 
 @router.get("/jobs/{job_id}/report.pdf")
