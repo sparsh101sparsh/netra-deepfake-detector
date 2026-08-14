@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils";
 import { ArticleCard, ScamNewsArticle } from "./ArticleCard";
 import { TavilySyncIndicator, FeedSkeleton } from "./TavilySyncIndicator";
 import { Button } from "@/components/atoms/Button";
-import { GlidingFilterTabs } from "@/components/atoms/GlidingFilterTabs";
 import { GlideMenu } from "@/components/atoms/GlideMenu";
 
 export interface LiveCyberScamNewsFeedProps {
@@ -144,21 +143,9 @@ export function LiveCyberScamNewsFeed({
           totalCount={articles.length}
           compact={compact}
         />
-
-        {/* 3. Category Filter Tabs with Gliding Indicator */}
-        <GlidingFilterTabs
-          tabs={CATEGORIES.map((c) => ({
-            id: c.id,
-            label: compact ? c.shortLabel : c.label,
-          }))}
-          activeId={activeCategory}
-          onChange={setActiveCategory}
-          pillVariant="rounded-xl"
-          className="p-1 rounded-xl bg-[#18181B] border border-white/10"
-        />
       </div>
 
-      {/* 4. Continuous Unified News Stream (Flush with card border for scrollbar) */}
+      {/* 3. Continuous Unified News Stream (Flush with card border for scrollbar) */}
       <div
         className={cn(
           "flex-1 overflow-y-auto min-h-[380px] custom-scrollbar",

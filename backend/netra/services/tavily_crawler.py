@@ -102,12 +102,71 @@ def execute_tavily_crawl() -> Dict[str, Any]:
         except Exception as e:
             logger.error("Tavily API crawl error: %s", str(e))
 
+    # Broadcast intelligence digest to Telegram and WhatsApp bots
+    try:
+        broadcast_daily_threat_intelligence()
+    except Exception as e:
+        logger.warning("Broadcast trigger warning: %s", str(e))
+
     return {
         "status": "success",
         "crawled_count": crawled_count,
         "synced_at": datetime.now(timezone.utc).isoformat(),
         "total_active_news": len(get_latest_scam_news(50))
     }
+
+def broadcast_daily_threat_intelligence():
+    """Broadcasts 24-hour top cyber threat advisories to Telegram bot and WhatsApp bot."""
+    try:
+        articles = get_latest_scam_news(3)
+        if not articles:
+            return
+
+        telegram_text = (
+            "🚨 *NETRA 24-Hour Autonomous Threat Intelligence Brief*\n\n"
+            "Top verified cyber threats and scams detected in the last 24 hours:\n\n"
+        )
+        for i, a in enumerate(articles, 1):
+            telegram_text += (
+                f"{i}. *{a.get('title')}*\n"
+                f"   • *Category:* {a.get('category', 'CYBER_SCAM')}\n"
+                f"   • *Impact:* {a.get('reported_loss', 'Financial Fraud')}\n"
+                f"   • *Region:* {a.get('city', 'India')}\n"
+                f"   • [Read Advisory]({a.get('url', '#')})\n\n"
+            )
+        telegram_text += "🛡️ _Report threats or verify media via @netra_aibot or netra.ai_"
+
+        # 1. Telegram Dispatch
+        bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "8708018934:AAGcftsAgA02vlp9oBIAxM10bq4G29ucQWo")
+        admin_chat_id = os.getenv("TELEGRAM_ADMIN_CHAT_ID")
+        if bot_token and admin_chat_id:
+            try:
+                url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                requests.post(url, json={
+                    "chat_id": admin_chat_id,
+                    "text": telegram_text,
+                    "parse_mode": "Markdown",
+                    "disable_web_page_preview": True
+                }, timeout=10)
+                logger.info("Dispatched 24h intelligence digest to Telegram chat %s", admin_chat_id)
+            except Exception as e:
+                logger.warning("Telegram broadcast notice: %s", str(e))
+
+        # 2. WhatsApp Webhook Dispatch
+        whatsapp_webhook_url = os.getenv("WHATSAPP_DIGEST_WEBHOOK_URL")
+        if whatsapp_webhook_url:
+            try:
+                requests.post(whatsapp_webhook_url, json={
+                    "event": "daily_threat_digest",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "articles": articles
+                }, timeout=10)
+                logger.info("Dispatched 24h intelligence digest to WhatsApp webhook")
+            except Exception as e:
+                logger.warning("WhatsApp broadcast notice: %s", str(e))
+
+    except Exception as e:
+        logger.error("Failed to execute daily threat digest broadcast: %s", str(e))
 
 def start_24h_background_worker():
     """Starts a daemon thread that runs Tavily crawl every 24 hours."""

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { 
-  Key, Terminal, Shield, Copy, Check, Plus, Trash2, 
+  Key, Terminal, Copy, Check, Plus, Trash2, 
   Play, Sparkles, Code, RefreshCw, Send, CheckCircle2, AlertCircle 
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
@@ -26,6 +26,7 @@ export default function DevelopersPage() {
   const [keys, setKeys] = useState<ApiKeyItem[]>([]);
   const [activeKey, setActiveKey] = useState<string>("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
   const [keyNameInput, setKeyNameInput] = useState("");
   const [isCreatingKey, setIsCreatingKey] = useState(false);
   const [activeSnippetTab, setActiveSnippetTab] = useState<"curl" | "python" | "javascript">("curl");
@@ -72,6 +73,7 @@ export default function DevelopersPage() {
         setKeyNameInput("");
         setIsCreatingKey(false);
         if (data.key?.raw_key) {
+          setNewlyCreatedKey(data.key.raw_key);
           setActiveKey(data.key.raw_key);
         }
         fetchKeys();
@@ -204,6 +206,51 @@ export default function DevelopersPage() {
                 </form>
               )}
 
+              {/* Newly Created Key Alert Banner */}
+              {newlyCreatedKey && (
+                <div className="p-4 rounded-xl bg-accent/10 border-[1.5px] border-accent/40 space-y-2 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-ink flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      Key Created Successfully
+                    </span>
+                    <button
+                      onClick={() => setNewlyCreatedKey(null)}
+                      className="text-[11px] text-ink-3 hover:text-ink font-semibold"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-ink-2 leading-relaxed">
+                    Copy your API key now. For your security, this key won&apos;t be shown again in full.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="text"
+                      readOnly
+                      value={newlyCreatedKey}
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-surface border border-line font-mono text-xs text-accent select-all outline-none"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(newlyCreatedKey)}
+                      className="px-3 py-1.5 rounded-lg bg-accent text-white hover:bg-accent/90 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 shadow-sm"
+                    >
+                      {copiedKey === newlyCreatedKey ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Keys List */}
               <div className="space-y-3">
                 {keys.length === 0 ? (
@@ -261,52 +308,6 @@ export default function DevelopersPage() {
                   </GlideMenu>
                 )}
               </div>
-            </div>
-
-            {/* Usage Quota Card */}
-            <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card space-y-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-600 dark:text-green-400">
-                  <Shield className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="font-bold text-sm text-ink">Usage Quota</h2>
-                  <span className="text-[10px] text-green-600 dark:text-green-400">
-                    {activeKeyData?.tier ? `${activeKeyData.tier.toUpperCase()} TIER` : "No Active Key"}
-                  </span>
-                </div>
-              </div>
-
-              {activeKeyData ? (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs text-ink-2 font-mono">
-                    <span>API Calls Used</span>
-                    <strong>{activeKeyData.used_requests} / {activeKeyData.monthly_quota}</strong>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-inset overflow-hidden border border-line">
-                    <div
-                      className="h-full bg-accent rounded-full transition-all"
-                      style={{
-                        width: `${Math.max(
-                          2,
-                          Math.min(
-                            100,
-                            (activeKeyData.used_requests / (activeKeyData.monthly_quota || 1)) * 100
-                          )
-                        )}%`,
-                      }}
-                    ></div>
-                  </div>
-                  <div className="text-[10px] text-ink-3 flex justify-between pt-1 font-mono">
-                    <span>Rate: 60 req/min</span>
-                    <span>Monthly Quota Active</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="py-4 text-center text-xs text-ink-3">
-                  Generate an API key above to activate and track your quota consumption.
-                </div>
-              )}
             </div>
 
           </div>
