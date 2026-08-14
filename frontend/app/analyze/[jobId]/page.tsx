@@ -84,6 +84,7 @@ export default function AnalysisPage({ params }: Props) {
   const [activeWorkerCmdTab, setActiveWorkerCmdTab] = useState<"python" | "npm">("python");
   const [elapsedQueueSeconds, setElapsedQueueSeconds] = useState<number>(0);
   const [videoDuration, setVideoDuration] = useState<number>(0);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -693,26 +694,51 @@ export default function AnalysisPage({ params }: Props) {
                     )}
                   </button>
                   <button
-                    onClick={() => generateForensicPDF({
-                      id: jobId,
-                      title: "Video Forensic Analysis",
-                      verdict: result.verdict,
-                      confidence: result.confidence,
-                      riskLevel: result.risk_level || "LOW",
-                      timestamp: jobStatus?.created_at || undefined,
-                      scores: {
-                        gendScore: result.gend_score,
-                        visualScore: result.visual_score,
-                        audioScore: result.audio_score,
-                        clipScore: result.clip_score,
-                      },
-                      frames: result.frames,
-                      summary: result.forensic_report,
-                    })}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-accent/10 border border-accent/30 text-xs font-medium text-accent hover:bg-accent/20 transition-all shadow-sm"
+                    disabled={isGeneratingPdf}
+                    onClick={async () => {
+                      try {
+                        setIsGeneratingPdf(true);
+                        await generateForensicPDF({
+                          id: jobId,
+                          title: "Video Forensic Analysis",
+                          verdict: result.verdict,
+                          confidence: result.confidence,
+                          riskLevel: result.risk_level || "LOW",
+                          timestamp: jobStatus?.created_at || undefined,
+                          scores: {
+                            gendScore: result.gend_score,
+                            visualScore: result.visual_score,
+                            audioScore: result.audio_score,
+                            clipScore: result.clip_score,
+                          },
+                          frames: result.frames,
+                          keyframeSnapshots: (result as any).keyframe_snapshots || (result.frames as any[])?.filter((f: any) => f.annotated_image_url).map((f: any) => ({
+                            frame_number: f.frame_number,
+                            timestamp: f.timestamp,
+                            anomaly_region: f.anomaly_region,
+                            anomaly_score: f.confidence,
+                            detector_subsystem: f.detector_subsystem,
+                            bounding_box: f.bounding_box,
+                          })),
+                          summary: result.forensic_report,
+                        });
+                      } finally {
+                        setTimeout(() => setIsGeneratingPdf(false), 1200);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/15 border border-accent/40 text-xs font-semibold text-accent hover:bg-accent/25 transition-all shadow-sm active:scale-95 disabled:opacity-50"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download PDF</span>
+                    {isGeneratingPdf ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                        <span>Compiling Forensic PDF...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Generate &amp; Download Forensic PDF</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
