@@ -22,19 +22,40 @@ logging.basicConfig(
 )
 logger = logging.getLogger("netra.worker")
 
+import os, sys
+from dotenv import load_dotenv
+
+# Ensure root and backend directories are in sys.path
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+backend_dir = os.path.join(root_dir, "backend")
+for p in [root_dir, backend_dir]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
+load_dotenv(os.path.join(root_dir, ".env"))
+load_dotenv(os.path.join(backend_dir, ".env"))
+
 # AWS Config
 REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
-SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL", "")
+SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL", "https://sqs.us-east-1.amazonaws.com/131746731374/netra-jobs")
 S3_BUCKET_MEDIA = os.getenv("S3_BUCKET_MEDIA", "netra-media-uploads")
 S3_BUCKET_MODELS = os.getenv("S3_BUCKET_MODELS", "netra-models")
 DYNAMO_TABLE = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
 SPATIAL_MODEL_PATH = os.getenv("SPATIAL_MODEL_PATH", "/opt/netra/models/spatial/model.pth")
 CLIP_PROBE_PATH = os.getenv("CLIP_PROBE_PATH", "/opt/netra/models/clip_probe/model.pth")
 
-# AWS clients
-sqs = boto3.client("sqs", region_name=REGION)
-s3 = boto3.client("s3", region_name=REGION)
-dynamodb = boto3.client("dynamodb", region_name=REGION)
+def get_boto3(service_name: str):
+    kwargs = {"region_name": REGION}
+    ak = os.getenv("AWS_ACCESS_KEY_ID")
+    sk = os.getenv("AWS_SECRET_ACCESS_KEY")
+    if ak and sk:
+        kwargs["aws_access_key_id"] = ak.strip()
+        kwargs["aws_secret_access_key"] = sk.strip()
+    return boto3.client(service_name, **kwargs)
+
+sqs = get_boto3("sqs")
+s3 = get_boto3("s3")
+dynamodb = get_boto3("dynamodb")
 
 
 def update_job_progress(job_id: str, status: str, progress: int, stage: str):
@@ -205,12 +226,12 @@ def process_job(job_id: str, s3_key: str):
                 video_duration=video_duration,
             )
 
-            # === STAGE 9: Bedrock forensic report ===
-            update_job_progress(job_id, "processing", 92, "Generating forensic report via Amazon Bedrock")
-            from netra.llm.bedrock import BedrockForensicInvestigator
-            bedrock = BedrockForensicInvestigator()
-            evidence_json = evidence.to_llm_prompt_json()
-            bedrock_result = bedrock.generate_forensic_report(evidence_json)
+            # === STAGE 9: Deterministic Forensic Evidence Dossier ===
+            update_job_progress(job_id, "processing", 92, "Consolidating forensic evidence dossier")
+            bedrock_result = {
+                "full_report": f"Forensic analysis completed for job {job_id}. Verdict: {fusion_result['verdict']} with {fusion_result['confidence']:.1f}% confidence. Visual score: {fusion_result['visual_score']:.2f}, Risk level: {fusion_result['risk_level']}.",
+                "generated_by": "NETRA Neural Forensic Engine v5.0 (Deterministic)"
+            }
 
             # === STAGE 10: Compose final result ===
             update_job_progress(job_id, "processing", 98, "Finalizing results")
