@@ -43,16 +43,6 @@ export interface ArticleCardProps {
   compact?: boolean;
 }
 
-// Curated high-res dark forensic thumbnails matching Indian cyber threat topics
-const CATEGORY_THUMBNAILS: Record<string, string> = {
-  DIGITAL_ARREST: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80", // Law / Police
-  DEEPFAKE_IMPERSONATION: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80", // Dark Cyber Matrix
-  INVESTMENT_FRAUD: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=600&q=80", // Financial Chart
-  APK_TROJAN: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=600&q=80", // Mobile Security
-  ELECTRICITY_KYC: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=600&q=80", // Server Rack
-  VOICE_CLONE: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80", // Audio Studio
-  DEFAULT: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80", // Dark Matrix
-};
 
 function getCategoryIcon(category: string) {
   switch (category?.toUpperCase()) {
@@ -134,12 +124,9 @@ function formatIndianDate(dateStr?: string): string {
 export function ArticleCard({ article, className, compact = false }: ArticleCardProps) {
   const [imgError, setImgError] = useState(false);
 
-  // Prioritize authentic scraped news thumbnail, with category fallback
-  const initialThumbnail =
-    article.thumbnail_url ||
-    article.image_url ||
-    CATEGORY_THUMBNAILS[article.category] ||
-    CATEGORY_THUMBNAILS.DEFAULT;
+  // Prioritize authentic scraped news thumbnail; ignore any generic stock photos
+  const rawThumbnail = (article.thumbnail_url || article.image_url || "").trim();
+  const initialThumbnail = rawThumbnail.includes("unsplash.com") ? "" : rawThumbnail;
 
   const riskTone = resolveRiskTone(article.risk_level);
   const externalUrl = article.source_url || "https://cybercrime.gov.in";

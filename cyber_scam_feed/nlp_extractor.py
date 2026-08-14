@@ -13,13 +13,13 @@ from datetime import datetime, timezone
 
 from cyber_scam_feed.models import ScamReport
 
-# Categorical image assets
+# Categorical fallback image assets (leave empty so authentic scraped images or clean UI badges are rendered)
 FALLBACK_CATEGORY_IMAGES = {
-    "Digital Arrest": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80",  # Legal / Scales
-    "Apk Trojan": "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=400&q=80",      # Mobile security
-    "Deepfake Impersonation": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=400&q=80", # Cyber matrix
-    "Investment Fraud": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=400&q=80",   # Stock chart
-    "Cyber Fraud": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80"
+    "Digital Arrest": "",
+    "Apk Trojan": "",
+    "Deepfake Impersonation": "",
+    "Investment Fraud": "",
+    "Cyber Fraud": ""
 }
 
 
