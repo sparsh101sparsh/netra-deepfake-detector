@@ -315,14 +315,16 @@ def parse_raw_tavily_result(result: Dict[str, Any], category_hint: str = "") -> 
     sources, source_display = extract_publisher(url, title)
     mo_summary = extract_modus_operandi(snippet, title, category)
 
-    image_url = ""
-    # Check if result has images or fallback
-    images = result.get("images", [])
-    if images and isinstance(images, list) and len(images) > 0:
-        first_img = images[0]
-        image_url = first_img.get("url") if isinstance(first_img, dict) else str(first_img)
-
-    if not image_url:
+    # Scrape authentic editorial thumbnail directly from the news site (og:image / twitter:image)
+    try:
+        from cyber_scam_feed.image_scraper import resolve_best_thumbnail
+        fallback = FALLBACK_CATEGORY_IMAGES.get(category, FALLBACK_CATEGORY_IMAGES["Cyber Fraud"])
+        image_url = resolve_best_thumbnail(
+            article_url=url,
+            tavily_images=result.get("images", []),
+            fallback_category_image=fallback
+        )
+    except Exception:
         image_url = FALLBACK_CATEGORY_IMAGES.get(category, FALLBACK_CATEGORY_IMAGES["Cyber Fraud"])
 
     report_id = generate_deterministic_id(url, title)

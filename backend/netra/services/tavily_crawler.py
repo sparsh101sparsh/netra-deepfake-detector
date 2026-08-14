@@ -85,6 +85,7 @@ def get_latest_scam_news(limit: int = 15) -> List[Dict[str, Any]]:
                 "published_at":       r.published_date or "",
                 "published_date":     r.published_date or "",
                 "image_url":          r.image_url or "",
+                "thumbnail_url":      r.image_url or "",
                 "verified":           bool(r.verified),
             })
         return feed

@@ -33,37 +33,43 @@ def get_tavily_api_key() -> str:
     return "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"
 
 
-# Default scam intelligence search queries targeting national and regional alerts
+# Default scam intelligence search queries targeting national and regional alerts (2026 fresh recency)
 DEFAULT_SEARCH_QUERIES = [
     {
-        "query": "supreme court CBI digital arrest scam nationwide probe",
+        "query": "India digital arrest scam police advisory cyber crime 2026",
         "category_hint": "Digital Arrest",
-        "topic": "news"
+        "topic": "news",
+        "time_range": "week"
     },
     {
-        "query": "fake apk malware steal money judge bombay high court accessibility service",
+        "query": "cyber police bust fake call centre digital arrest crore fraud arrest India",
+        "category_hint": "Digital Arrest",
+        "topic": "news",
+        "time_range": "week"
+    },
+    {
+        "query": "fake apk malware bank account cyber cell warning advisory India 2026",
         "category_hint": "Apk Trojan",
-        "topic": "news"
+        "topic": "news",
+        "time_range": "week"
     },
     {
-        "query": "AI deepfake video Sudha Murty fraudulent stock trading scheme WhatsApp",
+        "query": "AI deepfake stock trading investment fraud WhatsApp group police FIR India",
         "category_hint": "Deepfake Impersonation",
-        "topic": "news"
+        "topic": "news",
+        "time_range": "week"
     },
     {
-        "query": "Pune police cyber syndicate senior citizens crore crypto fraud",
+        "query": "cyber crime police bust online trading scam crore arrested India 2026",
         "category_hint": "Investment Fraud",
-        "topic": "news"
+        "topic": "news",
+        "time_range": "week"
     },
     {
-        "query": "cyber crime police bust online trading scam crore arrested",
-        "category_hint": "Investment Fraud",
-        "topic": "news"
-    },
-    {
-        "query": "digital arrest fake customs parcel police Skype call scam",
-        "category_hint": "Digital Arrest",
-        "topic": "news"
+        "query": "electricity bill update KYC scam bank account emptied cyber fraud India",
+        "category_hint": "Electricity KYC",
+        "topic": "news",
+        "time_range": "week"
     }
 ]
 
