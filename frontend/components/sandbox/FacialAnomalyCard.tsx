@@ -245,7 +245,7 @@ function FaceScorecard({ face }: { face: FaceEntry }) {
     isDeepfake ? "bg-red-500/5" : isSynthetic ? "bg-amber-500/5" : "bg-emerald-500/5";
 
   const metrics = face.neural_metrics || {};
-  const [x, y, w, h] = face.bbox;
+  const [x, y, w, h] = face.bbox ?? [0, 0, 0, 0];
 
   return (
     <div className={cn("rounded-xl border-[1.5px] p-4 space-y-3", borderColor, bgColor)}>
@@ -258,7 +258,7 @@ function FaceScorecard({ face }: { face: FaceEntry }) {
             <CheckCircle2 className={cn("w-4 h-4", accentColor)} />
           )}
           <span className={cn("font-mono font-bold text-xs uppercase", accentColor)}>
-            {face.face_id.replace("_", " ").toUpperCase()}
+            {(face.face_id ?? "face").replace(/_/g, " ").toUpperCase()}
           </span>
         </div>
         <StatusPill
