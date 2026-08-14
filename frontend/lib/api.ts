@@ -310,7 +310,10 @@ export function connectWebSocket(
   // In production this is https://netra-api-pmr7.onrender.com
   // In dev this is http://127.0.0.1:8000
   const backendHttpUrl = isBrowser
-    ? (process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`)
+    ? (process.env.NEXT_PUBLIC_API_URL ||
+        (typeof window !== "undefined" && window.location.hostname.includes("render.com")
+          ? "https://netra-api-pmr7.onrender.com"
+          : `${window.location.protocol}//${window.location.hostname}:8000`))
     : "http://localhost:8000";
   // Convert http(s): → ws(s): for native WebSocket protocol
   const wsBaseUrl = backendHttpUrl.replace(/^http/, "ws");
