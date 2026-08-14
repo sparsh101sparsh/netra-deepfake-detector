@@ -798,6 +798,7 @@ def process_job(
                 else []
             ),
             "metadata_flags": evidence.metadata_flags,
+            "metadata": auxiliary_result.get("metadata", {}),
             "forensic_report": bedrock_result.get("full_report", ""),
             "report_generated_by": bedrock_result.get(
                 "generated_by", "NETRA Neural Forensic Engine v5.0"

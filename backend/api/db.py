@@ -100,6 +100,10 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_community_category ON community_posts(category);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_community_created ON community_posts(created_at);")
     
+    # Purge legacy mock seed records so catalog and community only show real user submissions
+    cursor.execute("DELETE FROM threat_catalog WHERE id LIKE 'NETRA-SCAM-%';")
+    cursor.execute("DELETE FROM community_posts WHERE id LIKE 'post-%';")
+
     conn.commit()
     conn.close()
 

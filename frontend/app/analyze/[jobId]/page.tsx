@@ -18,6 +18,7 @@ import DetectorScorecard from "@/components/DetectorScorecard";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { StatusPill } from "@/components/atoms/StatusPill";
+import { generateForensicPDF } from "@/lib/pdfReportGenerator";
 import {
   Loader2,
   ShieldCheck,
@@ -25,6 +26,7 @@ import {
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
+  Download,
   Zap,
   Cpu,
   Server,
@@ -689,6 +691,28 @@ export default function AnalysisPage({ params }: Props) {
                         <span>Copy Dossier</span>
                       </>
                     )}
+                  </button>
+                  <button
+                    onClick={() => generateForensicPDF({
+                      id: jobId,
+                      title: "Video Forensic Analysis",
+                      verdict: result.verdict,
+                      confidence: result.confidence,
+                      riskLevel: result.risk_level || "LOW",
+                      timestamp: jobStatus?.created_at || undefined,
+                      scores: {
+                        gendScore: result.gend_score,
+                        visualScore: result.visual_score,
+                        audioScore: result.audio_score,
+                        clipScore: result.clip_score,
+                      },
+                      frames: result.frames,
+                      summary: result.forensic_report,
+                    })}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-accent/10 border border-accent/30 text-xs font-medium text-accent hover:bg-accent/20 transition-all shadow-sm"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download PDF</span>
                   </button>
                 </div>
               </div>

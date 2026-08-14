@@ -118,106 +118,157 @@ async def report_new_threat(payload: ReportThreatRequest):
 @router.get("/threat-intelligence/{threat_id}/fir-pdf")
 async def download_fir_dossier(threat_id: str):
     """
-    Generate an official Cyber Crime FIR Report PDF formatted for cybercrime.gov.in.
+    Generate an official Cyber Crime FIR Report PDF formatted for cybercrime.gov.in using ReportLab.
     """
     item = get_threat_by_id(threat_id)
     if not item:
         raise HTTPException(status_code=404, detail="Threat incident not found")
 
-    # Generate PDF in-memory using Typst or ReportLab
-    import subprocess, tempfile
+    import io
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
     
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'FIRTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=15,
+        leading=18,
+        alignment=1, # Center
+        textColor=colors.HexColor("#0f172a")
+    )
+    subtitle_style = ParagraphStyle(
+        'FIRSubtitle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Oblique',
+        fontSize=9,
+        leading=12,
+        alignment=1, # Center
+        textColor=colors.HexColor("#475569")
+    )
+    section_style = ParagraphStyle(
+        'FIRSection',
+        parent=styles['Heading2'],
+        fontName='Helvetica-Bold',
+        fontSize=11,
+        leading=14,
+        textColor=colors.HexColor("#1e293b"),
+        spaceBefore=10,
+        spaceAfter=4
+    )
+    body_style = ParagraphStyle(
+        'FIRBody',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=9,
+        leading=13,
+        textColor=colors.HexColor("#334155")
+    )
+    table_cell = ParagraphStyle(
+        'FIRCell',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=8.5,
+        leading=11,
+        textColor=colors.HexColor("#1e293b")
+    )
+    table_cell_bold = ParagraphStyle(
+        'FIRCellBold',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8.5,
+        leading=11,
+        textColor=colors.HexColor("#0f172a")
+    )
+
+    story = []
+    
+    # Title & Subtitle
+    story.append(Paragraph("CYBER CRIME INCIDENT REPORT &amp; FORENSIC DOSSIER", title_style))
+    story.append(Spacer(1, 4))
+    story.append(Paragraph("Generated for Submission to National Cyber Crime Reporting Portal (cybercrime.gov.in)", subtitle_style))
+    story.append(Spacer(1, 10))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#f59e0b"), spaceAfter=10))
+
+    # Meta Table
     iocs = item.get("extracted_iocs", {})
     phones_str = ", ".join(iocs.get("phones", [])) or "None identified"
     upis_str = ", ".join(iocs.get("upis", [])) or "None identified"
     urls_str = ", ".join(iocs.get("urls", [])) or "None identified"
-    
     fir = item.get("fir_dossier", {})
-    laws_str = "\\n".join([f"- {law}" for law in fir.get("applicable_laws", ["IT Act 2000 Section 66D", "BNS 2023 Section 318(4)"])])
 
-    typ_content = f'''
-#set page(paper: "a4", margin: (x: 2cm, y: 2.2cm))
-#set text(font: "Helvetica", size: 10pt)
+    meta_data = [
+        [Paragraph("Case Reference ID:", table_cell_bold), Paragraph(str(item.get("id", "N/A")), table_cell)],
+        [Paragraph("Incident Date / Time:", table_cell_bold), Paragraph(str(item.get("created_at", "N/A")), table_cell)],
+        [Paragraph("Incident Title:", table_cell_bold), Paragraph(str(item.get("title", "N/A")), table_cell)],
+        [Paragraph("Detection Confidence:", table_cell_bold), Paragraph(f"{float(item.get('fake_probability', 0))*100:.1f}% ({item.get('risk_level', 'UNKNOWN')} RISK)", table_cell)],
+        [Paragraph("Origin Location:", table_cell_bold), Paragraph(f"{item.get('city', 'Unknown')}, {item.get('state', 'Unknown')}, India ({item.get('location_source', 'ESTIMATED')})", table_cell)],
+        [Paragraph("Device / Software:", table_cell_bold), Paragraph(f"{item.get('device_model', 'Standard Device')} | {item.get('software_used', 'NETRA Multi-Modal V5')}", table_cell)],
+    ]
+    t = Table(meta_data, colWidths=[150, 370])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+        ('BOX', (0, 0), (-1, -1), 1, colors.HexColor("#cbd5e1")),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 10))
 
-#align(center)[
-  #text(16pt, weight: "bold")[CYBER CRIME INCIDENT REPORT & FORENSIC DOSSIER]
-  #v(0.1cm)
-  #text(10pt, style: "italic")[Generated for Submission to National Cyber Crime Reporting Portal (cybercrime.gov.in)]
-  #v(0.4cm)
-]
+    # Section 1: Executive Incident Summary
+    story.append(Paragraph("1. Executive Incident Summary", section_style))
+    summary_text = fir.get("incident_summary", "Synthetic AI or cyber fraud media intercepted matching known impersonation vector.")
+    story.append(Paragraph(summary_text, body_style))
 
-#rect(width: 100%, fill: rgb("#F7FAFC"), stroke: 1pt + rgb("#CBD5E0"), radius: 4pt, inset: 10pt)[
-  #grid(
-    columns: (1fr, 2fr),
-    row-gutter: 8pt,
-    [*Case Reference ID:*], [{item["id"]}],
-    [*Incident Date / Time:*], [{item["created_at"]}],
-    [*Incident Type:*], [{item["title"]}],
-    [*Detection Confidence:*], [{item["fake_probability"]*100:.1f}% ({item["risk_level"]} RISK)],
-    [*Origin Location:*], [{item["city"]}, {item["state"]}, India ({item["location_source"]})],
-    [*Device / Editor:*], [{item["device_model"]} | {item["software_used"]}]
-  )
-]
+    # Section 2: Technical Indicators of Compromise (IOCs)
+    story.append(Paragraph("2. Technical Indicators of Compromise (IOCs)", section_style))
+    story.append(Paragraph(f"• <b>Attacker Phone Number(s):</b> {phones_str}", body_style))
+    story.append(Paragraph(f"• <b>Fraudulent UPI Handle(s):</b> {upis_str}", body_style))
+    story.append(Paragraph(f"• <b>Malicious Links / APKs:</b> {urls_str}", body_style))
 
-#v(0.4cm)
-== 1. Executive Incident Summary
-{fir.get("incident_summary", "Synthetic AI media intercepted matching known impersonation fraud vector.")}
+    # Section 3: Applicable Legal Provisions
+    story.append(Paragraph("3. Applicable Legal Provisions under Indian Law", section_style))
+    laws = fir.get("applicable_laws", [
+        "Information Technology Act 2000 — Section 66D (Cheating by personation using computer resource)",
+        "Bharatiya Nyaya Sanhita 2023 — Section 318(4) (Cheating and dishonestly inducing delivery of property)",
+        "Information Technology Act 2000 — Section 66E (Violation of bodily privacy via deepfake manipulation)"
+    ])
+    for law in laws:
+        story.append(Paragraph(f"• {law}", body_style))
 
-#v(0.3cm)
-== 2. Technical Indicators of Compromise (IOCs)
-- *Attacker Phone Number(s):* {phones_str}
-- *Fraudulent UPI Handle(s):* `{upis_str}`
-- *Malicious Links / APKs:* `{urls_str}`
+    # Section 4: Recommended Law Enforcement Action
+    story.append(Paragraph("4. Recommended Law Enforcement Action", section_style))
+    action_text = fir.get("recommended_action", "Immediate freeze of recipient beneficiary accounts, blocking of fraudulent phone/UPI handles, and issuance of cyber summons under CrPC Section 91.")
+    story.append(Paragraph(action_text, body_style))
 
-#v(0.3cm)
-== 3. Applicable Legal Provisions under Indian Law
-{laws_str}
+    # Signature Footnote
+    story.append(Spacer(1, 16))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=6))
+    footnote_style = ParagraphStyle(
+        'FIRFootnote',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=7.5,
+        leading=10,
+        alignment=1,
+        textColor=colors.HexColor("#64748b")
+    )
+    story.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified", footnote_style))
 
-#v(0.3cm)
-== 4. Recommended Law Enforcement Action
-{fir.get("recommended_action", "Immediate freeze of recipient UPI accounts and cyber cell summons.")}
-
-#v(0.8cm)
-#align(center)[
-  #text(8pt, fill: rgb("#718096"))[Digital Signature Verified by NETRA Autonomous Forensic Intelligence Engine | Hash: SHA-256 Verified]
-]
-'''
-    with tempfile.NamedTemporaryFile(suffix=".typ", mode="w", delete=False) as f_typ:
-        f_typ.write(typ_content)
-        typ_path = f_typ.name
-        
-    pdf_path = typ_path.replace(".typ", ".pdf")
-    try:
-        import shutil
-        typst_bin = shutil.which("typst") or (
-            "/opt/homebrew/bin/typst" if os.path.exists("/opt/homebrew/bin/typst") else (
-                "/usr/local/bin/typst" if os.path.exists("/usr/local/bin/typst") else (
-                    "/usr/bin/typst" if os.path.exists("/usr/bin/typst") else None
-                )
-            )
-        )
-        if not typst_bin:
-            raise HTTPException(
-                status_code=503,
-                detail="Typst PDF compiler not available on server. Please install typst to generate FIR dossiers."
-            )
-            
-        subprocess.run([typst_bin, "compile", typ_path, pdf_path], check=True)
-        with open(pdf_path, "rb") as f_pdf:
-            pdf_bytes = f_pdf.read()
-        os.remove(typ_path)
-        os.remove(pdf_path)
-        return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=FIR_Report_{threat_id}.pdf"})
-    except HTTPException:
-        if os.path.exists(typ_path):
-            os.remove(typ_path)
-        raise
-    except Exception as e:
-        if os.path.exists(typ_path):
-            os.remove(typ_path)
-        if os.path.exists(pdf_path):
-            os.remove(pdf_path)
-        raise HTTPException(status_code=500, detail=f"Failed to generate FIR PDF: {str(e)}")
+    doc.build(story)
+    pdf_bytes = buf.getvalue()
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=NETRA_FIR_{threat_id}.pdf"}
+    )
 
 # Developer API Keys Management Endpoints
 @router.post("/developers/keys")

@@ -220,7 +220,7 @@ export function LiveThreatRadar() {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-white tracking-tight text-sm sm:text-base">
-                National Cyber Threat Radar
+                Netra Cyber Threat Radar
               </h3>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
