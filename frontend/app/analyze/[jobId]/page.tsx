@@ -591,64 +591,6 @@ export default function AnalysisPage({ params }: Props) {
          * ───────────────────────────────────────────────────────────── */}
         {isComplete && result && (
           <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Verdict Hero Banner */}
-            <div
-              className={`rounded-2xl p-8 text-center border relative overflow-hidden shadow-card ${
-                result.confidence > 70
-                  ? "border-red-500/30 bg-red-500/8"
-                  : result.confidence > 30
-                  ? "border-amber-500/30 bg-amber-500/8"
-                  : "border-green-500/30 bg-green-500/8"
-              }`}
-            >
-              <div className="flex flex-col items-center">
-                {result.confidence > 70 ? (
-                  <ShieldAlert className="w-16 h-16 text-red-400 mb-4 animate-in zoom-in-95 duration-300" />
-                ) : result.confidence > 30 ? (
-                  <AlertTriangle className="w-16 h-16 text-amber-400 mb-4 animate-in zoom-in-95 duration-300" />
-                ) : (
-                  <ShieldCheck className="w-16 h-16 text-green-400 mb-4 animate-in zoom-in-95 duration-300" />
-                )}
-
-                <span className="text-xs font-mono uppercase tracking-widest text-ink-3 mb-1">
-                  OFFICIAL FORENSIC VERDICT
-                </span>
-
-                <h2
-                  className={`text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 ${
-                    result.confidence > 70
-                      ? "text-red-400"
-                      : result.confidence > 30
-                      ? "text-amber-400"
-                      : "text-green-400"
-                  }`}
-                >
-                  {result.confidence > 70
-                    ? "Likely AI-Generated Media"
-                    : result.confidence > 30
-                    ? "Possibly Altered / Suspicious"
-                    : "Authentic Unmanipulated Media"}
-                </h2>
-
-                <div className="flex flex-wrap items-center justify-center gap-3 mt-2 text-xs">
-                  <span className="px-3 py-1 rounded-full bg-surface border border-line text-ink font-medium">
-                    Verdict: <span className="font-mono text-accent">{result.verdict}</span>
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-surface border border-line text-ink font-medium">
-                    Risk Level:{" "}
-                    <span className="capitalize font-mono text-accent">
-                      {result.risk_level?.toLowerCase()}
-                    </span>
-                  </span>
-                  {result.manipulation_type && (
-                    <span className="px-3 py-1 rounded-full bg-surface border border-line text-ink font-medium">
-                      Type: <span className="font-mono text-accent">{result.manipulation_type}</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
             {/* Confidence & Multi-Detector Scorecard Grid */}
             <div className="grid lg:grid-cols-3 gap-6">
               <div className="rounded-2xl bg-surface border-[1.5px] border-line p-6 flex flex-col items-center justify-center min-h-[300px] shadow-card">
