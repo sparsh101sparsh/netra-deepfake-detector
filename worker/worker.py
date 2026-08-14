@@ -50,10 +50,10 @@ logging.basicConfig(
 logger = logging.getLogger("netra.worker")
 
 # AWS & Environment Config
-REGION = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
-SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL", "https://sqs.ap-south-1.amazonaws.com/131746731374/netra-jobs")
-S3_BUCKET_MEDIA = os.getenv("S3_BUCKET_MEDIA", "netra-media-mumbai-131746731374")
-S3_BUCKET_MODELS = os.getenv("S3_BUCKET_MODELS", "netra-models")
+REGION = os.getenv("AWS_DEFAULT_REGION", "ap-south-1").split("#")[0].strip()
+SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL", "https://sqs.ap-south-1.amazonaws.com/131746731374/netra-jobs").split("#")[0].strip()
+S3_BUCKET_MEDIA = os.getenv("S3_BUCKET_MEDIA", "netra-media-mumbai-131746731374").split("#")[0].strip()
+S3_BUCKET_MODELS = os.getenv("S3_BUCKET_MODELS", "netra-models").split("#")[0].strip()
 DYNAMO_TABLE_JOBS = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
 DYNAMO_TABLE_WORKERS = os.getenv("DYNAMO_TABLE_WORKERS", "netra-workers")
 SPATIAL_MODEL_PATH = os.getenv("SPATIAL_MODEL_PATH", "/opt/netra/models/spatial/model.pth")

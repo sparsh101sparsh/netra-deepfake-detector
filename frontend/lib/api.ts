@@ -17,6 +17,7 @@ export interface DetectionResult {
   verdict: string;
   confidence: number;
   visual_score: number;
+  gend_score?: number | null;
   audio_score: number | null;
   clip_score: number | null;
   risk_level: string;
@@ -27,6 +28,8 @@ export interface DetectionResult {
   executive_summary?: string | null;
   report_generated_by?: string;
   manipulation_type?: string;
+  video_duration?: number;
+  frames_analyzed?: number;
 }
 
 export interface WorkerTelemetry {

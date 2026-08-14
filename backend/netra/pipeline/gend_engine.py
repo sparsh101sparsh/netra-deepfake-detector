@@ -93,6 +93,21 @@ class GenDForensicEngine:
         tensor = torch.from_numpy(normalized).permute(2, 0, 1)
         return tensor
 
+    def analyze_frames(self, frames: List[Union[str, np.ndarray, Image.Image]]) -> Dict:
+        """Analyze a list of frame filepaths, numpy arrays, or PIL images."""
+        crops = []
+        for f in frames:
+            if isinstance(f, str):
+                import cv2
+                img = cv2.imread(f)
+                if img is not None:
+                    crops.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+            elif f is not None:
+                crops.append(f)
+        res = self.analyze_frame_crops(crops)
+        res["fake_probability"] = res.get("gend_fake_probability", 0.5)
+        return res
+
     def analyze_frame_crops(self, face_crops: List[Union[Image.Image, np.ndarray]]) -> Dict:
         """
         Runs GenD inference over uniformly sampled face crops (up to 32 frames).
