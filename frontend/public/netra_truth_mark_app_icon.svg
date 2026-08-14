@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+  <!-- NETRA Architecture of Truth — Premium App Icon -->
+  <defs>
+    <!-- App Squircle Gradient -->
+    <radialGradient id="appBgGrad" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#141724" />
+      <stop offset="45%" stop-color="#080A10" />
+      <stop offset="100%" stop-color="#030407" />
+    </radialGradient>
+
+    <!-- Glass Rim Bevel -->
+    <linearGradient id="appRimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4" />
+      <stop offset="30%" stop-color="#38bdf8" stop-opacity="0.2" />
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.3" />
+    </linearGradient>
+
+    <!-- Core Emblem Glow -->
+    <filter id="coreGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Squircle Clip Path -->
+    <clipPath id="appSquircleClip">
+      <rect x="0" y="0" width="512" height="512" rx="115" ry="115" />
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#appSquircleClip)">
+    <!-- Midnight Canvas -->
+    <rect x="0" y="0" width="512" height="512" fill="url(#appBgGrad)" />
+
+    <!-- Subtle Ambient Radial Grid -->
+    <g opacity="0.12">
+      <circle cx="256" cy="256" r="210" stroke="#ffffff" stroke-width="1" stroke-dasharray="4 8" />
+      <circle cx="256" cy="256" r="160" stroke="#ffffff" stroke-width="1" />
+      <line x1="256" y1="20" x2="256" y2="492" stroke="#ffffff" stroke-width="0.8" stroke-dasharray="6 6" />
+      <line x1="20" y1="256" x2="492" y2="256" stroke="#ffffff" stroke-width="0.8" stroke-dasharray="6 6" />
+    </g>
+
+    <!-- Ambient Cyan/White Bloom -->
+    <circle cx="256" cy="256" r="140" fill="#38bdf8" fill-opacity="0.07" filter="blur(40px)" />
+    <circle cx="256" cy="256" r="80" fill="#ffffff" fill-opacity="0.06" filter="blur(20px)" />
+
+    <!-- ── THE TRUTH MARK KITE EMBLEM (Centered & Scaled x2.6) ── -->
+    <g transform="translate(256, 256) scale(2.6) translate(-100, -100)" filter="url(#coreGlow)">
+      <!-- Outer Diamond -->
+      <polygon
+        points="100,56 148,100 100,144 52,100"
+        stroke="#ffffff"
+        stroke-width="3"
+        stroke-linejoin="miter"
+      />
+
+      <!-- Inner Diamond -->
+      <polygon
+        points="100,74 122,100 100,126 78,100"
+        stroke="#ffffff"
+        stroke-width="1.6"
+        stroke-linejoin="miter"
+      />
+
+      <!-- Facet Connectors: Top ➔ Inner L/R -->
+      <line x1="100" y1="56" x2="78" y2="100" stroke="#ffffff" stroke-width="1.2" />
+      <line x1="100" y1="56" x2="122" y2="100" stroke="#ffffff" stroke-width="1.2" />
+
+      <!-- Facet Connectors: Bottom ➔ Inner L/R -->
+      <line x1="100" y1="144" x2="78" y2="100" stroke="#ffffff" stroke-width="1.2" />
+      <line x1="100" y1="144" x2="122" y2="100" stroke="#ffffff" stroke-width="1.2" />
+
+      <!-- Facet Connectors: Left ➔ Inner T/B -->
+      <line x1="52" y1="100" x2="100" y2="74" stroke="#ffffff" stroke-width="1.2" />
+      <line x1="52" y1="100" x2="100" y2="126" stroke="#ffffff" stroke-width="1.2" />
+
+      <!-- Facet Connectors: Right ➔ Inner T/B -->
+      <line x1="148" y1="100" x2="100" y2="74" stroke="#ffffff" stroke-width="1.2" />
+      <line x1="148" y1="100" x2="100" y2="126" stroke="#ffffff" stroke-width="1.2" />
+
+      <!-- Horizontal Axis -->
+      <line x1="52" y1="100" x2="148" y2="100" stroke="#ffffff" stroke-width="1.6" />
+
+      <!-- Center Dot -->
+      <circle cx="100" cy="100" r="8" fill="#ffffff" />
+    </g>
+
+    <!-- Specular Rim Highlight -->
+    <rect x="2" y="2" width="508" height="508" rx="113" ry="113" fill="none" stroke="url(#appRimGrad)" stroke-width="3" />
+  </g>
+</svg>
