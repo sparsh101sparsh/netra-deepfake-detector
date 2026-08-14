@@ -125,6 +125,8 @@ class SpatialSBIDetector:
             return
 
         cascade_candidates = [
+            "/home/ubuntu/netra/models/haarcascade_frontalface_default.xml",
+            os.path.expanduser("~/netra/models/haarcascade_frontalface_default.xml"),
             os.path.join(os.path.dirname(__file__), "..", "..", "..", "models", "haarcascade_frontalface_default.xml"),
             os.path.join(os.getcwd(), "netra", "models", "haarcascade_frontalface_default.xml"),
             os.path.join(os.getcwd(), "models", "haarcascade_frontalface_default.xml"),
@@ -289,7 +291,7 @@ class SpatialSBIDetector:
                     tensor = INFERENCE_TRANSFORMS(pil_img)
 
                     tensors_in_chunk.append(tensor)
-                    valid_indices.append((i, face_found, frame_bgr))
+                    valid_indices.append((i, face_found, frame_bgr, face_crop))
 
                 except Exception as e:
                     logger.error(f"Error preprocessing frame at index {start_idx + i}: {e}")
@@ -298,6 +300,7 @@ class SpatialSBIDetector:
                         "flags": ["preprocessing_error"],
                         "face_found": False,
                         "confidence": 0.0,
+                        "face_crop": None,
                     }
 
             # Run batched neural forward pass
@@ -310,7 +313,7 @@ class SpatialSBIDetector:
                         # Index 1 = fake
                         fake_probs = probs[:, 1].detach().cpu().numpy()
 
-                    for j, (orig_i, face_found, frame_bgr) in enumerate(valid_indices):
+                    for j, (orig_i, face_found, frame_bgr, face_crop) in enumerate(valid_indices):
                         fake_prob = float(fake_probs[j])
                         flags = self._generate_flags(fake_prob, frame_bgr)
                         chunk_results[orig_i] = {
@@ -318,6 +321,7 @@ class SpatialSBIDetector:
                             "flags": flags,
                             "face_found": face_found,
                             "confidence": round(fake_prob, 4),
+                            "face_crop": face_crop,
                         }
                 except Exception as e:
                     logger.error(f"Neural batch inference error: {e}")

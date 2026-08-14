@@ -683,10 +683,18 @@ def process_job(
         global_gend = None
         if models.gend_engine:
             try:
-                frame_paths = [f["image_path"] for f in frames if "image_path" in f]
-                gend_res = models.gend_engine.analyze_frames(frame_paths)
+                face_crops = [
+                    p["face_crop"]
+                    for p in frame_predictions
+                    if p.get("face_crop") is not None and getattr(p.get("face_crop"), "size", 0) > 0
+                ]
+                if face_crops:
+                    gend_res = models.gend_engine.analyze_frame_crops(face_crops)
+                else:
+                    frame_paths = [f["image_path"] for f in frames if "image_path" in f]
+                    gend_res = models.gend_engine.analyze_frames(frame_paths)
                 global_gend = gend_res.get("fake_probability")
-                logger.info(f"GenD Foundation Analysis fake_probability: {global_gend}")
+                logger.info(f"GenD Foundation Analysis fake_probability: {global_gend} (used {len(face_crops)} face crops)")
             except Exception as e:
                 logger.warning(f"GenD analysis failed: {e}")
 
