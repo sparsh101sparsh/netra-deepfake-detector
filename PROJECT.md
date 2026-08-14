@@ -19,6 +19,10 @@
 | 8 | Rebranding & Radar Filter Fix | Update Navbar & Footer to "Netra Radar", title to "Netra Cyber Threat Radar", fix LiveThreatRadar "Deepfakes" category filter bug. | M4 | ORIGINAL_REQUEST §3 |
 | 9 | 1-Click Forensic PDF Download Buttons | Add download buttons on `/analyze/[jobId]` and catalog slide-over modal linking to PDF endpoints. | M4 | ORIGINAL_REQUEST §4 |
 | 10 | E2E Integration & Forensic Audit | End-to-end verification across all 5 directives: clean DB, upload with EXIF GPS, auto-population, catalog filters/previews, radar plotting, PDF download, and forensic integrity audit. | M5 | ORIGINAL_REQUEST §1-§5 |
+| 11 | Spatial Anomaly Localization Engine | Extract keyframes with anomaly >75%, isolate 3 facial landmark regions (eyewear specular glare, iris reflection discontinuity, lip-sync seam), output exact 2D bounding boxes `[x, y, w, h]` and descriptors, <200ms latency. | M6 | ORIGINAL_REQUEST (2026-09-03T20:47:27Z) §R1 |
+| 12 | Worker Pipeline Integration & Snapshot Generation | Top 2-3 flagged frames in `worker.py`, amber `#f59e0b` bounding box + `ANOMALY DETECTED HERE` badge, save to `backend/media/keyframes/`, populate `annotated_image_url` and `keyframe_snapshots`. | M7 | ORIGINAL_REQUEST (2026-09-03T20:47:27Z) §R2 |
+| 13 | Court-Ready Forensic PDF Report Enhancement | Embed keyframe snapshots side-by-side with diagnostic metadata in Section 2, implement `jobs/{job_id}/report.pdf`, update FIR PDF in `threat_intel.py` and `pdfReportGenerator.ts`, statutory compliance (Sec 65B, Sec 66D, Sec 318(4) BNS). | M8 | ORIGINAL_REQUEST (2026-09-03T20:47:27Z) §R3 |
+| 14 | Automated Visual Verification & Benchmark Suite | Execute pipeline on 20 deepfake test video subset, render PDFs to high-res PNG via `pypdfium2`, assert zero unhandled exceptions and <200ms frame latency. | M9 | ORIGINAL_REQUEST (2026-09-03T20:47:27Z) §R4 |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
@@ -28,44 +32,56 @@
 | 3 | Forensic Typst & ReportLab PDF Generator | Implement dual-engine client jsPDF + backend ReportLab FIR PDF | M1 | COMPLETE |
 | 4 | Frontend Catalog UI, Previews, Rebranding & PDF Buttons | Overhaul `/reported` tabs, media players, lightbox, transcript, rebranding, 1-click PDF buttons | M2, M3 | COMPLETE |
 | 5 | E2E Integration Testing & Forensic Integrity Audit | End-to-end verification, production deployment, and live cloud validation | M1, M2, M3, M4 | COMPLETE |
+| 6 | Spatial Anomaly Localization Engine (R1) | Complete `backend/netra/pipeline/visual_localizer.py` with 3 landmark regions, BGR fix, >75% anomaly filter, descriptors, <200ms latency | none | COMPLETE |
+| 7 | Worker Pipeline Integration & Snapshot Generation (R2) | Integrate into `worker/worker.py`, top 2-3 keyframes, amber `#f59e0b` box + badge, persistent storage under `backend/media/keyframes/`, `annotated_image_url` | M6 | COMPLETE |
+| 8 | Court-Ready Forensic PDF Report Enhancement (R3) | Implement `jobs.py` ReportLab PDF endpoint, update `threat_intel.py` FIR PDF with side-by-side snapshot table, update `pdfReportGenerator.ts`, Sec 65B/66D/318(4) compliance | M7 | COMPLETE |
+| 9 | Visual Verification & 20-Video Benchmark Suite (R4) | Automated benchmark runner across 20 deepfake videos, `pypdfium2` PNG rendering, latency verification, zero-exception audit | M8 | COMPLETE |
 
 ## Interface Contracts
 
-### Media Serving & Catalog Storage
-- **Media URL format**: `/api/backend/api/v1/media/{type}/{filename}` (proxied via Next.js to FastAPI `/api/v1/media/{type}/{filename}`)
-- **Normalized Media Types**:
-  - `video` <-> `type IN ('video', 'video_deepfake')`
-  - `image` <-> `type IN ('image', 'image_deepfake')`
-  - `audio` <-> `type IN ('audio', 'audio_clone')`
-  - `text` <-> `type IN ('text', 'scam_text')`
-- **Geolocation contract**:
-  - `lat`, `lng`: Decimal float or `None`.
-  - `location_source`: `"EXACT_GPS"` (when extracted from media EXIF/metadata) or `None`.
-  - Radar endpoint `/api/v1/threat-intelligence/radar` plots items ONLY where `lat IS NOT NULL AND lng IS NOT NULL`.
+### Visual Anomaly Localization Contract
+- **Module**: `backend/netra/pipeline/visual_localizer.py`
+- **Primary Method**: `VisualAnomalyLocalizer.localize_and_annotate(frame_bgr, anomaly_score=0.92, face_bbox=None, prefer_region=None)`
+- **Returns**: `(annotated_frame_bgr: np.ndarray, metadata: dict)`
+- **Metadata Fields**:
+  - `bounding_box`: `[x, y, w, h]` (pixel coordinates)
+  - `normalized_box`: `[x_norm, y_norm, w_norm, h_norm]`
+  - `semantic_label`: e.g. `"Eyewear Specular Glare & Feature Discontinuity"`, `"Iris/Pupil Corneal Reflection Discontinuity"`, `"Lip-Sync Blending Boundary Artifact"`
+  - `anomaly_score`: float (0.0 - 1.0)
+  - `evidence_code`: `"EVD-EYE-SPECULAR-GLARE"` | `"EVD-IRIS-CORNEAL-DISCONTINUITY"` | `"EVD-LIP-SYNC-BOUNDARY-SEAM"`
+  - `statutory_act`: e.g. `"Section 65B Indian Evidence Act & Section 66D IT Act 2000"`
+  - `detector_subsystem`: e.g. `"GenD Foundation Model ViT-L/14 + Spatial SBI"`
 
-### Forensic PDF Endpoint
-- **URL**: `GET /api/v1/jobs/{job_id}/report.pdf`
-- **Response**: `application/pdf`, filename `NETRA_Forensic_Report_{job_id}.pdf`
-- **Contents**:
-  - Header: Netra Forensic Seal & Institutional Banner
-  - Custody: Job ID, media SHA-256 hash, timestamp, worker node
-  - Verdict: Verdict (`DEEPFAKE`, `AUTHENTIC`, `SUSPICIOUS`), Risk Level (`CRITICAL`, `HIGH`, `LOW`), Confidence %
-  - Scorecard: Spatial SBI score, GenD ViT-L, Wav2Vec2 Audio, CLIP Probe
-  - Metadata: Container bitrate, duration, codec, EXIF location & device
-  - Keyframe Anomalies: timestamp, frame index, anomaly flags
+### Worker Snapshot Storage & Schema Contract
+- **Storage Path**: `backend/media/keyframes/{job_id}_frame_{frame_number}_annotated.jpg`
+- **URL Path**: `/api/backend/api/v1/media/keyframes/{filename}` and `/api/v1/media/keyframes/{filename}`
+- **`final_result["frames"][i]` Schema Addition**:
+  - `annotated_image_url`: string URL or `None`
+- **`final_result["keyframe_snapshots"]` Schema**:
+  - Array of snapshot objects:
+    - `frame_number`: int
+    - `timestamp`: str
+    - `anomaly_region`: str
+    - `anomaly_score`: float
+    - `image_path`: str (local disk path for backend PDF rendering)
+    - `image_url`: str (API URL for frontend rendering)
+    - `detector_subsystem`: str
+    - `bounding_box`: `[x, y, w, h]`
+
+### Court-Ready Forensic PDF Contract
+- **Endpoints**:
+  - `GET /api/v1/jobs/{job_id}/report.pdf`: Generates PDF report with custody, verdict, neural scores, and Section 2 side-by-side keyframe evidence.
+  - `GET /api/v1/threat-intelligence/{threat_id}/fir-pdf`: Generates cybercrime FIR dossier with Section 2 side-by-side keyframe evidence.
+- **Section 2 Table Layout**:
+  - Left column: 220pt width image showing amber `#f59e0b` bounding box & `ANOMALY DETECTED HERE` badge.
+  - Right column: 290pt width diagnostic table with Timestamp, Anomaly Index, Localized Region, Detector Subsystem, Forensic Finding, and Statutory Certification (Sec 65B IEA / Sec 63 BSA, Sec 66D IT Act, Sec 318(4) BNS).
 
 ## Code Layout
-- `backend/api/db.py`: SQLite initialization, migrations, CRUD helpers (`get_threat_catalog`, `insert_threat_item`)
-- `backend/api/netra.db`: Primary SQLite database
-- `backend/api/server.py`: FastAPI entrypoint, router mounts, static media mount
-- `backend/api/routes/detect.py`: Multi-modal upload & analysis endpoints (video, image OCR, audio)
-- `backend/api/routes/scam.py`: Text scam analysis endpoint
-- `backend/api/routes/jobs.py`: Analysis job status and PDF report generation
-- `backend/api/routes/threat_intel.py`: Threat catalog, radar telemetry, FIR PDF generation
-- `backend/netra/pipeline/exif_engine.py`: EXIF GPS and container metadata extractor
-- `frontend/app/reported/page.tsx`: Threat catalog page with filter tabs, cards, media previews, slide-over modal
-- `frontend/app/analyze/[jobId]/page.tsx`: Video analysis results page with Download Forensic PDF button
-- `frontend/app/radar/page.tsx`: Netra Cyber Threat Radar page
-- `frontend/components/LiveThreatRadar.tsx`: Satellite radar map component
-- `frontend/components/layout/Navbar.tsx`: Header navigation
-- `frontend/components/layout/Footer.tsx`: Footer navigation
+- `backend/netra/pipeline/visual_localizer.py`: Visual anomaly localization engine
+- `worker/worker.py`: Deepfake analysis worker pipeline with snapshot generation
+- `backend/api/routes/threat_intel.py`: Threat intelligence and FIR PDF dossier generator
+- `backend/api/routes/jobs.py`: Analysis jobs router and PDF report generator
+- `frontend/lib/pdfReportGenerator.ts`: Client-side jsPDF forensic report generator
+- `backend/media/keyframes/`: Persistent storage directory for annotated keyframe snapshots
+- `garbage/kaggle_and_scratch/benchmark_datasets/generated_100_deepfake_videos/`: 100 deepfake benchmark videos
+
