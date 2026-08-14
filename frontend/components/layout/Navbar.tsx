@@ -171,15 +171,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="hidden md:flex items-center gap-1 p-1 rounded-full bg-[#17191A] border border-white/10 shadow-card relative overflow-hidden"
             aria-label="Main Navigation"
           >
-            {/* The Gliding Indicator Pill with Beautiful-UI bezier curve */}
+            {/* The Gliding Blue Indicator Pill with Beautiful-UI bezier curve */}
             <span
               aria-hidden="true"
-              className={cn(
-                "pointer-events-none absolute rounded-full z-0",
-                hoveredNavId && hoveredNavId !== activeNavId
-                  ? "bg-white/[0.12] border border-white/10"
-                  : "bg-[#0084ff] shadow-sm shadow-[#0084ff]/20"
-              )}
+              className="pointer-events-none absolute rounded-full z-0 bg-[#0084ff] shadow-sm shadow-[#0084ff]/20"
               style={{
                 left: navHighlight?.left ?? 0,
                 top: navHighlight?.top ?? 0,
@@ -187,14 +182,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 height: navHighlight?.height ?? 0,
                 opacity: navHighlight ? 1 : 0,
                 transition:
-                  "left 240ms cubic-bezier(0.23, 1, 0.32, 1), top 240ms cubic-bezier(0.23, 1, 0.32, 1), width 240ms cubic-bezier(0.23, 1, 0.32, 1), height 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease, background-color 180ms ease",
+                  "left 240ms cubic-bezier(0.23, 1, 0.32, 1), top 240ms cubic-bezier(0.23, 1, 0.32, 1), width 240ms cubic-bezier(0.23, 1, 0.32, 1), height 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease",
               }}
             />
 
             {NAV_ITEMS.map((item) => {
               const active = isNavActive(item);
-              const isPillSelected = item.id === activeNavId;
-              const isHovered = hoveredNavId === item.id;
+              const currentPillId = hoveredNavId ?? activeNavId;
+              const hasBluePill = item.id === currentPillId;
               const IconComp = item.icon;
 
               return (
@@ -213,16 +208,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className={cn(
                     "relative z-10 flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold font-sans transition-colors duration-150 truncate cursor-pointer",
-                    // When item has the active blue pill or is actively hovered, text is crisp pure white
-                    (isPillSelected && !hoveredNavId) || active || isHovered
+                    hasBluePill
                       ? "text-white"
                       : "text-zinc-400 hover:text-white"
                   )}
                 >
-                  {(active || (isPillSelected && !hoveredNavId)) && (
+                  {active && (
                     <span className="size-1.5 rounded-full bg-white animate-pulse" />
                   )}
-                  <IconComp className={cn("size-3.5", ((isPillSelected && !hoveredNavId) || active || isHovered) ? "text-white" : "text-zinc-400")} />
+                  <IconComp className={cn("size-3.5", hasBluePill ? "text-white" : "text-zinc-400")} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -318,7 +312,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       "flex items-center gap-3 px-4 py-2.5 rounded-full text-xs font-sans font-medium transition-colors border-0",
                       active
                         ? "bg-[#0084ff] text-white font-semibold shadow-none"
-                        : "text-zinc-400 hover:bg-white/[0.08] hover:text-white"
+                        : "text-zinc-400 hover:bg-[#0084ff] hover:text-white"
                     )}
                   >
                     <IconComp className={cn("size-4", active ? "text-white" : "text-zinc-400")} />
