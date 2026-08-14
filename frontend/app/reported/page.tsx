@@ -51,6 +51,7 @@ export default function ThreatCatalogPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<ThreatItem | null>(null);
+  const [playingCardId, setPlayingCardId] = useState<string | null>(null);
 
   const fetchItems = () => {
     setLoading(true);
@@ -241,27 +242,66 @@ export default function ThreatCatalogPage() {
                         {item.title}
                       </h3>
 
-                      {/* Playable Media Preview Thumbnail */}
+                      {/* Playable Media Preview or In-Place Active Player */}
                       {(item.media_url || item.thumbnail_url) && item.type === "video_deepfake" && (
-                        <div className="relative rounded-xl overflow-hidden bg-black/60 border border-white/10 aspect-video flex items-center justify-center group-hover:border-accent/40 transition-colors">
-                          <video
-                            src={item.media_url ? (item.media_url.startsWith("http") ? item.media_url : `/api/backend${item.media_url}`) : undefined}
-                            poster={item.thumbnail_url ? (item.thumbnail_url.startsWith("http") ? item.thumbnail_url : `/api/backend${item.thumbnail_url}`) : undefined}
-                            preload="metadata"
-                            muted
-                            playsInline
-                            crossOrigin="anonymous"
-                            className="w-full h-full object-cover opacity-80"
-                            onError={(e) => {
-                              // If video stream fails to load, gracefully hide video element
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                            <div className="w-10 h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent">
-                              <Play className="size-4 fill-current ml-0.5" />
+                        <div
+                          className="relative rounded-xl overflow-hidden bg-black/80 border border-white/10 aspect-video flex items-center justify-center group-hover:border-accent/40 transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {playingCardId === item.id ? (
+                            <div className="relative w-full h-full">
+                              <ResilientVideoPlayer
+                                primaryUrl={item.media_url ? (item.media_url.startsWith("http") ? item.media_url : `/api/backend${item.media_url}`) : undefined}
+                                fallbackUrl={item.id ? `/api/backend/api/v1/jobs/${item.id}/stream` : (item.media_url ? `/api/backend${item.media_url}` : undefined)}
+                                poster={item.thumbnail_url ? (item.thumbnail_url.startsWith("http") ? item.thumbnail_url : `/api/backend${item.thumbnail_url}`) : undefined}
+                                autoPlay={true}
+                                controls={true}
+                                playsInline={true}
+                                className="w-full h-full object-contain"
+                              />
+                              <button
+                                type="button"
+                                title="Close player"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPlayingCardId(null);
+                                }}
+                                className="absolute top-2 left-2 z-20 w-6 h-6 rounded-full bg-black/70 hover:bg-black text-white/80 hover:text-white border border-white/20 flex items-center justify-center text-xs backdrop-blur-sm cursor-pointer transition-all"
+                              >
+                                ✕
+                              </button>
                             </div>
-                          </div>
+                          ) : (
+                            <div
+                              className="relative w-full h-full cursor-pointer group/thumb"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPlayingCardId(item.id);
+                              }}
+                            >
+                              <video
+                                src={item.media_url ? (item.media_url.startsWith("http") ? item.media_url : `/api/backend${item.media_url}`) : undefined}
+                                poster={item.thumbnail_url ? (item.thumbnail_url.startsWith("http") ? item.thumbnail_url : `/api/backend${item.thumbnail_url}`) : undefined}
+                                preload="metadata"
+                                muted
+                                playsInline
+                                crossOrigin="anonymous"
+                                className="w-full h-full object-cover opacity-80"
+                                onError={(e) => {
+                                  // If video stream fails to load, gracefully hide video element
+                                  (e.target as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover/thumb:bg-black/20 transition-colors">
+                                <div className="w-12 h-12 rounded-full bg-accent/25 border-2 border-accent flex items-center justify-center text-accent shadow-lg group-hover/thumb:scale-110 group-hover/thumb:bg-accent group-hover/thumb:text-black transition-all">
+                                  <Play className="size-5 fill-current ml-0.5" />
+                                </div>
+                              </div>
+                              <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm text-[10px] font-mono text-zinc-300 border border-white/10 pointer-events-none">
+                                Click to play inline
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 

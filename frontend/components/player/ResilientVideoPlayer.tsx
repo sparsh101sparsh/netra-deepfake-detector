@@ -13,6 +13,7 @@ interface ResilientVideoPlayerProps {
   className?: string;
   controls?: boolean;
   playsInline?: boolean;
+  autoPlay?: boolean;
 }
 
 export function ResilientVideoPlayer({
@@ -25,6 +26,7 @@ export function ResilientVideoPlayer({
   className = "w-full h-full object-contain",
   controls = true,
   playsInline = true,
+  autoPlay = false,
 }: ResilientVideoPlayerProps) {
   const internalRef = useRef<HTMLVideoElement | null>(null);
   const activeRef = externalRef || internalRef;
@@ -115,6 +117,7 @@ export function ResilientVideoPlayer({
           ref={activeRef as React.LegacyRef<HTMLVideoElement>}
           src={activeSrc}
           poster={poster}
+          autoPlay={autoPlay}
           controls={controls}
           playsInline={playsInline}
           crossOrigin="anonymous"
