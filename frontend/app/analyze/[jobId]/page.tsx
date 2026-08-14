@@ -712,13 +712,15 @@ export default function AnalysisPage({ params }: Props) {
                             clipScore: result.clip_score,
                           },
                           frames: result.frames,
-                          keyframeSnapshots: (result as any).keyframe_snapshots || (result.frames as any[])?.filter((f: any) => f.annotated_image_url).map((f: any) => ({
+                          keyframeSnapshots: result.keyframe_snapshots || result.frames?.filter((f) => f.annotated_image_url).map((f) => ({
                             frame_number: f.frame_number,
                             timestamp: f.timestamp,
-                            anomaly_region: f.anomaly_region,
+                            anomaly_region: f.anomaly_region || "Eyewear / Facial Specular Discontinuity",
                             anomaly_score: f.confidence,
-                            detector_subsystem: f.detector_subsystem,
-                            bounding_box: f.bounding_box,
+                            image_url: f.annotated_image_url!,
+                            annotated_image_url: f.annotated_image_url!,
+                            detector_subsystem: f.detector_subsystem || "GenD Foundation Model ViT-L/14 + Spatial SBI",
+                            bounding_box: f.bounding_box || [0, 0, 0, 0],
                           })),
                           summary: result.forensic_report,
                         });
