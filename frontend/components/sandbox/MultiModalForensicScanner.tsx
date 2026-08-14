@@ -41,10 +41,8 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
   const [imageOcrResult, setImageOcrResult] = useState<OCRDossierResult | null>(null);
 
   // Text Threat Triage State
-  const [rawText, setRawText] = useState(
-    "Urgent Notice: Electricity power connection will be disconnected at 9:30 PM tonight due to pending bill. Call bill officer at 9876543210 immediately or install bses-update.apk to pay ₹1,450 to electricity.officer@okhdfcbank."
-  );
-  const [textCity, setTextCity] = useState("New Delhi");
+  const [rawText, setRawText] = useState("");
+  const [textCity, setTextCity] = useState("");
   const [isAnalyzingText, setIsAnalyzingText] = useState(false);
   const [textResult, setTextResult] = useState<{
     is_scam: boolean;
@@ -53,10 +51,9 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
     verdict: string;
     scam_type?: string | null;
     matched_rules: string[];
-    analysis_method: string;
-    processing_time_ms: number;
+    analysis_reason?: string;
     llm_reason?: string | null;
-    extracted_iocs?: {
+    extracted_iocs: {
       phones: string[];
       upis: string[];
       urls: string[];
@@ -64,17 +61,6 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
     };
   } | null>(null);
   const [copiedIocKey, setCopiedIocKey] = useState<string | null>(null);
-
-  // Video / Audio Simulation / Progress State
-  const [neuralSimulation, setNeuralSimulation] = useState<{
-    fileName: string;
-    verdict: string;
-    confidence: string;
-    threatScore: number;
-    isScanning: boolean;
-    details: string;
-    modality: "video" | "audio";
-  } | null>(null);
 
   // Extract client-side IOCs helper
   const extractClientIOCs = (text: string) => {
@@ -90,7 +76,6 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
     async (file: File) => {
       setUploadError(null);
       setImageOcrResult(null);
-      setNeuralSimulation(null);
       setIsUploading(true);
       setUploadProgress(0);
 
@@ -248,7 +233,6 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
               setUploadError(null);
               setImageOcrResult(null);
               setTextResult(null);
-              setNeuralSimulation(null);
             }}
             size="md"
             renderOption={(opt, isSelected) => {
@@ -468,63 +452,6 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
           />
         )}
       </div>
-
-      {/* ── 3. BEAUTIFUL UI NEURAL SCAN CARD FOR VIDEO / AUDIO ── */}
-      {neuralSimulation && (
-        <div className="rounded-xl bg-surface border-[1.5px] border-line p-4 space-y-3.5 text-xs shadow-card animate-in fade-up duration-300">
-          <div className="flex items-center justify-between border-b border-line pb-3">
-            <span className="font-semibold text-ink flex items-center gap-2">
-              <CyberIcon name={neuralSimulation.modality === "audio" ? "audio" : "video"} size={16} glow={!neuralSimulation.isScanning} />
-              <span className="truncate max-w-[200px] sm:max-w-xs">{neuralSimulation.fileName}</span>
-            </span>
-
-            {neuralSimulation.isScanning ? (
-              <LoadingState label="Inspecting signal..." variant="Drive" />
-            ) : (
-              <StatusPill
-                tone={neuralSimulation.threatScore >= 75 ? "critical" : "active"}
-                size="sm"
-                pulse={neuralSimulation.threatScore >= 75}
-              >
-                {neuralSimulation.confidence} Confidence • {neuralSimulation.threatScore >= 75 ? "MANIPULATED" : "AUTHENTIC"}
-              </StatusPill>
-            )}
-          </div>
-
-          {/* Thinking Trace (Collapsible Reasoning Tree) */}
-          <ThinkingState
-            variant="Forensic"
-            isProcessing={neuralSimulation.isScanning}
-            activeLabel={neuralSimulation.modality === "audio" ? "Checking voice naturalness" : "Analyzing facial movements and video edges"}
-            doneLabel={neuralSimulation.modality === "audio" ? "Voice analysis complete" : "Face and video analysis complete"}
-            rows={
-              neuralSimulation.modality === "audio"
-                ? [
-                    { primary: "Checking voice pitch and tone naturalness", secondary: "Audio check" },
-                    { primary: "Checking for synthetic or robotic speech patterns", secondary: "Voice scan" },
-                    { primary: "Checking background room and environment sound", secondary: "Acoustic check" },
-                    { primary: "Generating AI voice risk score", secondary: neuralSimulation.confidence },
-                  ]
-                : [
-                    { primary: "Analyzing facial features and eye movements", secondary: "Face tracking" },
-                    { primary: "Checking for digital face-swapping or editing edges", secondary: "Visual check" },
-                    { primary: "Checking smoothness and consistency across frames", secondary: "Frame flow" },
-                    { primary: "Generating deepfake risk score", secondary: neuralSimulation.confidence },
-                  ]
-            }
-          />
-
-          {!neuralSimulation.isScanning && (
-            <div className="space-y-1.5 pt-1 border-t border-line">
-              <div className="font-semibold text-xs text-ink">{neuralSimulation.verdict}</div>
-              <div className="text-[12px] text-ink-2 leading-relaxed bg-inset/60 p-3 rounded-lg border border-line">
-                <StreamText text={neuralSimulation.details} charsPerTick={3} tickMs={12} />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
     </div>
   );
 }

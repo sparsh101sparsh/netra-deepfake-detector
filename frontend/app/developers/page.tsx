@@ -31,10 +31,8 @@ export default function DevelopersPage() {
   const [activeSnippetTab, setActiveSnippetTab] = useState<"curl" | "python" | "javascript">("curl");
 
   // Playground state
-  const [playgroundText, setPlaygroundText] = useState(
-    "Dear customer, your electricity power will be disconnected at 9:30 PM tonight due to unpaid bill. Call officer Ramesh at 9876543210 immediately or pay via bses-power.apk"
-  );
-  const [playgroundCity, setPlaygroundCity] = useState("New Delhi");
+  const [playgroundText, setPlaygroundText] = useState("");
+  const [playgroundCity, setPlaygroundCity] = useState("");
   const [isRunningPlayground, setIsRunningPlayground] = useState(false);
   const [playgroundResponse, setPlaygroundResponse] = useState<any>(null);
 
@@ -336,6 +334,7 @@ export default function DevelopersPage() {
                     rows={3}
                     value={playgroundText}
                     onChange={(e) => setPlaygroundText(e.target.value)}
+                    placeholder="Enter or select a sample payload to test API response..."
                     className="w-full px-3 py-2.5 rounded-xl bg-surface border border-line focus:border-accent/60 focus:ring-1 focus:ring-accent/40 outline-none text-xs text-ink placeholder-ink-3 transition-all font-mono"
                   />
                 </div>
@@ -347,14 +346,15 @@ export default function DevelopersPage() {
                       type="text"
                       value={playgroundCity}
                       onChange={(e) => setPlaygroundCity(e.target.value)}
-                      className="px-2 py-1 rounded-lg bg-surface border border-line focus:border-accent/60 focus:ring-1 focus:ring-accent/40 outline-none text-xs text-ink w-28"
+                      placeholder="e.g. New Delhi"
+                      className="px-2 py-1 rounded-lg bg-surface border border-line focus:border-accent/60 focus:ring-1 focus:ring-accent/40 outline-none text-xs text-ink w-28 placeholder:text-ink-3"
                     />
                   </div>
 
                   <button
                     onClick={runPlaygroundTest}
-                    disabled={isRunningPlayground}
-                    className="px-4 py-2 rounded-xl bg-accent text-white hover:bg-accent/90 text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+                    disabled={isRunningPlayground || !playgroundText.trim()}
+                    className="px-4 py-2 rounded-xl bg-accent text-white hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
                   >
                     {isRunningPlayground ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
                     Execute
