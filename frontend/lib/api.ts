@@ -35,6 +35,7 @@ export interface WorkerTelemetry {
   assigned_worker_id?: string | null;
   worker_device?: string | null;
   last_worker_heartbeat?: string | null;
+  estimated_wait_seconds?: number | null;
   stage_label?: string;
   queue_length?: number;
   queue_age_seconds?: number;
@@ -179,7 +180,7 @@ export const STAGE_LABELS: Record<string, string> = {
 
 export interface WorkerNodeInfo {
   worker_id: string;
-  status: "idle" | "busy" | "draining";
+  status: "idle" | "busy" | "offline" | "processing" | "draining";
   device_type: string;
   device_name?: string;
   active_job_id?: string | null;
@@ -190,6 +191,7 @@ export interface WorkerNodeInfo {
 export interface WorkerFleetStatusResponse {
   status: "active" | "offline" | "degraded";
   active_workers_count: number;
+  total_registered?: number;
   workers: WorkerNodeInfo[];
 }
 
@@ -247,15 +249,23 @@ export async function getVideoUrl(jobId: string): Promise<string | null> {
   }
 }
 
-/** WebSocket connection for real-time progress. */
+/** WebSocket connection for real-time progress.
+ *  IMPORTANT: Next.js rewrites (/api/backend → backend) do NOT proxy WebSocket connections.
+ *  We must connect directly to the backend API URL derived from NEXT_PUBLIC_API_URL.
+ */
 export function connectWebSocket(
   jobId: string,
   onUpdate: (data: Partial<JobStatusResponse>) => void
 ): WebSocket {
-  const wsProtocol = isBrowser && window.location.protocol === "https:" ? "wss:" : "ws:";
-  const wsHost = isBrowser ? window.location.host : "localhost:8000";
-  const wsUrl = `${wsProtocol}//${wsHost}${API_BASE}`;
-  const ws = new WebSocket(`${wsUrl}/api/v1/ws/${jobId}`);
+  // Derive the backend base URL: NEXT_PUBLIC_API_URL is the HTTP(S) backend root.
+  // In production this is https://netra-api-pmr7.onrender.com
+  // In dev this is http://127.0.0.1:8000
+  const backendHttpUrl = isBrowser
+    ? (process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`)
+    : "http://localhost:8000";
+  // Convert http(s): → ws(s): for native WebSocket protocol
+  const wsBaseUrl = backendHttpUrl.replace(/^http/, "ws");
+  const ws = new WebSocket(`${wsBaseUrl}/api/v1/ws/${jobId}`);
   ws.onmessage = (e) => {
     try {
       onUpdate(JSON.parse(e.data));

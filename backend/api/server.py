@@ -14,16 +14,24 @@ if os.path.exists(backend_env): load_dotenv(backend_env)
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .routes import detect, jobs, workers, scam, public_api, threat_intel, news_routes, community, bot_ingest
 from netra.services.tavily_crawler import start_24h_background_worker
 
-app = FastAPI(title="NETRA API", version="5.1", description="Multi-Modal Deepfake Detection & Threat Intelligence Platform")
+from contextlib import asynccontextmanager
 
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     start_24h_background_worker()
+    yield
+
+app = FastAPI(
+    title="NETRA API",
+    version="5.1",
+    description="Multi-Modal Deepfake Detection & Threat Intelligence Platform",
+    lifespan=lifespan
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,7 +53,7 @@ app.include_router(bot_ingest.router, prefix="/api/v1")
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": "5.0", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "ok", "version": "5.0", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @app.get("/")
 async def root():
