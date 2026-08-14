@@ -47,29 +47,62 @@ class GenDForensicEngine:
             self._init_model()
 
     def _init_model(self):
-        """Attempts to load weights from Hugging Face or initializes local hypersphere head."""
+        """
+        Attempts to load weights from Hugging Face with multiple fallback strategies
+        to handle meta device and precision issues. If all remote attempts fail,
+        falls back to the local hypersphere edge-energy simulator (NOT a real detector).
+        """
+        import importlib.util
         try:
-            import importlib.util
             from huggingface_hub import hf_hub_download
+        except ImportError:
+            logger.warning("huggingface_hub not installed — running hypersphere fallback.")
+            self.is_remote_loaded = False
+            return
 
+        try:
             logger.info(f"Loading GenD foundation model from Hugging Face: {self.model_name}")
             py_path = hf_hub_download(self.model_name, "modeling_gend.py")
             spec = importlib.util.spec_from_file_location("modeling_gend", py_path)
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
 
-            self.model = mod.GenD.from_pretrained(
-                self.model_name,
-                torch_dtype=torch.float16 if self.use_half_precision else torch.float32,
-            )
-            self.model.to(self.device)
-            self.model.eval()
-            self.is_remote_loaded = True
-            logger.info("GenD ViT-L model successfully loaded and active on %s", self.device)
+            # Strategy 1: standard load (float16 on GPU, float32 on CPU)
+            load_kwargs = {
+                "torch_dtype": torch.float16 if self.use_half_precision else torch.float32,
+            }
+            loaded = False
+            last_exc = None
+
+            for attempt, extra in enumerate([
+                {},                                        # Strategy 1: default
+                {"device_map": None, "low_cpu_mem_usage": False},  # Strategy 2: no meta device
+                {"torch_dtype": torch.float32, "device_map": None, "low_cpu_mem_usage": False},  # Strategy 3: full precision + no meta
+            ], 1):
+                try:
+                    kw = {**load_kwargs, **extra}
+                    self.model = mod.GenD.from_pretrained(self.model_name, **kw)
+                    self.model.to(self.device)
+                    self.model.eval()
+                    self.is_remote_loaded = True
+                    logger.info("GenD ViT-L model loaded (strategy %d) on %s", attempt, self.device)
+                    loaded = True
+                    break
+                except Exception as exc:
+                    last_exc = exc
+                    logger.debug("GenD load attempt %d failed: %s", attempt, exc)
+                    continue
+
+            if not loaded:
+                raise last_exc
+
         except Exception as e:
             logger.warning(
-                "Could not fetch remote Hugging Face weights (%s). Running GenD local hypersphere architecture simulator.",
-                str(e),
+                "GenD remote weights unavailable (%s). "
+                "Running local hypersphere edge-energy simulator — "
+                "NOTE: this does NOT give reliable deepfake scores. "
+                "Exclude from fusion when gend_status=HYPERSPHERE_FUSION_READY.",
+                str(e)[:120],
             )
             self.is_remote_loaded = False
 
