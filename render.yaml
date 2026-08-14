@@ -33,6 +33,26 @@ services:
           name: netra-postgres
           property: connectionString
 
+  # ── NETRA Next.js Frontend ─────────────────────────────────────────────────
+  - type: web
+    name: netra-frontend
+    runtime: node
+    region: oregon
+    plan: starter
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    startCommand: "node .next/standalone/server.js"
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://netra-api-pmr7.onrender.com
+      - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+        value: 934298152536-ft5qgqj1ouh125jrfckjiup1b3jp04gl.apps.googleusercontent.com
+      - key: PORT
+        value: 3000
+
 databases:
   # ── NETRA PostgreSQL Production Database ──────────────────────────────────
   - name: netra-postgres
