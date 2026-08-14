@@ -266,28 +266,69 @@ class AudioDeepfakeDetector:
                 audio = self._resample_to_16k(audio, sr)
                 sr = 16000
 
-            # Acoustic Energy & Voice Activity Gate:
-            # MelodyMachine is trained specifically on vocal formants.
-            # Pure silence or low-energy ambient room hiss lacks human vocal tract resonance
-            # and triggers massive false positives if fed to speech classification models.
-            rms = float(np.sqrt(np.mean(audio**2)))
+            # ── Waveform Speech Detection Gate ────────────────────────────────────
+            # Analyse the raw PCM waveform BEFORE touching any deepfake model.
+            # If the waveform proves there is no meaningful human speech:
+            #   → do NOT load, run, or score any deepfake detection model
+            #   → return immediately with a clear "no_deepfake_models_run" status
+            #
+            # Metrics used (all computable in milliseconds from raw numpy, no ML needed):
+            #   1. RMS energy            – overall loudness
+            #   2. Peak amplitude        – clipping / loud transients
+            #   3. ZCR variance          – high variance = natural vocal cord modulation;
+            #                              near-zero variance = pure silence or monotone hiss
+            #   4. High-frequency ratio  – voiced speech always has energy above 1kHz;
+            #                              silent/ambient tracks concentrate in 0–200Hz hum
+            # ────────────────────────────────────────────────────────────────────
+            rms  = float(np.sqrt(np.mean(audio ** 2)))
             peak = float(np.abs(audio).max())
-            if rms < 0.003 and peak < 0.04:
+
+            # Zero-Crossing Rate across short 20ms windows
+            window = 320  # 20ms at 16kHz
+            zcr_per_window = [
+                float(np.mean(np.abs(np.diff(np.sign(audio[i:i + window])))) / 2)
+                for i in range(0, len(audio) - window, window)
+            ]
+            zcr_variance = float(np.var(zcr_per_window)) if zcr_per_window else 0.0
+
+            # High-frequency spectral energy ratio (above 1kHz vs total)
+            fft_mag = np.abs(np.fft.rfft(audio[:min(len(audio), 16000 * 2)]))  # first 2s
+            freqs   = np.fft.rfftfreq(min(len(audio), 16000 * 2), d=1.0 / 16000)
+            hf_energy    = float(np.sum(fft_mag[freqs >  1000] ** 2) + 1e-12)
+            total_energy = float(np.sum(fft_mag ** 2) + 1e-12)
+            hf_ratio     = hf_energy / total_energy
+
+            # Speech present if EITHER:
+            #   – significant energy (rms >= 0.010) with voice-band high-frequency content (hf_ratio > 0.10)
+            #   – moderate energy (rms >= 0.005) with strong ZCR variance (ZCR > 0.0008, typical of voiced speech)
+            has_speech = (
+                (rms >= 0.010 and hf_ratio > 0.10)
+                or (rms >= 0.005 and zcr_variance > 0.0008)
+            )
+
+            if not has_speech:
                 logger.info(
-                    f"Audio track is silent or ambient room floor noise (RMS={rms:.6f}, peak={peak:.4f}). "
-                    "Skipping neural vocoder classification to prevent false positives."
+                    f"Waveform analysis: NO human speech detected "
+                    f"(RMS={rms:.6f}, peak={peak:.4f}, ZCR_var={zcr_variance:.6f}, HF_ratio={hf_ratio:.4f}). "
+                    "Skipping ALL deepfake detection models — no audio track to evaluate."
                 )
                 return {
                     "fake_probability": 0.0,
-                    "flags": ["ambient_or_silent_audio"],
+                    "flags": ["no_deepfake_models_run"],
                     "timestamp_segments": [],
                     "available": False,
                     "has_speech": False,
+                    "waveform_stats": {
+                        "rms": round(rms, 6),
+                        "peak": round(peak, 4),
+                        "zcr_variance": round(zcr_variance, 6),
+                        "hf_ratio": round(hf_ratio, 4),
+                    },
                 }
 
-            # Cap at 60s max to avoid memory saturation
-            max_samples = 16000 * 60
-            audio = audio[:max_samples]
+
+            # Cap at 60s max to avoid memory saturation on long videos
+            audio = audio[:16000 * 60]
 
             # Temporal segmentation in 5-second chunks
             chunk_size = 16000 * 5
