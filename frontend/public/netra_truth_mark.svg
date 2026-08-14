@@ -72,24 +72,24 @@
 
     <!-- 3. Facet Connector Lines -->
     <g stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="miter">
-      <!-- From Outer Top (200, 62) to Inner Left & Right -->
+      <!-- From Outer Top to Inner Left & Right -->
       <line x1="200" y1="62" x2="144" y2="200" />
       <line x1="200" y1="62" x2="256" y2="200" />
 
-      <!-- From Outer Bottom (200, 338) to Inner Left & Right -->
+      <!-- From Outer Bottom to Inner Left & Right -->
       <line x1="200" y1="338" x2="144" y2="200" />
       <line x1="200" y1="338" x2="256" y2="200" />
 
-      <!-- From Outer Left (68, 200) to Inner Top & Bottom -->
+      <!-- From Outer Left to Inner Top & Bottom -->
       <line x1="68" y1="200" x2="200" y2="126" />
       <line x1="68" y1="200" x2="200" y2="274" />
 
-      <!-- From Outer Right (332, 200) to Inner Top & Bottom -->
+      <!-- From Outer Right to Inner Top & Bottom -->
       <line x1="332" y1="200" x2="200" y2="126" />
       <line x1="332" y1="200" x2="200" y2="274" />
     </g>
 
-    <!-- 4. Horizontal Telemetry Axis (Left to Right) -->
+    <!-- 4. Horizontal Telemetry Axis -->
     <line
       x1="68"
       y1="200"
