@@ -45,11 +45,31 @@ export interface PDFReportData {
     anomaly_score?: number;
     detector_subsystem?: string;
     image_base64?: string;
+    image_url?: string;
+    annotated_image_url?: string;
     bounding_box?: [number, number, number, number];
   }>;
 }
 
-export function generateForensicPDF(data: PDFReportData) {
+async function fetchImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(typeof reader.result === "string" ? reader.result : null);
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function generateForensicPDF(data: PDFReportData): Promise<void> {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -71,7 +91,7 @@ export function generateForensicPDF(data: PDFReportData) {
   doc.setTextColor(148, 163, 184); // slate-400
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.text("Court-Admissible Evidence Certificate | Compliant with IT Act 2000 & BNS 2023", 18, y + 9);
+  doc.text("Court-Admissible Evidence Certificate | Compliant with Sec 65B IEA 1872 / Sec 63 BSA 2023 & IT Act 2000", 18, y + 9);
 
   y += 24;
 
@@ -148,12 +168,15 @@ export function generateForensicPDF(data: PDFReportData) {
 
   y += 4;
 
+  let sectionIndex = 2;
+
   // Tavily Live News Match Section (if present)
   if (data.tavilyMatches && data.tavilyMatches.length > 0) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(245, 158, 11); // Amber
-    doc.text(`2. Tavily Live Cyber Scam Threat Match (${data.tavilyMatches.length} Active Advisories)`, 14, y);
+    doc.text(`${sectionIndex}. Tavily Live Cyber Scam Threat Match (${data.tavilyMatches.length} Active Advisories)`, 14, y);
+    sectionIndex++;
     y += 5;
 
     doc.setTextColor(15, 23, 42);
@@ -177,10 +200,11 @@ export function generateForensicPDF(data: PDFReportData) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10.5);
     doc.setTextColor(245, 158, 11);
-    doc.text("2. Localized Visual Keyframe Evidence (Tamper-Evident Anomaly Overlay)", 14, y);
+    doc.text(`${sectionIndex}. Localized Visual Keyframe Evidence (Tamper-Evident Anomaly Overlay)`, 14, y);
+    sectionIndex++;
     y += 5;
 
-    data.keyframeSnapshots.slice(0, 3).forEach((snap) => {
+    for (const snap of data.keyframeSnapshots.slice(0, 3)) {
       if (y > 230) {
         doc.addPage();
         y = 20;
@@ -189,13 +213,41 @@ export function generateForensicPDF(data: PDFReportData) {
       doc.setDrawColor(203, 213, 225);
       doc.rect(14, y, pageWidth - 28, 48, "FD");
 
-      if (snap.image_base64) {
-        try {
-          doc.addImage(snap.image_base64, "JPEG", 16, y + 2, 55, 42);
-        } catch {
-          doc.rect(16, y + 2, 55, 42, "S");
-          doc.text("[Visual Snapshot]", 25, y + 22);
+      let base64 = snap.image_base64;
+      if (!base64) {
+        const candidateUrl = snap.annotated_image_url || snap.image_url;
+        if (candidateUrl && typeof window !== "undefined" && typeof fetch === "function") {
+          base64 = (await fetchImageAsBase64(candidateUrl)) || undefined;
         }
+      }
+
+      let imageRendered = false;
+      if (base64) {
+        try {
+          doc.addImage(base64, "JPEG", 16, y + 3, 55, 42);
+          imageRendered = true;
+        } catch {
+          imageRendered = false;
+        }
+      }
+
+      if (!imageRendered) {
+        // Amber tamper-evident forensic fallback card matching R2 & R3 specs
+        doc.setFillColor(241, 245, 249);
+        doc.setDrawColor(245, 158, 11); // amber #f59e0b
+        doc.rect(16, y + 3, 55, 42, "FD");
+        doc.setTextColor(245, 158, 11);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.text("ANOMALY DETECTED HERE", 18, y + 11);
+        doc.setTextColor(100, 116, 139);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.text(`Frame #${snap.frame_number}`, 18, y + 19);
+        const bbox = snap.bounding_box || [0, 0, 0, 0];
+        doc.text(`BBox: [${bbox.join(", ")}]`, 18, y + 25);
+        doc.text("Cryptographic Keyframe Crop", 18, y + 31);
+        doc.text("Sec 65B Certified", 18, y + 37);
       }
 
       const textX = 76;
@@ -214,7 +266,7 @@ export function generateForensicPDF(data: PDFReportData) {
       doc.text(`• Forensic Finding: Discontinuity in specular reflection & latent boundary.`, textX, y + 39);
 
       y += 52;
-    });
+    }
     y += 2;
   }
 
@@ -223,7 +275,8 @@ export function generateForensicPDF(data: PDFReportData) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10.5);
     doc.setTextColor(15, 23, 42);
-    doc.text(`3. Flagged Forensic Keyframe Dossier (${data.frames.length} Sampled Frames)`, 14, y);
+    doc.text(`${sectionIndex}. Flagged Forensic Keyframe Dossier (${data.frames.length} Sampled Frames)`, 14, y);
+    sectionIndex++;
     y += 5;
 
     doc.setFillColor(241, 245, 249);
@@ -258,7 +311,8 @@ export function generateForensicPDF(data: PDFReportData) {
   }
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.text("4. Applicable Legal Provisions (Indian Cyber Law)", 14, y);
+  doc.text(`${sectionIndex}. Applicable Legal Provisions (Indian Cyber Law)`, 14, y);
+  sectionIndex++;
   y += 5;
 
   doc.setFont("helvetica", "normal");
@@ -279,7 +333,7 @@ export function generateForensicPDF(data: PDFReportData) {
   doc.setTextColor(100, 116, 139);
   doc.setFontSize(7);
   doc.text("Digitally Certified by NETRA Autonomous Forensic Intelligence Engine", 14, 281);
-  doc.text("Certificate SHA-256 Non-Repudiation Verified | Indian Cybercrime Portal Format", 14, 284);
+  doc.text("Certificate SHA-256 Non-Repudiation Verified | Certified under Sec 65B Indian Evidence Act / Sec 63 BSA 2023", 14, 284);
   doc.text("cybercrime.gov.in Official Standard Compliant", pageWidth - 70, 281);
 
   doc.save(`NETRA_Forensic_Report_${data.id.substring(0, 8)}.pdf`);

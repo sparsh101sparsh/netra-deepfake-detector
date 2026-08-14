@@ -4,6 +4,22 @@
 const isBrowser = typeof window !== "undefined";
 const API_BASE = "/api/backend";
 
+export interface KeyframeSnapshot {
+  frame_number: number;
+  timestamp: string;
+  anomaly_region: string;
+  anomaly_score: number;
+  confidence?: number;
+  image_path?: string;
+  image_url: string;
+  annotated_image_url?: string;
+  detector_subsystem: string;
+  bounding_box: [number, number, number, number];
+  normalized_box?: [number, number, number, number];
+  evidence_code?: string;
+  statutory_act?: string;
+}
+
 export interface FrameEvidence {
   frame_number: number;
   timestamp: string;
@@ -11,6 +27,11 @@ export interface FrameEvidence {
   flags: string[];
   spatial_score: number;
   clip_score?: number | null;
+  annotated_image_url?: string;
+  image_path?: string;
+  bounding_box?: [number, number, number, number];
+  anomaly_region?: string;
+  detector_subsystem?: string;
 }
 
 export interface DetectionResult {
@@ -22,6 +43,7 @@ export interface DetectionResult {
   clip_score: number | null;
   risk_level: string;
   frames: FrameEvidence[];
+  keyframe_snapshots?: KeyframeSnapshot[];
   audio_flags: string[];
   metadata_flags: string[];
   forensic_report: string;

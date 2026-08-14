@@ -912,6 +912,11 @@ def process_job(
                     if f.frame_number in annotated_frames_map
                     else None
                 ),
+                "detector_subsystem": (
+                    annotated_frames_map[f.frame_number]["detector_subsystem"]
+                    if f.frame_number in annotated_frames_map
+                    else None
+                ),
             }
             for f in evidence.suspicious_frames[:20]
         ]
@@ -927,6 +932,7 @@ def process_job(
                     "image_path": snap["image_path"],
                     "bounding_box": snap["bounding_box"],
                     "anomaly_region": snap["anomaly_region"],
+                    "detector_subsystem": snap["detector_subsystem"],
                 })
                 existing_frame_nums.add(snap["frame_number"])
 

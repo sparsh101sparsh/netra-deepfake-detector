@@ -344,6 +344,33 @@ class TestTier1FeatureCoverage:
         assert f"NETRA_FIR_{threat_id}.pdf" in fir_resp.headers.get("content-disposition", "")
 
         # 2. Verify Job Forensic PDF Endpoint contract (GET /api/v1/jobs/{job_id}/report.pdf)
+        from backend.api.routes.jobs import save_local_job
+        save_local_job({
+            "job_id": "test-job-sample-id",
+            "status": "complete",
+            "verdict": "DEEPFAKE",
+            "confidence": 98.4,
+            "risk_level": "CRITICAL",
+            "result": {
+                "verdict": "DEEPFAKE",
+                "confidence": 98.4,
+                "risk_level": "CRITICAL",
+                "visual_score": 0.992,
+                "gend_score": 0.984,
+                "audio_score": 0.12,
+                "keyframe_snapshots": [
+                    {
+                        "frame_number": 45,
+                        "timestamp": "00:01.50",
+                        "anomaly_region": "Eyewear Specular Glare Plane",
+                        "confidence": 0.984,
+                        "anomaly_score": 0.984,
+                        "detector_subsystem": "GenD Foundation Model ViT-L/14 + Spatial SBI",
+                        "bounding_box": [120, 80, 240, 110]
+                    }
+                ]
+            }
+        })
         job_pdf_resp = client.get("/api/v1/jobs/test-job-sample-id/report.pdf")
         # Under progressive testability: returns 200 when M3 implemented, or 501 stub prior to M3
         assert job_pdf_resp.status_code in (200, 501), f"Unexpected status {job_pdf_resp.status_code}"
