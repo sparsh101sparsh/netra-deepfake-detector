@@ -17,8 +17,18 @@ from typing import List, Dict, Any
 
 logger = logging.getLogger("netra.tavily_crawler")
 
-# Resolve the cyber_scam_feed package (lives at repo root, not inside netra/)
-_REPO_ROOT = Path(__file__).resolve().parents[4]  # …/newantigravworkfolder
+# Resolve the cyber_scam_feed package — works locally and on Render
+# Local:  …/newantigravworkfolder/netra/backend/netra/services/ → parents[4] = newantigravworkfolder
+# Render: …/netra/backend/netra/services/                       → parents[3] = netra repo root
+_THIS = Path(__file__).resolve()
+for _depth in [4, 3, 2]:
+    _candidate = _THIS.parents[_depth]
+    if (_candidate / "cyber_scam_feed" / "__init__.py").exists():
+        _REPO_ROOT = _candidate
+        break
+else:
+    _REPO_ROOT = _THIS.parents[3]  # fallback
+
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
