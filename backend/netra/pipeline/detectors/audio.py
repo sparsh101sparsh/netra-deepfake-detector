@@ -298,18 +298,41 @@ class AudioDeepfakeDetector:
             total_energy = float(np.sum(fft_mag ** 2) + 1e-12)
             hf_ratio     = hf_energy / total_energy
 
-            # Speech present if EITHER:
-            #   – significant energy (rms >= 0.010) with voice-band high-frequency content (hf_ratio > 0.10)
-            #   – moderate energy (rms >= 0.005) with strong ZCR variance (ZCR > 0.0008, typical of voiced speech)
+            # Temporal continuity: what fraction of 20ms windows have enough energy to be speech?
+            # Human speech is sustained across consecutive frames.
+            # Keyboard clicks, door slams, and sparse impulses only occupy 1–5% of frames.
+            window_rms = [
+                float(np.sqrt(np.mean(audio[i:i + window] ** 2)))
+                for i in range(0, len(audio) - window, window)
+            ]
+            # Count windows whose energy exceeds an absolute speech floor.
+            # Human voiced speech windows are reliably above 0.005 RMS.
+            # This handles mixed silence+speech clips correctly — only the speech
+            # windows count, regardless of how much silence pad exists.
+            SPEECH_FLOOR = 0.005
+            active_frame_fraction = (
+                float(np.mean([1 if w > SPEECH_FLOOR else 0 for w in window_rms]))
+                if window_rms else 0.0
+            )
+            # Also check the maximum window energy: if at least one window is strongly
+            # voiced (> 0.015), the signal contains real speech bursts even if sparse.
+            has_strong_burst = float(np.max(window_rms)) > 0.015 if window_rms else False
+
+            # Speech present if:
+            #   (A) Sustained speech: loud + high-freq + enough active frames
+            #   (B) ZCR-variant + enough active frames (softer voice)
+            #   (C) Strong burst detected (at least one loud voiced window) + ZCR variance proves it's not a click
             has_speech = (
-                (rms >= 0.010 and hf_ratio > 0.10)
-                or (rms >= 0.005 and zcr_variance > 0.0008)
+                (rms >= 0.010 and hf_ratio > 0.10 and active_frame_fraction >= 0.15)
+                or (rms >= 0.005 and zcr_variance > 0.0008 and active_frame_fraction >= 0.15)
+                or (has_strong_burst and zcr_variance > 0.001 and hf_ratio > 0.10)
             )
 
             if not has_speech:
                 logger.info(
                     f"Waveform analysis: NO human speech detected "
-                    f"(RMS={rms:.6f}, peak={peak:.4f}, ZCR_var={zcr_variance:.6f}, HF_ratio={hf_ratio:.4f}). "
+                    f"(RMS={rms:.6f}, peak={peak:.4f}, ZCR_var={zcr_variance:.6f}, "
+                    f"HF_ratio={hf_ratio:.4f}, active_frames={active_frame_fraction:.3f}). "
                     "Skipping ALL deepfake detection models — no audio track to evaluate."
                 )
                 return {
@@ -323,6 +346,7 @@ class AudioDeepfakeDetector:
                         "peak": round(peak, 4),
                         "zcr_variance": round(zcr_variance, 6),
                         "hf_ratio": round(hf_ratio, 4),
+                        "active_frame_fraction": round(active_frame_fraction, 4),
                     },
                 }
 
