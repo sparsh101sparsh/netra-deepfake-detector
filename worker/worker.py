@@ -50,9 +50,9 @@ logging.basicConfig(
 logger = logging.getLogger("netra.worker")
 
 # AWS & Environment Config
-REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
-SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL", "https://sqs.us-east-1.amazonaws.com/131746731374/netra-jobs")
-S3_BUCKET_MEDIA = os.getenv("S3_BUCKET_MEDIA", "netra-media-uploads")
+REGION = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
+SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL", "https://sqs.ap-south-1.amazonaws.com/131746731374/netra-jobs")
+S3_BUCKET_MEDIA = os.getenv("S3_BUCKET_MEDIA", "netra-media-mumbai-131746731374")
 S3_BUCKET_MODELS = os.getenv("S3_BUCKET_MODELS", "netra-models")
 DYNAMO_TABLE_JOBS = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
 DYNAMO_TABLE_WORKERS = os.getenv("DYNAMO_TABLE_WORKERS", "netra-workers")
@@ -259,8 +259,8 @@ class WorkerLivenessRegistry:
             status = self.status
             active_job_id = self.active_job_id
 
-        expr = "SET #s = :s, last_heartbeat = :lh, last_heartbeat_epoch = :e, ttl = :ttl, active_job_id = :j"
-        expr_names = {"#s": "status"}
+        expr = "SET #s = :s, last_heartbeat = :lh, last_heartbeat_epoch = :e, #ttl = :ttl, active_job_id = :j"
+        expr_names = {"#s": "status", "#ttl": "ttl"}
         expr_vals = {
             ":s": {"S": status},
             ":lh": {"S": now.isoformat()},
@@ -366,13 +366,12 @@ class ModelRegistry:
         )
 
         # 1. Spatial SBI Detector
-        from netra.pipeline.detectors.spatial import SpatialSBIDetector
+        from netra.pipeline.detectors.spatial import SpatialSBIDetector, resolve_spatial_checkpoint_path
 
-        self.spatial_detector = SpatialSBIDetector(
-            model_path=SPATIAL_MODEL_PATH
-            if (SPATIAL_MODEL_PATH and os.path.exists(SPATIAL_MODEL_PATH))
-            else None
+        resolved_spatial = resolve_spatial_checkpoint_path(
+            SPATIAL_MODEL_PATH if (SPATIAL_MODEL_PATH and os.path.exists(SPATIAL_MODEL_PATH)) else None
         )
+        self.spatial_detector = SpatialSBIDetector(model_path=resolved_spatial)
 
         # 2. Audio Deepfake Detector
         from netra.pipeline.detectors.audio import AudioDeepfakeDetector
@@ -382,17 +381,27 @@ class ModelRegistry:
         # 3. CLIP Deepfake Probe
         from netra.pipeline.detectors.clip_probe import CLIPDeepfakeProbe
 
-        try:
-            self.clip_detector = CLIPDeepfakeProbe(
-                probe_path=CLIP_PROBE_PATH
-                if (CLIP_PROBE_PATH and os.path.exists(CLIP_PROBE_PATH))
-                else None
-            )
-        except Exception as e:
-            logger.warning(f"CLIPDeepfakeProbe initialization error: {e}")
+        # 3. CLIP Deepfake Probe (only load if custom probe weights provided)
+        if CLIP_PROBE_PATH and os.path.exists(CLIP_PROBE_PATH):
+            from netra.pipeline.detectors.clip_probe import CLIPDeepfakeProbe
+            try:
+                self.clip_detector = CLIPDeepfakeProbe(probe_path=CLIP_PROBE_PATH)
+            except Exception as e:
+                logger.warning(f"CLIPDeepfakeProbe initialization error: {e}")
+                self.clip_detector = None
+        else:
             self.clip_detector = None
 
-        # 4. Gated Fusion Engine
+        # 4. GenD ViT-L/14 Foundation Engine
+        from netra.pipeline.gend_engine import GenDForensicEngine
+        try:
+            self.gend_engine = GenDForensicEngine()
+            self.gend_engine._ensure_model_loaded()
+        except Exception as e:
+            logger.warning(f"GenD initialization warning: {e}")
+            self.gend_engine = None
+
+        # 5. Gated Fusion Engine
         from netra.pipeline.fusion import GatedFusionEngine
 
         self.fusion_engine = GatedFusionEngine()
@@ -670,10 +679,22 @@ def process_job(
                 sum(clip_scores) / len(clip_scores) if clip_scores else None
             )
 
+        # GenD Foundation ViT-L/14 Analysis
+        global_gend = None
+        if models.gend_engine:
+            try:
+                frame_paths = [f["image_path"] for f in frames if "image_path" in f]
+                gend_res = models.gend_engine.analyze_frames(frame_paths)
+                global_gend = gend_res.get("fake_probability")
+                logger.info(f"GenD Foundation Analysis fake_probability: {global_gend}")
+            except Exception as e:
+                logger.warning(f"GenD analysis failed: {e}")
+
         fusion_result = models.fusion_engine.fuse(
             visual_score=global_visual,
             audio_score=global_audio,
             clip_score=global_clip,
+            gend_score=global_gend,
             aux_flags=auxiliary_result.get("all_flags", []),
         )
 
@@ -724,6 +745,7 @@ def process_job(
             "verdict": fusion_result["verdict"],
             "confidence": fusion_result["confidence"],
             "visual_score": fusion_result["visual_score"],
+            "gend_score": global_gend,
             "audio_score": fusion_result.get("audio_score"),
             "clip_score": fusion_result.get("clip_score"),
             "risk_level": fusion_result["risk_level"],
@@ -767,13 +789,16 @@ def run_worker():
     """Main SQS polling loop. Runs continuously on GPU / MPS / CPU worker nodes."""
     logger.info("NETRA Worker Daemon initializing...")
 
-    # Prewarm models once at daemon startup
-    models = ModelRegistry.get_instance()
-
-    # Initialize worker presence registry
+    # Initialize worker presence registry immediately so UI detects active worker
     worker_registry = WorkerLivenessRegistry()
+    worker_registry.status = "prewarming"
     worker_registry.register()
     worker_registry.start_pulse_thread()
+
+    # Prewarm models once at daemon startup
+    models = ModelRegistry.get_instance()
+    worker_registry.status = "idle"
+    worker_registry.pulse()
 
     # Signal handling for graceful termination
     shutdown_requested = threading.Event()

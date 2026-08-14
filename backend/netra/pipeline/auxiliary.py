@@ -82,7 +82,12 @@ def analyze_eye_blinks(frames: List[Dict]) -> Dict:
     """
     try:
         import mediapipe as mp
-        mp_face_mesh = mp.solutions.face_mesh
+        mp_solutions = getattr(mp, "solutions", None)
+        if not mp_solutions and hasattr(mp, "python"):
+            mp_solutions = getattr(mp.python, "solutions", None)
+        if not mp_solutions:
+            return {"blink_rate_per_minute": 0, "blink_anomalous": False, "ear_std": 0}
+        mp_face_mesh = mp_solutions.face_mesh
         face_mesh = mp_face_mesh.FaceMesh(
             static_image_mode=True,
             max_num_faces=1,
@@ -158,7 +163,12 @@ def analyze_face_landmarks_jitter(frames: List[Dict]) -> Dict:
     """
     try:
         import mediapipe as mp
-        mp_face_mesh = mp.solutions.face_mesh
+        mp_solutions = getattr(mp, "solutions", None)
+        if not mp_solutions and hasattr(mp, "python"):
+            mp_solutions = getattr(mp.python, "solutions", None)
+        if not mp_solutions:
+            return {"landmark_jitter": 0.0, "anomalies": []}
+        mp_face_mesh = mp_solutions.face_mesh
         face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1)
 
         nose_positions = []
