@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { UserProfile, GoogleAuthModal } from "@/components/layout/GoogleAuthModal";
 import { NetraUserAvatar } from "@/components/NetraUserAvatar";
+import { AuthRequiredGate } from "@/components/auth/AuthRequiredGate";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
@@ -108,6 +109,7 @@ export default function BlogWriterPage() {
 
   // User & Auth State
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   // Document State
@@ -155,13 +157,16 @@ export default function BlogWriterPage() {
 
   // Load User from Session
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("netra_user");
-      if (stored) {
-        setUser(JSON.parse(stored));
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("netra_auth_user") || localStorage.getItem("netra_user");
+        if (stored) {
+          setUser(JSON.parse(stored));
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
+      setIsCheckingAuth(false);
     }
   }, []);
 
@@ -589,9 +594,19 @@ export default function BlogWriterPage() {
       )}
 
       {/* ── MAIN DOCUMENT WORKSPACE CANVAS ── */}
-      <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-8 sm:py-12 space-y-6">
-        
-        {/* Cover Image Banner Display */}
+      {!isCheckingAuth && !user ? (
+        <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-16 flex flex-col justify-center animate-in fade-in duration-300">
+          <AuthRequiredGate
+            title="Investigator Authorization Required"
+            subtitle="Authoring and publishing forensic intelligence, threat analyses, or deepfake advisories requires an authenticated investigator profile."
+            badge="CONTRIBUTOR ACCESS ONLY"
+            icon={Edit3}
+            onSignInClick={() => setAuthModalOpen(true)}
+          />
+        </main>
+      ) : (
+        <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-8 sm:py-12 space-y-6">
+          {/* Cover Image Banner Display */}
         {coverImage && (
           <div className="relative w-full h-48 sm:h-64 rounded-2xl overflow-hidden border border-white/10 group mb-6 shadow-xl">
             <img src={coverImage} alt="Article Cover" className="w-full h-full object-cover" />
@@ -803,6 +818,7 @@ export default function BlogWriterPage() {
           </article>
         )}
       </main>
+    )}
 
       {/* Google Auth Modal (if user tries to publish while logged out) */}
       <GoogleAuthModal

@@ -15,6 +15,7 @@ import { CommunityEditorModal } from "@/components/community/CommunityEditorModa
 import { CommunityArticleModal } from "@/components/community/CommunityArticleModal";
 import { CommunityPost } from "@/components/community/types";
 import { GlidingFilterTabs } from "@/components/atoms/GlidingFilterTabs";
+import { AuthRequiredGate } from "@/components/auth/AuthRequiredGate";
 import { cn } from "@/lib/utils";
 
 export default function CommunityPage() {
@@ -25,6 +26,7 @@ export default function CommunityPage() {
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,12 +65,13 @@ export default function CommunityPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedUser = localStorage.getItem("netra_auth_user");
+      const savedUser = localStorage.getItem("netra_auth_user") || localStorage.getItem("netra_user");
       if (savedUser) {
         try {
           setUser(JSON.parse(savedUser));
         } catch {}
       }
+      setIsCheckingAuth(false);
     }
     fetchCommunityPosts();
   }, []);
@@ -143,9 +146,18 @@ export default function CommunityPage() {
       <Navbar />
 
       <main className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 space-y-8 flex-1 animate-in fade-in duration-300">
-        
-        {/* ── SEARCH & CATEGORY FILTER TOOLBAR ── */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        {!isCheckingAuth && !user ? (
+          <AuthRequiredGate
+            title="Verified Investigator Community"
+            subtitle="The NETRA community publishes verified forensic dossiers, emerging scam typologies, and deepfake investigations. Access is restricted to authenticated investigators and registered researchers."
+            badge="AUTHENTICATED ACCESS ONLY"
+            icon={Users}
+            onSignInClick={() => setIsAuthModalOpen(true)}
+          />
+        ) : (
+          <>
+            {/* ── SEARCH & CATEGORY FILTER TOOLBAR ── */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           
           {/* Category Pills */}
           <GlidingFilterTabs
@@ -260,6 +272,8 @@ export default function CommunityPage() {
             ))}
           </div>
         )}
+      </>
+    )}
 
       </main>
 
@@ -282,7 +296,7 @@ export default function CommunityPage() {
         onPublished={handlePostPublished}
       />
 
-      {/* Google Auth Modal (if unauthenticated user tries to write post) */}
+      {/* Google Auth Modal */}
       <GoogleAuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
@@ -290,8 +304,9 @@ export default function CommunityPage() {
         onUserChange={(loggedUser) => {
           setUser(loggedUser);
           if (loggedUser) {
+            localStorage.setItem("netra_auth_user", JSON.stringify(loggedUser));
             setIsAuthModalOpen(false);
-            setIsEditorOpen(true);
+            fetchCommunityPosts();
           }
         }}
       />

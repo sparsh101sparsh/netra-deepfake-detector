@@ -208,7 +208,7 @@ function InteractiveAnnotatedPreview({
                   border: `2px solid ${borderColor}`,
                   backgroundColor: isActive ? `${borderColor}25` : "transparent",
                 }}
-                title={`Click to inspect Face #${idx + 1} (${face.verdict} - ${Math.round(face.fake_probability * 100)}%)`}
+                title={`Click to inspect Face #${idx + 1} (${face.verdict} - ${Math.round((face.fake_probability ?? 0) * 100)}%)`}
               >
                 <span
                   className={cn(
@@ -217,7 +217,7 @@ function InteractiveAnnotatedPreview({
                   )}
                   style={{ backgroundColor: borderColor }}
                 >
-                  Face #{idx + 1}: {Math.round(face.fake_probability * 100)}%
+                  Face #{idx + 1}: {Math.round((face.fake_probability ?? 0) * 100)}%
                 </span>
               </button>
             );
@@ -245,7 +245,7 @@ function FaceScorecard({ face }: { face: FaceEntry }) {
     isDeepfake ? "bg-red-500/5" : isSynthetic ? "bg-amber-500/5" : "bg-emerald-500/5";
 
   const metrics = face.neural_metrics || {};
-  const [x, y, w, h] = face.bbox ?? [0, 0, 0, 0];
+  const [x = 0, y = 0, w = 0, h = 0] = face.bbox ?? [0, 0, 0, 0];
 
   return (
     <div className={cn("rounded-xl border-[1.5px] p-4 space-y-3", borderColor, bgColor)}>
@@ -258,7 +258,7 @@ function FaceScorecard({ face }: { face: FaceEntry }) {
             <CheckCircle2 className={cn("w-4 h-4", accentColor)} />
           )}
           <span className={cn("font-mono font-bold text-xs uppercase", accentColor)}>
-            {(face.face_id ?? "face").replace(/_/g, " ").toUpperCase()}
+            {String(face.face_id || "face").replace(/_/g, " ").toUpperCase()}
           </span>
         </div>
         <StatusPill
@@ -346,7 +346,7 @@ function FaceScorecard({ face }: { face: FaceEntry }) {
               className="inline-flex items-center gap-1 rounded-md bg-white/5 border border-white/10 px-2 py-0.5 text-[10px] font-mono text-zinc-400"
             >
               <Zap className="w-2.5 h-2.5 text-amber-400" />
-              {flag.replace(/_/g, " ")}
+              {typeof flag === "string" ? flag.replace(/_/g, " ") : String(flag)}
             </span>
           ))}
         </div>
@@ -384,25 +384,25 @@ export function FacialAnomalyCard({ data, onReset, className }: FacialAnomalyCar
       id: data.scan_id || `IMG-${Date.now().toString(36).toUpperCase()}`,
       title: "Facial Deepfake & Photographic Manipulation Evidence Dossier",
       verdict: data.composite_verdict || (facial.composite_face_verdict === "DEEPFAKE" ? "CRITICAL FACIAL DEEPFAKE DETECTED" : "AUTHENTIC MEDIA"),
-      confidence: facial.max_fake_probability,
-      riskLevel: data.composite_risk_level || (facial.max_fake_probability >= 0.75 ? "CRITICAL" : "SAFE"),
+      confidence: facial.max_fake_probability ?? 0,
+      riskLevel: data.composite_risk_level || ((facial.max_fake_probability ?? 0) >= 0.75 ? "CRITICAL" : "SAFE"),
       city: "Digital Image Forensics Lab",
       state: "National Jurisdiction",
       locationSource: "EXIF / Digital Container",
       scores: {
-        visualScore: facial.max_fake_probability,
-        gendScore: activeF?.neural_metrics?.sbi_artifact_level ?? facial.max_fake_probability,
+        visualScore: facial.max_fake_probability ?? 0,
+        gendScore: activeF?.neural_metrics?.sbi_artifact_level ?? (facial.max_fake_probability ?? 0),
       },
-      summary: `Multi-face inspection resolved ${facial.face_count} face(s). Peak synthetic probability: ${Math.round(facial.max_fake_probability * 100)}%. Evidence: ${activeF?.evidence_code || "EVD-GEN-ANOMALY"} in ${activeF?.anomaly_region || "Facial Zone"}.`,
+      summary: `Multi-face inspection resolved ${facial.face_count} face(s). Peak synthetic probability: ${Math.round((facial.max_fake_probability ?? 0) * 100)}%. Evidence: ${activeF?.evidence_code || "EVD-GEN-ANOMALY"} in ${activeF?.anomaly_region || "Facial Zone"}.`,
       keyframeSnapshots: faces.map((f, idx) => ({
         frame_number: idx + 1,
-        timestamp: `Face #${idx + 1} (${f.face_id})`,
+        timestamp: `Face #${idx + 1} (${f.face_id || `face_${idx + 1}`})`,
         anomaly_region: f.anomaly_region || "Facial ROI",
-        anomaly_score: f.fake_probability,
+        anomaly_score: f.fake_probability ?? 0,
         detector_subsystem: "SpatialSBIDetector + VisualAnomalyLocalizer",
         image_base64: facial.annotated_preview_base64 || undefined,
         image_url: facial.annotated_preview_url || undefined,
-        bounding_box: f.bbox,
+        bounding_box: f.bbox ?? [0, 0, 0, 0],
       })),
     });
   };
@@ -506,7 +506,7 @@ export function FacialAnomalyCard({ data, onReset, className }: FacialAnomalyCar
             {faces.map((f, i) => {
               const isSynth = f.verdict !== "AUTHENTIC";
               const isDf = f.verdict === "DEEPFAKE";
-              const prob = Math.round(f.fake_probability * 100);
+              const prob = Math.round((f.fake_probability ?? 0) * 100);
               const isActive = i === activeFaceIdx;
 
               return (

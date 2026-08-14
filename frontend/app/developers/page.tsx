@@ -9,6 +9,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SegmentedControl } from "@/components/atoms/SegmentedControl";
 import { GlideMenu } from "@/components/atoms/GlideMenu";
+import { AuthRequiredGate } from "@/components/auth/AuthRequiredGate";
+import { GoogleAuthModal, UserProfile } from "@/components/layout/GoogleAuthModal";
 
 interface ApiKeyItem {
   key_id: string;
@@ -23,6 +25,10 @@ interface ApiKeyItem {
 }
 
 export default function DevelopersPage() {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
   const [keys, setKeys] = useState<ApiKeyItem[]>([]);
   const [activeKey, setActiveKey] = useState<string>("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -54,8 +60,22 @@ export default function DevelopersPage() {
   };
 
   useEffect(() => {
-    fetchKeys();
+    if (typeof window !== "undefined") {
+      const savedUser = localStorage.getItem("netra_auth_user") || localStorage.getItem("netra_user");
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch {}
+      }
+      setIsCheckingAuth(false);
+    }
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchKeys();
+    }
+  }, [user]);
 
   const handleCreateKey = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,13 +155,22 @@ export default function DevelopersPage() {
 
       {/* Main Content (Wide Layout) */}
       <main className="w-full max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 py-10 space-y-8 animate-in fade-in duration-500 font-sans flex-1">
-        
-        {/* Header */}
-        <div className="border-b border-line pb-6">
-          <div className="inline-flex items-center gap-2 text-[11px] font-mono font-semibold text-accent uppercase tracking-widest mb-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
-            Developer Platform
-          </div>
+        {!isCheckingAuth && !user ? (
+          <AuthRequiredGate
+            title="Developer Console & API Key Access"
+            subtitle="Generating production API credentials, monitoring request rate quotas, and running live inference in the REST playground requires an authenticated developer account."
+            badge="AUTHENTICATED ACCESS ONLY"
+            icon={Key}
+            onSignInClick={() => setIsAuthModalOpen(true)}
+          />
+        ) : (
+          <>
+            {/* Header */}
+            <div className="border-b border-line pb-6">
+              <div className="inline-flex items-center gap-2 text-[11px] font-mono font-semibold text-accent uppercase tracking-widest mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                Developer Platform
+              </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink">
             API Access & Console
           </h1>
@@ -482,10 +511,27 @@ console.log(result);`
           </div>
 
         </div>
+          </>
+        )}
 
       </main>
 
       <Footer />
+
+      {/* Google Auth Modal */}
+      <GoogleAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        user={user}
+        onUserChange={(loggedUser) => {
+          setUser(loggedUser);
+          if (loggedUser) {
+            localStorage.setItem("netra_auth_user", JSON.stringify(loggedUser));
+            setIsAuthModalOpen(false);
+            fetchKeys();
+          }
+        }}
+      />
     </div>
   );
 }
