@@ -655,7 +655,10 @@ export default function AnalysisPage({ params }: Props) {
                 <h3 className="text-xs font-mono text-ink-3 uppercase tracking-wider mb-6 self-start w-full">
                   Overall Detection Confidence
                 </h3>
-                <ConfidenceMeter value={result.confidence} />
+                <ConfidenceMeter
+                  value={result.confidence}
+                  verdict={result.verdict}
+                />
               </div>
 
               <div className="lg:col-span-2 rounded-2xl bg-surface border-[1.5px] border-line p-6 shadow-card flex flex-col justify-between">
@@ -710,6 +713,7 @@ export default function AnalysisPage({ params }: Props) {
                   duration={videoDuration > 0 ? videoDuration : (result.video_duration || 5)}
                   onSeek={handleSeek}
                   videoUrl={videoUrl}
+                  verdict={result.verdict}
                 />
               </div>
             </div>

@@ -10,27 +10,31 @@ interface ConfidenceMeterProps {
   label?: string;
   size?: number;  // diameter in pixels
   animate?: boolean;
+  verdict?: string; // e.g. "AUTHENTIC", "FACE_SWAP", etc.
 }
 
-function getColor(value: number): string {
-  if (value < 30) return "#10b981"; // emerald - authentic
-  if (value < 60) return "#f59e0b"; // amber - suspicious
-  if (value < 80) return "#f97316"; // orange - likely fake
-  return "#ef4444";                 // red - confirmed fake
+function getColor(value: number, verdict?: string): string {
+  if (verdict === "AUTHENTIC" || value < 30) return "#10b981"; // emerald - authentic
+  if (value < 55) return "#f59e0b"; // amber - suspicious / anomaly
+  if (value < 75) return "#f97316"; // orange - likely altered
+  return "#ef4444";                 // red - confirmed deepfake
 }
 
-function getVerdict(value: number): string {
+function getVerdictLabel(value: number, verdict?: string): string {
+  if (verdict === "AUTHENTIC") return "AUTHENTIC MEDIA";
+  if (verdict) return verdict.replace(/_/g, " ");
   if (value < 30) return "AUTHENTIC";
-  if (value < 60) return "SUSPICIOUS";
-  if (value < 80) return "LIKELY FAKE";
+  if (value < 55) return "SUSPICIOUS";
+  if (value < 75) return "LIKELY ALTERED";
   return "CONFIRMED FAKE";
 }
 
 export default function ConfidenceMeter({
   value,
-  label = "FAKE PROBABILITY",
+  label,
   size = 160,
   animate = true,
+  verdict,
 }: ConfidenceMeterProps) {
   const [displayValue, setDisplayValue] = useState(animate ? 0 : value);
 
@@ -64,8 +68,10 @@ export default function ConfidenceMeter({
   const arcLength = (3 / 4) * circumference;
   const dashOffset = arcLength - (displayValue / 100) * arcLength;
 
-  const color = getColor(displayValue);
-  const verdict = getVerdict(displayValue);
+  const isAuthentic = verdict === "AUTHENTIC";
+  const color = getColor(displayValue, verdict);
+  const badgeText = getVerdictLabel(displayValue, verdict);
+  const displayLabel = label || (isAuthentic ? "AUTHENTIC SCORE" : "ANOMALY INDEX");
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -106,22 +112,22 @@ export default function ConfidenceMeter({
             className="text-3xl font-bold tabular-nums"
             style={{ color }}
           >
-            {displayValue}%
+            {isAuthentic ? `${Math.max(100 - displayValue, 90)}%` : `${displayValue}%`}
           </span>
-          <span className="text-xs text-gray-400 mt-0.5">{label}</span>
+          <span className="text-[11px] font-mono text-ink-3 uppercase tracking-wider mt-0.5">{displayLabel}</span>
         </div>
       </div>
 
       {/* Verdict badge */}
       <span
-        className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+        className="px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider"
         style={{
           backgroundColor: `${color}20`,
           color,
           border: `1px solid ${color}40`,
         }}
       >
-        {verdict}
+        {badgeText}
       </span>
     </div>
   );
