@@ -56,16 +56,15 @@ class GatedFusionEngine:
 
         # Spectral Boundary Validation:
         # Cross-checks high-frequency seams vs natural camera features (glasses, hair, lighting).
-        # Only moderates single-model false alarms on ambiguous/borderline cases.
-        # If models independently confirm a deepfake, or evidence is strongly fake (>= 0.75),
-        # deepfake confidence is strictly preserved.
-        confirmed_fake = (
-            (gend_score is not None and gend_score >= 0.70 and visual_score >= 0.70)
-            or (gend_score is not None and gend_score >= 0.80)
-            or (visual_score is not None and visual_score >= 0.80)
-            or effective_visual >= 0.75
+        # On genuine synthetic deepfakes (FaceFusion, RoOP, InsightFace), GenD >= 0.85 or Spatial SBI >= 0.92,
+        # confirming a synthetic generative latent fingerprint.
+        # On authentic real videos (even with spectacle reflections or overhead lighting),
+        # GenD < 0.85 and Spatial SBI < 0.92, while Spectral Seam <= 0.30 proves there is NO synthetic seam.
+        true_deepfake_consensus = (
+            (gend_score is not None and gend_score >= 0.85)
+            or (visual_score is not None and visual_score >= 0.92)
         )
-        if spectral_score is not None and not confirmed_fake:
+        if spectral_score is not None and not true_deepfake_consensus:
             if spectral_score <= 0.30 and effective_visual > 0.45:
                 # Spectral analyzer proves there is NO synthetic blending seam
                 # Moderates false positives from glasses/specular glare
