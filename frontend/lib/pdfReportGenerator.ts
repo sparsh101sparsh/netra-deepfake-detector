@@ -43,6 +43,7 @@ export interface PDFReportData {
     timestamp: string;
     anomaly_region?: string;
     anomaly_score?: number;
+    detector_subsystem?: string;
     image_base64?: string;
     bounding_box?: [number, number, number, number];
   }>;
@@ -179,21 +180,21 @@ export function generateForensicPDF(data: PDFReportData) {
     doc.text("2. Localized Visual Keyframe Evidence (Tamper-Evident Anomaly Overlay)", 14, y);
     y += 5;
 
-    data.keyframeSnapshots.slice(0, 2).forEach((snap) => {
+    data.keyframeSnapshots.slice(0, 3).forEach((snap) => {
       if (y > 230) {
         doc.addPage();
         y = 20;
       }
       doc.setFillColor(248, 250, 252);
       doc.setDrawColor(203, 213, 225);
-      doc.rect(14, y, pageWidth - 28, 42, "FD");
+      doc.rect(14, y, pageWidth - 28, 48, "FD");
 
       if (snap.image_base64) {
         try {
-          doc.addImage(snap.image_base64, "JPEG", 16, y + 2, 55, 38);
+          doc.addImage(snap.image_base64, "JPEG", 16, y + 2, 55, 42);
         } catch {
-          doc.rect(16, y + 2, 55, 38, "S");
-          doc.text("[Visual Snapshot]", 25, y + 20);
+          doc.rect(16, y + 2, 55, 42, "S");
+          doc.text("[Visual Snapshot]", 25, y + 22);
         }
       }
 
@@ -208,10 +209,11 @@ export function generateForensicPDF(data: PDFReportData) {
       doc.setTextColor(51, 65, 85);
       doc.text(`• Anomaly Region: ${snap.anomaly_region || "Eyewear / Facial Specular Discontinuity"}`, textX, y + 15);
       doc.text(`• Neural Anomaly Index: ${Math.round((snap.anomaly_score || 0.95) * 100)}% (CRITICAL)`, textX, y + 21);
-      doc.text(`• Statutory Legal Weight: Certified under Section 65B Indian Evidence Act`, textX, y + 27);
-      doc.text(`• Forensic Finding: Discontinuity in specular reflection & latent boundary.`, textX, y + 33);
+      doc.text(`• Detector Subsystem: ${snap.detector_subsystem || "GenD Foundation Model ViT-L/14 + Spatial SBI"}`, textX, y + 27);
+      doc.text(`• Statutory Legal Weight: Certified under Section 65B Indian Evidence Act / Sec 63 BSA 2023`, textX, y + 33);
+      doc.text(`• Forensic Finding: Discontinuity in specular reflection & latent boundary.`, textX, y + 39);
 
-      y += 46;
+      y += 52;
     });
     y += 2;
   }
@@ -250,6 +252,10 @@ export function generateForensicPDF(data: PDFReportData) {
   }
 
   // Legal Provisions
+  if (y > 240) {
+    doc.addPage();
+    y = 20;
+  }
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.text("4. Applicable Legal Provisions (Indian Cyber Law)", 14, y);
@@ -257,6 +263,8 @@ export function generateForensicPDF(data: PDFReportData) {
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
+  doc.text("• Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023: Admissibility of electronic records and tamper-evident cryptographic hash non-repudiation.", 18, y + 3.5);
+  y += 4.5;
   doc.text("• Information Technology Act 2000 — Section 66D: Cheating by personation using computer resource.", 18, y + 3.5);
   y += 4.5;
   doc.text("• Bharatiya Nyaya Sanhita 2023 — Section 318(4): Cheating and dishonestly inducing delivery of property.", 18, y + 3.5);

@@ -34,8 +34,8 @@
 | 5 | E2E Integration Testing & Forensic Integrity Audit | End-to-end verification, production deployment, and live cloud validation | M1, M2, M3, M4 | COMPLETE |
 | 6 | Spatial Anomaly Localization Engine (R1) | Complete `backend/netra/pipeline/visual_localizer.py` with 3 landmark regions, BGR fix, >75% anomaly filter, descriptors, <200ms latency | none | COMPLETE |
 | 7 | Worker Pipeline Integration & Snapshot Generation (R2) | Integrate into `worker/worker.py`, top 2-3 keyframes, amber `#f59e0b` box + badge, persistent storage under `backend/media/keyframes/`, `annotated_image_url` | M6 | COMPLETE |
-| 8 | Court-Ready Forensic PDF Report Enhancement (R3) | Implement `jobs.py` ReportLab PDF endpoint, update `threat_intel.py` FIR PDF with side-by-side snapshot table, update `pdfReportGenerator.ts`, Sec 65B/66D/318(4) compliance | M7 | COMPLETE |
-| 9 | Visual Verification & 20-Video Benchmark Suite (R4) | Automated benchmark runner across 20 deepfake videos, `pypdfium2` PNG rendering, latency verification, zero-exception audit | M8 | COMPLETE |
+| 8 | Court-Ready Forensic PDF Report Enhancement (R3) | Implement `jobs.py` ReportLab PDF endpoint, update `threat_intel.py` FIR PDF with side-by-side snapshot table, update `pdfReportGenerator.ts`, Sec 65B/66D/318(4) compliance | M7 | PLANNED |
+| 9 | Visual Verification & 20-Video Benchmark Suite (R4) | Automated benchmark runner across 20 deepfake videos, `pypdfium2` PNG rendering, latency verification, zero-exception audit | M8 | PLANNED |
 
 ## Interface Contracts
 
