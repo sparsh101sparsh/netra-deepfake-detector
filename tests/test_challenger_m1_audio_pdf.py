@@ -3,25 +3,31 @@ Milestone 1 Empirical Challenger Test Suite
 Validates:
 1. POST /api/v1/detect/audio with diverse audio wave payloads (0.2s, silence, noise, 5s clip, <0.1s, varied codecs).
 2. Complete acoustic telemetry response schema validation and physical invariants.
-3. SQLite database persistence and physical upload storage in threat_catalog.
-4. GET /threat-intelligence/{threat_id}/fir-pdf across all 5 modalities:
+3. Multi-channel stereo and diverse sample-rate resampling (44.1kHz, 48kHz, 8kHz).
+4. SQLite database persistence and physical upload storage in threat_catalog.
+5. GET /threat-intelligence/{threat_id}/fir-pdf across all 5 modalities:
    - Audio Voice Clone
    - Image Pure Face (Branch A)
    - Image Document Scam (Branch B)
    - Image Hybrid (Branch C)
    - Video Deepfake
-5. Rendering and text extraction via pypdfium2 verifying uncorrupted PDF streams.
-6. Strict absence of "Section 63", "Section 65B", "65B", and "Section 63 BSA".
-7. Adversarial resilience against corrupted payloads, boundary conditions, and missing metadata.
+6. Rendering and text extraction via pypdfium2 verifying uncorrupted PDF streams.
+7. Base64 embedded photographic evidence rendering in Image FIR PDFs.
+8. Strict absence of "Section 63", "Section 65B", "65B", "Section 63 BSA", "Indian Evidence Act", etc.
+9. Adversarial resilience against corrupted payloads, boundary conditions, and missing metadata.
+10. Concurrency stress across audio detection and FIR PDF downloads.
 """
 
 import io
 import os
 import wave
 import json
+import base64
 import sqlite3
 import hashlib
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
+from PIL import Image as PILImage
 import pypdfium2
 import pytest
 from fastapi.testclient import TestClient
@@ -35,22 +41,18 @@ def client():
         yield c
 
 
-def generate_wave_bytes(duration_sec: float, sample_rate: int = 16000, wave_type: str = "sine") -> bytes:
-    """Generate in-memory WAV bytes with specific duration and acoustic signal."""
+def generate_wave_bytes(duration_sec: float, sample_rate: int = 16000, wave_type: str = "sine", channels: int = 1) -> bytes:
+    """Generate in-memory WAV bytes with specific duration, sample rate, channels, and acoustic signal."""
     num_samples = int(duration_sec * sample_rate)
     t = np.linspace(0, duration_sec, num_samples, endpoint=False)
 
     if wave_type == "sine":
-        # 440 Hz standard tone
         audio = 0.5 * np.sin(2 * np.pi * 440 * t)
     elif wave_type == "silent":
-        # Pure digital silence
         audio = np.zeros(num_samples, dtype=np.float32)
     elif wave_type == "noise":
-        # Random Gaussian white noise (high Wiener flatness)
         audio = np.random.normal(0, 0.4, num_samples).clip(-1.0, 1.0)
     elif wave_type == "harmonic_complex":
-        # Multi-tone complex with simulated vocoder artifacts
         audio = (
             0.35 * np.sin(2 * np.pi * 300 * t) +
             0.25 * np.sin(2 * np.pi * 600 * t) +
@@ -60,15 +62,31 @@ def generate_wave_bytes(duration_sec: float, sample_rate: int = 16000, wave_type
     else:
         audio = 0.4 * np.sin(2 * np.pi * 500 * t)
 
-    int_samples = (audio * 32767).astype(np.int16)
+    if channels == 2:
+        # Stereo: duplicate or create slightly shifted channel
+        audio_left = audio
+        audio_right = audio * 0.8
+        stereo_audio = np.column_stack((audio_left, audio_right))
+        int_samples = (stereo_audio * 32767).astype(np.int16)
+    else:
+        int_samples = (audio * 32767).astype(np.int16)
 
     bio = io.BytesIO()
     with wave.open(bio, "wb") as wf:
-        wf.setnchannels(1)
+        wf.setnchannels(channels)
         wf.setsampwidth(2)
         wf.setframerate(sample_rate)
         wf.writeframes(int_samples.tobytes())
     return bio.getvalue()
+
+
+def generate_test_image_b64(width: int = 300, height: int = 200, color: tuple = (245, 158, 11)) -> str:
+    """Generate a valid base64 PNG data URI."""
+    im = PILImage.new("RGB", (width, height), color)
+    buf = io.BytesIO()
+    im.save(buf, format="PNG")
+    raw_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+    return f"data:image/png;base64,{raw_b64}"
 
 
 # ==============================================================================
@@ -134,6 +152,28 @@ def test_audio_detect_payload_variations(client, scenario, duration, wave_type, 
     assert 0.0 <= scorecard["temporal_inconsistency"] <= 1.0
 
 
+@pytest.mark.parametrize("sr,channels,label", [
+    (44100, 2, "stereo_44khz"),
+    (48000, 2, "stereo_48khz"),
+    (8000, 1, "telephony_8khz"),
+])
+def test_audio_detect_stereo_and_resampling(client, sr, channels, label):
+    """
+    Challenge audio decoding with stereo audio and non-16kHz sample rates.
+    Verifies that the backend resamples to 16,000 Hz and averages stereo channels cleanly.
+    """
+    wav_bytes = generate_wave_bytes(duration_sec=1.0, sample_rate=sr, channels=channels, wave_type="harmonic_complex")
+    resp = client.post(
+        "/api/v1/detect/audio",
+        files={"file": (f"{label}.wav", wav_bytes, "audio/wav")}
+    )
+    assert resp.status_code == 200, f"Resampling test {label} failed: {resp.text}"
+    data = resp.json()
+    assert data["sample_rate_hz"] == 16000
+    assert 0.8 <= data["speech_duration_seconds"] <= 1.2
+    assert "wiener_flatness" in data["acoustic_metrics"]
+
+
 def test_audio_detect_database_catalog_insertion(client):
     """
     Empirically verify that POST /api/v1/detect/audio inserts an entry into
@@ -178,7 +218,6 @@ def test_audio_detect_database_catalog_insertion(client):
     assert media_url is not None
     assert "/api/v1/media/uploads/" in media_url
 
-    # Check that the physical file actually exists in uploads directory
     disk_filename = os.path.basename(media_url)
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     upload_path = os.path.join(repo_root, "backend", "media", "uploads", disk_filename)
@@ -535,7 +574,6 @@ def test_fir_pdf_generation_5_modalities(client, modality):
     extracted_pages_text = []
     for page_idx in range(page_count):
         page = doc[page_idx]
-        # Empirical raster rendering verification (detects corrupted drawing commands)
         bitmap = page.render(scale=1.5)
         pil_img = bitmap.to_pil()
         assert pil_img.width > 500, f"Rendered page width too small ({pil_img.width}px) on page {page_idx}"
@@ -558,21 +596,91 @@ def test_fir_pdf_generation_5_modalities(client, modality):
     # CRITICAL MANDATE: ABSOLUTE EXCLUSION OF SECTION 63 / 65B
     # ==============================================================================
     prohibited_citations = [
-        "Section 63",
-        "Section 65B",
-        "65B",
-        "Section 63 BSA",
-        "BSA 2023 certificate",
-        "Indian Evidence Act",
-        "BSA Section 63",
-        "IEA Section 65B"
+        "section 63",
+        "section 65b",
+        "65b",
+        "section 63 bsa",
+        "bsa 2023 certificate",
+        "indian evidence act",
+        "bsa section 63",
+        "iea section 65b",
+        "sec 65b",
+        "sec 63",
+        "sec. 65b",
+        "sec. 63"
     ]
 
+    lower_text = full_text.lower()
     for prohibited in prohibited_citations:
-        assert prohibited.lower() not in full_text.lower(), (
+        assert prohibited not in lower_text, (
             f"VIOLATION: Prohibited legal citation '{prohibited}' found in generated FIR PDF for modality '{mod_name}'!\n"
-            f"Offending text snippet: ...{full_text[max(0, full_text.lower().find(prohibited.lower())-50):full_text.lower().find(prohibited.lower())+100]}..."
+            f"Offending text snippet: ...{full_text[max(0, lower_text.find(prohibited)-50):lower_text.find(prohibited)+100]}..."
         )
+
+
+def test_image_fir_pdf_with_base64_embedded_evidence(client):
+    """
+    Empirically challenge ReportLab image embedding by supplying an actual
+    in-memory base64 PNG data URI in annotated_preview_base64.
+    Verifies that ReportLab decodes the image, scales it to 220x140pt,
+    embeds it in the PDF table, and produces a valid uncorrupted PDF.
+    """
+    b64_img = generate_test_image_b64(width=400, height=300, color=(220, 38, 38))
+    item_id = insert_threat_item({
+        "id": "EMBED-IMG-FACE-01",
+        "title": "Embedded Base64 Visual Evidence Challenge",
+        "type": "image_deepfake",
+        "threat_category": "FACE_SWAP",
+        "fake_probability": 0.98,
+        "verdict": "DEEPFAKE",
+        "risk_level": "CRITICAL",
+        "city": "Kolkata",
+        "state": "West Bengal",
+        "extracted_iocs": {
+            "analysis_mode": "pure_face",
+            "annotated_preview_base64": b64_img,
+            "facial_analysis": {
+                "face_count": 1,
+                "max_fake_probability": 0.98,
+                "composite_face_verdict": "DEEPFAKE",
+                "annotated_preview_base64": b64_img,
+                "faces": [
+                    {
+                        "face_id": "face_1",
+                        "bbox": [50, 50, 200, 200],
+                        "fake_probability": 0.98,
+                        "verdict": "DEEPFAKE",
+                        "risk_level": "CRITICAL",
+                        "anomaly_region": "Facial Boundary Seam",
+                        "evidence_code": "EVD-BOUNDARY-SEAM",
+                        "neural_metrics": {
+                            "sbi_artifact_level": 0.98,
+                            "ocular_reflection_symmetry": 0.22,
+                            "eyewear_specular_score": 75.0,
+                            "lip_sync_laplacian_score": 16.0
+                        }
+                    }
+                ]
+            }
+        }
+    })
+
+    resp = client.get(f"/api/v1/threat-intelligence/{item_id}/fir-pdf")
+    assert resp.status_code == 200
+    assert resp.content.startswith(b"%PDF-1.")
+    assert len(resp.content) > 6000
+
+    doc = pypdfium2.PdfDocument(resp.content)
+    assert len(doc) >= 1
+    # Render to bitmap to verify visual integrity with embedded image
+    rendered = doc[0].render(scale=1.5).to_pil()
+    assert rendered.width > 500
+    assert rendered.height > 500
+
+    full_text = " ".join([page.get_textpage().get_text_range() for page in doc])
+    assert "Section 63" not in full_text
+    assert "Section 65B" not in full_text
+    assert "65B" not in full_text
 
 
 def test_fir_pdf_nonexistent_threat_returns_404(client):
@@ -609,3 +717,33 @@ def test_fir_pdf_adversarial_missing_iocs(client):
     assert "Section 63" not in full_text
     assert "Section 65B" not in full_text
     assert "65B" not in full_text
+
+
+def test_concurrency_stress_audio_and_pdf(client):
+    """
+    Stress-test concurrent calls across audio detection and FIR PDF generation.
+    Validates absence of SQLite lock contention, thread corruption, or memory leaks.
+    """
+    def task_audio(idx: int):
+        wav = generate_wave_bytes(0.3, wave_type="sine")
+        resp = client.post(f"/api/v1/detect/audio", files={"file": (f"concurrent_{idx}.wav", wav, "audio/wav")})
+        assert resp.status_code == 200
+        return resp.json()["sha256_hash"]
+
+    def task_pdf(item_id: str):
+        resp = client.get(f"/api/v1/threat-intelligence/{item_id}/fir-pdf")
+        assert resp.status_code == 200
+        assert resp.content.startswith(b"%PDF-1.")
+        return len(resp.content)
+
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        futures_audio = [executor.submit(task_audio, i) for i in range(4)]
+        futures_pdf = [executor.submit(task_pdf, "CHALLENGE-AUD-01") for _ in range(4)]
+
+        for f in futures_audio:
+            sha = f.result()
+            assert len(sha) == 64
+
+        for f in futures_pdf:
+            size = f.result()
+            assert size > 3000

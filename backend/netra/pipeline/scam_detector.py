@@ -54,12 +54,12 @@ class ScamDetector:
                 r"\b(prepaid\s*task|rating\s*hotel|google\s*review\s*job)\b"
             ],
             "LOTTERY_PRIZE_FRAUD": [
-                r"\b(lucky\s*draw|sim\s*card\s*lucky\s*draw|lottery|kbc|kaun\s*banega\s*crorepati|crorepati)\b",
-                r"\b(won\s*(?:the|a)?\s*(?:prize|lottery|car|amount|cash)|prize\s*(?:of|money)|collect\s*(?:your)?\s*prize|claim\s*(?:your)?\s*prize)\b",
-                r"\b(only\s*whatsapp\s*call|whatsapp\s*call|kbc\s*(?:department|head\s*office|officer|winner|no|number)?)\b",
+                r"\b(lucky\s*draw|sim\s*card\s*lucky\s*draw|for\s*all\s*sim\s*cards|lottery|lucky\s*lottery|kbc|kaun\s*banega\s*crorepati|crorepati)\b",
+                r"\b(won\s*(?:the|a)?\s*(?:prize|lottery|car|amount|cash)|prize\s*(?:of|money|amount)|collect\s*(?:your)?\s*prize|claim\s*(?:your)?\s*prize)\b",
+                r"\b(only\s*whatsapp\s*call|whatsapp\s*call|kbc\s*(?:department|head\s*office|officer|winner|no|number)?|contact\s*only\s*(?:the\s*)?following\s*number)\b",
                 r"(25[,\s]*00[,\s]*000|25\s*lakh|50\s*lakh|1\s*crore|cash\s*prize)",
                 r"\b(state\s*bank\s*of\s*india|congratulations\s*(?:you)?\s*(?:have|heve|got)?\s*(?:won)?)\b",
-                r"(लॉटरी|केबीसी|करोड़पति|बधाई\s*हो|आप\s*जीते\s*हैं|लकी\s*ड्रॉ)"
+                r"(लॉटरी|केबीसी|करोड़पति|बधाई\s*हो|आप\s*जीते\s*हैं|लकी\s*ड्रॉ|லாட்டரி|அதிர்ஷ்ட\s*லாட்டரி|பரிசு|வென்றுள்ளீர்கள்|ஸ்டேட்\s*பேங்க்|வாழ்த்துக்கள்|லாటరీ|లక్కీ\s*డ్రా|బహుమతి|గెలుచుకున్నారు)"
             ]
         }
 
