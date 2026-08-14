@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -38,8 +38,8 @@ export interface NavbarProps {
 
 /**
  * Navbar — Sticky Glassmorphic Forensic Navigation Header.
- * Features NETRA glowing eye mark, sliding pill segmented menu,
- * live telemetry pill, and Google Auth modal trigger with avatar preview.
+ * Features NETRA glowing eye mark, sliding gliding pill menu with Beautiful-UI
+ * cubic-bezier(0.23, 1, 0.32, 1) transition timing, live telemetry, and Google Auth.
  */
 export const Navbar: React.FC<NavbarProps> = ({
   activeSection,
@@ -51,6 +51,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Gliding Hover & Active Indicator Tracking
+  const [hoveredNavId, setHoveredNavId] = useState<string | null>(null);
+  const [navHighlight, setNavHighlight] = useState<{
+    left: number;
+    width: number;
+    top: number;
+    height: number;
+  } | null>(null);
+
+  const navContainerRef = useRef<HTMLElement>(null);
+  const navItemRefs = useRef<Record<string, HTMLElement | null>>({});
 
   // Restore authenticated session from localStorage
   useEffect(() => {
@@ -82,6 +94,28 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (item.href !== "/" && pathname?.startsWith(item.href)) return true;
     return false;
   };
+
+  // Find active item id
+  const activeNavId = NAV_ITEMS.find((item) => isNavActive(item))?.id ?? "scanner";
+
+  // Reposition the gliding indicator whenever hover or active changes
+  useLayoutEffect(() => {
+    const targetId = hoveredNavId ?? activeNavId;
+    const targetElement = navItemRefs.current[targetId];
+    const container = navContainerRef.current;
+
+    if (targetElement && container) {
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = targetElement.getBoundingClientRect();
+
+      setNavHighlight({
+        left: targetRect.left - containerRect.left,
+        top: targetRect.top - containerRect.top,
+        width: targetRect.width,
+        height: targetRect.height,
+      });
+    }
+  }, [hoveredNavId, activeNavId, pathname, activeSection]);
 
   return (
     <>
@@ -121,11 +155,33 @@ export const Navbar: React.FC<NavbarProps> = ({
             </Link>
           </div>
 
-          {/* Center Segmented Navigation Menu (Desktop) */}
+          {/* Center Gliding Segmented Navigation Menu (Desktop) */}
           <nav 
-            className="hidden md:flex items-center gap-1 p-1 rounded-full bg-[#141416] border border-white/10 shadow-card"
+            ref={navContainerRef}
+            onMouseLeave={() => setHoveredNavId(null)}
+            className="hidden md:flex items-center gap-1 p-1 rounded-full bg-[#17191A] border border-white/10 shadow-card relative overflow-hidden"
             aria-label="Main Navigation"
           >
+            {/* The Gliding Indicator Pill with Beautiful-UI bezier curve */}
+            <span
+              aria-hidden="true"
+              className={cn(
+                "pointer-events-none absolute rounded-full z-0",
+                hoveredNavId && hoveredNavId !== activeNavId
+                  ? "bg-white/[0.12] border border-white/10"
+                  : "bg-[#0084ff] shadow-sm shadow-[#0084ff]/20"
+              )}
+              style={{
+                left: navHighlight?.left ?? 0,
+                top: navHighlight?.top ?? 0,
+                width: navHighlight?.width ?? 0,
+                height: navHighlight?.height ?? 0,
+                opacity: navHighlight ? 1 : 0,
+                transition:
+                  "left 240ms cubic-bezier(0.23, 1, 0.32, 1), top 240ms cubic-bezier(0.23, 1, 0.32, 1), width 240ms cubic-bezier(0.23, 1, 0.32, 1), height 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease, background-color 180ms ease",
+              }}
+            />
+
             {NAV_ITEMS.map((item) => {
               const active = isNavActive(item);
               const IconComp = item.icon;
@@ -133,7 +189,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               return (
                 <Link
                   key={item.id}
+                  ref={(el) => {
+                    navItemRefs.current[item.id] = el;
+                  }}
                   href={item.href}
+                  onMouseEnter={() => setHoveredNavId(item.id)}
                   onClick={(e) => {
                     if (pathname === "/" && item.href === "/" && onNavigateSection) {
                       e.preventDefault();
@@ -141,10 +201,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     }
                   }}
                   className={cn(
-                    "relative flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold font-sans transition-colors duration-150 truncate cursor-pointer",
+                    "relative z-10 flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold font-sans transition-colors duration-150 truncate cursor-pointer",
                     active
-                      ? "bg-[#0084ff] text-white hover:bg-[#0073e6] border-0 shadow-none"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.08]"
+                      ? "text-white"
+                      : "text-zinc-400 hover:text-white"
                   )}
                 >
                   {active && (
@@ -164,37 +224,31 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => setAuthModalOpen(true)}
-                className={cn(
-                  "flex items-center gap-2.5 h-9 px-3.5 rounded-full",
-                  "bg-[#18181B] hover:bg-[#222226] border border-[#0084ff]/40 hover:border-[#0084ff]/80",
-                  "shadow-card text-xs font-semibold text-white transition-all duration-150 cursor-pointer",
-                  "focus-visible:ring-2 focus-visible:ring-[#0084ff]/50 active:scale-[0.98]"
-                )}
-                aria-label="User Profile and Settings"
+                className="group flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full bg-inset hover:bg-hover border-[1.5px] border-line hover:border-line-strong transition-all shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                aria-label="User Account Menu"
               >
-                <NetraUserAvatar
-                  avatarIndex={user.avatarIndex}
-                  seed={user.email}
-                  size={22}
-                  showGlow={false}
-                />
-                <span className="font-semibold max-w-[120px] sm:max-w-[150px] truncate hidden sm:inline text-white">
-                  {user.name}
-                </span>
+                <div className="relative">
+                  <NetraUserAvatar avatarIndex={user.avatarIndex} seed={user.email} size={26} />
+                  <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-emerald-400 border border-surface shadow-sm" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-semibold text-ink leading-tight truncate max-w-[90px] sm:max-w-[120px]">
+                    {(user.name || user.email || "User").split(" ")[0]}
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400 leading-none truncate max-w-[90px] sm:max-w-[120px]">
+                    Verified
+                  </span>
+                </div>
+                <ChevronDown className="size-3 text-zinc-400 group-hover:text-ink transition-colors ml-0.5" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => setAuthModalOpen(true)}
-                className={cn(
-                  "flex items-center gap-2 h-9 px-5 rounded-full",
-                  "bg-[#0084ff] hover:bg-[#0073e6] border-0",
-                  "text-xs font-semibold text-white shadow-none transition-colors duration-150 cursor-pointer active:scale-[0.98]"
-                )}
+                className="btn-tactile flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-semibold font-sans bg-inset hover:bg-hover text-ink border-[1.5px] border-line hover:border-line-strong transition-all shadow-sm focus-visible:outline-none"
               >
-                {/* Clean Google Icon */}
-                <div className="size-4 rounded-full bg-white flex items-center justify-center p-0.5 shrink-0">
-                  <svg className="w-full h-full" viewBox="0 0 24 24">
+                <div className="size-4 flex items-center justify-center shrink-0">
+                  <svg className="size-3.5" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
                       d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"

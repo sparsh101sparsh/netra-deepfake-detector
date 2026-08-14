@@ -13,12 +13,16 @@ from typing import Dict, List, Optional, Any
 DB_PATH = os.getenv("NETRA_DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "netra.db"))
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH, timeout=20.0)
+    conn = sqlite3.connect(DB_PATH, timeout=30.0, isolation_level=None)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA busy_timeout=30000;")
     return conn
 
 def init_db():
-    conn = get_db()
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout=30000;")
     cursor = conn.cursor()
     
     # 1. API Keys Table
@@ -49,12 +53,12 @@ def init_db():
         risk_level TEXT NOT NULL,
         thumbnail_url TEXT,
         media_url TEXT,
-        lat REAL NOT NULL,
-        lng REAL NOT NULL,
-        city TEXT NOT NULL,
-        state TEXT NOT NULL,
-        country TEXT NOT NULL DEFAULT 'India',
-        location_source TEXT NOT NULL, -- EXACT_GPS, ESTIMATED_TELECOM, REGIONAL_HOTSPOT
+        lat REAL,
+        lng REAL,
+        city TEXT,
+        state TEXT,
+        country TEXT DEFAULT 'India',
+        location_source TEXT, -- EXACT_GPS, ESTIMATED_TELECOM, USER_REPORTED
         device_model TEXT,
         software_used TEXT,
         extracted_iocs TEXT, -- JSON string of {phones: [], upis: [], urls: [], apks: []}
@@ -64,11 +68,37 @@ def init_db():
     );
     """)
     
+    # 3. Community Posts Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS community_posts (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        category TEXT NOT NULL,
+        content TEXT NOT NULL,
+        excerpt TEXT,
+        cover_image TEXT,
+        embed_url TEXT,
+        author_id TEXT,
+        author_name TEXT NOT NULL,
+        author_email TEXT,
+        author_avatar TEXT,
+        author_avatar_index INTEGER DEFAULT 0,
+        author_role TEXT,
+        created_at TEXT NOT NULL,
+        read_time TEXT NOT NULL,
+        likes INTEGER NOT NULL DEFAULT 1,
+        views INTEGER NOT NULL DEFAULT 1,
+        tags TEXT
+    );
+    """)
+
     # Create Indexes for fast lookup
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_threat_category ON threat_catalog(threat_category);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_threat_type ON threat_catalog(type);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_threat_created ON threat_catalog(created_at);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_threat_city ON threat_catalog(city);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_community_category ON community_posts(category);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_community_created ON community_posts(created_at);")
     
     conn.commit()
     conn.close()
@@ -76,7 +106,7 @@ def init_db():
 # API Key Management Functions
 def create_api_key(name: str, tier: str = "free", monthly_quota: int = 100) -> Dict[str, str]:
     import secrets
-    raw_token = f"sk_live_{secrets.token_hex(16)}"
+    raw_token = f"netra_live_{secrets.token_hex(16)}"
     key_id = f"key_{secrets.token_hex(6)}"
     key_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
     key_prefix = raw_token[:12] + "••••"
@@ -140,14 +170,44 @@ def delete_api_key(key_id: str) -> bool:
 
 # Threat Catalog Functions
 def insert_threat_item(item: Dict[str, Any]) -> str:
-    import uuid
-    item_id = item.get("id") or f"THREAT-{uuid.uuid4().hex[:8].upper()}"
-    created_at = item.get("created_at") or time.strftime("%Y-%m-%d %H:%M:%S")
+    title = item.get("title") or "Untitled Incident"
+    media_type = item.get("type") or "scam_text"
+    threat_category = item.get("threat_category") or "IMPERSONATION"
+    source_platform = item.get("source_platform") or "Web"
     
     iocs_json = json.dumps(item.get("extracted_iocs", {})) if isinstance(item.get("extracted_iocs"), dict) else (item.get("extracted_iocs") or "{}")
     fir_json = json.dumps(item.get("fir_dossier", {})) if isinstance(item.get("fir_dossier"), dict) else (item.get("fir_dossier") or "{}")
-    
+
+    # Content-Hash Deduplication
+    content_seed = f"{title}_{threat_category}_{media_type}_{iocs_json}"
+    content_hash = hashlib.sha256(content_seed.encode("utf-8")).hexdigest()[:12].upper()
+    item_id = item.get("id") or f"THREAT-{content_hash}"
+    created_at = item.get("created_at") or time.strftime("%Y-%m-%d %H:%M:%S")
+
     conn = get_db()
+    existing = conn.execute("SELECT id FROM threat_catalog WHERE id = ?", (item_id,)).fetchone()
+    if existing:
+        # Increment upvotes on repeat detections rather than creating duplicate spam
+        conn.execute("UPDATE threat_catalog SET upvotes_count = upvotes_count + 1 WHERE id = ?", (item_id,))
+        conn.commit()
+        conn.close()
+        return item_id
+
+    # Strictly honest coordinates: None if missing, never fabricate New Delhi
+    lat = item.get("lat")
+    lng = item.get("lng")
+    city = item.get("city")
+    state = item.get("state")
+    country = item.get("country") if item.get("country") is not None else ("India" if city else None)
+    location_source = item.get("location_source") if (lat is not None and lng is not None) else None
+
+    fake_probability = item.get("fake_probability") if item.get("fake_probability") is not None else 0.85
+    verdict = item.get("verdict") if item.get("verdict") is not None else "SCAM"
+    risk_level = item.get("risk_level") if item.get("risk_level") is not None else "HIGH"
+    device_model = item.get("device_model")
+    software_used = item.get("software_used")
+    upvotes_count = item.get("upvotes_count") if item.get("upvotes_count") is not None else 1
+
     conn.execute("""
     INSERT OR REPLACE INTO threat_catalog (
         id, title, type, threat_category, source_platform, fake_probability, verdict,
@@ -156,15 +216,15 @@ def insert_threat_item(item: Dict[str, Any]) -> str:
         upvotes_count, created_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        item_id, item.get("title", "Untitled Incident"), item.get("type", "video_deepfake"),
-        item.get("threat_category", "IMPERSONATION"), item.get("source_platform", "Web"),
-        item.get("fake_probability", 0.95), item.get("verdict", "DEEPFAKE"),
-        item.get("risk_level", "HIGH"), item.get("thumbnail_url"), item.get("media_url"),
-        item.get("lat", 28.6139), item.get("lng", 77.2090), item.get("city", "New Delhi"),
-        item.get("state", "Delhi"), item.get("country", "India"),
-        item.get("location_source", "ESTIMATED_TELECOM"), item.get("device_model", "Unknown Device"),
-        item.get("software_used", "Unknown Software"), iocs_json, fir_json,
-        item.get("upvotes_count", 1), created_at
+        item_id, title, media_type,
+        threat_category, source_platform,
+        fake_probability, verdict,
+        risk_level, item.get("thumbnail_url"), item.get("media_url"),
+        lat, lng, city,
+        state, country,
+        location_source, device_model,
+        software_used, iocs_json, fir_json,
+        upvotes_count, created_at
     ))
     conn.commit()
     conn.close()
@@ -225,11 +285,178 @@ def get_threat_by_id(threat_id: str) -> Optional[Dict]:
 
 def upvote_threat_item(threat_id: str) -> Optional[int]:
     conn = get_db()
+    row = conn.execute("SELECT upvotes_count FROM threat_catalog WHERE id = ?", (threat_id,)).fetchone()
+    if not row:
+        conn.close()
+        return None
     conn.execute("UPDATE threat_catalog SET upvotes_count = upvotes_count + 1 WHERE id = ?", (threat_id,))
     conn.commit()
-    row = conn.execute("SELECT upvotes_count FROM threat_catalog WHERE id = ?", (threat_id,)).fetchone()
+    new_row = conn.execute("SELECT upvotes_count FROM threat_catalog WHERE id = ?", (threat_id,)).fetchone()
     conn.close()
-    return row["upvotes_count"] if row else None
+    return new_row["upvotes_count"] if new_row else None
+
+# Community Posts Functions
+def _row_to_community_post(r: Dict[str, Any]) -> Dict[str, Any]:
+    tags = []
+    if r.get("tags"):
+        try:
+            tags = json.loads(r["tags"]) if isinstance(r["tags"], str) else r["tags"]
+        except Exception:
+            tags = [r["tags"]] if isinstance(r["tags"], str) else []
+            
+    return {
+        "id": r["id"],
+        "title": r["title"],
+        "category": r["category"],
+        "content": r["content"],
+        "excerpt": r.get("excerpt") or "",
+        "cover_image": r.get("cover_image"),
+        "embed_url": r.get("embed_url"),
+        "author": {
+            "id": r.get("author_id"),
+            "name": r.get("author_name") or "Anonymous Investigator",
+            "email": r.get("author_email"),
+            "avatar": r.get("author_avatar"),
+            "avatar_index": r.get("author_avatar_index", 0),
+            "role": r.get("author_role")
+        },
+        "created_at": r["created_at"],
+        "read_time": r.get("read_time") or "3 min read",
+        "likes": r.get("likes", 1),
+        "views": r.get("views", 1),
+        "tags": tags
+    }
+
+def insert_community_post(post: Dict[str, Any]) -> Dict[str, Any]:
+    import uuid
+    post_id = post.get("id") or f"post-{uuid.uuid4().hex[:8]}"
+    created_at = post.get("created_at") or time.strftime("%Y-%m-%d %H:%M:%S")
+    
+    author = post.get("author", {})
+    if not isinstance(author, dict):
+        author = {}
+        
+    tags_json = json.dumps(post.get("tags", [])) if isinstance(post.get("tags"), list) else "[]"
+    
+    # Calculate read time if not provided
+    read_time = post.get("read_time")
+    if not read_time:
+        words = len((post.get("content") or "").split())
+        read_mins = max(1, round(words / 200))
+        read_time = f"{read_mins} min read"
+        
+    excerpt = post.get("excerpt")
+    if not excerpt and post.get("content"):
+        plain = post["content"].replace("#", "").replace("*", "").replace(">", "").strip()
+        excerpt = plain[:140] + ("..." if len(plain) > 140 else "")
+
+    conn = get_db()
+    conn.execute("""
+    INSERT OR REPLACE INTO community_posts (
+        id, title, category, content, excerpt, cover_image, embed_url,
+        author_id, author_name, author_email, author_avatar, author_avatar_index, author_role,
+        created_at, read_time, likes, views, tags
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        post_id,
+        post.get("title") or "Untitled Forensic Article",
+        post.get("category") or "THREAT_INTEL",
+        post.get("content") or "",
+        excerpt,
+        post.get("cover_image"),
+        post.get("embed_url"),
+        author.get("id"),
+        author.get("name") or "Anonymous Investigator",
+        author.get("email"),
+        author.get("avatar"),
+        author.get("avatar_index") if author.get("avatar_index") is not None else 0,
+        author.get("role"),
+        created_at,
+        read_time,
+        post.get("likes") if post.get("likes") is not None else 0,
+        post.get("views") if post.get("views") is not None else 0,
+        tags_json
+    ))
+    conn.commit()
+    conn.close()
+    
+    return get_community_post_by_id(post_id) or {
+        "id": post_id,
+        "title": post.get("title"),
+        "category": post.get("category"),
+        "content": post.get("content"),
+        "excerpt": excerpt,
+        "cover_image": post.get("cover_image"),
+        "embed_url": post.get("embed_url"),
+        "author": author,
+        "created_at": created_at,
+        "read_time": read_time,
+        "likes": post.get("likes") if post.get("likes") is not None else 0,
+        "views": post.get("views") if post.get("views") is not None else 0,
+        "tags": post.get("tags") or []
+    }
+
+def get_community_posts(
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    author_id: Optional[str] = None,
+    author_email: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0
+) -> List[Dict[str, Any]]:
+    conn = get_db()
+    query = "SELECT * FROM community_posts WHERE 1=1"
+    params = []
+    
+    if category and category.upper() != "ALL":
+        query += " AND UPPER(category) = ?"
+        params.append(category.upper())
+        
+    if author_id:
+        query += " AND author_id = ?"
+        params.append(author_id)
+        
+    if author_email:
+        query += " AND LOWER(author_email) = ?"
+        params.append(author_email.lower())
+        
+    if search:
+        query += " AND (LOWER(title) LIKE ? OR LOWER(excerpt) LIKE ? OR LOWER(content) LIKE ? OR LOWER(author_name) LIKE ?)"
+        term = f"%{search.lower()}%"
+        params.extend([term, term, term, term])
+        
+    query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
+    
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    
+    return [_row_to_community_post(dict(r)) for r in rows]
+
+def get_community_post_by_id(post_id: str, increment_view: bool = False) -> Optional[Dict[str, Any]]:
+    conn = get_db()
+    row = conn.execute("SELECT * FROM community_posts WHERE id = ?", (post_id,)).fetchone()
+    if not row:
+        conn.close()
+        return None
+    if increment_view:
+        conn.execute("UPDATE community_posts SET views = views + 1 WHERE id = ?", (post_id,))
+        conn.commit()
+        row = conn.execute("SELECT * FROM community_posts WHERE id = ?", (post_id,)).fetchone()
+    conn.close()
+    return _row_to_community_post(dict(row))
+
+def like_community_post(post_id: str) -> Optional[int]:
+    conn = get_db()
+    row = conn.execute("SELECT likes FROM community_posts WHERE id = ?", (post_id,)).fetchone()
+    if not row:
+        conn.close()
+        return None
+    conn.execute("UPDATE community_posts SET likes = likes + 1 WHERE id = ?", (post_id,))
+    conn.commit()
+    new_row = conn.execute("SELECT likes FROM community_posts WHERE id = ?", (post_id,)).fetchone()
+    conn.close()
+    return new_row["likes"] if new_row else None
 
 # Initialize on module load
 init_db()

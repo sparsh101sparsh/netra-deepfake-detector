@@ -58,7 +58,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
   return (
     <article
       onClick={() => onOpen(post)}
-      className="group relative flex flex-col rounded-2xl bg-[#141416] border border-white/[0.08] hover:border-white/20 transition-all duration-200 overflow-hidden cursor-pointer shadow-card hover:shadow-overlay flex-1"
+      className="group relative flex flex-col rounded-2xl bg-[#17191A] border border-white/[0.08] hover:border-white/20 transition-all duration-200 overflow-hidden cursor-pointer shadow-card hover:shadow-overlay flex-1"
     >
       {/* 1. Cover Image Header */}
       {post.cover_image && (
@@ -70,7 +70,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#141416] via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#17191A] via-transparent to-black/30" />
 
           {/* Category Pill on Image */}
           <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">

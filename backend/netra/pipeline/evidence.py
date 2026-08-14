@@ -1,7 +1,6 @@
 """
 NETRA Evidence Bundle Builder
-Assembles all detector outputs into a structured JSON that gets sent to Bedrock.
-The LLM NEVER sees raw video frames — only this structured evidence.
+Assembles all detector outputs into a structured JSON evidence report.
 """
 from dataclasses import dataclass, field, asdict
 from typing import List, Optional, Dict
@@ -29,9 +28,8 @@ class AudioSegmentEvidence:
 @dataclass
 class EvidenceBundle:
     """
-    Complete evidence package for Bedrock forensic report generation.
-    Serialized to JSON and sent to Claude 3.5 Sonnet.
-    Max size: 8,000 chars (enforced by truncation before Bedrock call).
+    Complete evidence package for forensic report generation.
+    Serialized to JSON for archival and FIR dossier synthesis.
     """
     job_id: str
     video_duration: float
@@ -47,9 +45,9 @@ class EvidenceBundle:
     auxiliary_flags: List[str]
     audio_available: bool = True
 
-    def to_llm_prompt_json(self, max_frames: int = 10, max_chars: int = 8000) -> str:
+    def to_report_json(self, max_frames: int = 10, max_chars: int = 8000) -> str:
         """
-        Serialize to structured JSON for Bedrock prompt.
+        Serialize to structured JSON for reporting.
         Caps at max_frames frames and max_chars total characters.
         """
         payload = {

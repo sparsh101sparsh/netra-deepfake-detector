@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { GlideMenu } from "@/components/atoms/GlideMenu";
+import { cn } from "@/lib/utils";
 
 export default function TechnologyPage() {
   const benchmarkMatrix = [
@@ -130,43 +132,56 @@ export default function TechnologyPage() {
 
           <div className="bg-surface border-[1.5px] border-line rounded-2xl overflow-hidden shadow-card">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-line bg-inset text-ink-2">
-                    <th className="p-4 font-semibold">Detector / Architecture</th>
-                    <th className="p-4 font-semibold">Detection Rate</th>
-                    <th className="p-4 font-semibold">Confidence Margin</th>
-                    <th className="p-4 font-semibold">Architecture Summary</th>
-                    <th className="p-4 font-semibold">Role</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {benchmarkMatrix.map((row, idx) => (
-                    <tr key={idx} className={idx === 0 ? "bg-accent/5 font-semibold" : "hover:bg-inset/50"}>
-                      <td className="p-4 text-ink flex items-center gap-2">
-                        {idx === 0 && <span className="w-2 h-2 rounded-full bg-accent"></span>}
-                        {row.model}
-                      </td>
-                      <td className={`p-4 font-mono font-bold ${parseFloat(row.detectionRate) >= 95 ? "text-green-500" : parseFloat(row.detectionRate) >= 90 ? "text-accent" : parseFloat(row.detectionRate) >= 70 ? "text-yellow-500" : "text-red-500"}`}>
-                        {row.detectionRate}
-                      </td>
-                      <td className="p-4 font-mono text-ink-2">{row.meanFakeProb}</td>
-                      <td className="p-4 text-ink-2 font-sans">{row.architecture}</td>
-                      <td className="p-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          row.status === "Primary System"
-                            ? "bg-accent/10 text-accent border border-accent/40"
-                            : row.status === "Integrated Backbone"
-                            ? "bg-green-500/10 text-green-600 border border-green-500/40 dark:text-green-400"
-                            : "bg-inset text-ink-2 border border-line"
-                        }`}>
-                          {row.status}
-                        </span>
-                      </td>
+              <GlideMenu
+                className="w-full"
+                highlightClassName="inset-x-0 bg-white/[0.04] rounded-none"
+                rowSelector="[data-menu-row]"
+              >
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-line bg-inset text-ink-2">
+                      <th className="p-4 font-semibold">Detector / Architecture</th>
+                      <th className="p-4 font-semibold">Detection Rate</th>
+                      <th className="p-4 font-semibold">Confidence Margin</th>
+                      <th className="p-4 font-semibold">Architecture Summary</th>
+                      <th className="p-4 font-semibold">Role</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {benchmarkMatrix.map((row, idx) => (
+                      <tr
+                        key={idx}
+                        data-menu-row
+                        className={cn(
+                          "relative z-10 transition-colors duration-150",
+                          idx === 0 ? "bg-accent/5 font-semibold" : ""
+                        )}
+                      >
+                        <td className="p-4 text-ink flex items-center gap-2">
+                          {idx === 0 && <span className="w-2 h-2 rounded-full bg-accent"></span>}
+                          {row.model}
+                        </td>
+                        <td className={`p-4 font-mono font-bold ${parseFloat(row.detectionRate) >= 95 ? "text-green-500" : parseFloat(row.detectionRate) >= 90 ? "text-accent" : parseFloat(row.detectionRate) >= 70 ? "text-yellow-500" : "text-red-500"}`}>
+                          {row.detectionRate}
+                        </td>
+                        <td className="p-4 font-mono text-ink-2">{row.meanFakeProb}</td>
+                        <td className="p-4 text-ink-2 font-sans">{row.architecture}</td>
+                        <td className="p-4">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            row.status === "Primary System"
+                              ? "bg-accent/10 text-accent border border-accent/40"
+                              : row.status === "Integrated Backbone"
+                              ? "bg-green-500/10 text-green-600 border border-green-500/40 dark:text-green-400"
+                              : "bg-inset text-ink-2 border border-line"
+                          }`}>
+                            {row.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </GlideMenu>
             </div>
           </div>
         </div>

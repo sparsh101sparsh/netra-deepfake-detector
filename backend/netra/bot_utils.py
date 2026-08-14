@@ -108,7 +108,7 @@ def format_result_telegram(result: dict, job_id: str) -> str:
     risk      = result.get("risk_level", "UNKNOWN")
     manip     = result.get("manipulation_type", "N/A")
     report    = result.get("forensic_report", "")
-    model     = result.get("model_used", "Amazon Bedrock")
+    model     = result.get("model_used", "NETRA Multi-Modal Forensic Pipeline")
 
     verdict_emoji = {
         "AUTHENTIC":  "✅",
@@ -141,7 +141,7 @@ def format_result_whatsapp(result: dict, job_id: str) -> str:
     conf    = result.get("confidence", 0)
     risk    = result.get("risk_level", "UNKNOWN")
     manip   = result.get("manipulation_type", "N/A")
-    model   = result.get("model_used", "Amazon Bedrock")
+    model   = result.get("model_used", "NETRA Multi-Modal Forensic Pipeline")
 
     verdict_emoji = {
         "AUTHENTIC":  "✅",

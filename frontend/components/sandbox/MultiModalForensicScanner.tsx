@@ -118,42 +118,13 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             onScanComplete?.(data);
             return;
           }
-          throw new Error("Backend OCR endpoint returned status " + res.status);
-        } catch (err) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `OCR endpoint returned status ${res.status}`);
+        } catch (err: any) {
           clearInterval(progressInterval);
-          // Fallback to client-side OCR extraction synthesis if offline
-          const fallbackData: OCRDossierResult = {
-            status: "success",
-            filename: file.name,
-            ocr_analysis: {
-              engine: "PaddleOCR v2.7 (Neural Engine)",
-              full_text: "URGENT NOTICE: ELECTRICITY CONNECTION DISCONNECTION. Call Officer 9876543210 immediately or install bses-update.apk. Pay UPI: electricity.officer@okhdfcbank",
-              lines_count: 4,
-              processing_time_ms: 125,
-            },
-            scam_analysis: {
-              is_scam: true,
-              risk_score: 96,
-              risk_level: "CRITICAL",
-              verdict: "CRITICAL SCAM SCREENSHOT (PADDLEOCR + THREAT MODEL)",
-              scam_type: "ELECTRICITY_KYC_EXTORTION",
-              matched_rules: [
-                "Urgent power cut ultimatum (9:30 PM tonight)",
-                "Malicious APK download link detected (bses-update.apk)",
-                "Unregistered personal UPI handle extracted",
-              ],
-              analysis_reason: "High-urgency phishing message demanding immediate UPI payment to avert power disconnection.",
-            },
-            extracted_iocs: {
-              phones: ["9876543210"],
-              upis: ["electricity.officer@okhdfcbank"],
-              apks: ["bses-update.apk"],
-              urls: [],
-            },
-            recommendation: "File an immediate cyber crime complaint at cybercrime.gov.in. Block phone number and revoke UPI VPA.",
-          };
-          setImageOcrResult(fallbackData);
-          onScanComplete?.(fallbackData);
+          console.warn("Image OCR error:", err);
+          setUploadError(err?.message || "Image OCR forensic node unreachable. Please check backend server.");
+          setImageOcrResult(null);
         } finally {
           setIsUploading(false);
         }
@@ -177,72 +148,18 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             return;
           }
         }
-        // If backend returned non-job or fallback needed
-        runSimulatedNeuralScan(
-          file.name,
-          activeModality === "audio" ? "SYNTHETIC VOICE CLONE" : "CRITICAL DEEPFAKE",
-          "97.8%",
-          98,
-          activeModality === "audio" ? "audio" : "video"
-        );
-      } catch {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Detection engine returned status ${res.status}`);
+      } catch (err: any) {
         clearInterval(progressInterval);
-        runSimulatedNeuralScan(
-          file.name,
-          activeModality === "audio" ? "SYNTHETIC VOICE CLONE" : "CRITICAL DEEPFAKE",
-          "97.8%",
-          98,
-          activeModality === "audio" ? "audio" : "video"
-        );
+        console.warn("Video/Audio detection dispatch error:", err);
+        setUploadError(err?.message || "Forensic pipeline node unreachable. Please ensure backend GPU worker is active.");
       } finally {
         setIsUploading(false);
       }
     },
     [activeModality, router, onScanComplete]
   );
-
-  // Neural inspection simulator for presets / offline fallbacks
-  const runSimulatedNeuralScan = (
-    fileName: string,
-    verdict: string,
-    confidence: string,
-    threatScore: number,
-    modality: "video" | "audio"
-  ) => {
-    setNeuralSimulation({
-      fileName,
-      verdict: "Analyzing Neural Signals & Spatial-Temporal Waveforms...",
-      confidence: "0%",
-      threatScore: 0,
-      isScanning: true,
-      details: modality === "audio"
-        ? "Extracting neural vocoder residuals (ElevenLabs/Bark) and micro-glottal pitch variance..."
-        : "Executing GenD ViT-L/14 embedding extraction & 2D-DCT spectral forensic analysis...",
-      modality,
-    });
-
-    let p = 0;
-    const interval = setInterval(() => {
-      p += 25;
-      if (p >= 100) {
-        clearInterval(interval);
-        const isDeepfake = verdict.includes("DEEPFAKE") || verdict.includes("CLONE") || verdict.includes("FORGED");
-        setNeuralSimulation({
-          fileName,
-          verdict,
-          confidence,
-          threatScore,
-          isScanning: false,
-          details: isDeepfake
-            ? modality === "audio"
-              ? "Synthetic Neural Vocoder Detected: Discontinuous phase spectrum and zero natural micro-tremor signature."
-              : "Deepfake Seam Discontinuity Detected: Spectral boundary mismatch in facial keypoint mesh and frame-to-frame temporal flicker."
-            : "Authentic Forensic Signature: Organic camera sensor pattern noise and natural biometric micro-glottal resonance.",
-          modality,
-        });
-      }
-    }, 180);
-  };
 
   // ── 3. TEXT THREAT TRIAGE HANDLER ──
   const handleTextTriage = async () => {
@@ -251,6 +168,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
 
     setIsAnalyzingText(true);
     setTextResult(null);
+    setUploadError(null);
 
     const iocs = extractClientIOCs(trimmed);
 
@@ -270,33 +188,12 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
         onScanComplete?.(data);
         return;
       }
-      throw new Error("Text scam detection endpoint error");
-    } catch {
-      // Robust fallback scoring if backend is offline
-      const hasApk = iocs.apks.length > 0;
-      const hasUpi = iocs.upis.length > 0;
-      const hasUrgent = /urgent|disconnected|arrest|police|cbi|customs|immediately/i.test(trimmed);
-      const calculatedScore = hasApk || (hasUpi && hasUrgent) ? 96 : hasUrgent ? 82 : 45;
-
-      const fallbackResult = {
-        is_scam: calculatedScore >= 50,
-        risk_score: calculatedScore,
-        confidence: 96,
-        verdict: calculatedScore >= 75 ? "CRITICAL — High Urgency Extortion Scam" : "HIGH RISK — Suspicious Phishing Text",
-        scam_type: hasApk ? "APK_TROJAN_DOWNLOAD" : hasUpi ? "ELECTRICITY_KYC" : "DIGITAL_ARREST",
-        matched_rules: [
-          ...(hasApk ? ["Malicious APK sideloading attachment (.apk)"] : []),
-          ...(hasUpi ? ["Fraudulent unverified UPI gateway handle"] : []),
-          ...(hasUrgent ? ["Coercive temporal deadline ultimatum"] : []),
-        ],
-        analysis_method: "scam_detector_engine",
-        processing_time_ms: 110,
-        llm_reason: "Phishing payload attempts social engineering coercion by threatening disconnection and instructing the victim to execute unauthorized financial transactions and download unverified application packages.",
-        extracted_iocs: iocs,
-      };
-
-      setTextResult(fallbackResult);
-      onScanComplete?.(fallbackResult);
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `Scam detection returned status ${res.status}`);
+    } catch (err: any) {
+      console.warn("Text scam detection error:", err);
+      setUploadError(err?.message || "Scam detection engine unreachable. Ensure backend server is running.");
+      setTextResult(null);
     } finally {
       setIsAnalyzingText(false);
     }

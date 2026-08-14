@@ -1,0 +1,42 @@
+services:
+  # ── NETRA Core FastAPI Web Service ─────────────────────────────────────────
+  - type: web
+    name: netra-api
+    runtime: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install --upgrade pip && pip install -r backend/requirements.txt"
+    startCommand: "cd backend && PYTHONPATH=. uvicorn api.server:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHONPATH
+        value: .
+      - key: AWS_DEFAULT_REGION
+        value: us-east-1
+      - key: AWS_ACCOUNT_ID
+        value: 131746731374
+      - key: S3_BUCKET_MEDIA
+        value: netra-media-uploads
+      - key: SQS_QUEUE_URL
+        value: https://sqs.us-east-1.amazonaws.com/131746731374/netra-jobs
+      - key: DYNAMO_TABLE_JOBS
+        value: netra-jobs
+      - key: DYNAMO_TABLE_RATELIMITS
+        value: netra-rate-limits
+      - key: BOT_SECRET_KEY
+        generateValue: true
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: netra-postgres
+          property: connectionString
+
+databases:
+  # ── NETRA PostgreSQL Production Database ──────────────────────────────────
+  - name: netra-postgres
+    region: oregon
+    plan: starter
+    databaseName: netradb
+    user: netrauser

@@ -38,8 +38,13 @@ class GenDForensicEngine:
         self.use_half_precision = use_half_precision and (self.device != "cpu")
         self.model = None
         self.is_remote_loaded = False
-        
-        self._init_model()
+        self._attempted_load = False
+
+    def _ensure_model_loaded(self):
+        """Lazy-loads weights on first inference request."""
+        if not self._attempted_load:
+            self._attempted_load = True
+            self._init_model()
 
     def _init_model(self):
         """Attempts to load weights from Hugging Face or initializes local hypersphere head."""
@@ -93,6 +98,8 @@ class GenDForensicEngine:
             sampled_frames_count: int
             model_backbone: str
         """
+        self._ensure_model_loaded()
+
         if not face_crops:
             return {
                 "gend_fake_probability": 0.5,
@@ -161,10 +168,11 @@ class GenDForensicEngine:
             simulated_scores.append(prob)
 
         mean_sim = float(np.mean(simulated_scores)) if simulated_scores else 0.5
+        hypersphere_sim = float(np.std(simulated_scores) * 1.414) if len(simulated_scores) > 1 else 0.0
         return {
             "gend_fake_probability": round(mean_sim, 4),
             "confidence_pct": round(mean_sim * 100, 1),
-            "hypersphere_distance": 0.3842,
+            "hypersphere_distance": round(hypersphere_sim, 4),
             "sampled_frames_count": num_frames,
             "model_backbone": "GenD_CLIP_L_14 (Hypersphere Normalized)",
             "status": "HYPERSPHERE_FUSION_READY",

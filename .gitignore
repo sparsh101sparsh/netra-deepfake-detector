@@ -13,6 +13,7 @@ venv/
 # *.mp4 and *.mov are tracked via Git LFS — do not ignore them
 *.pptx
 *.pkl
+!backend/netra/pipeline/models/*.pkl
 kaggle_logs*/
 kaggle-clip-output/
 extracted_frames/
@@ -20,3 +21,7 @@ scratch_frames/
 *.ses
 training/kaggle-clip-notebook/output_logs/
 data/
+garbage/
+threat_catalog.db
+*.db-shm
+*.db-wal

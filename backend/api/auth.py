@@ -11,9 +11,6 @@ def verify_api_key(api_key: str = Security(api_key_header)):
     res = verify_and_consume_key(api_key)
     
     if not res:
-        # Check if master demo key is used or local dev
-        if api_key.startswith("sk_test_") or api_key.startswith("sk_live_"):
-            return {"api_key": api_key, "tier": "developer", "quota": 5000, "used": 1}
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API Key. Please provide a valid X-API-Key header generated from the Developer Portal."

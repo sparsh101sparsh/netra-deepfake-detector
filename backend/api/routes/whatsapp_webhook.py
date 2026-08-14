@@ -227,7 +227,7 @@ async def whatsapp_webhook(
             "• Send video → auto analysis\n"
             "• Send YouTube URL → auto analysis\n"
             "• 'status <job_id>' → check running job\n\n"
-            "Powered by AWS (EfficientNet + Wav2Vec2 + Amazon Bedrock)"
+            "Powered by NETRA Forensic Pipeline (GenD + Wav2Vec2 + SBI)"
         ))
 
     elif body.startswith("status "):
