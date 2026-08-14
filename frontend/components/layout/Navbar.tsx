@@ -158,7 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </span>
                 </div>
                 <span className="hidden sm:inline-block text-[10px] font-mono text-zinc-500 -mt-0.5 uppercase tracking-wider">
-                  Eyes that see through
+                  The Architecture of Truth
                 </span>
               </div>
             </Link>
