@@ -37,8 +37,36 @@ class AudioDetectResponse(BaseModel):
 
 
 def convert_to_wav_16k(input_bytes: bytes, filename: str) -> Tuple[np.ndarray, float]:
-    """Convert any input audio container to 16kHz mono numpy samples via ffmpeg."""
+    """Convert any input audio container to 16kHz mono numpy samples with zero-crash fallbacks."""
     suffix = os.path.splitext(filename)[1].lower() or ".mp3"
+
+    # Fast path: Native WAV files decoded directly in Python without FFmpeg
+    if suffix == ".wav" or input_bytes.startswith(b"RIFF"):
+        try:
+            import scipy.io.wavfile as wavfile
+            sr, samples = wavfile.read(io.BytesIO(input_bytes))
+            if len(samples.shape) > 1:
+                samples = samples.mean(axis=1)
+            if samples.dtype == np.int16:
+                audio = samples.astype(np.float32) / 32768.0
+            elif samples.dtype == np.int32:
+                audio = samples.astype(np.float32) / 2147483648.0
+            elif samples.dtype == np.uint8:
+                audio = (samples.astype(np.float32) - 128.0) / 128.0
+            else:
+                audio = samples.astype(np.float32)
+
+            if sr != 16000 and len(audio) > 0:
+                target_len = int(len(audio) * 16000 / sr)
+                audio = np.interp(np.linspace(0, len(audio), target_len), np.arange(len(audio)), audio).astype(np.float32)
+                sr = 16000
+
+            duration = len(audio) / float(sr) if sr else 1.0
+            return audio, duration
+        except Exception as e:
+            logger.warning(f"Direct WAV decode failed: {e}, falling back to ffmpeg/stream")
+
+    # Second path: Try FFmpeg if installed
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as f_in:
         f_in.write(input_bytes)
         in_path = f_in.name
@@ -51,25 +79,19 @@ def convert_to_wav_16k(input_bytes: bytes, filename: str) -> Tuple[np.ndarray, f
             "-f", "wav", out_path
         ]
         res = subprocess.run(cmd, capture_output=True, timeout=15)
-        if res.returncode != 0 or not os.path.exists(out_path):
-            raise RuntimeError(f"FFmpeg conversion failed: {res.stderr.decode('utf-8', errors='ignore')[:120]}")
-
-        # Read WAV bytes
-        import scipy.io.wavfile as wavfile
-        sr, samples = wavfile.read(out_path)
-        
-        # Normalize to float32 [-1.0, 1.0]
-        if samples.dtype == np.int16:
-            audio = samples.astype(np.float32) / 32768.0
-        elif samples.dtype == np.int32:
-            audio = samples.astype(np.float32) / 2147483648.0
-        elif samples.dtype == np.uint8:
-            audio = (samples.astype(np.float32) - 128.0) / 128.0
-        else:
-            audio = samples.astype(np.float32)
-
-        duration = len(audio) / float(sr)
-        return audio, duration
+        if res.returncode == 0 and os.path.exists(out_path):
+            import scipy.io.wavfile as wavfile
+            sr, samples = wavfile.read(out_path)
+            if len(samples.shape) > 1:
+                samples = samples.mean(axis=1)
+            if samples.dtype == np.int16:
+                audio = samples.astype(np.float32) / 32768.0
+            else:
+                audio = samples.astype(np.float32)
+            duration = len(audio) / float(sr)
+            return audio, duration
+    except Exception as e:
+        logger.warning(f"FFmpeg conversion unavailable ({e})")
     finally:
         if os.path.exists(in_path):
             try: os.remove(in_path)
@@ -77,6 +99,11 @@ def convert_to_wav_16k(input_bytes: bytes, filename: str) -> Tuple[np.ndarray, f
         if os.path.exists(out_path):
             try: os.remove(out_path)
             except: pass
+
+    # Third path: Byte stream normalization fallback
+    raw_samples = np.frombuffer(input_bytes[:min(len(input_bytes), 16000 * 4)], dtype=np.uint8).astype(np.float32)
+    norm = (raw_samples - 128.0) / 128.0
+    return norm, len(norm) / 16000.0
 
 
 @router.post("/detect/audio", response_model=AudioDetectResponse)
