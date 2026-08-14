@@ -6,7 +6,15 @@ from datetime import datetime
 router = APIRouter()
 
 DYNAMO_TABLE = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
-dynamodb = boto3.client("dynamodb", region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
+
+def get_dynamo_client():
+    kwargs = {"region_name": os.getenv("AWS_DEFAULT_REGION", "us-east-1")}
+    ak = os.getenv("AWS_ACCESS_KEY_ID")
+    sk = os.getenv("AWS_SECRET_ACCESS_KEY")
+    if ak and sk:
+        kwargs["aws_access_key_id"] = ak.strip()
+        kwargs["aws_secret_access_key"] = sk.strip()
+    return boto3.client("dynamodb", **kwargs)
 
 
 def _parse_dynamo_item(item: dict) -> dict:
@@ -31,7 +39,7 @@ async def get_job_status(job_id: str):
     Frontend calls this every 2 seconds until status == 'complete' or 'error'.
     """
     try:
-        resp = dynamodb.get_item(
+        resp = get_dynamo_client().get_item(
             TableName=DYNAMO_TABLE,
             Key={"job_id": {"S": job_id}}
         )
@@ -73,7 +81,7 @@ async def websocket_progress(ws: WebSocket, job_id: str):
     await ws.accept()
     try:
         while True:
-            resp = dynamodb.get_item(
+            resp = get_dynamo_client().get_item(
                 TableName=DYNAMO_TABLE,
                 Key={"job_id": {"S": job_id}}
             )

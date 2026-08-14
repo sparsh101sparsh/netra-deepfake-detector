@@ -22,9 +22,14 @@ def get_dynamo_table() -> str:
 MAX_FILE_SIZE_MB = 100
 ALLOWED_TYPES = {"video/mp4", "video/quicktime", "video/webm", "video/avi", "video/x-msvideo"}
 
-s3 = boto3.client("s3", region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
-sqs = boto3.client("sqs", region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
-dynamodb = boto3.client("dynamodb", region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
+def get_boto3_client(service_name: str):
+    kwargs = {"region_name": os.getenv("AWS_DEFAULT_REGION", "us-east-1")}
+    ak = os.getenv("AWS_ACCESS_KEY_ID")
+    sk = os.getenv("AWS_SECRET_ACCESS_KEY")
+    if ak and sk:
+        kwargs["aws_access_key_id"] = ak.strip()
+        kwargs["aws_secret_access_key"] = sk.strip()
+    return boto3.client(service_name, **kwargs)
 
 
 @router.post("/detect/full")
@@ -57,6 +62,9 @@ async def detect_full(file: UploadFile = File(...)):
 
     s3_uploaded = False
     try:
+        s3 = get_boto3_client("s3")
+        sqs = get_boto3_client("sqs")
+        dynamodb = get_boto3_client("dynamodb")
         # 1. Upload to S3
         import io
         s3.upload_fileobj(io.BytesIO(contents), s3_bucket, s3_key)
