@@ -118,3 +118,37 @@ def execute_tavily_crawl() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"execute_tavily_crawl error: {e}", exc_info=True)
         return {"status": "error", "reason": str(e)}
+
+
+# ── 24h Background Crawler Thread ────────────────────────────────────────────
+import threading
+
+_bg_thread: "threading.Thread | None" = None
+
+def start_24h_background_worker():
+    """
+    Launches a daemon thread that runs execute_tavily_crawl() on startup
+    and then every 24 hours. Called by server.py lifespan on startup.
+    Silently no-ops if TAVILY_API_KEY is not set.
+    """
+    global _bg_thread
+
+    def _loop():
+        import time
+        # Initial crawl on startup
+        try:
+            execute_tavily_crawl()
+        except Exception as e:
+            logger.warning(f"Initial Tavily crawl failed: {e}")
+        # Repeat every 24h
+        while True:
+            time.sleep(86400)
+            try:
+                execute_tavily_crawl()
+            except Exception as e:
+                logger.warning(f"Scheduled Tavily crawl failed: {e}")
+
+    if _bg_thread is None or not _bg_thread.is_alive():
+        _bg_thread = threading.Thread(target=_loop, daemon=True, name="tavily-24h-crawler")
+        _bg_thread.start()
+        logger.info("24h Tavily background crawler thread started.")
