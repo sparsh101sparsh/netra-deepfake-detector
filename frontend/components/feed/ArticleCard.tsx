@@ -33,6 +33,7 @@ export interface ScamNewsArticle {
   modus_operandi?: string;
   published_at: string;
   thumbnail_url?: string;
+  image_url?: string;
   crawled_at?: string;
 }
 
@@ -95,6 +96,36 @@ function formatCategoryLabel(cat?: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function formatIndianDate(dateStr?: string): string {
+  if (!dateStr) return "";
+  const s = dateStr.trim();
+  // If already in dd/mm/yy or dd/mm/yyyy format
+  if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(s)) {
+    const parts = s.split("/");
+    const yy = parts[2].length === 4 ? parts[2].slice(-2) : parts[2];
+    return `${parts[0].padStart(2, "0")}/${parts[1].padStart(2, "0")}/${yy}`;
+  }
+  // Try matching YYYY-MM-DD
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, y, m, d] = isoMatch;
+    return `${d}/${m}/${y.slice(-2)}`;
+  }
+  // Try standard Date parsing
+  try {
+    const dt = new Date(s);
+    if (!isNaN(dt.getTime())) {
+      const d = String(dt.getDate()).padStart(2, "0");
+      const m = String(dt.getMonth() + 1).padStart(2, "0");
+      const yy = String(dt.getFullYear()).slice(-2);
+      return `${d}/${m}/${yy}`;
+    }
+  } catch {
+    // fallback to original string
+  }
+  return s;
+}
+
 /**
  * ArticleCard component
  * High-density institutional threat intelligence card with thumbnail,
@@ -103,8 +134,10 @@ function formatCategoryLabel(cat?: string): string {
 export function ArticleCard({ article, className, compact = false }: ArticleCardProps) {
   const [imgError, setImgError] = useState(false);
 
+  // Prioritize authentic scraped news thumbnail, with category fallback
   const initialThumbnail =
     article.thumbnail_url ||
+    article.image_url ||
     CATEGORY_THUMBNAILS[article.category] ||
     CATEGORY_THUMBNAILS.DEFAULT;
 
@@ -155,7 +188,7 @@ export function ArticleCard({ article, className, compact = false }: ArticleCard
             </span>
             <span className="flex items-center gap-1 shrink-0 text-zinc-500 tabular-nums">
               <Clock className="size-3" />
-              <span>{article.published_at}</span>
+              <span>{formatIndianDate(article.published_at)}</span>
             </span>
           </div>
 

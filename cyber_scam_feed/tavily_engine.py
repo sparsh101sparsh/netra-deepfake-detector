@@ -30,7 +30,7 @@ class TavilySearchEngine:
         topic: str = "news",
         max_results: int = 5,
         include_images: bool = True,
-        time_range: Optional[str] = None,
+        time_range: Optional[str] = "week",
         include_domains: Optional[List[str]] = None,
         retries: int = 3,
         backoff_sec: float = 2.0
