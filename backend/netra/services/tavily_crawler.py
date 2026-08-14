@@ -96,12 +96,17 @@ def get_latest_scam_news(limit: int = 15) -> List[Dict[str, Any]]:
 def execute_tavily_crawl() -> Dict[str, Any]:
     """
     Triggers a live multi-vector Tavily crawl via ScamFeedPipeline.
-    Runs in FastAPI BackgroundTasks. Requires TAVILY_API_KEY env variable.
+    Runs in FastAPI BackgroundTasks. Requires TAVILY_API_KEY env variable or config fallback.
     """
     if not _ENGINE_OK:
         return {"status": "skipped", "reason": "cyber_scam_feed not available"}
 
-    api_key = os.getenv("TAVILY_API_KEY", "")
+    try:
+        from cyber_scam_feed.config import get_tavily_api_key
+        api_key = get_tavily_api_key()
+    except Exception:
+        api_key = os.getenv("TAVILY_API_KEY", "")
+
     if not api_key:
         logger.warning("TAVILY_API_KEY not set — live crawl skipped.")
         return {"status": "skipped", "reason": "TAVILY_API_KEY not configured"}
