@@ -1,83 +1,82 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%" fill="none">
-  <!-- NETRA Truth Mark — Transparent Vector Icon -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%" fill="none">
   <defs>
-    <!-- Center Radial Glow Halo -->
-    <radialGradient id="transCenterGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35" />
-      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.12" />
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    <!-- Dark Obsidian Canvas Gradient -->
+    <radialGradient id="favBg" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#0F1E36" />
+      <stop offset="50%" stop-color="#081224" />
+      <stop offset="100%" stop-color="#030712" />
     </radialGradient>
 
-    <!-- Specular Glow Filter -->
-    <filter id="transVectorBloom" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="2.5" result="blur" />
+    <!-- Amber / Gold Telemetry Glow -->
+    <radialGradient id="favGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.4" />
+      <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+    </radialGradient>
+
+    <filter id="favBloom" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
+
+    <clipPath id="squircleClip">
+      <rect x="8" y="8" width="240" height="240" rx="54" ry="54" />
+    </clipPath>
   </defs>
 
-  <!-- Center Ambient Halo Glow -->
-  <circle cx="200" cy="200" r="95" fill="url(#transCenterGlow)" />
+  <!-- Squircle App Badge Body -->
+  <g clip-path="url(#squircleClip)">
+    <rect x="8" y="8" width="240" height="240" fill="url(#favBg)" />
+    <circle cx="128" cy="128" r="90" fill="url(#favGlow)" />
 
-  <!-- Main Emblem Rig with Specular Bloom -->
-  <g filter="url(#transVectorBloom)">
-    <!-- 1. Outer Bold Kite / Diamond Perimeter -->
-    <polygon
-      points="200,62 332,200 200,338 68,200"
-      stroke="#ffffff"
-      stroke-width="5.5"
-      stroke-linejoin="miter"
-      stroke-miterlimit="10"
-      stroke-linecap="square"
-    />
-
-    <!-- 2. Inner Concentric Diamond -->
-    <polygon
-      points="200,126 256,200 200,274 144,200"
-      stroke="#ffffff"
-      stroke-width="3.5"
-      stroke-linejoin="miter"
-      stroke-miterlimit="10"
-      stroke-linecap="square"
-    />
-
-    <!-- 3. Facet Connector Lines -->
-    <g stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="miter">
-      <!-- From Outer Top (200, 62) to Inner Left & Right -->
-      <line x1="200" y1="62" x2="144" y2="200" />
-      <line x1="200" y1="62" x2="256" y2="200" />
-
-      <!-- From Outer Bottom (200, 338) to Inner Left & Right -->
-      <line x1="200" y1="338" x2="144" y2="200" />
-      <line x1="200" y1="338" x2="256" y2="200" />
-
-      <!-- From Outer Left (68, 200) to Inner Top & Bottom -->
-      <line x1="68" y1="200" x2="200" y2="126" />
-      <line x1="68" y1="200" x2="200" y2="274" />
-
-      <!-- From Outer Right (332, 200) to Inner Top & Bottom -->
-      <line x1="332" y1="200" x2="200" y2="126" />
-      <line x1="332" y1="200" x2="200" y2="274" />
+    <!-- Technical Crosshair Coordinate Grid Lines -->
+    <g stroke="#f59e0b" stroke-opacity="0.18" stroke-width="1" stroke-dasharray="3 5">
+      <circle cx="128" cy="128" r="92" />
+      <line x1="128" y1="16" x2="128" y2="240" />
+      <line x1="16" y1="128" x2="240" y2="128" />
     </g>
 
-    <!-- 4. Horizontal Telemetry Axis (Left to Right) -->
-    <line
-      x1="68"
-      y1="200"
-      x2="332"
-      y2="200"
-      stroke="#ffffff"
-      stroke-width="3.5"
-      stroke-linecap="round"
-    />
+    <!-- ── NETRA TRUTH MARK EMBLEM ── -->
+    <g filter="url(#favBloom)">
+      <!-- 1. Outer Diamond (Gold/Amber) -->
+      <polygon
+        points="128,38 214,128 128,218 42,128"
+        stroke="#f59e0b"
+        stroke-width="7"
+        stroke-linejoin="miter"
+        stroke-miterlimit="10"
+      />
 
-    <!-- 5. Central Opaque Aperture Dot Core -->
-    <circle
-      cx="200"
-      cy="200"
-      r="22"
-      fill="#ffffff"
-      stroke="#ffffff"
-      stroke-width="1"
-    />
+      <!-- 2. Inner Concentric Diamond (Diamond White) -->
+      <polygon
+        points="128,80 166,128 128,176 90,128"
+        stroke="#ffffff"
+        stroke-width="4.5"
+        stroke-linejoin="miter"
+        stroke-miterlimit="10"
+      />
+
+      <!-- 3. Facet Connector Rays -->
+      <g stroke="#fbbf24" stroke-width="3" stroke-linecap="round">
+        <line x1="128" y1="38" x2="90" y2="128" />
+        <line x1="128" y1="38" x2="166" y2="128" />
+        <line x1="128" y1="218" x2="90" y2="128" />
+        <line x1="128" y1="218" x2="166" y2="128" />
+        <line x1="42" y1="128" x2="128" y2="80" />
+        <line x1="42" y1="128" x2="128" y2="176" />
+        <line x1="214" y1="128" x2="128" y2="80" />
+        <line x1="214" y1="128" x2="128" y2="176" />
+      </g>
+
+      <!-- 4. Horizontal Telemetry Radar Axis -->
+      <line x1="38" y1="128" x2="218" y2="128" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round" />
+
+      <!-- 5. Central Ocular Aperture Core -->
+      <circle cx="128" cy="128" r="16" fill="#ffffff" stroke="#f59e0b" stroke-width="2.5" />
+      <circle cx="128" cy="128" r="7" fill="#030712" />
+    </g>
   </g>
+
+  <!-- Outer Squircle Ring Border -->
+  <rect x="8" y="8" width="240" height="240" rx="54" ry="54" fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-opacity="0.6" />
 </svg>
