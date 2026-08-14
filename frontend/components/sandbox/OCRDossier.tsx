@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { 
   Phone, CreditCard, Link2, Box, Copy, Check, ShieldAlert, 
-  FileText, Sparkles, X, AlertCircle, ArrowUpRight 
+  FileText, Sparkles, X, AlertCircle, ArrowUpRight, Globe 
 } from "lucide-react";
 import { CyberIcon } from "@/components/CyberIcons";
 import { StatusPill, StatusPillTone } from "@/components/atoms/StatusPill";
@@ -36,6 +36,20 @@ export interface ScamAnalysisData {
   analysis_reason?: string;
 }
 
+export interface TavilyArticle {
+  title?: string;
+  url?: string;
+  snippet?: string;
+}
+
+export interface TavilyThreatIntel {
+  verified_threat?: boolean;
+  query_used?: string;
+  matches_count?: number;
+  articles?: TavilyArticle[];
+  intel_summary?: string;
+}
+
 export interface OCRDossierResult {
   status?: string;
   filename?: string;
@@ -43,6 +57,7 @@ export interface OCRDossierResult {
   scam_analysis?: ScamAnalysisData;
   extracted_iocs?: ExtractedIOCs;
   recommendation?: string;
+  tavily_threat_intel?: TavilyThreatIntel | null;
 }
 
 export interface OCRDossierProps {
@@ -283,6 +298,47 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
                   <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
                 )}
               </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tavily Live Threat Cross-Check Advisory */}
+      {data.tavily_threat_intel?.verified_threat && (
+        <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-3.5 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-amber-400" />
+              Tavily Live Threat Cross-Check Advisory
+            </span>
+            <span className="text-[10px] text-zinc-400 font-mono">
+              {data.tavily_threat_intel.matches_count || data.tavily_threat_intel.articles?.length || 0} Verified Advisory Match(es)
+            </span>
+          </div>
+          {data.tavily_threat_intel.intel_summary && (
+            <p className="text-[11.5px] text-zinc-300 leading-relaxed bg-[var(--canvas)] p-2.5 rounded-lg border border-[var(--border)]">
+              {data.tavily_threat_intel.intel_summary}
+            </p>
+          )}
+          <div className="space-y-1.5">
+            {data.tavily_threat_intel.articles?.slice(0, 3).map((art, idx) => (
+              <a
+                key={idx}
+                href={art.url || "#"}
+                target="_blank"
+                rel="noreferrer"
+                className="block p-2.5 rounded-lg bg-[var(--canvas)] border border-[var(--border)] hover:border-amber-500/40 transition-colors"
+              >
+                <div className="text-xs font-semibold text-zinc-200 flex items-center justify-between gap-2">
+                  <span className="truncate">{art.title || "Advisory Report"}</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                </div>
+                {art.snippet && (
+                  <div className="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                    {art.snippet}
+                  </div>
+                )}
+              </a>
             ))}
           </div>
         </div>

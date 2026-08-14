@@ -4,6 +4,16 @@ export type { MultiModalScannerProps, ScannerModality } from "./MultiModalForens
 export { DropZone, MODALITY_CONFIGS } from "./DropZone";
 export type { DropZoneProps, SandboxModality, ModalityConfig } from "./DropZone";
 
+export { FacialAnomalyCard, FacialDeepfakeCard } from "./FacialAnomalyCard";
+export type {
+  FacialAnomalyCardProps,
+  FacialDeepfakeCardProps,
+  DualBranchResult,
+  FaceEntry,
+  NeuralMetrics,
+  FacialAnalysis,
+} from "./FacialAnomalyCard";
+
 export { OCRDossier } from "./OCRDossier";
 export type { OCRDossierProps, OCRDossierResult, ExtractedIOCs, OCRAnalysisData, ScamAnalysisData } from "./OCRDossier";
 
