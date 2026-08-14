@@ -90,6 +90,15 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (activeSection) {
       return activeSection === item.id || (item.id === "scanner" && activeSection === "analyzer");
     }
+    if (item.id === "scanner") {
+      return pathname === "/" || pathname?.startsWith("/analyze") || pathname?.startsWith("/intro-preview");
+    }
+    if (item.id === "radar") {
+      return pathname === "/radar" || pathname?.startsWith("/trends") || pathname?.startsWith("/mapping");
+    }
+    if (item.id === "reported") {
+      return pathname === "/reported" || pathname?.startsWith("/reported") || pathname?.startsWith("/scam");
+    }
     if (pathname === item.href) return true;
     if (item.href !== "/" && pathname?.startsWith(item.href)) return true;
     return false;
@@ -184,6 +193,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {NAV_ITEMS.map((item) => {
               const active = isNavActive(item);
+              const isPillSelected = item.id === activeNavId;
+              const isHovered = hoveredNavId === item.id;
               const IconComp = item.icon;
 
               return (
@@ -202,15 +213,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className={cn(
                     "relative z-10 flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold font-sans transition-colors duration-150 truncate cursor-pointer",
-                    active
+                    // When item has the active blue pill or is actively hovered, text is crisp pure white
+                    (isPillSelected && !hoveredNavId) || active || isHovered
                       ? "text-white"
                       : "text-zinc-400 hover:text-white"
                   )}
                 >
-                  {active && (
+                  {(active || (isPillSelected && !hoveredNavId)) && (
                     <span className="size-1.5 rounded-full bg-white animate-pulse" />
                   )}
-                  <IconComp className={cn("size-3.5", active ? "text-white" : "text-zinc-400")} />
+                  <IconComp className={cn("size-3.5", ((isPillSelected && !hoveredNavId) || active || isHovered) ? "text-white" : "text-zinc-400")} />
                   <span>{item.label}</span>
                 </Link>
               );
