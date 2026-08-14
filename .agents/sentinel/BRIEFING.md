@@ -1,7 +1,7 @@
-# BRIEFING — 2026-09-04T06:12:30+05:30
+# BRIEFING — 2026-09-04T14:38:20+05:30
 
 ## Mission
-Supervise implementation of intelligent dual-branch routing and multi-modal forensic inspection engine for image uploads in NETRA (pure face detection & deepfake scoring, document OCR & scam intelligence, hybrid composite dossier, multi-face extraction, and adaptive frontend UI).
+Supervise implementation of institutional, court-admissible forensic PDF analysis reports for Audio voice clone and Image manipulation/document fraud across the NETRA platform (client-side jsPDF generator, backend ReportLab FIR exporter, 1-click downloads, and Section 65B/63 statutory compliance).
 
 ## 🔒 My Identity
 - Archetype: sentinel
@@ -13,6 +13,8 @@ Supervise implementation of intelligent dual-branch routing and multi-modal fore
 - Active Victory Auditor: 385a3295-3e21-4d36-bd06-b349a7921692 (.agents/victory_auditor_1)
 - Active Orchestrator 4: 723b76f6-32ae-4c03-9b1d-41af1fd93738 (.agents/orchestrator_4 - killed after M10 audit on 429 quota)
 - Active Orchestrator 5: 6f6c89a5-72ce-466c-8167-e8560115e462 (.agents/orchestrator_5 - running with flash model)
+- Active Orchestrator 6: cc46082a-b586-4eb5-8c8b-07ac7b03df73 (.agents/orchestrator_6 - killed after 429 quota exhaustion)
+- Active Orchestrator 7: c4f5bfee-3be1-47dc-be98-179731aeec71 (.agents/orchestrator_7 - running with flash model)
 
 ## 🔒 Key Constraints
 - No technical decisions — relay only
@@ -22,18 +24,20 @@ Supervise implementation of intelligent dual-branch routing and multi-modal fore
 - Cancel crons and kill subagents upon verified completion
 
 ## User Context
-- **Last user request**: Implement intelligent dual-branch routing and multi-modal forensic inspection engine for image uploads in NETRA (R1: backend routing engine Branch A/B/C, R2: multi-face extraction & forensic scoring, R3: MultiModalForensicScanner.tsx adaptive presentation, R4: verification, non-regression, frontend build, test suite).
-- **Routing Decision**: General path -> `teamwork_preview_orchestrator` (orchestrator_5).
+- **Last user request**: Build institutional, court-admissible forensic PDF analysis reports for Audio voice clone and Image manipulation/document fraud across the NETRA platform.
+  - R1: Specialized Forensic PDF Report Generation for Image & Document Fraud (Branch A: Pure Face, Branch B: Document OCR/Scam, Branch C: Hybrid) with 1-click export from OCRDossier, FacialAnomalyCard, /reported.
+  - R2: Specialized Forensic PDF Report Generation for Audio Voice Clones (duration, spectral flags, vocoder phase, scorecard, advisory, 1-click export).
+  - R3: Backend Endpoint & Client-Side Generation Parity (client-side jsPDF in frontend/lib/pdfReportGenerator.ts, backend ReportLab in backend/api/routes/threat_intel.py).
+- **Routing Decision**: General path -> `teamwork_preview_orchestrator` (orchestrator_7).
 - **Pending clarifications**: none
-- **Delivered results**:
-  - Milestone 10 (Backend dual-branch router & multi-face scoring) completed and verified clean.
+- **Delivered results**: none yet (orchestrator_7 dispatched)
 
 ## Project Status
-- **Phase**: in progress (Milestones 11 & 12)
-- **Active Agent**: 6f6c89a5-72ce-466c-8167-e8560115e462 (orchestrator_5)
+- **Phase**: in progress (Milestones 1-4)
+- **Active Agent**: c4f5bfee-3be1-47dc-be98-179731aeec71 (orchestrator_7)
 - **Crons Active**:
-  - Cron 1 (Progress */8): f2dba19d-5927-4257-8210-fec2fc911a26/task-38
-  - Cron 2 (Liveness */10): f2dba19d-5927-4257-8210-fec2fc911a26/task-40
+  - Cron 1 (Progress */8): 8d2a5619-3365-4aaf-a556-aca7958e5b40/task-28
+  - Cron 2 (Liveness */10): 8d2a5619-3365-4aaf-a556-aca7958e5b40/task-30
 
 ## Victory Audit Status
 - **Triggered**: no
@@ -44,4 +48,6 @@ Supervise implementation of intelligent dual-branch routing and multi-modal fore
 
 ## Artifact Index
 - /Users/iamsparsh00321/Desktop/newantigravworkfolder/netra/.agents/ORIGINAL_REQUEST.md — Authoritative record of user requests
-- /Users/iamsparsh00321/Desktop/newantigravworkfolder/netra/.agents/orchestrator_4/ — Orchestrator 4 workspace
+- /Users/iamsparsh00321/Desktop/newantigravworkfolder/netra/.agents/PROJECT.md — Architecture & master inventory
+- /Users/iamsparsh00321/Desktop/newantigravworkfolder/netra/.agents/orchestrator_7/ — Orchestrator 7 workspace
+

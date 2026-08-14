@@ -481,6 +481,7 @@ export default function ThreatCatalogPage() {
                   verdict: activeItem.verdict || "SUSPICIOUS",
                   confidence: activeItem.fake_probability * 100,
                   riskLevel: activeItem.risk_level || "HIGH",
+                  mediaType: activeItem.type,
                   city: activeItem.city,
                   state: activeItem.state,
                   locationSource: activeItem.location_source,

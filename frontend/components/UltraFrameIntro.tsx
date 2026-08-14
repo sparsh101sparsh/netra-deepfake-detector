@@ -278,7 +278,7 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
   const closingOpacity = Math.min(1, Math.max(0, (currentFrame - 380) / 30));
 
   return (
-    <div className={`w-full flex flex-col items-center justify-center select-none ${className}`}>
+    <div className={`w-full h-full flex flex-col items-center justify-center select-none ${className}`}>
       {/* ── OPTIONAL TIMELINE CONTROL DECK (For developer scrubbing/preview) ── */}
       {showControls && (
         <div className="w-full max-w-5xl px-4 py-3 bg-[#0E1118]/95 backdrop-blur-xl border border-white/10 rounded-2xl mb-6 shadow-2xl space-y-3 z-30">
@@ -453,7 +453,7 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
             ? `max-w-5xl bg-[#060608] rounded-3xl border border-white/15 p-6 sm:p-12 shadow-[0_20px_80px_rgba(0,0,0,0.9)] ${
                 isZoomedOnKite ? "min-h-[550px]" : "min-h-[640px] sm:min-h-[720px]"
               }`
-            : "min-h-screen h-full bg-[#060608] p-6 sm:p-12 border-0"
+            : "min-h-screen h-full w-full flex-1 bg-[#060608] p-6 sm:p-12 border-0"
         }`}
       >
         {/* Subtle Ambient Grid */}

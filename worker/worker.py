@@ -850,7 +850,7 @@ def process_job(
                         "bounding_box": meta.get("bounding_box", [0, 0, 0, 0]),
                         "normalized_box": meta.get("normalized_box"),
                         "evidence_code": meta.get("evidence_code", "EVD-ANOMALY"),
-                        "statutory_act": meta.get("statutory_act", "Section 65B Indian Evidence Act"),
+                        "statutory_act": meta.get("statutory_act", "Section 66D IT Act 2000 & Section 318(4) BNS 2023"),
                     }
                     keyframe_snapshots.append(snap_record)
                     annotated_frames_map[f_num] = snap_record

@@ -380,20 +380,43 @@ export function FacialAnomalyCard({ data, onReset, className }: FacialAnomalyCar
 
   // 1-Click Court Evidence PDF Download
   const handleDownloadPDF = async () => {
+    const rawProb = facial.max_fake_probability ?? 0;
     await generateForensicPDF({
       id: data.scan_id || `IMG-${Date.now().toString(36).toUpperCase()}`,
       title: "Facial Deepfake & Photographic Manipulation Evidence Dossier",
       verdict: data.composite_verdict || (facial.composite_face_verdict === "DEEPFAKE" ? "CRITICAL FACIAL DEEPFAKE DETECTED" : "AUTHENTIC MEDIA"),
-      confidence: facial.max_fake_probability ?? 0,
-      riskLevel: data.composite_risk_level || ((facial.max_fake_probability ?? 0) >= 0.75 ? "CRITICAL" : "SAFE"),
+      confidence: Math.round(rawProb <= 1 ? rawProb * 100 : rawProb),
+      riskLevel: data.composite_risk_level || (rawProb >= 0.75 ? "CRITICAL" : "SAFE"),
+      mediaType: "image_pure_face",
       city: "Digital Image Forensics Lab",
       state: "National Jurisdiction",
       locationSource: "EXIF / Digital Container",
       scores: {
-        visualScore: facial.max_fake_probability ?? 0,
-        gendScore: activeF?.neural_metrics?.sbi_artifact_level ?? (facial.max_fake_probability ?? 0),
+        visualScore: rawProb,
+        gendScore: activeF?.neural_metrics?.sbi_artifact_level ?? rawProb,
       },
-      summary: `Multi-face inspection resolved ${facial.face_count} face(s). Peak synthetic probability: ${Math.round((facial.max_fake_probability ?? 0) * 100)}%. Evidence: ${activeF?.evidence_code || "EVD-GEN-ANOMALY"} in ${activeF?.anomaly_region || "Facial Zone"}.`,
+      summary: `Multi-face inspection resolved ${facial.face_count} face(s). Peak synthetic probability: ${Math.round(rawProb * 100)}%. Evidence: ${activeF?.evidence_code || "EVD-GEN-ANOMALY"} in ${activeF?.anomaly_region || "Facial Zone"}.`,
+      facialAnalysis: {
+        faceCount: facial.face_count,
+        compositeVerdict: facial.composite_face_verdict,
+        maxFakeProbability: rawProb,
+        annotatedPreviewBase64: facial.annotated_preview_base64 || undefined,
+        annotatedPreviewUrl: facial.annotated_preview_url || undefined,
+        faces: faces.map((f, idx) => ({
+          faceId: f.face_id || `face_${idx + 1}`,
+          fakeProbability: f.fake_probability,
+          verdict: f.verdict,
+          bbox: f.bbox,
+          anomalyRegion: f.anomaly_region,
+          evidenceCode: f.evidence_code,
+          neuralMetrics: {
+            sbiArtifactLevel: f.neural_metrics?.sbi_artifact_level,
+            ocularSymmetry: f.neural_metrics?.ocular_reflection_symmetry,
+            eyewearGlareArtifact: f.neural_metrics?.eyewear_specular_score,
+            lipSyncLaplacian: f.neural_metrics?.lip_sync_laplacian_score,
+          },
+        })),
+      },
       keyframeSnapshots: faces.map((f, idx) => ({
         frame_number: idx + 1,
         timestamp: `Face #${idx + 1} (${f.face_id || `face_${idx + 1}`})`,

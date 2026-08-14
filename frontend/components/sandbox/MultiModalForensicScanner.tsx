@@ -70,7 +70,7 @@ function HybridDossier({ data, onReset }: { data: DualBranchResult; onReset: () 
   return (
     <div className="space-y-3 animate-in fade-in duration-200">
       {/* Composite Header */}
-      <div className="rounded-xl bg-canvas border-[1.5px] border-amber-500/30 bg-amber-500/5 px-4 py-3 flex items-center justify-between">
+      <div className="rounded-xl bg-canvas border-[1.5px] border-amber-500/30 bg-amber-500/5 px-4 py-3 flex items-center justify-between gap-3">
         <div>
           <div className="text-xs font-bold uppercase tracking-wide text-amber-400">
             Hybrid Threat Detected
@@ -79,9 +79,66 @@ function HybridDossier({ data, onReset }: { data: DualBranchResult; onReset: () 
             {data.composite_verdict || "Image contains both facial content and scam text"}
           </div>
         </div>
-        <StatusPill tone={scoreTone} size="sm" pulse={compositeScore >= 75}>
-          {compositeScore}% Risk · {compositeLevel}
-        </StatusPill>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="primary"
+            size="xs"
+            onClick={() => generateForensicPDF({
+              id: data.scan_id || `HYB-${Date.now().toString(36).toUpperCase()}`,
+              title: "Hybrid Multi-Vector Forensic Investigation Dossier",
+              verdict: data.composite_verdict || "HYBRID FACIAL DEEPFAKE & DOCUMENT SCAM DETECTED",
+              confidence: compositeScore,
+              riskLevel: compositeLevel,
+              mediaType: "image_hybrid",
+              city: "Digital Cyber Forensics Lab",
+              state: "National Jurisdiction",
+              locationSource: "MULTI_VECTOR_HYBRID_ANALYSIS",
+              facialAnalysis: {
+                faceCount: data.facial_analysis?.face_count,
+                compositeVerdict: data.facial_analysis?.composite_face_verdict,
+                maxFakeProbability: data.facial_analysis?.max_fake_probability,
+                annotatedPreviewBase64: data.facial_analysis?.annotated_preview_base64 || undefined,
+                annotatedPreviewUrl: data.facial_analysis?.annotated_preview_url || undefined,
+                faces: data.facial_analysis?.faces?.map((f, idx) => ({
+                  faceId: f.face_id || `face_${idx + 1}`,
+                  fakeProbability: f.fake_probability,
+                  verdict: f.verdict,
+                  bbox: f.bbox,
+                  anomalyRegion: f.anomaly_region,
+                  evidenceCode: f.evidence_code,
+                })),
+              },
+              ocrAnalysis: {
+                engine: data.ocr_analysis?.engine,
+                fullText: data.ocr_analysis?.full_text,
+                linesCount: data.ocr_analysis?.lines_count,
+              },
+              scamAnalysis: {
+                isScam: data.scam_analysis?.is_scam,
+                riskScore: data.scam_analysis?.risk_score,
+                riskLevel: data.scam_analysis?.risk_level,
+                matchedRules: data.scam_analysis?.matched_rules,
+                analysisReason: data.scam_analysis?.analysis_reason,
+              },
+              iocs: {
+                phones: data.extracted_iocs?.phones,
+                upis: data.extracted_iocs?.upis,
+                urls: data.extracted_iocs?.urls,
+                apks: data.extracted_iocs?.apks,
+              },
+              tavilyMatches: data.tavily_threat_intel?.articles,
+              summary: `Composite risk: ${compositeScore}% (${compositeLevel}). Analyzed ${faceCount} face(s) and ${totalIOCs} IOC(s).`,
+            })}
+            className="inline-flex items-center gap-1.5"
+          >
+            <Download className="w-3 h-3" />
+            <span>PDF Dossier</span>
+          </Button>
+
+          <StatusPill tone={scoreTone} size="sm" pulse={compositeScore >= 75}>
+            {compositeScore}% Risk · {compositeLevel}
+          </StatusPill>
+        </div>
       </div>
 
       {/* Tab Switcher */}
@@ -352,11 +409,20 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
       verdict: audioResult.verdict,
       confidence: audioResult.confidence,
       riskLevel: audioResult.risk_level,
+      mediaType: "audio_clone",
       city: "National Telecom Intercept",
       state: "India",
       locationSource: "TELECOM_NETWORK",
       scores: {
         audioScore: audioResult.fake_probability,
+      },
+      audioAnalysis: {
+        speechDurationSeconds: audioResult.speech_duration_seconds,
+        sampleRate: 16000,
+        codec: "Opus/OGG 16kHz",
+        spectralFlags: audioResult.flags,
+        wav2vec2Score: audioResult.fake_probability,
+        sourcePlatform: audioResult.source_platform,
       },
       summary: `Audio recording duration: ${audioResult.speech_duration_seconds}s. Acoustic spectral flags: ${audioResult.flags.join(", ")}.`,
       tavilyMatches: audioResult.tavily_threat_intel?.articles,

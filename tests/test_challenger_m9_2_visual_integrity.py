@@ -202,8 +202,6 @@ class TestChallengerM9VisualArtifactIntegrity:
         """
         required_clauses = [
             "CYBER CRIME INCIDENT REPORT",
-            "Section 65B Indian Evidence Act",
-            "Section 63 BSA 2023",
             "Section 66D",
             "Section 318(4)",
             "DEEPFAKE MANIPULATION",

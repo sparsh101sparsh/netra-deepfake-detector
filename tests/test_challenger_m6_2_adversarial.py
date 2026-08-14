@@ -227,19 +227,19 @@ class TestAdversarialStatutoryAndSemanticIntegrity:
             "eyewear",
             "EVD-EYE-SPECULAR-GLARE",
             "Eyewear Specular Glare & Feature Discontinuity",
-            ["Section 65B Indian Evidence Act", "Section 66D IT Act 2000"]
+            ["Section 66D IT Act 2000"]
         ),
         (
             "iris",
             "EVD-IRIS-CORNEAL-DISCONTINUITY",
             "Iris/Pupil Corneal Reflection Discontinuity",
-            ["Section 65B Indian Evidence Act", "Section 66D IT Act 2000"]
+            ["Section 66D IT Act 2000"]
         ),
         (
             "lip_sync",
             "EVD-LIP-SYNC-BOUNDARY-SEAM",
             "Lip-Sync Blending Boundary Artifact",
-            ["Section 65B Indian Evidence Act", "Section 318(4) BNS 2023"]
+            ["Section 318(4) BNS 2023"]
         ),
     ])
     def test_statutory_and_evidence_codes(self, prefer_input, expected_evd, expected_label, statutory_tokens):
@@ -355,7 +355,7 @@ class TestAdversarialRealDeepfakeVideos:
             assert bx + bw <= w and by + bh <= h
             assert meta["forensic_badge"] == "ANOMALY DETECTED HERE"
             assert meta["evidence_code"].startswith("EVD-")
-            assert "Section 65B" in meta["statutory_act"]
+            assert "Section 66D" in meta["statutory_act"]
 
         mean_lat = sum(latencies) / len(latencies)
         assert mean_lat < 20.0, f"Mean latency {mean_lat:.2f}ms exceeds target 20ms"

@@ -40,7 +40,7 @@ body_style = ParagraphStyle(
 story = []
 story.append(Paragraph("CYBER CRIME INCIDENT REPORT &amp; FORENSIC DOSSIER", title_style))
 story.append(Spacer(1, 4))
-story.append(Paragraph("Official Court-Admissible Visual Evidence | Generated under Section 65B Indian Evidence Act", body_style))
+story.append(Paragraph("Official Forensic AI Analysis Report | NETRA Autonomous Verification Engine", body_style))
 story.append(Spacer(1, 8))
 story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#f59e0b"), spaceAfter=10))
 

@@ -121,3 +121,52 @@ Integrity mode: development
 - [ ] Frontend `npm run build` succeeds with zero TypeScript compilation errors.
 - [ ] Backend starts cleanly and passes all test assertions on test images.
 
+
+## 2026-09-04T09:07:13Z
+
+Build institutional, court-admissible forensic PDF analysis reports for Audio voice clone and Image manipulation/document fraud across the NETRA platform.
+
+Working directory: /Users/iamsparsh00321/Desktop/newantigravworkfolder/netra
+Integrity mode: development
+
+Research agents should thoroughly examine how media forensics data is modeled for images (pure face, document OCR, hybrid) and audio (voice cloning, acoustic spectral flags, duration, Wav2Vec2 scores). Implementation agents will then implement the tailored forensic PDF dossiers both in the client-side generator (frontend/lib/pdfReportGenerator.ts) and the backend FIR PDF exporter (backend/api/routes/threat_intel.py), wiring up 1-click downloads in OCRDossier, FacialAnomalyCard, and MultiModalForensicScanner.
+
+## Requirements
+
+### R1. Specialized Forensic PDF Report Generation for Image & Document Fraud
+- Design and implement court-admissible PDF generation specifically tailored for Image analysis:
+  - **Branch A (Pure Facial Deepfake)**: Multi-face breakdown table, bounding box crops / annotated face previews, neural metrics (SBI artifact level, ocular reflection symmetry, specular glare plane), and statutory certification under Sec 65B Indian Evidence Act / Sec 63 BSA 2023.
+  - **Branch B (Document Scam / OCR)**: Extracted text log, flagged IOCs (phone numbers, UPI IDs, malicious links, phishing domains), OCR engine telemetry, matched safety rules, and Tavily threat advisory cross-references.
+  - **Branch C (Hybrid / Multi-Modal Image)**: Integrated two-section report featuring both facial authenticity scoring and extracted text fraud analysis.
+- Ensure 1-click export from `OCRDossier.tsx`, `FacialAnomalyCard.tsx`, and `/reported` catalog items.
+
+### R2. Specialized Forensic PDF Report Generation for Audio Voice Clones
+- Design and implement court-admissible PDF generation specifically tailored for Audio analysis:
+  - Speech duration, sample rate, and codec verification.
+  - Acoustic spectral forensic flags (pitch discontinuity, vocoder phase distortion, synthetic harmonic artifacts).
+  - Multi-detector voice clone scorecard (Wav2Vec2, spectral features).
+  - Tavily voice clone advisory cross-references and cybercrime reporting guidance.
+- Ensure 1-click export from `MultiModalForensicScanner.tsx` audio results card and `/reported` catalog items.
+
+### R3. Backend Endpoint & Client-Side Generation Parity
+- Ensure robust generation across both channels:
+  - **Client-Side (`frontend/lib/pdfReportGenerator.ts`)**: jsPDF generation with polished typography, dark-mode/institutional styling, embedded keyframe crops, and zero external network blocking.
+  - **Backend Server-Side (`backend/api/routes/threat_intel.py`)**: ReportLab generation with customized layouts for `type == 'audio_clone'` and `type == 'image_deepfake'` matching Section 65B Indian Evidence Act / Section 63 BSA 2023.
+
+## Acceptance Criteria
+
+### Forensic & Visual Quality
+- [ ] Image manipulation PDFs embed photographic crops / bounding box annotations alongside neural scores.
+- [ ] Document OCR PDFs embed formatted tables of extracted IOCs (Phones, UPIs, URLs) and matched fraud rules.
+- [ ] Audio clone PDFs present acoustic spectral flags, duration telemetry, and vocoder fingerprint metrics.
+- [ ] Download buttons in `OCRDossier`, `FacialAnomalyCard`, `MultiModalForensicScanner` (Audio), and `reported/page.tsx` generate the correct, non-generic PDF.
+
+### Build & Execution Stability
+- [ ] `npm run build` in `frontend/` succeeds with 0 TypeScript compilation errors.
+- [ ] Both frontend client-side export and backend `/threat-intelligence/{id}/fir-pdf` produce valid, uncorrupted PDFs for audio and image items.
+
+## 2026-09-04T15:03:38+05:30
+
+Section 63 BSA 2023 / Section 65B IEA 1872 certificate
+-remove this from the whole project
+

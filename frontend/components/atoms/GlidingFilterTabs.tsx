@@ -51,15 +51,21 @@ export function GlidingFilterTabs({
       const container = containerRef.current;
 
       if (targetEl && container) {
-        const cRect = container.getBoundingClientRect();
-        const tRect = targetEl.getBoundingClientRect();
+        const isDirect = targetEl.offsetParent === container;
+        const left = isDirect
+          ? targetEl.offsetLeft
+          : targetEl.getBoundingClientRect().left - container.getBoundingClientRect().left;
+        const top = isDirect
+          ? targetEl.offsetTop
+          : targetEl.getBoundingClientRect().top - container.getBoundingClientRect().top;
+        const width = isDirect
+          ? targetEl.offsetWidth
+          : targetEl.getBoundingClientRect().width;
+        const height = isDirect
+          ? targetEl.offsetHeight
+          : targetEl.getBoundingClientRect().height;
 
-        setIndicatorStyle({
-          left: tRect.left - cRect.left,
-          top: tRect.top - cRect.top,
-          width: tRect.width,
-          height: tRect.height,
-        });
+        setIndicatorStyle({ left, top, width, height });
       }
     };
 

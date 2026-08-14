@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import { 
   Phone, CreditCard, Link2, Box, Copy, Check, ShieldAlert, 
-  FileText, Sparkles, X, AlertCircle, ArrowUpRight, Globe 
+  FileText, Sparkles, X, AlertCircle, ArrowUpRight, Globe, Download
 } from "lucide-react";
 import { CyberIcon } from "@/components/CyberIcons";
 import { StatusPill, StatusPillTone } from "@/components/atoms/StatusPill";
 import { Chip } from "@/components/atoms/Chip";
 import { Button } from "@/components/atoms/Button";
 import { TaskRows, TaskRow } from "@/components/primitives/TaskRows";
+import { generateForensicPDF } from "@/lib/pdfReportGenerator";
 import { cn } from "@/lib/utils";
 
 export interface ExtractedIOCs {
@@ -358,6 +359,48 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
           {data.recommendation || "Verified by NETRA AI security checks."}
         </span>
         <div className="flex items-center gap-2 self-end sm:self-auto">
+          <Button
+            variant="primary"
+            size="xs"
+            onClick={() => generateForensicPDF({
+              id: `DOC-${Date.now().toString(36).toUpperCase()}`,
+              title: "Document Scam & Phishing OCR Evidence Dossier",
+              verdict: scam.verdict || (scam.is_scam ? "MALICIOUS SCAM DOCUMENT" : "VERIFIED AUTHENTIC DOCUMENT"),
+              confidence: riskScore,
+              riskLevel: riskLevel,
+              mediaType: "image_document",
+              city: "Digital Document Forensics Lab",
+              state: "National Jurisdiction",
+              locationSource: "RAPID_OCR_EXTRACTION",
+              ocrAnalysis: {
+                engine: ocr.engine || "RapidOCR (PP-OCRv4)",
+                fullText: ocr.full_text,
+                linesCount: ocr.lines_count,
+                processingTimeMs: ocr.processing_time_ms,
+              },
+              scamAnalysis: {
+                isScam: scam.is_scam,
+                riskScore: scam.risk_score,
+                riskLevel: scam.risk_level,
+                scamType: scam.scam_type,
+                matchedRules: scam.matched_rules,
+                analysisReason: scam.analysis_reason,
+              },
+              iocs: {
+                phones: iocs.phones,
+                upis: iocs.upis,
+                urls: iocs.urls,
+                apks: iocs.apks,
+              },
+              tavilyMatches: data.tavily_threat_intel?.articles,
+              summary: data.recommendation || scam.analysis_reason || "OCR document scam analysis complete.",
+            })}
+            className="inline-flex items-center gap-1.5"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download Forensic PDF</span>
+          </Button>
+
           {scam.is_scam && (
             <a
               href="https://cybercrime.gov.in"

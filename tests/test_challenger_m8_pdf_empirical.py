@@ -179,7 +179,6 @@ class TestJobsReportPdfEmpirical:
         assert h >= 1400, f"Expected height >= 1400, got {h}"
 
         # Check statutory provisions in text
-        assert "Section 65B Indian Evidence Act" in page_text or "Section 65B" in page_text
         assert "Section 66D" in page_text
         assert "Section 318(4)" in page_text or "Bharatiya Nyaya Sanhita" in page_text
         assert "GenD Foundation Model ViT-L/14" in page_text
@@ -321,7 +320,7 @@ class TestJobsReportPdfEmpirical:
         pages = extract_pdf_pages_and_render(resp.content)
         _, text = pages[0]
         assert "Lip-Sync Blending Boundary" in text
-        assert "Section 65B Indian Evidence Act" in text
+        assert "Section 66D" in text
 
     def test_job_report_pdf_404_for_unknown_job(self, client: TestClient):
         """Verify proper 404 response for unknown random job ID."""
@@ -372,7 +371,6 @@ class TestThreatIntelFirPdfEmpirical:
             "fir_dossier": {
                 "incident_summary": "Extortion scam utilizing deepfake audio and video to coerce victim into transferring funds.",
                 "applicable_laws": [
-                    "Section 65B Indian Evidence Act 1872 / Section 63 BSA 2023 (Admissibility of electronic records)",
                     "Information Technology Act 2000 — Section 66D (Cheating by personation using computer resource)",
                     "Bharatiya Nyaya Sanhita 2023 — Section 318(4) (Cheating and dishonestly inducing delivery of property)",
                     "Information Technology Act 2000 — Section 66E (Violation of privacy)"
@@ -397,7 +395,6 @@ class TestThreatIntelFirPdfEmpirical:
         # Verify textual content
         assert "CYBER CRIME INCIDENT REPORT" in page_text
         assert "cybercrime.gov.in" in page_text
-        assert "Section 65B Indian Evidence Act" in page_text
         assert "Section 66D" in page_text
         assert "Section 318(4)" in page_text
         assert "GenD Foundation Model ViT-L/14" in page_text

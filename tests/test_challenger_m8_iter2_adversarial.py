@@ -164,8 +164,7 @@ class TestAdversarialImageCorruptions:
             assert "Lip-Sync Blending Boundary Artifact" in full_text
             assert "94.5%" in full_text
             assert "Spatial SBI (EfficientNet-B4)" in full_text
-            assert "Section 65B Indian Evidence Act" in full_text
-            assert "Section 66D IT Act" in full_text
+            assert "Section 66D" in full_text
             assert "High-frequency latent boundary seam" in full_text
 
         finally:
@@ -234,7 +233,7 @@ class TestAdversarialImageCorruptions:
             assert "Iris/Pupil Corneal Reflection Discontinuity" in full_text
             assert "96.2%" in full_text
             assert "GenD Foundation Model ViT-L/14" in full_text
-            assert "Section 65B Indian Evidence Act" in full_text
+            assert "Section 66D" in full_text
             assert "Corneal reflection asymmetry" in full_text
 
         finally:

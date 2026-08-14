@@ -144,7 +144,7 @@ class TestBenchmarkRealVideoExecution:
             assert len(snap["bounding_box"]) == 4 and all(isinstance(v, int) for v in snap["bounding_box"])
             assert len(snap["normalized_box"]) == 4 and all(0.0 <= v <= 1.0 for v in snap["normalized_box"])
             assert isinstance(snap["evidence_code"], str) and snap["evidence_code"].startswith("EVD-")
-            assert isinstance(snap["statutory_act"], str) and "Section 65B" in snap["statutory_act"]
+            assert isinstance(snap["statutory_act"], str) and "Section 66D" in snap["statutory_act"]
             assert snap["image_url"].startswith("/api/")
             assert snap["annotated_image_url"] == snap["image_url"]
 
