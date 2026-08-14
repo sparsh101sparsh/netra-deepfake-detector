@@ -1,0 +1,1002 @@
+[
+  {
+    "index": 1,
+    "filename": "deepfake_ACM_Amar_Preet_Singh.mp4",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "latitude": 28.6139,
+    "longitude": 77.209,
+    "iso6709": "+28.6139+077.2090/",
+    "description": "New Delhi, Delhi, India (Lat: 28.6139, Lon: 77.209)"
+  },
+  {
+    "index": 2,
+    "filename": "deepfake_A_R_Rahman.mp4",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "latitude": 19.076,
+    "longitude": 72.8777,
+    "iso6709": "+19.0760+072.8777/",
+    "description": "Mumbai, Maharashtra, India (Lat: 19.076, Lon: 72.8777)"
+  },
+  {
+    "index": 3,
+    "filename": "deepfake_Abhinav_Bindra.mp4",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "latitude": 12.9716,
+    "longitude": 77.5946,
+    "iso6709": "+12.9716+077.5946/",
+    "description": "Bengaluru, Karnataka, India (Lat: 12.9716, Lon: 77.5946)"
+  },
+  {
+    "index": 4,
+    "filename": "deepfake_Adm_Krishna_Swaminathan.mp4",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "latitude": 22.5726,
+    "longitude": 88.3639,
+    "iso6709": "+22.5726+088.3639/",
+    "description": "Kolkata, West Bengal, India (Lat: 22.5726, Lon: 88.3639)"
+  },
+  {
+    "index": 5,
+    "filename": "deepfake_Ajit_Doval.mp4",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "latitude": 13.0827,
+    "longitude": 80.2707,
+    "iso6709": "+13.0827+080.2707/",
+    "description": "Chennai, Tamil Nadu, India (Lat: 13.0827, Lon: 80.2707)"
+  },
+  {
+    "index": 6,
+    "filename": "deepfake_Akhilesh_Yadav.mp4",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "latitude": 17.385,
+    "longitude": 78.4867,
+    "iso6709": "+17.3850+078.4867/",
+    "description": "Hyderabad, Telangana, India (Lat: 17.385, Lon: 78.4867)"
+  },
+  {
+    "index": 7,
+    "filename": "deepfake_Alia_Bhatt.mp4",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "latitude": 23.0225,
+    "longitude": 72.5714,
+    "iso6709": "+23.0225+072.5714/",
+    "description": "Ahmedabad, Gujarat, India (Lat: 23.0225, Lon: 72.5714)"
+  },
+  {
+    "index": 8,
+    "filename": "deepfake_Amartya_Sen.mp4",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "latitude": 26.9124,
+    "longitude": 75.7873,
+    "iso6709": "+26.9124+075.7873/",
+    "description": "Jaipur, Rajasthan, India (Lat: 26.9124, Lon: 75.7873)"
+  },
+  {
+    "index": 9,
+    "filename": "deepfake_Amit_Shah.mp4",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "latitude": 26.8467,
+    "longitude": 80.9462,
+    "iso6709": "+26.8467+080.9462/",
+    "description": "Lucknow, Uttar Pradesh, India (Lat: 26.8467, Lon: 80.9462)"
+  },
+  {
+    "index": 10,
+    "filename": "deepfake_Amitabh_Bachchan.mp4",
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "latitude": 25.3176,
+    "longitude": 82.9739,
+    "iso6709": "+25.3176+082.9739/",
+    "description": "Varanasi, Uttar Pradesh, India (Lat: 25.3176, Lon: 82.9739)"
+  },
+  {
+    "index": 11,
+    "filename": "deepfake_Anurag_Thakur.mp4",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "latitude": 18.5204,
+    "longitude": 73.8567,
+    "iso6709": "+18.5204+073.8567/",
+    "description": "Pune, Maharashtra, India (Lat: 18.5204, Lon: 73.8567)"
+  },
+  {
+    "index": 12,
+    "filename": "deepfake_Arundhati_Roy.mp4",
+    "city": "Surat",
+    "state": "Gujarat",
+    "latitude": 21.1702,
+    "longitude": 72.8311,
+    "iso6709": "+21.1702+072.8311/",
+    "description": "Surat, Gujarat, India (Lat: 21.1702, Lon: 72.8311)"
+  },
+  {
+    "index": 13,
+    "filename": "deepfake_Arvind_Kejriwal.mp4",
+    "city": "Chandigarh",
+    "state": "Chandigarh",
+    "latitude": 30.7333,
+    "longitude": 76.7794,
+    "iso6709": "+30.7333+076.7794/",
+    "description": "Chandigarh, Chandigarh, India (Lat: 30.7333, Lon: 76.7794)"
+  },
+  {
+    "index": 14,
+    "filename": "deepfake_Asha_Bhosle.mp4",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "latitude": 23.2599,
+    "longitude": 77.4126,
+    "iso6709": "+23.2599+077.4126/",
+    "description": "Bhopal, Madhya Pradesh, India (Lat: 23.2599, Lon: 77.4126)"
+  },
+  {
+    "index": 15,
+    "filename": "deepfake_Ashwini_Vaishnaw.mp4",
+    "city": "Indore",
+    "state": "Madhya Pradesh",
+    "latitude": 22.7196,
+    "longitude": 75.8577,
+    "iso6709": "+22.7196+075.8577/",
+    "description": "Indore, Madhya Pradesh, India (Lat: 22.7196, Lon: 75.8577)"
+  },
+  {
+    "index": 16,
+    "filename": "deepfake_Azim_Premji.mp4",
+    "city": "Patna",
+    "state": "Bihar",
+    "latitude": 25.5941,
+    "longitude": 85.1376,
+    "iso6709": "+25.5941+085.1376/",
+    "description": "Patna, Bihar, India (Lat: 25.5941, Lon: 85.1376)"
+  },
+  {
+    "index": 17,
+    "filename": "deepfake_Bhavish_Aggarwal.mp4",
+    "city": "Bhubaneswar",
+    "state": "Odisha",
+    "latitude": 20.2961,
+    "longitude": 85.8245,
+    "iso6709": "+20.2961+085.8245/",
+    "description": "Bhubaneswar, Odisha, India (Lat: 20.2961, Lon: 85.8245)"
+  },
+  {
+    "index": 18,
+    "filename": "deepfake_CNR_Rao.mp4",
+    "city": "Cuttack",
+    "state": "Odisha",
+    "latitude": 20.4625,
+    "longitude": 85.883,
+    "iso6709": "+20.4625+085.8830/",
+    "description": "Cuttack, Odisha, India (Lat: 20.4625, Lon: 85.883)"
+  },
+  {
+    "index": 19,
+    "filename": "deepfake_C_P_Radhakrishnan.mp4",
+    "city": "Puri",
+    "state": "Odisha",
+    "latitude": 19.8135,
+    "longitude": 85.8312,
+    "iso6709": "+19.8135+085.8312/",
+    "description": "Puri, Odisha, India (Lat: 19.8135, Lon: 85.8312)"
+  },
+  {
+    "index": 20,
+    "filename": "deepfake_Cyrus_Poonawalla.mp4",
+    "city": "Visakhapatnam",
+    "state": "Andhra Pradesh",
+    "latitude": 17.6868,
+    "longitude": 83.2185,
+    "iso6709": "+17.6868+083.2185/",
+    "description": "Visakhapatnam, Andhra Pradesh, India (Lat: 17.6868, Lon: 83.2185)"
+  },
+  {
+    "index": 21,
+    "filename": "deepfake_Deepika_Padukone.mp4",
+    "city": "Vijayawada",
+    "state": "Andhra Pradesh",
+    "latitude": 16.5062,
+    "longitude": 80.648,
+    "iso6709": "+16.5062+080.6480/",
+    "description": "Vijayawada, Andhra Pradesh, India (Lat: 16.5062, Lon: 80.648)"
+  },
+  {
+    "index": 22,
+    "filename": "deepfake_Deepinder_Goyal.mp4",
+    "city": "Tirupati",
+    "state": "Andhra Pradesh",
+    "latitude": 13.6288,
+    "longitude": 79.4192,
+    "iso6709": "+13.6288+079.4192/",
+    "description": "Tirupati, Andhra Pradesh, India (Lat: 13.6288, Lon: 79.4192)"
+  },
+  {
+    "index": 23,
+    "filename": "deepfake_Devendra_Fadnavis.mp4",
+    "city": "Kochi",
+    "state": "Kerala",
+    "latitude": 9.9312,
+    "longitude": 76.2673,
+    "iso6709": "+09.9312+076.2673/",
+    "description": "Kochi, Kerala, India (Lat: 9.9312, Lon: 76.2673)"
+  },
+  {
+    "index": 24,
+    "filename": "deepfake_Dharmendra_Pradhan.mp4",
+    "city": "Thiruvananthapuram",
+    "state": "Kerala",
+    "latitude": 8.5241,
+    "longitude": 76.9366,
+    "iso6709": "+08.5241+076.9366/",
+    "description": "Thiruvananthapuram, Kerala, India (Lat: 8.5241, Lon: 76.9366)"
+  },
+  {
+    "index": 25,
+    "filename": "deepfake_Dilip_Shanghvi.mp4",
+    "city": "Kozhikode",
+    "state": "Kerala",
+    "latitude": 11.2588,
+    "longitude": 75.7804,
+    "iso6709": "+11.2588+075.7804/",
+    "description": "Kozhikode, Kerala, India (Lat: 11.2588, Lon: 75.7804)"
+  },
+  {
+    "index": 26,
+    "filename": "deepfake_Droupadi_Murmu.mp4",
+    "city": "Guwahati",
+    "state": "Assam",
+    "latitude": 26.1445,
+    "longitude": 91.7362,
+    "iso6709": "+26.1445+091.7362/",
+    "description": "Guwahati, Assam, India (Lat: 26.1445, Lon: 91.7362)"
+  },
+  {
+    "index": 27,
+    "filename": "deepfake_Gautam_Adani.mp4",
+    "city": "Silchar",
+    "state": "Assam",
+    "latitude": 24.8333,
+    "longitude": 92.7789,
+    "iso6709": "+24.8333+092.7789/",
+    "description": "Silchar, Assam, India (Lat: 24.8333, Lon: 92.7789)"
+  },
+  {
+    "index": 28,
+    "filename": "deepfake_Gen_Dhiraj_Seth.mp4",
+    "city": "Dibrugarh",
+    "state": "Assam",
+    "latitude": 27.4728,
+    "longitude": 94.912,
+    "iso6709": "+27.4728+094.9120/",
+    "description": "Dibrugarh, Assam, India (Lat: 27.4728, Lon: 94.912)"
+  },
+  {
+    "index": 29,
+    "filename": "deepfake_Gyanesh_Kumar.mp4",
+    "city": "Dehradun",
+    "state": "Uttarakhand",
+    "latitude": 30.3165,
+    "longitude": 78.0322,
+    "iso6709": "+30.3165+078.0322/",
+    "description": "Dehradun, Uttarakhand, India (Lat: 30.3165, Lon: 78.0322)"
+  },
+  {
+    "index": 30,
+    "filename": "deepfake_Himanta_Biswa_Sarma.mp4",
+    "city": "Haridwar",
+    "state": "Uttarakhand",
+    "latitude": 29.9457,
+    "longitude": 78.1642,
+    "iso6709": "+29.9457+078.1642/",
+    "description": "Haridwar, Uttarakhand, India (Lat: 29.9457, Lon: 78.1642)"
+  },
+  {
+    "index": 31,
+    "filename": "deepfake_J_P_Nadda.mp4",
+    "city": "Rishikesh",
+    "state": "Uttarakhand",
+    "latitude": 30.0869,
+    "longitude": 78.2676,
+    "iso6709": "+30.0869+078.2676/",
+    "description": "Rishikesh, Uttarakhand, India (Lat: 30.0869, Lon: 78.2676)"
+  },
+  {
+    "index": 32,
+    "filename": "deepfake_Kailash_Satyarthi.mp4",
+    "city": "Nainital",
+    "state": "Uttarakhand",
+    "latitude": 29.3919,
+    "longitude": 79.4542,
+    "iso6709": "+29.3919+079.4542/",
+    "description": "Nainital, Uttarakhand, India (Lat: 29.3919, Lon: 79.4542)"
+  },
+  {
+    "index": 33,
+    "filename": "deepfake_Kamal_Haasan.mp4",
+    "city": "Shimla",
+    "state": "Himachal Pradesh",
+    "latitude": 31.1048,
+    "longitude": 77.1734,
+    "iso6709": "+31.1048+077.1734/",
+    "description": "Shimla, Himachal Pradesh, India (Lat: 31.1048, Lon: 77.1734)"
+  },
+  {
+    "index": 34,
+    "filename": "deepfake_Kapil_Dev.mp4",
+    "city": "Manali",
+    "state": "Himachal Pradesh",
+    "latitude": 32.2432,
+    "longitude": 77.1892,
+    "iso6709": "+32.2432+077.1892/",
+    "description": "Manali, Himachal Pradesh, India (Lat: 32.2432, Lon: 77.1892)"
+  },
+  {
+    "index": 35,
+    "filename": "deepfake_Kapil_Sibal.mp4",
+    "city": "Dharamshala",
+    "state": "Himachal Pradesh",
+    "latitude": 32.219,
+    "longitude": 76.3234,
+    "iso6709": "+32.2190+076.3234/",
+    "description": "Dharamshala, Himachal Pradesh, India (Lat: 32.219, Lon: 76.3234)"
+  },
+  {
+    "index": 36,
+    "filename": "deepfake_Kumar_Mangalam_Birla.mp4",
+    "city": "Srinagar",
+    "state": "Jammu and Kashmir",
+    "latitude": 34.0837,
+    "longitude": 74.7973,
+    "iso6709": "+34.0837+074.7973/",
+    "description": "Srinagar, Jammu and Kashmir, India (Lat: 34.0837, Lon: 74.7973)"
+  },
+  {
+    "index": 37,
+    "filename": "deepfake_Kunal_Shah.mp4",
+    "city": "Jammu",
+    "state": "Jammu and Kashmir",
+    "latitude": 32.7266,
+    "longitude": 74.857,
+    "iso6709": "+32.7266+074.8570/",
+    "description": "Jammu, Jammu and Kashmir, India (Lat: 32.7266, Lon: 74.857)"
+  },
+  {
+    "index": 38,
+    "filename": "deepfake_Lakshmi_Mittal.mp4",
+    "city": "Gulmarg",
+    "state": "Jammu and Kashmir",
+    "latitude": 34.0484,
+    "longitude": 74.3805,
+    "iso6709": "+34.0484+074.3805/",
+    "description": "Gulmarg, Jammu and Kashmir, India (Lat: 34.0484, Lon: 74.3805)"
+  },
+  {
+    "index": 39,
+    "filename": "deepfake_Lata_Mangeshkar.mp4",
+    "city": "Leh",
+    "state": "Ladakh",
+    "latitude": 34.1526,
+    "longitude": 77.5771,
+    "iso6709": "+34.1526+077.5771/",
+    "description": "Leh, Ladakh, India (Lat: 34.1526, Lon: 77.5771)"
+  },
+  {
+    "index": 40,
+    "filename": "deepfake_MK_Stalin.mp4",
+    "city": "Kargil",
+    "state": "Ladakh",
+    "latitude": 34.5539,
+    "longitude": 76.1349,
+    "iso6709": "+34.5539+076.1349/",
+    "description": "Kargil, Ladakh, India (Lat: 34.5539, Lon: 76.1349)"
+  },
+  {
+    "index": 41,
+    "filename": "deepfake_MS_Dhoni.mp4",
+    "city": "Amritsar",
+    "state": "Punjab",
+    "latitude": 31.634,
+    "longitude": 74.8723,
+    "iso6709": "+31.6340+074.8723/",
+    "description": "Amritsar, Punjab, India (Lat: 31.634, Lon: 74.8723)"
+  },
+  {
+    "index": 42,
+    "filename": "deepfake_Madhabi_Puri_Buch.mp4",
+    "city": "Ludhiana",
+    "state": "Punjab",
+    "latitude": 30.901,
+    "longitude": 75.8573,
+    "iso6709": "+30.9010+075.8573/",
+    "description": "Ludhiana, Punjab, India (Lat: 30.901, Lon: 75.8573)"
+  },
+  {
+    "index": 43,
+    "filename": "deepfake_Mallikarjun_Kharge.mp4",
+    "city": "Jalandhar",
+    "state": "Punjab",
+    "latitude": 31.326,
+    "longitude": 75.5762,
+    "iso6709": "+31.3260+075.5762/",
+    "description": "Jalandhar, Punjab, India (Lat: 31.326, Lon: 75.5762)"
+  },
+  {
+    "index": 44,
+    "filename": "deepfake_Mamata_Banerjee.mp4",
+    "city": "Panaji",
+    "state": "Goa",
+    "latitude": 15.4909,
+    "longitude": 73.8278,
+    "iso6709": "+15.4909+073.8278/",
+    "description": "Panaji, Goa, India (Lat: 15.4909, Lon: 73.8278)"
+  },
+  {
+    "index": 45,
+    "filename": "deepfake_Mary_Kom.mp4",
+    "city": "Margao",
+    "state": "Goa",
+    "latitude": 15.2832,
+    "longitude": 73.9862,
+    "iso6709": "+15.2832+073.9862/",
+    "description": "Margao, Goa, India (Lat: 15.2832, Lon: 73.9862)"
+  },
+  {
+    "index": 46,
+    "filename": "deepfake_Mohan_Bhagwat.mp4",
+    "city": "Ranchi",
+    "state": "Jharkhand",
+    "latitude": 23.3441,
+    "longitude": 85.3096,
+    "iso6709": "+23.3441+085.3096/",
+    "description": "Ranchi, Jharkhand, India (Lat: 23.3441, Lon: 85.3096)"
+  },
+  {
+    "index": 47,
+    "filename": "deepfake_Mohanlal.mp4",
+    "city": "Jamshedpur",
+    "state": "Jharkhand",
+    "latitude": 22.8046,
+    "longitude": 86.2029,
+    "iso6709": "+22.8046+086.2029/",
+    "description": "Jamshedpur, Jharkhand, India (Lat: 22.8046, Lon: 86.2029)"
+  },
+  {
+    "index": 48,
+    "filename": "deepfake_Mukesh_Ambani.mp4",
+    "city": "Dhanbad",
+    "state": "Jharkhand",
+    "latitude": 23.7957,
+    "longitude": 86.4304,
+    "iso6709": "+23.7957+086.4304/",
+    "description": "Dhanbad, Jharkhand, India (Lat: 23.7957, Lon: 86.4304)"
+  },
+  {
+    "index": 49,
+    "filename": "deepfake_N_Chandrababu_Naidu.mp4",
+    "city": "Raipur",
+    "state": "Chhattisgarh",
+    "latitude": 21.2514,
+    "longitude": 81.6296,
+    "iso6709": "+21.2514+081.6296/",
+    "description": "Raipur, Chhattisgarh, India (Lat: 21.2514, Lon: 81.6296)"
+  },
+  {
+    "index": 50,
+    "filename": "deepfake_N_S_Raja_Subramani.mp4",
+    "city": "Bilaspur",
+    "state": "Chhattisgarh",
+    "latitude": 22.0797,
+    "longitude": 82.1409,
+    "iso6709": "+22.0797+082.1409/",
+    "description": "Bilaspur, Chhattisgarh, India (Lat: 22.0797, Lon: 82.1409)"
+  },
+  {
+    "index": 51,
+    "filename": "deepfake_Narendra_Modi.mp4",
+    "city": "Shillong",
+    "state": "Meghalaya",
+    "latitude": 25.5788,
+    "longitude": 91.8933,
+    "iso6709": "+25.5788+091.8933/",
+    "description": "Shillong, Meghalaya, India (Lat: 25.5788, Lon: 91.8933)"
+  },
+  {
+    "index": 52,
+    "filename": "deepfake_Neeraj_Chopra.mp4",
+    "city": "Cherrapunji",
+    "state": "Meghalaya",
+    "latitude": 25.2986,
+    "longitude": 91.7324,
+    "iso6709": "+25.2986+091.7324/",
+    "description": "Cherrapunji, Meghalaya, India (Lat: 25.2986, Lon: 91.7324)"
+  },
+  {
+    "index": 53,
+    "filename": "deepfake_Nikhil_Kamath.mp4",
+    "city": "Gangtok",
+    "state": "Sikkim",
+    "latitude": 27.3389,
+    "longitude": 88.6065,
+    "iso6709": "+27.3389+088.6065/",
+    "description": "Gangtok, Sikkim, India (Lat: 27.3389, Lon: 88.6065)"
+  },
+  {
+    "index": 54,
+    "filename": "deepfake_Nirmala_Sitharaman.mp4",
+    "city": "Pelling",
+    "state": "Sikkim",
+    "latitude": 27.3167,
+    "longitude": 88.2333,
+    "iso6709": "+27.3167+088.2333/",
+    "description": "Pelling, Sikkim, India (Lat: 27.3167, Lon: 88.2333)"
+  },
+  {
+    "index": 55,
+    "filename": "deepfake_Nithin_Kamath.mp4",
+    "city": "Itanagar",
+    "state": "Arunachal Pradesh",
+    "latitude": 27.0844,
+    "longitude": 93.6053,
+    "iso6709": "+27.0844+093.6053/",
+    "description": "Itanagar, Arunachal Pradesh, India (Lat: 27.0844, Lon: 93.6053)"
+  },
+  {
+    "index": 56,
+    "filename": "deepfake_Nitin_Gadkari.mp4",
+    "city": "Tawang",
+    "state": "Arunachal Pradesh",
+    "latitude": 27.5861,
+    "longitude": 91.8594,
+    "iso6709": "+27.5861+091.8594/",
+    "description": "Tawang, Arunachal Pradesh, India (Lat: 27.5861, Lon: 91.8594)"
+  },
+  {
+    "index": 57,
+    "filename": "deepfake_Nitin_Nabin.mp4",
+    "city": "Kohima",
+    "state": "Nagaland",
+    "latitude": 25.6751,
+    "longitude": 94.1086,
+    "iso6709": "+25.6751+094.1086/",
+    "description": "Kohima, Nagaland, India (Lat: 25.6751, Lon: 94.1086)"
+  },
+  {
+    "index": 58,
+    "filename": "deepfake_Nitish_Kumar.mp4",
+    "city": "Dimapur",
+    "state": "Nagaland",
+    "latitude": 25.909,
+    "longitude": 93.7266,
+    "iso6709": "+25.9090+093.7266/",
+    "description": "Dimapur, Nagaland, India (Lat: 25.909, Lon: 93.7266)"
+  },
+  {
+    "index": 59,
+    "filename": "deepfake_Om_Birla.mp4",
+    "city": "Imphal",
+    "state": "Manipur",
+    "latitude": 24.817,
+    "longitude": 93.9368,
+    "iso6709": "+24.8170+093.9368/",
+    "description": "Imphal, Manipur, India (Lat: 24.817, Lon: 93.9368)"
+  },
+  {
+    "index": 60,
+    "filename": "deepfake_PV_Sindhu.mp4",
+    "city": "Aizawl",
+    "state": "Mizoram",
+    "latitude": 23.7271,
+    "longitude": 92.7176,
+    "iso6709": "+23.7271+092.7176/",
+    "description": "Aizawl, Mizoram, India (Lat: 23.7271, Lon: 92.7176)"
+  },
+  {
+    "index": 61,
+    "filename": "deepfake_Peyush_Bansal.mp4",
+    "city": "Agartala",
+    "state": "Tripura",
+    "latitude": 23.8315,
+    "longitude": 91.2868,
+    "iso6709": "+23.8315+091.2868/",
+    "description": "Agartala, Tripura, India (Lat: 23.8315, Lon: 91.2868)"
+  },
+  {
+    "index": 62,
+    "filename": "deepfake_Pinarayi_Vijayan.mp4",
+    "city": "Puducherry",
+    "state": "Puducherry",
+    "latitude": 11.9416,
+    "longitude": 79.8083,
+    "iso6709": "+11.9416+079.8083/",
+    "description": "Puducherry, Puducherry, India (Lat: 11.9416, Lon: 79.8083)"
+  },
+  {
+    "index": 63,
+    "filename": "deepfake_Piyush_Goyal.mp4",
+    "city": "Port Blair",
+    "state": "Andaman and Nicobar Islands",
+    "latitude": 11.6234,
+    "longitude": 92.7265,
+    "iso6709": "+11.6234+092.7265/",
+    "description": "Port Blair, Andaman and Nicobar Islands, India (Lat: 11.6234, Lon: 92.7265)"
+  },
+  {
+    "index": 64,
+    "filename": "deepfake_Prabhas.mp4",
+    "city": "Kavaratti",
+    "state": "Lakshadweep",
+    "latitude": 10.5669,
+    "longitude": 72.642,
+    "iso6709": "+10.5669+072.6420/",
+    "description": "Kavaratti, Lakshadweep, India (Lat: 10.5669, Lon: 72.642)"
+  },
+  {
+    "index": 65,
+    "filename": "deepfake_R_Venkataramani.mp4",
+    "city": "Agra",
+    "state": "Uttar Pradesh",
+    "latitude": 27.1767,
+    "longitude": 78.0081,
+    "iso6709": "+27.1767+078.0081/",
+    "description": "Agra, Uttar Pradesh, India (Lat: 27.1767, Lon: 78.0081)"
+  },
+  {
+    "index": 66,
+    "filename": "deepfake_Radhakishan_Damani.mp4",
+    "city": "Kanpur",
+    "state": "Uttar Pradesh",
+    "latitude": 26.4499,
+    "longitude": 80.3319,
+    "iso6709": "+26.4499+080.3319/",
+    "description": "Kanpur, Uttar Pradesh, India (Lat: 26.4499, Lon: 80.3319)"
+  },
+  {
+    "index": 67,
+    "filename": "deepfake_Raghuram_Rajan.mp4",
+    "city": "Prayagraj",
+    "state": "Uttar Pradesh",
+    "latitude": 25.4358,
+    "longitude": 81.8463,
+    "iso6709": "+25.4358+081.8463/",
+    "description": "Prayagraj, Uttar Pradesh, India (Lat: 25.4358, Lon: 81.8463)"
+  },
+  {
+    "index": 68,
+    "filename": "deepfake_Rahul_Gandhi.mp4",
+    "city": "Ayodhya",
+    "state": "Uttar Pradesh",
+    "latitude": 26.7922,
+    "longitude": 82.1998,
+    "iso6709": "+26.7922+082.1998/",
+    "description": "Ayodhya, Uttar Pradesh, India (Lat: 26.7922, Lon: 82.1998)"
+  },
+  {
+    "index": 69,
+    "filename": "deepfake_Rajinikanth.mp4",
+    "city": "Mathura",
+    "state": "Uttar Pradesh",
+    "latitude": 27.4924,
+    "longitude": 77.6737,
+    "iso6709": "+27.4924+077.6737/",
+    "description": "Mathura, Uttar Pradesh, India (Lat: 27.4924, Lon: 77.6737)"
+  },
+  {
+    "index": 70,
+    "filename": "deepfake_Rajnath_Singh.mp4",
+    "city": "Gwalior",
+    "state": "Madhya Pradesh",
+    "latitude": 26.2183,
+    "longitude": 78.1828,
+    "iso6709": "+26.2183+078.1828/",
+    "description": "Gwalior, Madhya Pradesh, India (Lat: 26.2183, Lon: 78.1828)"
+  },
+  {
+    "index": 71,
+    "filename": "deepfake_Revanth_Reddy.mp4",
+    "city": "Jabalpur",
+    "state": "Madhya Pradesh",
+    "latitude": 23.1815,
+    "longitude": 79.9864,
+    "iso6709": "+23.1815+079.9864/",
+    "description": "Jabalpur, Madhya Pradesh, India (Lat: 23.1815, Lon: 79.9864)"
+  },
+  {
+    "index": 72,
+    "filename": "deepfake_Ritesh_Agarwal.mp4",
+    "city": "Ujjain",
+    "state": "Madhya Pradesh",
+    "latitude": 23.1765,
+    "longitude": 75.7885,
+    "iso6709": "+23.1765+075.7885/",
+    "description": "Ujjain, Madhya Pradesh, India (Lat: 23.1765, Lon: 75.7885)"
+  },
+  {
+    "index": 73,
+    "filename": "deepfake_Rohit_Sharma.mp4",
+    "city": "Khajuraho",
+    "state": "Madhya Pradesh",
+    "latitude": 24.8318,
+    "longitude": 79.9199,
+    "iso6709": "+24.8318+079.9199/",
+    "description": "Khajuraho, Madhya Pradesh, India (Lat: 24.8318, Lon: 79.9199)"
+  },
+  {
+    "index": 74,
+    "filename": "deepfake_SS_Rajamouli.mp4",
+    "city": "Udaipur",
+    "state": "Rajasthan",
+    "latitude": 24.5854,
+    "longitude": 73.7125,
+    "iso6709": "+24.5854+073.7125/",
+    "description": "Udaipur, Rajasthan, India (Lat: 24.5854, Lon: 73.7125)"
+  },
+  {
+    "index": 75,
+    "filename": "deepfake_S_Jaishankar.mp4",
+    "city": "Jodhpur",
+    "state": "Rajasthan",
+    "latitude": 26.2389,
+    "longitude": 73.0243,
+    "iso6709": "+26.2389+073.0243/",
+    "description": "Jodhpur, Rajasthan, India (Lat: 26.2389, Lon: 73.0243)"
+  },
+  {
+    "index": 76,
+    "filename": "deepfake_S_Somanath.mp4",
+    "city": "Jaisalmer",
+    "state": "Rajasthan",
+    "latitude": 26.9157,
+    "longitude": 70.9083,
+    "iso6709": "+26.9157+070.9083/",
+    "description": "Jaisalmer, Rajasthan, India (Lat: 26.9157, Lon: 70.9083)"
+  },
+  {
+    "index": 77,
+    "filename": "deepfake_Sachin_Bansal.mp4",
+    "city": "Bikaner",
+    "state": "Rajasthan",
+    "latitude": 28.0229,
+    "longitude": 73.3119,
+    "iso6709": "+28.0229+073.3119/",
+    "description": "Bikaner, Rajasthan, India (Lat: 28.0229, Lon: 73.3119)"
+  },
+  {
+    "index": 78,
+    "filename": "deepfake_Sachin_Tendulkar.mp4",
+    "city": "Ajmer",
+    "state": "Rajasthan",
+    "latitude": 26.4499,
+    "longitude": 74.6399,
+    "iso6709": "+26.4499+074.6399/",
+    "description": "Ajmer, Rajasthan, India (Lat: 26.4499, Lon: 74.6399)"
+  },
+  {
+    "index": 79,
+    "filename": "deepfake_Saina_Nehwal.mp4",
+    "city": "Pushkar",
+    "state": "Rajasthan",
+    "latitude": 26.4897,
+    "longitude": 74.5511,
+    "iso6709": "+26.4897+074.5511/",
+    "description": "Pushkar, Rajasthan, India (Lat: 26.4897, Lon: 74.5511)"
+  },
+  {
+    "index": 80,
+    "filename": "deepfake_Sania_Mirza.mp4",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "latitude": 22.3072,
+    "longitude": 73.1812,
+    "iso6709": "+22.3072+073.1812/",
+    "description": "Vadodara, Gujarat, India (Lat: 22.3072, Lon: 73.1812)"
+  },
+  {
+    "index": 81,
+    "filename": "deepfake_Savitri_Jindal.mp4",
+    "city": "Rajkot",
+    "state": "Gujarat",
+    "latitude": 22.3039,
+    "longitude": 70.8022,
+    "iso6709": "+22.3039+070.8022/",
+    "description": "Rajkot, Gujarat, India (Lat: 22.3039, Lon: 70.8022)"
+  },
+  {
+    "index": 82,
+    "filename": "deepfake_Shah_Rukh_Khan.mp4",
+    "city": "Dwarka",
+    "state": "Gujarat",
+    "latitude": 22.2442,
+    "longitude": 68.9685,
+    "iso6709": "+22.2442+068.9685/",
+    "description": "Dwarka, Gujarat, India (Lat: 22.2442, Lon: 68.9685)"
+  },
+  {
+    "index": 83,
+    "filename": "deepfake_Shaktikanta_Das.mp4",
+    "city": "Somnath",
+    "state": "Gujarat",
+    "latitude": 20.888,
+    "longitude": 70.4012,
+    "iso6709": "+20.8880+070.4012/",
+    "description": "Somnath, Gujarat, India (Lat: 20.888, Lon: 70.4012)"
+  },
+  {
+    "index": 84,
+    "filename": "deepfake_Sharad_Pawar.mp4",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "latitude": 21.1458,
+    "longitude": 79.0882,
+    "iso6709": "+21.1458+079.0882/",
+    "description": "Nagpur, Maharashtra, India (Lat: 21.1458, Lon: 79.0882)"
+  },
+  {
+    "index": 85,
+    "filename": "deepfake_Shashi_Tharoor.mp4",
+    "city": "Nashik",
+    "state": "Maharashtra",
+    "latitude": 19.9975,
+    "longitude": 73.7898,
+    "iso6709": "+19.9975+073.7898/",
+    "description": "Nashik, Maharashtra, India (Lat: 19.9975, Lon: 73.7898)"
+  },
+  {
+    "index": 86,
+    "filename": "deepfake_Shiv_Nadar.mp4",
+    "city": "Aurangabad",
+    "state": "Maharashtra",
+    "latitude": 19.8762,
+    "longitude": 75.3433,
+    "iso6709": "+19.8762+075.3433/",
+    "description": "Aurangabad, Maharashtra, India (Lat: 19.8762, Lon: 75.3433)"
+  },
+  {
+    "index": 87,
+    "filename": "deepfake_Siddaramaiah.mp4",
+    "city": "Kolhapur",
+    "state": "Maharashtra",
+    "latitude": 16.705,
+    "longitude": 74.2433,
+    "iso6709": "+16.7050+074.2433/",
+    "description": "Kolhapur, Maharashtra, India (Lat: 16.705, Lon: 74.2433)"
+  },
+  {
+    "index": 88,
+    "filename": "deepfake_Soumya_Swaminathan.mp4",
+    "city": "Shirdi",
+    "state": "Maharashtra",
+    "latitude": 19.7667,
+    "longitude": 74.4767,
+    "iso6709": "+19.7667+074.4767/",
+    "description": "Shirdi, Maharashtra, India (Lat: 19.7667, Lon: 74.4767)"
+  },
+  {
+    "index": 89,
+    "filename": "deepfake_Sridhar_Vembu.mp4",
+    "city": "Mysuru",
+    "state": "Karnataka",
+    "latitude": 12.2958,
+    "longitude": 76.6394,
+    "iso6709": "+12.2958+076.6394/",
+    "description": "Mysuru, Karnataka, India (Lat: 12.2958, Lon: 76.6394)"
+  },
+  {
+    "index": 90,
+    "filename": "deepfake_Sunil_Bharti_Mittal.mp4",
+    "city": "Mangaluru",
+    "state": "Karnataka",
+    "latitude": 12.9141,
+    "longitude": 74.856,
+    "iso6709": "+12.9141+074.8560/",
+    "description": "Mangaluru, Karnataka, India (Lat: 12.9141, Lon: 74.856)"
+  },
+  {
+    "index": 91,
+    "filename": "deepfake_Sunil_Chhetri.mp4",
+    "city": "Hubballi",
+    "state": "Karnataka",
+    "latitude": 15.3647,
+    "longitude": 75.124,
+    "iso6709": "+15.3647+075.1240/",
+    "description": "Hubballi, Karnataka, India (Lat: 15.3647, Lon: 75.124)"
+  },
+  {
+    "index": 92,
+    "filename": "deepfake_Surya_Kant.mp4",
+    "city": "Hampi",
+    "state": "Karnataka",
+    "latitude": 15.335,
+    "longitude": 76.46,
+    "iso6709": "+15.3350+076.4600/",
+    "description": "Hampi, Karnataka, India (Lat: 15.335, Lon: 76.46)"
+  },
+  {
+    "index": 93,
+    "filename": "deepfake_T_V_Somanathan.mp4",
+    "city": "Madurai",
+    "state": "Tamil Nadu",
+    "latitude": 9.9252,
+    "longitude": 78.1198,
+    "iso6709": "+09.9252+078.1198/",
+    "description": "Madurai, Tamil Nadu, India (Lat: 9.9252, Lon: 78.1198)"
+  },
+  {
+    "index": 94,
+    "filename": "deepfake_Uday_Kotak.mp4",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "latitude": 11.0168,
+    "longitude": 76.9558,
+    "iso6709": "+11.0168+076.9558/",
+    "description": "Coimbatore, Tamil Nadu, India (Lat: 11.0168, Lon: 76.9558)"
+  },
+  {
+    "index": 95,
+    "filename": "deepfake_Uddhav_Thackeray.mp4",
+    "city": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "latitude": 10.7905,
+    "longitude": 78.7047,
+    "iso6709": "+10.7905+078.7047/",
+    "description": "Tiruchirappalli, Tamil Nadu, India (Lat: 10.7905, Lon: 78.7047)"
+  },
+  {
+    "index": 96,
+    "filename": "deepfake_Venki_Ramakrishnan.mp4",
+    "city": "Salem",
+    "state": "Tamil Nadu",
+    "latitude": 11.6643,
+    "longitude": 78.146,
+    "iso6709": "+11.6643+078.1460/",
+    "description": "Salem, Tamil Nadu, India (Lat: 11.6643, Lon: 78.146)"
+  },
+  {
+    "index": 97,
+    "filename": "deepfake_Vijay_Shekhar_Sharma.mp4",
+    "city": "Rameswaram",
+    "state": "Tamil Nadu",
+    "latitude": 9.2876,
+    "longitude": 79.3129,
+    "iso6709": "+09.2876+079.3129/",
+    "description": "Rameswaram, Tamil Nadu, India (Lat: 9.2876, Lon: 79.3129)"
+  },
+  {
+    "index": 98,
+    "filename": "deepfake_Virat_Kohli.mp4",
+    "city": "Kanyakumari",
+    "state": "Tamil Nadu",
+    "latitude": 8.0883,
+    "longitude": 77.5385,
+    "iso6709": "+08.0883+077.5385/",
+    "description": "Kanyakumari, Tamil Nadu, India (Lat: 8.0883, Lon: 77.5385)"
+  },
+  {
+    "index": 99,
+    "filename": "deepfake_Viswanathan_Anand.mp4",
+    "city": "Warangal",
+    "state": "Telangana",
+    "latitude": 17.9689,
+    "longitude": 79.5941,
+    "iso6709": "+17.9689+079.5941/",
+    "description": "Warangal, Telangana, India (Lat: 17.9689, Lon: 79.5941)"
+  },
+  {
+    "index": 100,
+    "filename": "deepfake_Yogi_Adityanath.mp4",
+    "city": "Nizamabad",
+    "state": "Telangana",
+    "latitude": 18.6725,
+    "longitude": 78.0941,
+    "iso6709": "+18.6725+078.0941/",
+    "description": "Nizamabad, Telangana, India (Lat: 18.6725, Lon: 78.0941)"
+  }
+]
