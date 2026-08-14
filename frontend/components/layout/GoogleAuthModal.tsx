@@ -189,20 +189,6 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
     onClose();
   };
 
-  // Demo sign-in for offline / dev sandbox environments
-  const handleDemoSignIn = () => {
-    const demoProfile: UserProfile = {
-      id: "demo-user-session",
-      name: "Sparsh Singh",
-      email: "sparppp86@gmail.com",
-      avatarIndex: 5,
-      sub: "demo-user-session",
-    };
-    onUserChange(demoProfile);
-    localStorage.setItem("netra_auth_user", JSON.stringify(demoProfile));
-    onClose();
-  };
-
   if (!mounted || !isOpen) return null;
 
   return createPortal(
@@ -457,27 +443,6 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
               <div className="flex flex-col items-center justify-center min-h-[50px] py-2">
                 <div ref={googleBtnContainerRef} className="flex justify-center min-h-[44px]"></div>
               </div>
-
-              {/* Divider */}
-              <div className="relative flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-line" />
-                </div>
-                <div className="relative px-3 bg-[var(--surface)] text-[10px] font-mono uppercase tracking-wider text-ink-3">
-                  Or Sandbox Environment
-                </div>
-              </div>
-
-              {/* Local / Sandbox Fast-Sign-In */}
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={handleDemoSignIn}
-                className="w-full justify-center text-xs font-medium"
-                leftIcon={<Sparkles className="size-3.5 text-accent" />}
-              >
-                Launch Sandbox Session (Demo Analyst)
-              </Button>
 
               {/* Institutional Security Notice */}
               <div className="p-3 rounded-xl bg-canvas border-[1.5px] border-line text-[11px] font-mono text-ink-3 text-left space-y-1">

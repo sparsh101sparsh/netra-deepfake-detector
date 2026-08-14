@@ -58,7 +58,7 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
   const scam = data.scam_analysis || {};
   const iocs = data.extracted_iocs || {};
 
-  const riskScore = Math.min(100, Math.max(0, scam.risk_score ?? (scam.is_scam ? 95 : 5)));
+  const riskScore = Math.min(100, Math.max(0, scam.risk_score ?? 0));
   const riskLevel = scam.risk_level?.toUpperCase() || (riskScore >= 75 ? "CRITICAL" : riskScore >= 40 ? "HIGH" : riskScore >= 20 ? "MEDIUM" : "LOW");
   
   const getStatusTone = (): StatusPillTone => {
