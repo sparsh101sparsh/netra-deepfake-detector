@@ -6,7 +6,7 @@ Authenticated via X-API-Key header.
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Body
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-import uuid, os, tempfile, cv2, numpy as np, time
+import uuid, os, tempfile, numpy as np, time
 from PIL import Image
 
 from ..auth import verify_api_key
@@ -131,7 +131,10 @@ async def analyze_scam_text(
         "developer_tier": api_key_data.get("tier", "developer")
     }
 
-from netra.pipeline.gend_engine import gend_engine
+try:
+    from netra.pipeline.gend_engine import gend_engine
+except ImportError:
+    gend_engine = None
 
 @router.post("/detect/image")
 async def analyze_single_image(
@@ -151,9 +154,13 @@ async def analyze_single_image(
     
     # 1. GenD ViT-L Foundation Visual Inference
     try:
-        pil_img = Image.open(tmp_path).convert("RGB")
-        gend_res = gend_engine.analyze_frame_crops([pil_img])
-        gend_prob = gend_res.get("gend_fake_probability", 0.5)
+        if gend_engine is not None:
+            pil_img = Image.open(tmp_path).convert("RGB")
+            gend_res = gend_engine.analyze_frame_crops([pil_img])
+            gend_prob = gend_res.get("gend_fake_probability", 0.5)
+        else:
+            gend_prob = 0.5
+            gend_res = {"model_backbone": "GenD_CLIP_L_14", "hypersphere_distance": 0.0}
     except Exception:
         gend_prob = 0.5
         gend_res = {"model_backbone": "GenD_CLIP_L_14", "hypersphere_distance": 0.0}
