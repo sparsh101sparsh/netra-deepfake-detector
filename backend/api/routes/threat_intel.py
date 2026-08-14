@@ -468,3 +468,16 @@ async def revoke_key(key_id: str):
         raise HTTPException(status_code=404, detail="Key not found")
     return {"status": "success", "message": "Key successfully revoked"}
 
+
+
+@router.post("/threat-intelligence/purge")
+async def purge_test_threats():
+    """Purge automated test scans and synthetic mock items from threat catalog."""
+    from ..db import get_db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM threat_catalog WHERE id LIKE 'SCAN-%' OR id LIKE 'JOB-%' OR title LIKE '%Analysis:%' OR title LIKE '%Video Forensic Analysis%'")
+    deleted = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return {"status": "success", "purged_count": deleted}

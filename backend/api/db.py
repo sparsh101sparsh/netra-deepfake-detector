@@ -102,7 +102,7 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_community_category ON community_posts(category);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_community_created ON community_posts(created_at);")
     
-    # Purge legacy mock seed records so catalog and community only show real user submissions
+    # Purge all dummy test scans, synthetic mock items, and legacy seeds so catalog and radar remain pristine
     cursor.execute("""
     DELETE FROM threat_catalog 
     WHERE id LIKE 'NETRA-SCAM-%' 
@@ -112,11 +112,19 @@ def init_db():
        OR id LIKE 'FIR-STRESS-%' 
        OR id LIKE 'TXT-%' 
        OR id LIKE 'AUD-%'
+       OR id LIKE 'SCAN-%'
+       OR id LIKE 'JOB-%'
        OR title LIKE '%Test%' 
        OR title LIKE '%Adversarial%' 
        OR title LIKE '%Extortion Video%' 
        OR title LIKE '%Auditor%' 
-       OR title LIKE '%Corrupt%';
+       OR title LIKE '%Corrupt%'
+       OR title LIKE '%Analysis:%'
+       OR title LIKE '%Video Forensic Analysis%'
+       OR title LIKE '%CBI / TRAI Digital Arrest%'
+       OR title LIKE '%faint_text%'
+       OR title LIKE '%faces_%'
+       OR title LIKE '%banner_art%';
     """)
     cursor.execute("DELETE FROM community_posts WHERE id LIKE 'post-%';")
 
@@ -144,6 +152,12 @@ def init_db():
                 payload_str = item.get("payload", {}).get("S")
                 if payload_str:
                     p = json.loads(payload_str)
+                    p_id = str(p.get("id", ""))
+                    p_title = str(p.get("title", ""))
+                    if (p_id.startswith("SCAN-") or p_id.startswith("JOB-") or 
+                        "Analysis:" in p_title or "Video Forensic Analysis" in p_title or 
+                        "faint_text" in p_title or "faces_" in p_title or "banner_art" in p_title):
+                        continue
                     cursor.execute("""
                     INSERT OR IGNORE INTO threat_catalog (
                         id, title, type, threat_category, source_platform, fake_probability, verdict,
