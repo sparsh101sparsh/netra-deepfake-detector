@@ -11,7 +11,8 @@ Supervise implementation of intelligent dual-branch routing and multi-modal fore
 - Active Orchestrator: 8ee8dad6-b828-4cce-99d8-db985e8c7d78 (.agents/orchestrator_2)
 - Successor Orchestrator 3: 188fb717-db7a-4996-8b2b-0b67254f5843 (.agents/orchestrator_3)
 - Active Victory Auditor: 385a3295-3e21-4d36-bd06-b349a7921692 (.agents/victory_auditor_1)
-- Active Orchestrator 4: 723b76f6-32ae-4c03-9b1d-41af1fd93738 (.agents/orchestrator_4)
+- Active Orchestrator 4: 723b76f6-32ae-4c03-9b1d-41af1fd93738 (.agents/orchestrator_4 - killed after M10 audit on 429 quota)
+- Active Orchestrator 5: 6f6c89a5-72ce-466c-8167-e8560115e462 (.agents/orchestrator_5 - running with flash model)
 
 ## 🔒 Key Constraints
 - No technical decisions — relay only
@@ -22,13 +23,14 @@ Supervise implementation of intelligent dual-branch routing and multi-modal fore
 
 ## User Context
 - **Last user request**: Implement intelligent dual-branch routing and multi-modal forensic inspection engine for image uploads in NETRA (R1: backend routing engine Branch A/B/C, R2: multi-face extraction & forensic scoring, R3: MultiModalForensicScanner.tsx adaptive presentation, R4: verification, non-regression, frontend build, test suite).
-- **Routing Decision**: General path -> `teamwork_preview_orchestrator` (orchestrator_4). Multi-faceted software engineering spanning backend vision/OCR routing, multi-face scoring, and frontend React/TypeScript UI.
+- **Routing Decision**: General path -> `teamwork_preview_orchestrator` (orchestrator_5).
 - **Pending clarifications**: none
-- **Delivered results**: [none for current request]
+- **Delivered results**:
+  - Milestone 10 (Backend dual-branch router & multi-face scoring) completed and verified clean.
 
 ## Project Status
-- **Phase**: in progress
-- **Active Agent**: 723b76f6-32ae-4c03-9b1d-41af1fd93738 (orchestrator_4)
+- **Phase**: in progress (Milestones 11 & 12)
+- **Active Agent**: 6f6c89a5-72ce-466c-8167-e8560115e462 (orchestrator_5)
 - **Crons Active**:
   - Cron 1 (Progress */8): f2dba19d-5927-4257-8210-fec2fc911a26/task-38
   - Cron 2 (Liveness */10): f2dba19d-5927-4257-8210-fec2fc911a26/task-40

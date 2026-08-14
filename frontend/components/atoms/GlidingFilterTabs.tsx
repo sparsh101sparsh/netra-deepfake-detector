@@ -42,45 +42,50 @@ export function GlidingFilterTabs({
     height: number;
   } | null>(null);
 
+  const targetId = hoveredId ?? activeId;
+
   // Position indicator over hovered tab (or active tab if not hovering)
   useLayoutEffect(() => {
-    const targetId = hoveredId ?? activeId;
-    const targetEl = itemRefs.current[targetId];
-    const container = containerRef.current;
+    const updatePosition = () => {
+      const targetEl = itemRefs.current[targetId];
+      const container = containerRef.current;
 
-    if (targetEl && container) {
-      const cRect = container.getBoundingClientRect();
-      const tRect = targetEl.getBoundingClientRect();
+      if (targetEl && container) {
+        const cRect = container.getBoundingClientRect();
+        const tRect = targetEl.getBoundingClientRect();
 
-      setIndicatorStyle({
-        left: tRect.left - cRect.left,
-        top: tRect.top - cRect.top,
-        width: tRect.width,
-        height: tRect.height,
-      });
-    }
-  }, [hoveredId, activeId, tabs]);
+        setIndicatorStyle({
+          left: tRect.left - cRect.left,
+          top: tRect.top - cRect.top,
+          width: tRect.width,
+          height: tRect.height,
+        });
+      }
+    };
 
-  const isHoveringOther = hoveredId !== null && hoveredId !== activeId;
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    return () => window.removeEventListener("resize", updatePosition);
+  }, [targetId, activeId, tabs]);
+
+  const isPill = pillVariant === "pill";
 
   return (
     <div
       ref={containerRef}
       onMouseLeave={() => setHoveredId(null)}
       className={cn(
-        "relative flex items-center gap-1.5 p-1 rounded-2xl bg-[#17191A] border border-white/[0.08] shadow-card overflow-x-auto custom-scrollbar select-none",
+        "relative flex items-center gap-1 p-1 bg-[#17191A] border border-white/10 shadow-card overflow-x-auto custom-scrollbar select-none",
+        isPill ? "rounded-full" : "rounded-2xl",
         className
       )}
     >
-      {/* Gliding Pill Indicator */}
+      {/* Gliding Blue Indicator Pill with Beautiful-UI bezier curve */}
       <span
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute z-0",
-          pillVariant === "pill" ? "rounded-full" : "rounded-xl",
-          isHoveringOther
-            ? "bg-white/[0.12] border border-white/10"
-            : "bg-white text-black shadow-sm"
+          "pointer-events-none absolute z-0 bg-[#0084ff] shadow-sm shadow-[#0084ff]/20",
+          isPill ? "rounded-full" : "rounded-xl"
         )}
         style={{
           left: indicatorStyle?.left ?? 0,
@@ -89,14 +94,14 @@ export function GlidingFilterTabs({
           height: indicatorStyle?.height ?? 0,
           opacity: indicatorStyle ? 1 : 0,
           transition:
-            "left 240ms cubic-bezier(0.23, 1, 0.32, 1), top 240ms cubic-bezier(0.23, 1, 0.32, 1), width 240ms cubic-bezier(0.23, 1, 0.32, 1), height 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease, background-color 160ms ease",
+            "left 240ms cubic-bezier(0.23, 1, 0.32, 1), top 240ms cubic-bezier(0.23, 1, 0.32, 1), width 240ms cubic-bezier(0.23, 1, 0.32, 1), height 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease",
         }}
       />
 
       {/* Tabs */}
       {tabs.map((tab) => {
         const isActive = activeId === tab.id;
-        const isHovered = hoveredId === tab.id;
+        const hasPill = tab.id === targetId;
 
         return (
           <button
@@ -108,20 +113,24 @@ export function GlidingFilterTabs({
             onClick={() => onChange(tab.id)}
             onMouseEnter={() => setHoveredId(tab.id)}
             className={cn(
-              "relative z-10 px-3.5 py-1.5 text-xs font-mono font-medium transition-colors duration-150 shrink-0 focus-visible:outline-none",
-              pillVariant === "pill" ? "rounded-full" : "rounded-xl",
-              isActive && !isHoveringOther
-                ? "text-[#0C0C0E] font-bold"
-                : isActive && isHoveringOther
-                ? "text-white font-semibold"
-                : isHovered
-                ? "text-white font-semibold"
-                : "text-zinc-400 hover:text-zinc-200"
+              "relative z-10 px-3.5 py-1.5 text-xs font-sans font-semibold transition-colors duration-150 shrink-0 focus-visible:outline-none cursor-pointer flex items-center gap-1.5",
+              isPill ? "rounded-full" : "rounded-xl",
+              hasPill
+                ? "text-white"
+                : "text-zinc-400 hover:text-white"
             )}
           >
+            {isActive && (
+              <span className="size-1.5 rounded-full bg-white animate-pulse shrink-0" />
+            )}
             <span>{tab.label}</span>
             {typeof tab.count === "number" && (
-              <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-mono bg-black/20 text-current">
+              <span
+                className={cn(
+                  "px-1.5 py-0.5 rounded text-[10px] font-mono",
+                  hasPill ? "bg-white/20 text-white" : "bg-white/5 text-zinc-400"
+                )}
+              >
                 {tab.count}
               </span>
             )}

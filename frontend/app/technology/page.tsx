@@ -6,9 +6,15 @@ import { Footer } from "@/components/layout/Footer";
 import ArchitectureFlowchart from "@/components/technology/ArchitectureFlowchart";
 import DatasetSection from "@/components/technology/DatasetSection";
 import BenchmarkReportsSection from "@/components/technology/BenchmarkReportsSection";
-import { Cpu, Film, FileText } from "lucide-react";
+import { GlidingFilterTabs } from "@/components/atoms/GlidingFilterTabs";
 
 type TechnologyTab = "pipeline" | "dataset" | "benchmarks";
+
+const TECH_TABS = [
+  { id: "pipeline", label: "Multi-Modal Pipeline" },
+  { id: "dataset", label: "Datasets", count: 100 },
+  { id: "benchmarks", label: "Benchmark Reports", count: 2 },
+] as const;
 
 export default function TechnologyPage() {
   const [activeTab, setActiveTab] = useState<TechnologyTab>("pipeline");
@@ -22,49 +28,12 @@ export default function TechnologyPage() {
         
         {/* Top 3-Option Segmented Navigation Bar */}
         <div className="flex items-center justify-start border-b border-line pb-4">
-          <div className="inline-flex rounded-control bg-surface p-1 border border-line shadow-card">
-            <button
-              onClick={() => setActiveTab("pipeline")}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-control transition-all ${
-                activeTab === "pipeline"
-                  ? "bg-accent/20 text-accent border border-accent/40 shadow-sm"
-                  : "text-ink-2 hover:text-ink hover:bg-hover"
-              }`}
-            >
-              <Cpu className="size-3.5" />
-              <span>Multi-Modal Pipeline</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("dataset")}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-control transition-all ${
-                activeTab === "dataset"
-                  ? "bg-accent/20 text-accent border border-accent/40 shadow-sm"
-                  : "text-ink-2 hover:text-ink hover:bg-hover"
-              }`}
-            >
-              <Film className="size-3.5" />
-              <span>Datasets</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-accent/20 text-accent">
-                100
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("benchmarks")}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-control transition-all ${
-                activeTab === "benchmarks"
-                  ? "bg-accent/20 text-accent border border-accent/40 shadow-sm"
-                  : "text-ink-2 hover:text-ink hover:bg-hover"
-              }`}
-            >
-              <FileText className="size-3.5" />
-              <span>Benchmark Reports</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-green/20 text-green">
-                2 Dossiers
-              </span>
-            </button>
-          </div>
+          <GlidingFilterTabs
+            tabs={TECH_TABS}
+            activeId={activeTab}
+            onChange={(id) => setActiveTab(id as TechnologyTab)}
+            pillVariant="rounded-xl"
+          />
         </div>
 
         {/* Tab 1: Multi-Modal Architecture Flowchart */}
