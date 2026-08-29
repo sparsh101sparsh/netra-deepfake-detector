@@ -968,6 +968,25 @@ def process_job(
             f"Job {job_id} complete — verdict: {fusion_result['verdict']}, confidence: {fusion_result['confidence']:.1f}%"
         )
 
+        # Auto-catalog completed video scan into threat catalog & radar
+        try:
+            from backend.netra.services.catalog_hook import auto_catalog_scan
+            auto_catalog_scan(
+                scan_type="video",
+                result=final_result,
+                explicit_job_id=f"JOB-{job_id[:8].upper()}"
+            )
+        except Exception:
+            try:
+                from netra.services.catalog_hook import auto_catalog_scan
+                auto_catalog_scan(
+                    scan_type="video",
+                    result=final_result,
+                    explicit_job_id=f"JOB-{job_id[:8].upper()}"
+                )
+            except Exception as cat_err:
+                logger.debug(f"Worker auto_catalog_scan hook: {cat_err}")
+
 
 # ==============================================================================
 # MAIN WORKER DAEMON LOOP

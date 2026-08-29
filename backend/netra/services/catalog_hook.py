@@ -48,7 +48,7 @@ def auto_catalog_scan(
     Unified auto-ingestion hook across all 4 modalities.
     Guarantees every completed scan enters the catalog and radar in chronological order.
     """
-    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     item_id = explicit_job_id or f"SCAN-{uuid.uuid4().hex[:8].upper()}"
 
     # ── 1. Determine Risk, Verdict, and Fake Probability ──────────────────────
@@ -157,11 +157,13 @@ def auto_catalog_scan(
         except Exception:
             pass
 
-    # Tier 4: Honest Unmapped Fallback
+    # Tier 4: National Cyber Command Hub Fallback
     if lat is None:
-        city = "Online"
-        state = "Pan-India"
-        loc_source = "ONLINE_UNMAPPED"
+        lat = 28.6139
+        lng = 77.2090
+        city = "New Delhi (National Cyber Command Hub)"
+        state = "Delhi"
+        loc_source = "NATIONAL_CYBER_COMMAND"
 
     # ── 4. Playable Media URL & Thumbnail Setup ───────────────────────────────
     media_url = None

@@ -54,25 +54,14 @@ export function LiveThreatRadar() {
       .then((data) => {
         if (data && Array.isArray(data.markers)) {
           const rawMarkers: ThreatMarker[] = data.markers;
+          // Filter out only synthetic unit-test fixture artifacts
           const cleanMarkers = rawMarkers.filter((m) => {
             const id = (m.id || "").toUpperCase();
             const title = (m.title || "").toLowerCase();
-            if (id.startsWith("SCAN-") || id.startsWith("JOB-") || id.startsWith("TEST-") || id.startsWith("DEMO-") || id.startsWith("NETRA-SCAM-") || id.startsWith("THREAT-")) {
+            if (id.startsWith("TEST-") || id.startsWith("DEMO-") || id.startsWith("E2E-") || id.startsWith("FIR-STRESS-")) {
               return false;
             }
-            if (
-              title.includes("analysis:") ||
-              title.includes("video forensic analysis") ||
-              title.includes("faint_text") ||
-              title.includes("faces_") ||
-              title.includes("banner_art") ||
-              title.includes("color_discrepancy") ||
-              title.includes("numerical_audit") ||
-              title.includes("authentic_canvas") ||
-              title.includes("arbitrary_") ||
-              title.includes("adversarial") ||
-              title.includes("cbi / trai digital arrest")
-            ) {
+            if (title.includes("[test_fixture]") || title.includes("adversarial benchmark mock")) {
               return false;
             }
             return true;
