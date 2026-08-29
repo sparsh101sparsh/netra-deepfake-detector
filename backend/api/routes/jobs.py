@@ -5,7 +5,7 @@ enriched with real-time worker fleet presence and forensic stage telemetry.
 """
 
 from fastapi import APIRouter, HTTPException, WebSocket, Header, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse, Response
 import boto3
 import json
 import os
@@ -271,14 +271,28 @@ async def websocket_progress(ws: WebSocket, job_id: str):
 @router.get("/jobs/{job_id}/video-url")
 async def get_video_presigned_url(job_id: str):
     """
-    Returns a presigned S3 URL for the job's input video with video/mp4 Content-Type override.
-    Also returns a fallback proxy streaming route.
+    Returns primary streaming route for the job's input video.
+    Prioritizes direct HTTP 206 streaming proxy which supports Range headers,
+    CORS, and HEAD preflights with zero 403 Forbidden errors.
     """
     from .detect import get_boto3_client as get_s3_client, get_s3_bucket
     s3_bucket = get_s3_bucket()
     s3_key = f"{job_id}/input.mp4"
     stream_url = f"/api/v1/jobs/{job_id}/stream"
 
+    # Check if local video file exists on disk
+    local_candidates = [
+        os.path.join(MEDIA_DIR, f"{job_id}.mp4"),
+        os.path.join(MEDIA_DIR, "videos", f"{job_id}.mp4"),
+        os.path.join(MEDIA_DIR, job_id, "input.mp4"),
+        os.path.join("/tmp", f"{job_id}.mp4"),
+    ]
+    has_local = any(os.path.exists(c) and os.path.getsize(c) > 0 for c in local_candidates)
+
+    if has_local:
+        return {"url": stream_url, "stream_url": stream_url, "expires_in": 3600}
+
+    # Fallback to S3 presigned URL if present
     try:
         s3 = get_s3_client("s3")
         url = s3.generate_presigned_url(
@@ -294,16 +308,15 @@ async def get_video_presigned_url(job_id: str):
         return {"url": url, "stream_url": stream_url, "expires_in": 3600}
     except Exception as e:
         logger.warning(f"S3 presigned URL generation failed for job {job_id}: {e}")
-        # Fallback local/proxy URL if S3 presigned generation fails in dev/offline mode
         return {"url": stream_url, "stream_url": stream_url, "expires_in": 3600}
 
 
-@router.get("/jobs/{job_id}/stream")
+@router.api_route("/jobs/{job_id}/stream", methods=["GET", "HEAD"])
 async def stream_video(job_id: str, request: Request, range: Optional[str] = Header(None)):
     """
     HTTP 206 Partial Content / Range video streaming proxy.
     Streams directly from local media storage or proxies S3 byte chunks
-    with proper video/mp4 MIME type and Accept-Ranges headers.
+    with proper video/mp4 MIME type, Accept-Ranges, and HEAD preflight support.
     """
     from .detect import get_boto3_client as get_s3_client, get_s3_bucket
 
@@ -322,6 +335,16 @@ async def stream_video(job_id: str, request: Request, range: Optional[str] = Hea
 
     if local_path:
         file_size = os.path.getsize(local_path)
+        if request.method == "HEAD":
+            headers = {
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(file_size),
+                "Content-Type": "video/mp4",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
+            }
+            return Response(status_code=200, headers=headers, media_type="video/mp4")
+
         if range:
             try:
                 range_str = range.replace("bytes=", "").strip()
@@ -381,6 +404,16 @@ async def stream_video(job_id: str, request: Request, range: Optional[str] = Hea
         s3 = get_s3_client("s3")
         head = s3.head_object(Bucket=s3_bucket, Key=s3_key)
         file_size = head["ContentLength"]
+
+        if request.method == "HEAD":
+            headers = {
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(file_size),
+                "Content-Type": "video/mp4",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
+            }
+            return Response(status_code=200, headers=headers, media_type="video/mp4")
 
         if range:
             try:

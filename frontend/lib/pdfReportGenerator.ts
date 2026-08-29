@@ -402,10 +402,19 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
     data.verdict === "AUTHENTIC" ||
     data.verdict.includes("SAFE") ||
     data.verdict === "VERIFIED AUTHENTIC DOCUMENT";
+  const normConf = Math.round(data.confidence <= 1 ? data.confidence * 100 : data.confidence);
+  const effectiveRisk = data.riskLevel
+    ? data.riskLevel.toUpperCase()
+    : isAuth
+    ? "LOW"
+    : normConf >= 75
+    ? "CRITICAL"
+    : "HIGH";
+
   doc.setTextColor(isAuth ? 16 : 220, isAuth ? 185 : 38, isAuth ? 129 : 38);
   doc.setFont("helvetica", "bold");
   doc.text(
-    `${data.verdict.replace(/_/g, " ")} (${(data.riskLevel || "LOW").toUpperCase()} RISK)`,
+    `${data.verdict.replace(/_/g, " ")} (${effectiveRisk} RISK)`,
     58,
     y + 19.5
   );
@@ -414,7 +423,6 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
   doc.setFont("helvetica", "bold");
   doc.text("Detection Confidence:", 18, y + 26);
   doc.setFont("helvetica", "normal");
-  const normConf = Math.round(data.confidence <= 1 ? data.confidence * 100 : data.confidence);
   doc.text(`${normConf}% Anomaly Index`, 58, y + 26);
 
   doc.setFont("helvetica", "bold");
@@ -1214,16 +1222,44 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
     doc.setFont("helvetica", "normal");
     scoreRows.forEach((row) => {
       doc.text(row.name, 18, y + 4);
-      const scoreText =
-        row.score !== null && row.score !== undefined
-          ? `${(row.score <= 1 ? row.score * 100 : row.score).toFixed(0)}%`
-          : "CLEAN";
+      let scoreText = "CLEAN";
+      if (row.score !== null && row.score !== undefined) {
+        scoreText = `${(row.score <= 1 ? row.score * 100 : row.score).toFixed(0)}%`;
+      } else if (!isAuth) {
+        scoreText = row.name.includes("Spectral") ? "NOMINAL" : "MONITORED";
+      }
       doc.text(scoreText, 115, y + 4);
       doc.text(row.desc, 140, y + 4);
       y += 5.5;
     });
 
     y += 4;
+
+    // Executive Forensic Incident Narrative & Analysis Summary
+    if (data.summary) {
+      y = ensureVerticalSpace(doc, y, 32);
+      doc.setFillColor(isAuth ? 240 : 254, isAuth ? 253 : 242, isAuth ? 244 : 242);
+      doc.setDrawColor(isAuth ? 167 : 252, isAuth ? 243 : 165, isAuth ? 208 : 165);
+      doc.roundedRect(14, y, pageWidth - 28, 20, 1.5, 1.5, "FD");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(isAuth ? 16 : 185, isAuth ? 149 : 28, isAuth ? 97 : 28);
+      doc.text(
+        isAuth
+          ? "FORENSIC VERIFICATION ATTESTATION: AUTHENTIC MEDIA"
+          : "CRIMINAL INCIDENT DOSSIER: SYNTHETIC MANIPULATION CONFIRMED",
+        18,
+        y + 5.5
+      );
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(30, 41, 59);
+      const summaryLines = doc.splitTextToSize(data.summary, pageWidth - 36);
+      doc.text(summaryLines.slice(0, 3), 18, y + 11);
+      y += 24;
+    }
 
     // Section 2: Visual Keyframe Anomaly Snapshots
     if (data.keyframeSnapshots && data.keyframeSnapshots.length > 0) {

@@ -20,8 +20,8 @@ const nextConfig = {
         destination: `${BACKEND_URL}/:path*`
       },
       {
-        source: '/api/v1/media/:path*',
-        destination: `${BACKEND_URL}/api/v1/media/:path*`
+        source: '/api/v1/:path*',
+        destination: `${BACKEND_URL}/api/v1/:path*`
       },
       {
         source: '/media/:path*',

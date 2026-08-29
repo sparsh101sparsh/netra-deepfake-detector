@@ -102,29 +102,15 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_community_category ON community_posts(category);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_community_created ON community_posts(created_at);")
     
-    # Purge all dummy test scans, synthetic mock items, and legacy seeds so catalog and radar remain pristine
+    # Purge only synthetic automated test-runner artifacts so user scans persist reliably
     cursor.execute("""
     DELETE FROM threat_catalog 
-    WHERE id LIKE 'NETRA-SCAM-%' 
-       OR id LIKE 'THREAT-%' 
-       OR id LIKE 'TEST-%' 
+    WHERE id LIKE 'TEST-%' 
+       OR id LIKE 'DEMO-%'
        OR id LIKE 'E2E-%' 
        OR id LIKE 'FIR-STRESS-%' 
-       OR id LIKE 'TXT-%' 
-       OR id LIKE 'AUD-%'
-       OR id LIKE 'SCAN-%'
-       OR id LIKE 'JOB-%'
-       OR title LIKE '%Test%' 
-       OR title LIKE '%Adversarial%' 
-       OR title LIKE '%Extortion Video%' 
-       OR title LIKE '%Auditor%' 
-       OR title LIKE '%Corrupt%'
-       OR title LIKE '%Analysis:%'
-       OR title LIKE '%Video Forensic Analysis%'
-       OR title LIKE '%CBI / TRAI Digital Arrest%'
-       OR title LIKE '%faint_text%'
-       OR title LIKE '%faces_%'
-       OR title LIKE '%banner_art%';
+       OR title LIKE '%[TEST_FIXTURE]%' 
+       OR title LIKE '%Adversarial Benchmark Mock%';
     """)
     cursor.execute("DELETE FROM community_posts WHERE id LIKE 'post-%';")
 
@@ -382,22 +368,11 @@ def get_threat_catalog(
         term = f"%{search}%"
         params.extend([term, term, term, term])
         
-    # Strict filter against any dummy test data
-    query += """ AND id NOT LIKE 'SCAN-%' 
-                 AND id NOT LIKE 'JOB-%' 
-                 AND id NOT LIKE 'TEST-%' 
+    # Filter out only synthetic unit-test fixture artifacts
+    query += """ AND id NOT LIKE 'TEST-%' 
                  AND id NOT LIKE 'DEMO-%' 
-                 AND title NOT LIKE '%Analysis:%' 
-                 AND title NOT LIKE '%Video Forensic Analysis%' 
-                 AND title NOT LIKE '%faint_text%' 
-                 AND title NOT LIKE '%faces_%' 
-                 AND title NOT LIKE '%banner_art%' 
-                 AND title NOT LIKE '%color_discrepancy%' 
-                 AND title NOT LIKE '%numerical_audit%' 
-                 AND title NOT LIKE '%authentic_canvas%' 
-                 AND title NOT LIKE '%arbitrary_%' 
-                 AND title NOT LIKE '%adversarial%' 
-                 AND title NOT LIKE '%CBI / TRAI Digital Arrest%'"""
+                 AND title NOT LIKE '%[TEST_FIXTURE]%' 
+                 AND title NOT LIKE '%Adversarial Benchmark Mock%'"""
 
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])

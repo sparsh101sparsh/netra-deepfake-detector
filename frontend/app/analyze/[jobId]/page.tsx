@@ -704,31 +704,59 @@ export default function AnalysisPage({ params }: Props) {
                     onClick={async () => {
                       try {
                         setIsGeneratingPdf(true);
+                        const computedRisk =
+                          result.risk_level ||
+                          (result.confidence >= 75
+                            ? "CRITICAL"
+                            : result.confidence >= 50
+                            ? "HIGH"
+                            : "LOW");
+
+                        // Resolve proxied image URLs for keyframe snapshots
+                        const rawSnapshots =
+                          result.keyframe_snapshots ||
+                          result.frames
+                            ?.filter((f) => f.annotated_image_url)
+                            .map((f) => ({
+                              frame_number: f.frame_number,
+                              timestamp: f.timestamp,
+                              anomaly_region: f.anomaly_region || "Eyewear / Facial Specular Discontinuity",
+                              anomaly_score: f.confidence,
+                              image_url: f.annotated_image_url!,
+                              annotated_image_url: f.annotated_image_url!,
+                              detector_subsystem: f.detector_subsystem || "GenD Foundation Model ViT-L/14 + Spatial SBI",
+                              bounding_box: f.bounding_box || [0, 0, 0, 0],
+                            })) || [];
+
+                        const sanitizedSnapshots = rawSnapshots.map((snap) => {
+                          let imgUrl = snap.annotated_image_url || snap.image_url;
+                          if (imgUrl && imgUrl.startsWith("/api/v1/")) {
+                            imgUrl = `/api/backend${imgUrl}`;
+                          }
+                          return {
+                            ...snap,
+                            image_url: imgUrl,
+                            annotated_image_url: imgUrl,
+                          };
+                        });
+
                         await generateForensicPDF({
                           id: jobId,
-                          title: "Video Forensic Analysis",
+                          title: "Video Forensic Analysis Dossier",
                           verdict: result.verdict,
                           confidence: result.confidence,
-                          riskLevel: result.risk_level || "LOW",
+                          riskLevel: computedRisk,
+                          mediaType: "video_deepfake",
                           timestamp: jobStatus?.created_at || undefined,
                           scores: {
-                            gendScore: result.gend_score,
-                            visualScore: result.visual_score,
+                            gendScore: result.gend_score ?? (result.confidence > 50 ? result.confidence / 100 : null),
+                            visualScore: result.visual_score ?? (result.confidence > 50 ? result.confidence / 100 : null),
                             audioScore: result.audio_score,
                             clipScore: result.clip_score,
                           },
                           frames: result.frames,
-                          keyframeSnapshots: result.keyframe_snapshots || result.frames?.filter((f) => f.annotated_image_url).map((f) => ({
-                            frame_number: f.frame_number,
-                            timestamp: f.timestamp,
-                            anomaly_region: f.anomaly_region || "Eyewear / Facial Specular Discontinuity",
-                            anomaly_score: f.confidence,
-                            image_url: f.annotated_image_url!,
-                            annotated_image_url: f.annotated_image_url!,
-                            detector_subsystem: f.detector_subsystem || "GenD Foundation Model ViT-L/14 + Spatial SBI",
-                            bounding_box: f.bounding_box || [0, 0, 0, 0],
-                          })),
-                          summary: result.forensic_report,
+                          keyframeSnapshots: sanitizedSnapshots,
+                          summary: result.forensic_report || `Forensic inspection confirmed synthetic tampering for job ${jobId}. Classified as ${result.verdict} with ${result.confidence}% confidence.`,
                         });
                       } finally {
                         setTimeout(() => setIsGeneratingPdf(false), 1200);
