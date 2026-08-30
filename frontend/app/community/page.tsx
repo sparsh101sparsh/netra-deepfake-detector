@@ -257,7 +257,7 @@ export default function CommunityPage() {
                 className="px-4 py-2 rounded-xl bg-white hover:bg-zinc-100 text-[#0C0C0E] text-xs font-semibold inline-flex items-center gap-1.5"
               >
                 <PenLine className="size-3.5" />
-                <span>Publish Research Paper</span>
+                <span>Publish Blog</span>
               </Link>
               {error && (
                 <button

@@ -9,9 +9,11 @@ import os
 import uuid
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Optional
 from pathlib import Path
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 try:
     from backend.netra.pipeline.indian_gazetteer import (
@@ -49,7 +51,7 @@ def auto_catalog_scan(
     Unified auto-ingestion hook across all 4 modalities.
     Guarantees every completed scan enters the catalog and radar in chronological order.
     """
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now_str = datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
     item_id = explicit_job_id or f"SCAN-{uuid.uuid4().hex[:8].upper()}"
 
     # ── 1. Determine Risk, Verdict, and Fake Probability ──────────────────────
@@ -218,6 +220,29 @@ def auto_catalog_scan(
             city = "Unmapped Ingestion"
             state = "Digital Vector"
             loc_source = "ONLINE_UNMAPPED"
+
+        if lat is not None and lng is not None:
+            if not isinstance(result.get("metadata"), dict):
+                result["metadata"] = {}
+            result["metadata"].update({
+                "lat": lat,
+                "lng": lng,
+                "city": city,
+                "state": state,
+                "location_source": loc_source,
+                "device_model": device_model,
+                "software_used": software_used,
+            })
+            if not result.get("exif_geolocation") and loc_source == "EXACT_GPS":
+                result["exif_geolocation"] = {
+                    "lat": lat,
+                    "lng": lng,
+                    "city": city,
+                    "state": state,
+                    "location_source": loc_source,
+                    "device_model": device_model,
+                    "software_used": software_used,
+                }
 
     # ── 4. Playable Media URL & Thumbnail Setup ───────────────────────────────
     media_url = None

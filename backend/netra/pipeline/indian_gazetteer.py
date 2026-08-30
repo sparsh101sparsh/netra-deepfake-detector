@@ -177,8 +177,10 @@ def _val_to_float(v: Any) -> float:
 
 
 def _dms_to_dec(dms: Any) -> float:
-    """Converts Degrees/Minutes/Seconds tuple to decimal degrees."""
+    """Converts Degrees/Minutes/Seconds tuple or decimal degrees to float."""
     try:
+        if isinstance(dms, (int, float)):
+            return float(dms)
         d = _val_to_float(dms[0])
         m = _val_to_float(dms[1])
         s = _val_to_float(dms[2])
@@ -330,7 +332,9 @@ def extract_media_exif_geolocation(file_bytes_or_path: Any) -> Optional[Dict[str
                             break
 
                 if loc:
-                    m = re.match(r'([+-]\d+(?:\.\d+)?)\s*([+-]\d+(?:\.\d+)?)', loc)
+                    m = re.search(r'([+-]?\d+(?:\.\d+)?)[,\s/]+([+-]?\d+(?:\.\d+)?)', loc)
+                    if not m:
+                        m = re.search(r'([+-]\d+(?:\.\d+)?)([+-]\d+(?:\.\d+)?)', loc)
                     if m:
                         lat, lng = float(m.group(1)), float(m.group(2))
                         nearest_city, nearest_state = _find_nearest_indian_city(lat, lng)

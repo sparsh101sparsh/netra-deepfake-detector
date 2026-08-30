@@ -8,7 +8,14 @@ import os
 import json
 import hashlib
 import time
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
+
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def get_current_ist_str() -> str:
+    """Standardizes all database timestamps to Indian Standard Time (IST)."""
+    return datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
 
 DB_PATH = os.getenv("NETRA_DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "netra.db"))
 
@@ -26,6 +33,8 @@ def is_synthetic_test_threat(item_id: str, title: str) -> bool:
     test_prefixes = (
         "TEST-", "DEMO-", "E2E-", "FIR-STRESS-", "CHALLENGE-",
         "THREAT-CONCUR-", "THREAT-ADV-", "THREAT-SPECIAL-",
+        "SCAN-TEST", "JOB-TEST", "SCAN-604CF2BC", "SCAN-3DCBDDD4",
+        "SCAN-C8052FD6", "SCAN-0EF9D516", "SCAN-3D86C020",
         "THREAT-7546", "THREAT-D38F", "THREAT-A471", "THREAT-9F10",
         "THREAT-ADE2", "THREAT-74AF", "THREAT-1D18", "THREAT-F988",
         "THREAT-2509", "THREAT-CC00", "THREAT-AF34", "THREAT-02FE",
@@ -48,7 +57,8 @@ def is_synthetic_test_threat(item_id: str, title: str) -> bool:
         "hey mom, i bought the groceries", "dear customer, your sbi yono",
         "your electricity will be disconnected", "hello, please find the meeting agenda",
         "noise.opus", "three_faces_test", "two_faces_test", "numerical_audit",
-        "blank.jpg", "s0.jpg", "scenario_1", "scenario_2", "scenario_3", "scenario_4"
+        "blank.jpg", "s0.jpg", "scenario_1", "scenario_2", "scenario_3", "scenario_4",
+        "user_mumbai_camera", "mumbai_photo.jpg", "verify_db_insert", "test_voice.wav"
     )
     if any(kw in t for kw in test_keywords):
         return True
@@ -69,6 +79,13 @@ def purge_synthetic_test_data() -> Dict[str, int]:
        OR id LIKE 'THREAT-CONCUR-%'
        OR id LIKE 'THREAT-ADV-%'
        OR id LIKE 'THREAT-SPECIAL-%'
+       OR id LIKE 'SCAN-TEST%'
+       OR id LIKE 'JOB-TEST%'
+       OR id LIKE 'SCAN-604CF2BC%'
+       OR id LIKE 'SCAN-3DCBDDD4%'
+       OR id LIKE 'SCAN-C8052FD6%'
+       OR id LIKE 'SCAN-0EF9D516%'
+       OR id LIKE 'SCAN-3D86C020%'
        OR id LIKE 'THREAT-7546%'
        OR id LIKE 'THREAT-D38F%'
        OR id LIKE 'THREAT-A471%'
@@ -126,7 +143,11 @@ def purge_synthetic_test_data() -> Dict[str, int]:
        OR title LIKE '%scenario_1%'
        OR title LIKE '%scenario_2%'
        OR title LIKE '%scenario_3%'
-       OR title LIKE '%scenario_4%';
+       OR title LIKE '%scenario_4%'
+       OR title LIKE '%user_mumbai_camera%'
+       OR title LIKE '%mumbai_photo.jpg%'
+       OR title LIKE '%verify_db_insert%'
+       OR title LIKE '%test_voice.wav%';
     """)
     purged_threats = cursor.rowcount
     
@@ -307,7 +328,7 @@ def create_api_key(name: str, tier: str = "developer", monthly_quota: int = -1) 
     key_id = f"key_{secrets.token_hex(6)}"
     key_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
     key_prefix = raw_token[:15] + "••••"
-    created_at = time.strftime("%Y-%m-%d %H:%M:%S")
+    created_at = get_current_ist_str()
     
     conn = get_db()
     conn.execute(
@@ -362,7 +383,7 @@ def verify_and_consume_key(raw_token: str) -> Optional[Dict]:
         return {"error": "QUOTA_EXCEEDED", "used": key_data["used_requests"], "quota": quota}
 
     # Increment usage counter
-    now = time.strftime("%Y-%m-%d %H:%M:%S")
+    now = get_current_ist_str()
     conn.execute(
         "UPDATE api_keys SET used_requests = used_requests + 1, last_used_at = ? WHERE key_id = ?",
         (now, key_data["key_id"])
@@ -399,7 +420,7 @@ def insert_threat_item(item: Dict[str, Any]) -> str:
     content_seed = f"{title}_{threat_category}_{media_type}_{iocs_json}"
     content_hash = hashlib.sha256(content_seed.encode("utf-8")).hexdigest()[:12].upper()
     item_id = item.get("id") or f"THREAT-{content_hash}"
-    created_at = item.get("created_at") or time.strftime("%Y-%m-%d %H:%M:%S")
+    created_at = item.get("created_at") or get_current_ist_str()
     # Strictly honest coordinates: None if missing, never fabricate New Delhi
     lat = item.get("lat")
     lng = item.get("lng")
@@ -420,21 +441,24 @@ def insert_threat_item(item: Dict[str, Any]) -> str:
     if existing:
         upd_fields = ["upvotes_count = upvotes_count + 1"]
         params = []
-        if lat is not None and (existing["lat"] is None or existing["lat"] == 28.6139):
+        if lat is not None:
             upd_fields.extend(["lat = ?", "lng = ?", "city = ?", "state = ?", "country = ?", "location_source = ?"])
             params.extend([lat, lng, city, state, country, location_source])
-        if item.get("media_url") and not existing["media_url"]:
+        if item.get("media_url"):
             upd_fields.append("media_url = ?")
             params.append(item.get("media_url"))
-        if item.get("thumbnail_url") and not existing["thumbnail_url"]:
+        if item.get("thumbnail_url"):
             upd_fields.append("thumbnail_url = ?")
             params.append(item.get("thumbnail_url"))
-        if device_model and (not existing["device_model"] or existing["device_model"] == "Direct Web Upload"):
+        if device_model and device_model != "Direct Web Upload":
             upd_fields.append("device_model = ?")
             params.append(device_model)
-        if software_used and (not existing["software_used"] or existing["software_used"] == "NETRA Multi-Modal V5"):
+        if software_used and software_used != "NETRA Multi-Modal V5":
             upd_fields.append("software_used = ?")
             params.append(software_used)
+        if created_at:
+            upd_fields.append("created_at = ?")
+            params.append(created_at)
         params.append(item_id)
         conn.execute(f"UPDATE threat_catalog SET {', '.join(upd_fields)} WHERE id = ?", params)
         conn.commit()
@@ -582,22 +606,22 @@ def get_threat_catalog(
         
     if media_type and media_type.lower() != "all":
         mt = media_type.strip().lower()
-        if mt == "video":
+        if mt in ("video", "video_deepfake"):
             query += " AND type IN ('video', 'video_deepfake')"
-        elif mt == "image":
+        elif mt in ("image", "image_deepfake"):
             query += " AND type IN ('image', 'image_deepfake')"
-        elif mt == "audio":
+        elif mt in ("audio", "audio_clone"):
             query += " AND type IN ('audio', 'audio_clone')"
-        elif mt == "text":
+        elif mt in ("text", "scam_text"):
             query += " AND type IN ('text', 'scam_text')"
         else:
             query += " AND type = ?"
             params.append(media_type)
         
     if search:
-        query += " AND (title LIKE ? OR city LIKE ? OR extracted_iocs LIKE ? OR software_used LIKE ?)"
+        query += " AND (id LIKE ? OR title LIKE ? OR city LIKE ? OR extracted_iocs LIKE ? OR software_used LIKE ?)"
         term = f"%{search}%"
-        params.extend([term, term, term, term])
+        params.extend([term, term, term, term, term])
         
     # Filter out synthetic unit-test fixture artifacts in production (allow during pytest)
     if not os.getenv("PYTEST_CURRENT_TEST"):
@@ -609,6 +633,13 @@ def get_threat_catalog(
                  AND id NOT LIKE 'THREAT-CONCUR-%'
                  AND id NOT LIKE 'THREAT-ADV-%'
                  AND id NOT LIKE 'THREAT-SPECIAL-%'
+                 AND id NOT LIKE 'SCAN-TEST%'
+                 AND id NOT LIKE 'JOB-TEST%'
+                 AND id NOT LIKE 'SCAN-604CF2BC%'
+                 AND id NOT LIKE 'SCAN-3DCBDDD4%'
+                 AND id NOT LIKE 'SCAN-C8052FD6%'
+                 AND id NOT LIKE 'SCAN-0EF9D516%'
+                 AND id NOT LIKE 'SCAN-3D86C020%'
                  AND id NOT LIKE 'THREAT-7546%'
                  AND id NOT LIKE 'THREAT-D38F%'
                  AND id NOT LIKE 'THREAT-A471%'
@@ -666,9 +697,13 @@ def get_threat_catalog(
                  AND title NOT LIKE '%scenario_1%'
                  AND title NOT LIKE '%scenario_2%'
                  AND title NOT LIKE '%scenario_3%'
-                 AND title NOT LIKE '%scenario_4%'"""
+                 AND title NOT LIKE '%scenario_4%'
+                 AND title NOT LIKE '%user_mumbai_camera%'
+                 AND title NOT LIKE '%mumbai_photo.jpg%'
+                 AND title NOT LIKE '%verify_db_insert%'
+                 AND title NOT LIKE '%test_voice.wav%'"""
 
-    query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+    query += " ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
     
     rows = conn.execute(query, params).fetchall()
@@ -744,7 +779,7 @@ def _row_to_community_post(r: Dict[str, Any]) -> Dict[str, Any]:
 def insert_community_post(post: Dict[str, Any]) -> Dict[str, Any]:
     import uuid
     post_id = post.get("id") or f"post-{uuid.uuid4().hex[:8]}"
-    created_at = post.get("created_at") or time.strftime("%Y-%m-%d %H:%M:%S")
+    created_at = post.get("created_at") or get_current_ist_str()
     
     author = post.get("author", {})
     if not isinstance(author, dict):

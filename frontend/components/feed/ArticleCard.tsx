@@ -47,15 +47,15 @@ export interface ArticleCardProps {
 function getCategoryIcon(category: string) {
   switch (category?.toUpperCase()) {
     case "DIGITAL_ARREST":
-      return <ShieldAlert className="size-5 text-red" />;
+      return <ShieldAlert className="size-5 text-zinc-300" />;
     case "DEEPFAKE_IMPERSONATION":
       return <Eye className="size-5 text-zinc-300" />;
     case "INVESTMENT_FRAUD":
-      return <TrendingDown className="size-5 text-orange" />;
+      return <TrendingDown className="size-5 text-zinc-300" />;
     case "APK_TROJAN":
       return <Smartphone className="size-5 text-zinc-300" />;
     case "ELECTRICITY_KYC":
-      return <Zap className="size-5 text-orange" />;
+      return <Zap className="size-5 text-zinc-300" />;
     case "VOICE_CLONE":
       return <Mic className="size-5 text-zinc-300" />;
     default:
@@ -216,26 +216,12 @@ export function ArticleCard({ article, className, compact = false }: ArticleCard
         </div>
       </div>
 
-      {/* Bottom Row: Subtle Badges & Link */}
+      {/* Bottom Row: Neutral Badges & Link */}
       <div className="flex items-center justify-between gap-2 pt-0.5 text-xs text-zinc-400">
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
-          {/* Subtle Status Badge */}
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border",
-              article.risk_level === "CRITICAL"
-                ? "bg-red-500/10 text-red-400 border-red-500/20"
-                : article.risk_level === "HIGH"
-                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                : "bg-blue-500/10 text-blue-400 border-blue-500/20"
-            )}
-          >
-            <span
-              className={cn(
-                "size-1.5 rounded-full",
-                article.risk_level === "CRITICAL" ? "bg-red-400" : "bg-amber-400"
-              )}
-            />
+          {/* Neutral Institutional Status Badge */}
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium uppercase tracking-wider bg-[#18181B] text-zinc-300 border border-white/10">
+            <span className="size-1.5 rounded-full bg-zinc-400" />
             {article.risk_level || "ALERT"}
           </span>
 
@@ -260,7 +246,7 @@ export function ArticleCard({ article, className, compact = false }: ArticleCard
           href={externalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-[11.5px] font-medium text-zinc-400 group-hover:text-accent transition-colors shrink-0"
+          className="inline-flex items-center gap-1 text-[11.5px] font-medium text-zinc-400 group-hover:text-white transition-colors shrink-0"
           aria-label={`Read full story: ${cleanedTitle}`}
         >
           <span>Read Source</span>
