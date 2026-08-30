@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { AlertCircle, RefreshCw, ExternalLink, Loader2 } from "lucide-react";
 
 interface ResilientVideoPlayerProps {
@@ -31,36 +31,43 @@ export function ResilientVideoPlayer({
   const internalRef = useRef<HTMLVideoElement | null>(null);
   const activeRef = externalRef || internalRef;
 
-  // Determine initial candidate source
-  const [currentSrc, setCurrentSrc] = useState<string | null>(primaryUrl || fallbackUrl || null);
-  const [triedFallback, setTriedFallback] = useState<boolean>(false);
+  // Ordered candidate sources to try
+  const sources = useMemo(() => {
+    const list: string[] = [];
+    if (primaryUrl) list.push(primaryUrl);
+    if (fallbackUrl && !list.includes(fallbackUrl)) list.push(fallbackUrl);
+    return list;
+  }, [primaryUrl, fallbackUrl]);
+
+  const [sourceIndex, setSourceIndex] = useState<number>(0);
+  const [retryCount, setRetryCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
-  const [retryCount, setRetryCount] = useState<number>(0);
 
-  // Synchronize when URL props change
+  // Synchronize when sources or retryCount changes
   useEffect(() => {
-    const initial = primaryUrl || fallbackUrl || null;
-    setCurrentSrc(initial);
-    setTriedFallback(false);
-    setHasError(!initial);
-    setIsLoading(Boolean(initial));
+    setSourceIndex(0);
+    setHasError(sources.length === 0);
+    setIsLoading(sources.length > 0);
   }, [primaryUrl, fallbackUrl, retryCount]);
 
-  // Handle playback error: failover to fallbackUrl if primaryUrl fails
+  const currentSrc = sources[sourceIndex] || null;
+
+  // Handle playback error: failover to next candidate source
   const handleError = useCallback(() => {
     const videoEl = activeRef.current;
     console.warn(
-      "[NETRA VideoPlayer] Playback failed for source:",
+      "[NETRA VideoPlayer] Playback failed for source index",
+      sourceIndex,
       currentSrc,
       "videoError:",
       videoEl?.error?.message || videoEl?.error?.code
     );
 
-    if (!triedFallback && fallbackUrl && fallbackUrl !== currentSrc) {
-      console.info("[NETRA VideoPlayer] Switching to fallback stream source:", fallbackUrl);
-      setTriedFallback(true);
-      setCurrentSrc(fallbackUrl);
+    if (sourceIndex + 1 < sources.length) {
+      const nextSrc = sources[sourceIndex + 1];
+      console.info("[NETRA VideoPlayer] Failing over to next source:", nextSrc);
+      setSourceIndex((prev) => prev + 1);
       setIsLoading(true);
       setHasError(false);
       if (videoEl) {
@@ -73,7 +80,7 @@ export function ResilientVideoPlayer({
       setIsLoading(false);
       setHasError(true);
     }
-  }, [triedFallback, fallbackUrl, currentSrc, autoPlay, activeRef]);
+  }, [sourceIndex, sources, currentSrc, autoPlay, activeRef]);
 
   const handleLoadedData = useCallback(() => {
     setIsLoading(false);
@@ -95,7 +102,6 @@ export function ResilientVideoPlayer({
     <div className="relative w-full h-full flex items-center justify-center bg-black select-none group">
       {currentSrc && !hasError && (
         <video
-          key={`${currentSrc}-${retryCount}`}
           ref={activeRef as React.LegacyRef<HTMLVideoElement>}
           src={currentSrc}
           poster={poster}

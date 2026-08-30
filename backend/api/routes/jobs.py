@@ -337,6 +337,66 @@ async def get_video_presigned_url(job_id: str):
         return {"url": stream_url, "stream_url": stream_url, "expires_in": 3600}
 
 
+def get_ffmpeg_binary() -> Optional[str]:
+    try:
+        from imageio_ffmpeg import get_ffmpeg_exe
+        exe = get_ffmpeg_exe()
+        if exe and os.path.exists(exe):
+            return exe
+    except Exception:
+        pass
+    import shutil
+    return shutil.which("ffmpeg")
+
+
+def ensure_h264_streamable(video_path: str) -> str:
+    """Ensure video is encoded in standard H.264 (avc1) with +faststart for browser HTML5 playback."""
+    if not os.path.exists(video_path) or os.path.getsize(video_path) == 0:
+        return video_path
+
+    base, ext = os.path.splitext(video_path)
+    h264_path = f"{base}_web_h264.mp4"
+    if os.path.exists(h264_path) and os.path.getsize(h264_path) > 0:
+        return h264_path
+
+    ffmpeg_bin = get_ffmpeg_binary()
+    if not ffmpeg_bin:
+        return video_path
+
+    # Check if input is already h264
+    try:
+        import subprocess
+        probe_res = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=codec_name", "-of", "default=noprint_wrappers=1:nokey=1", video_path],
+            capture_output=True, text=True, timeout=5
+        )
+        if probe_res.stdout.strip() == "h264":
+            return video_path
+    except Exception:
+        pass
+
+    try:
+        import subprocess
+        tmp_target = f"{h264_path}.tmp.mp4"
+        cmd = [
+            ffmpeg_bin, "-y", "-i", video_path,
+            "-c:v", "libx264", "-pix_fmt", "yuv420p",
+            "-preset", "veryfast", "-crf", "22",
+            "-movflags", "+faststart",
+            tmp_target
+        ]
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=25)
+        if res.returncode == 0 and os.path.exists(tmp_target) and os.path.getsize(tmp_target) > 0:
+            os.replace(tmp_target, h264_path)
+            return h264_path
+        if os.path.exists(tmp_target):
+            os.remove(tmp_target)
+    except Exception as e:
+        logger.warning(f"Failed to transcode {video_path} to H.264: {e}")
+    return video_path
+
+
 @router.api_route("/jobs/{job_id}/stream", methods=["GET", "HEAD"])
 async def stream_video(job_id: str, request: Request, range: Optional[str] = Header(None)):
     """
@@ -348,6 +408,7 @@ async def stream_video(job_id: str, request: Request, range: Optional[str] = Hea
 
     # 1. Check local media storage first
     local_candidates = [
+        os.path.join(MEDIA_DIR, f"{job_id}_web_h264.mp4"),
         os.path.join(MEDIA_DIR, f"{job_id}.mp4"),
         os.path.join(MEDIA_DIR, "videos", f"{job_id}.mp4"),
         os.path.join(MEDIA_DIR, job_id, "input.mp4"),
@@ -358,6 +419,27 @@ async def stream_video(job_id: str, request: Request, range: Optional[str] = Hea
         if os.path.exists(cand) and os.path.getsize(cand) > 0:
             local_path = cand
             break
+
+    # If missing locally, download from S3 once into local cache
+    if not local_path:
+        try:
+            s3_bucket = get_s3_bucket()
+            s3_key = f"{job_id}/input.mp4"
+            s3 = get_s3_client("s3")
+            os.makedirs(MEDIA_DIR, exist_ok=True)
+            cached_s3_path = os.path.join(MEDIA_DIR, f"{job_id}.mp4")
+            s3.download_file(s3_bucket, s3_key, cached_s3_path)
+            if os.path.exists(cached_s3_path) and os.path.getsize(cached_s3_path) > 0:
+                local_path = cached_s3_path
+        except Exception as dl_err:
+            logger.debug(f"Could not download video from S3 for job {job_id}: {dl_err}")
+
+    # Ensure H.264 compatibility for web playback
+    if local_path:
+        local_path = ensure_h264_streamable(local_path)
+
+    # Resolve Range header
+    range_header = request.headers.get("range") or request.headers.get("Range") or range
 
     if local_path:
         file_size = os.path.getsize(local_path)
@@ -371,9 +453,9 @@ async def stream_video(job_id: str, request: Request, range: Optional[str] = Hea
             }
             return Response(status_code=200, headers=headers, media_type="video/mp4")
 
-        if range:
+        if range_header:
             try:
-                range_str = range.replace("bytes=", "").strip()
+                range_str = range_header.replace("bytes=", "").strip()
                 parts = range_str.split("-")
                 start = int(parts[0]) if parts[0] else 0
                 end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1
@@ -423,7 +505,7 @@ async def stream_video(job_id: str, request: Request, range: Optional[str] = Hea
             }
             return StreamingResponse(full_local_generator(), status_code=200, headers=headers, media_type="video/mp4")
 
-    # 2. Stream from AWS S3
+    # 2. Fallback to direct S3 streaming if local caching failed
     s3_bucket = get_s3_bucket()
     s3_key = f"{job_id}/input.mp4"
     try:
@@ -441,9 +523,9 @@ async def stream_video(job_id: str, request: Request, range: Optional[str] = Hea
             }
             return Response(status_code=200, headers=headers, media_type="video/mp4")
 
-        if range:
+        if range_header:
             try:
-                range_str = range.replace("bytes=", "").strip()
+                range_str = range_header.replace("bytes=", "").strip()
                 parts = range_str.split("-")
                 start = int(parts[0]) if parts[0] else 0
                 end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1

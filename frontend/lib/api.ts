@@ -276,11 +276,15 @@ export async function getVideoMediaSources(jobId: string): Promise<VideoMediaSou
       return { primaryUrl: fallbackStream, streamUrl: fallbackStream };
     }
     const data = await res.json();
-    const stream = data.stream_url ? `${API_BASE}${data.stream_url}` : fallbackStream;
-    const primary = data.url || stream;
+    const stream = `/api/v1/jobs/${jobId}/stream`;
+    const backendStream = `${API_BASE}/api/v1/jobs/${jobId}/stream`;
+    let primary = backendStream;
+    if (data.url) {
+      primary = data.url.startsWith("http") ? data.url : `${API_BASE}${data.url}`;
+    }
     return { primaryUrl: primary, streamUrl: stream };
   } catch {
-    return { primaryUrl: fallbackStream, streamUrl: fallbackStream };
+    return { primaryUrl: `${API_BASE}/api/v1/jobs/${jobId}/stream`, streamUrl: `/api/v1/jobs/${jobId}/stream` };
   }
 }
 
