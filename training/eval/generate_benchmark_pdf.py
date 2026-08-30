@@ -159,11 +159,11 @@ story.append(Paragraph(
 ))
 story.append(Spacer(1, 6))
 
-# 5. Statutory Compliance
-story.append(Paragraph("5. Regulatory & Evidentiary Validity (Indian Statutory Law)", h2_style))
+# 5. Architecture of Truth
+story.append(Paragraph("5. The Architecture of Truth (मायातीतं सत्यस्य चक्षुः)", h2_style))
 story.append(Paragraph(
-    "Every scan performed by the NETRA pipeline generates legally defensible evidence packages compliant with <b>Section 66D of the IT Act 2000</b> and <b>Section 318(4) of the Bharatiya Nyaya Sanhita 2023</b>. "
-    "The system extracts cryptographic SHA-256 frame hashes, device camera serial identifiers, and attacker IOCs (Phone numbers, UPI handles, phishing APK signatures) auto-formatted into Instant FIR PDF Dossiers for immediate law enforcement dispatch to <b>cybercrime.gov.in</b> and National Cyber Helpline <b>1930</b>.",
+    "Beyond Illusion: Project NETRA operates as a real-time multi-modal forensic defense engine safeguarding digital integrity. "
+    "The system extracts tamper-evident frame fingerprints, camera hardware signatures, and attacker IOCs (Phone numbers, UPI handles, phishing APK signatures) auto-formatted into Instant Action Dossiers for immediate dispatch to <b>cybercrime.gov.in</b> and National Cyber Helpline <b>1930</b>.",
     body_style
 ))
 

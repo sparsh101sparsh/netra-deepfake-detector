@@ -452,7 +452,7 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
     story.append(Spacer(1, 4))
 
     # Section 2: Technical Audio Telemetry
-    story.append(Paragraph("2. Technical Audio Telemetry &amp; Cryptographic Verification", section_style))
+    story.append(Paragraph("2. Technical Audio Telemetry &amp; Forensic Verification", section_style))
     telemetry_data = [
         [Paragraph("Audio Duration:", table_cell_bold), Paragraph(f"{duration:.2f} seconds", table_cell),
          Paragraph("Sampling Rate:", table_cell_bold), Paragraph(f"{sample_rate:,} Hz (Forensic SR)", table_cell)],
@@ -473,8 +473,8 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
     story.append(Spacer(1, 3))
 
     hash_data = [
-        [Paragraph("SHA-256 Media Hash:", table_cell_bold), Paragraph(sha256, table_cell_mono)],
-        [Paragraph("Cryptographic Assurance:", table_cell_bold), Paragraph("Tamper-evident cryptographic SHA-256 media hash non-repudiation verified.", table_cell)]
+        [Paragraph("Media Hash Fingerprint:", table_cell_bold), Paragraph(sha256, table_cell_mono)],
+        [Paragraph("Forensic Assurance:", table_cell_bold), Paragraph("Tamper-evident media verification confirmed.", table_cell)]
     ]
     t_hash = Table(hash_data, colWidths=[150, 370])
     t_hash.setStyle(TableStyle([
@@ -563,7 +563,7 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
         "<b>EMERGENCY CITIZEN ACTION &amp; REPORTING PROTOCOL:</b><br/>"
         "1. <b>National Cybercrime Helpline: Dial 1930</b> immediately to register the incident under Citizen Financial Cyber Fraud Reporting System.<br/>"
         "2. <b>National Cyber Crime Reporting Portal:</b> File formal complaint at <b>cybercrime.gov.in</b> within the <b>Golden Hour (first 2 hours)</b> to trigger inter-bank fund lien freezing.<br/>"
-        "3. <b>Evidence Preservation:</b> Retain original audio in native container (.opus / .ogg / .wav). Attach this cryptographically verified SHA-256 report."
+        "3. <b>Evidence Preservation:</b> Retain original audio in native container (.opus / .ogg / .wav). Attach this verified forensic report."
     )
     t_guidance = Table([[Paragraph(guidance_html, body_style)]], colWidths=[520])
     t_guidance.setStyle(TableStyle([
@@ -577,12 +577,12 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
     story.append(t_guidance)
     story.append(Spacer(1, 4))
 
-    # Section 6: Cryptographic Evidence Ledger & Statutory Classification (KeepTogether)
+    # Section 6: Forensic Evidence Ledger & Statutory Classification (KeepTogether)
     cert_flowables = []
-    cert_flowables.append(Paragraph("6. Cryptographic Evidence Ledger &amp; Statutory Penal Classification", section_style))
+    cert_flowables.append(Paragraph("6. Forensic Evidence Ledger &amp; Statutory Penal Classification", section_style))
     cert_body = (
         f"This forensic report has been compiled by the NETRA Autonomous Digital Forensic System during automated forensic inspection. "
-        f"The electronic audio record (SHA-256: <code>{sha256[:28]}...</code>) was ingested and analyzed with full cryptographic integrity. "
+        f"The electronic audio record (Media Hash: <code>{sha256[:28]}...</code>) was ingested and analyzed with full forensic integrity. "
         f"Digital acoustic processing engines verified biometric vocoder signatures without synthetic alteration. "
         f"Recommended statutory penal provisions include <b>Section 66D of the Information Technology Act 2000</b> (cheating by personation using computer resource), "
         f"<b>Section 318(4) of the Bharatiya Nyaya Sanhita 2023</b> (cheating and dishonestly inducing delivery of property), and "
@@ -593,7 +593,7 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
 
     sig_data = [
         [Paragraph("<b>Forensic Examiner:</b> NETRA Autonomous Forensic Intelligence Engine<br/><b>System Identifier:</b> NETRA-DAF-AUDIO-V5<br/><b>Status:</b> Automated Forensic Tool Verification Complete", table_cell),
-         Paragraph(f"<b>Verification Timestamp:</b> {created_at} UTC<br/><b>Media SHA-256:</b> {sha256[:24]}...<br/><b>Statutory Classification:</b> IT Act 2000 &amp; BNS 2023", table_cell)]
+         Paragraph(f"<b>Verification Timestamp:</b> {created_at} UTC<br/><b>Media Fingerprint:</b> {sha256[:24]}...<br/><b>Statutory Classification:</b> IT Act 2000 &amp; BNS 2023", table_cell)]
     ]
     t_sig = Table(sig_data, colWidths=[260, 260])
     t_sig.setStyle(TableStyle([
@@ -607,7 +607,7 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
     cert_flowables.append(Spacer(1, 4))
     cert_flowables.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=4))
     fn_style = ParagraphStyle('AudioFIRFootnote', parent=styles['Normal'], fontName='Helvetica', fontSize=7, leading=9, alignment=1, textColor=colors.HexColor("#64748b"))
-    cert_flowables.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified | National Cyber Crime Reporting Portal (cybercrime.gov.in) Standard", fn_style))
+    cert_flowables.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth | National Cyber Crime Reporting Portal (cybercrime.gov.in) Standard", fn_style))
 
     story.append(KeepTogether(cert_flowables))
 
@@ -767,9 +767,9 @@ def generate_image_fir_pdf(item: dict) -> bytes:
             return card_table
         else:
             fallback_html = (
-                f"<b>[VISUAL EVIDENCE RECORD ARCHIVED IN CRYPTOGRAPHIC LEDGER]</b><br/><br/>"
+                f"<b>[VISUAL EVIDENCE RECORD ARCHIVED IN FORENSIC LEDGER]</b><br/><br/>"
                 f"{caption_html}<br/><br/>"
-                f"<b>Cryptographic Hash:</b> SHA-256: {media_sha256[:32]}...<br/>"
+                f"<b>Media Fingerprint:</b> {media_sha256[:32]}...<br/>"
                 f"<b>Chain of Custody Notice:</b> Digital stream verified with zero modification."
             )
             card_table = Table([[Paragraph(fallback_html, body_style)]], colWidths=[520])
@@ -986,7 +986,7 @@ def generate_image_fir_pdf(item: dict) -> bytes:
         "<b>EMERGENCY REPORTING &amp; GOLDEN HOUR ACTION:</b><br/>"
         "1. <b>National Cybercrime Helpline: Dial 1930</b> immediately.<br/>"
         "2. <b>National Cyber Crime Reporting Portal:</b> File formal complaint at <b>cybercrime.gov.in</b> within the <b>Golden Hour (first 2 hours)</b> to enable inter-bank lien placement.<br/>"
-        "3. <b>Evidence Preservation:</b> Preserve original image container with EXIF tags. Attach this cryptographically verified SHA-256 report."
+        "3. <b>Evidence Preservation:</b> Preserve original image container with EXIF tags. Attach this verified forensic report."
     )
     t_guid = Table([[Paragraph(guidance_box, body_style)]], colWidths=[520])
     t_guid.setStyle(TableStyle([
@@ -1000,21 +1000,21 @@ def generate_image_fir_pdf(item: dict) -> bytes:
     story.append(t_guid)
     story.append(Spacer(1, 4))
 
-    # Section: Cryptographic Evidence Ledger & Verification (KeepTogether)
+    # Section: Forensic Evidence Ledger & Verification (KeepTogether)
     cert_flowables = []
-    cert_flowables.append(Paragraph("Cryptographic Evidence Ledger &amp; Digital Verification", section_style))
+    cert_flowables.append(Paragraph("Forensic Evidence Ledger &amp; Digital Verification", section_style))
     cert_body = (
         f"This official forensic report has been compiled by the NETRA Autonomous Digital Threat Intelligence System during automated forensic analysis. "
-        f"The electronic visual record (SHA-256: <code>{media_sha256[:28]}...</code>) was ingested and analyzed without tampering. "
+        f"The electronic visual record (Media Hash: <code>{media_sha256[:28]}...</code>) was ingested and analyzed without tampering. "
         f"All spatial localization bounding boxes, neural biometric activations, and OCR text tokens accurately represent submitted media. "
-        f"Cryptographic SHA-256 non-repudiation verified."
+        f"Forensic tamper-evident verification certified."
     )
     cert_flowables.append(Paragraph(cert_body, body_style))
     cert_flowables.append(Spacer(1, 3))
 
     sig_data = [
         [Paragraph("<b>Forensic Examiner:</b> NETRA Autonomous Forensic Intelligence Engine<br/><b>System Identifier:</b> NETRA-VISION-DUAL-V5<br/><b>Status:</b> Automated Tool Verification Certified", table_cell),
-         Paragraph(f"<b>Verification Timestamp:</b> {created_at} UTC<br/><b>Media SHA-256:</b> {media_sha256[:24]}...<br/><b>Statutory Classification:</b> IT Act 2000 &amp; BNS 2023", table_cell)]
+         Paragraph(f"<b>Verification Timestamp:</b> {created_at} UTC<br/><b>Media Fingerprint:</b> {media_sha256[:24]}...<br/><b>Statutory Classification:</b> IT Act 2000 &amp; BNS 2023", table_cell)]
     ]
     t_sig = Table(sig_data, colWidths=[260, 260])
     t_sig.setStyle(TableStyle([
@@ -1028,7 +1028,7 @@ def generate_image_fir_pdf(item: dict) -> bytes:
     cert_flowables.append(Spacer(1, 4))
     cert_flowables.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=4))
     fn_style = ParagraphStyle('ImgFIRFootnote', parent=styles['Normal'], fontName='Helvetica', fontSize=7, leading=9, alignment=1, textColor=colors.HexColor("#64748b"))
-    cert_flowables.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified | National Cyber Crime Reporting Portal (cybercrime.gov.in) Standard", fn_style))
+    cert_flowables.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth | National Cyber Crime Reporting Portal (cybercrime.gov.in) Standard", fn_style))
 
     story.append(KeepTogether(cert_flowables))
 
@@ -1274,7 +1274,7 @@ async def download_fir_dossier(threat_id: str):
         alignment=1,
         textColor=colors.HexColor("#64748b")
     )
-    story.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified", footnote_style))
+    story.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth", footnote_style))
 
     try:
         doc.build(story)
@@ -1291,7 +1291,7 @@ async def download_fir_dossier(threat_id: str):
             Paragraph("&bull; <b>Section 66D Information Technology Act 2000</b>", body_style),
             Spacer(1, 10),
             HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=6),
-            Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified", footnote_style)
+            Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth", footnote_style)
         ]
         fallback_doc.build(fallback_story)
     pdf_bytes = buf.getvalue()

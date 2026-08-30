@@ -164,7 +164,7 @@ export const BENCHMARK_PRESETS: BenchmarkPreset[] = [
       filename: "Authentic_Bank_Statement.jpg",
       ocr_analysis: {
         engine: "PaddleOCR v2.7",
-        full_text: "HDFC BANK OFFICIAL MONTHLY STATEMENT - Account ending in 4910. Total balance ₹42,500. Branch: Connaught Place, New Delhi. Verified digital cryptographic signature present.",
+        full_text: "HDFC BANK OFFICIAL MONTHLY STATEMENT - Account ending in 4910. Total balance ₹42,500. Branch: Connaught Place, New Delhi. Verified digital verification signature present.",
         lines_count: 3,
         processing_time_ms: 92,
       },

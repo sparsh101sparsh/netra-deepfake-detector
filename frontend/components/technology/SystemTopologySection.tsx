@@ -190,10 +190,10 @@ export const SystemTopologySection: React.FC = () => {
             </div>
             <div className="p-2.5 rounded-lg bg-inset border border-line/60 text-ink-2">
               <span className="font-mono font-bold text-accent block text-[11px]">
-                Cryptographic Evidence Ledger
+                Forensic Evidence Ledger
               </span>
               <span>
-                Every generated forensic PDF report contains cryptographic SHA-256 hashes and timestamped audit trails.
+                Every generated forensic PDF report contains verifiable media fingerprints and timestamped audit trails.
               </span>
             </div>
           </div>

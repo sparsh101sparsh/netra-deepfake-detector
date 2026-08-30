@@ -444,7 +444,7 @@ def extract_aligned_faces(frame_rgb):
     latency: "< 5 ms",
     hardware: "CPU Execution",
     inputShape: "Aggregated results from all 6 ML Specialist workers",
-    outputFormat: "Structured Evidence JSON Bundle (Cryptographically Signed)",
+    outputFormat: "Structured Evidence JSON Bundle (Forensically Verified)",
     lossFunction: "N/A",
     trainingDataset: "N/A",
     f1Score: "100% Schema Valid",
@@ -454,7 +454,7 @@ def extract_aligned_faces(frame_rgb):
       "Strict Pydantic v2 schema validation enforcing court-admissible formatting",
       "Timestamped anomaly logging (e.g. Frame 14 at 00:03s flagged with SBI_SEAM_CONFIRMED)",
       "Zero-pixel privacy architecture: Media content never leaves private AWS VPC",
-      "Computes cryptographic SHA-256 digest of telemetry bundle for evidence tamper-proofing"
+      "Computes tamper-evident digest of telemetry bundle for evidence verification"
     ],
     failureModes: [
       "Schema mismatches from model version updates are rejected immediately before LLM call"
@@ -516,7 +516,7 @@ Format strictly into:
         body=json.dumps({"anthropic_version": "bedrock-2023-05-31", "messages": [{"role": "user", "content": prompt}], "max_tokens": 1500, "temperature": 0.1})
     )
     return json.loads(response["body"].read())["content"][0]["text"]`,
-    legalRelevance: "Court-admissible forensic documentation ready for formal submission with cryptographic SHA-256 integrity verification."
+    legalRelevance: "Court-admissible forensic documentation ready for formal submission with tamper-evident integrity verification."
   },
 
   verdict_delivery: {
@@ -539,7 +539,7 @@ Format strictly into:
       "Client-side jsPDF rendering for instant vector PDF report download",
       "Twilio REST webhook dispatching structured deepfake alert to reporter's WhatsApp",
       "DynamoDB netra-geo-telemetry table update broadcasting scam coordinates to MapLibre radar",
-      "Permanent cryptographic archival in AWS S3 netra-reports bucket"
+      "Permanent forensic archival in AWS S3 netra-reports bucket"
     ],
     failureModes: [
       "Client offline when job finishes; result is cached permanently in DynamoDB and accessible via /analyze/{job_id}"

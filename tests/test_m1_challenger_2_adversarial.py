@@ -142,7 +142,7 @@ def test_sparse_and_empty_iocs_image(client):
     text = " ".join(" ".join([page.get_textpage().get_text_range() for page in doc]).split())
     assert "Facial Deepfake & Manipulation Forensics" in text
     assert "Photographic Evidence" in text
-    assert "VISUAL EVIDENCE RECORD ARCHIVED IN CRYPTOGRAPHIC LEDGER" in text
+    assert "VISUAL EVIDENCE RECORD ARCHIVED IN FORENSIC LEDGER" in text
     assert "Multi-Face Forensic Breakdown Scorecard" in text
     assert "Section 66D" in text
     assert "Section 63" not in text
@@ -274,7 +274,7 @@ def test_broken_base64_and_invalid_image_paths(client):
             text = " ".join(" ".join([page.get_textpage().get_text_range() for page in doc]).split())
             
             # Verify the tamper-evident fallback card rendered cleanly
-            assert "VISUAL EVIDENCE RECORD ARCHIVED IN CRYPTOGRAPHIC LEDGER" in text, (
+            assert "VISUAL EVIDENCE RECORD ARCHIVED IN FORENSIC LEDGER" in text, (
                 f"Variant {variant['id']} failed to render fallback ledger card"
             )
             assert "Chain of Custody Notice" in text

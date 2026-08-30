@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { 
   Play, Pause, MapPin, Eye, ShieldAlert, 
   Download, Compass, Film, CheckCircle2, ChevronRight 
@@ -26,6 +26,8 @@ interface VideoMetadata {
 }
 
 export default function DatasetSection() {
+  const [activePlayingVideo, setActivePlayingVideo] = useState<string | null>(null);
+
   const videos: VideoMetadata[] = useMemo(() => {
     return (mappingData as VideoMetadata[]) || [];
   }, []);
@@ -97,17 +99,39 @@ export default function DatasetSection() {
             >
               {/* Video Player Container */}
               <div className="relative aspect-video bg-black/80 overflow-hidden flex items-center justify-center">
-                <video
-                  poster={posterUrl}
-                  preload="metadata"
-                  controls
-                  playsInline
-                  className="w-full h-full object-cover"
-                >
-                  <source src={primarySrc} type="video/mp4" />
-                  <source src={fallbackSrc} type="video/mp4" />
-                  Your browser does not support HTML5 video playback.
-                </video>
+                {activePlayingVideo === video.filename ? (
+                  <video
+                    autoPlay
+                    controls
+                    playsInline
+                    className="w-full h-full object-cover"
+                  >
+                    <source src={primarySrc} type="video/mp4" />
+                    <source src={fallbackSrc} type="video/mp4" />
+                    Your browser does not support HTML5 video playback.
+                  </video>
+                ) : (
+                  <div className="relative w-full h-full flex items-center justify-center bg-black/40">
+                    <img
+                      src={posterUrl}
+                      alt={figureName}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.opacity = "0.3";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+                    <button
+                      type="button"
+                      onClick={() => setActivePlayingVideo(video.filename)}
+                      aria-label={`Play deepfake sequence for ${figureName}`}
+                      className="absolute inset-0 m-auto size-12 rounded-full bg-accent/90 hover:bg-accent text-white flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-all duration-200 hover:scale-110 active:scale-95 group/btn"
+                    >
+                      <Play className="size-5 fill-current ml-0.5" />
+                    </button>
+                  </div>
+                )}
                 <div className="absolute top-2 left-2 z-10 pointer-events-none flex items-center gap-1">
                   <span className="px-1.5 py-0.5 rounded-[4px] bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-mono text-accent">
                     #{(idx + 1).toString().padStart(3, "0")}
