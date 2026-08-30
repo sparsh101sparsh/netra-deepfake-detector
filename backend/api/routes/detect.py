@@ -84,24 +84,6 @@ async def detect_full(file: UploadFile = File(...)):
     }
     save_local_job(job_record)
 
-    # Persist uploaded video bytes to local media directory for instant, resilient HTTP streaming
-    try:
-        os.makedirs(MEDIA_DIR, exist_ok=True)
-        os.makedirs(os.path.join(MEDIA_DIR, "videos"), exist_ok=True)
-        os.makedirs(os.path.join(MEDIA_DIR, job_id), exist_ok=True)
-        for tf in [
-            os.path.join(MEDIA_DIR, f"{job_id}.mp4"),
-            os.path.join(MEDIA_DIR, "videos", f"{job_id}.mp4"),
-            os.path.join(MEDIA_DIR, job_id, "input.mp4"),
-            os.path.join("/tmp", f"{job_id}.mp4"),
-        ]:
-            try:
-                with open(tf, "wb") as f_out:
-                    f_out.write(contents)
-            except Exception as w_err:
-                logger.debug(f"Failed writing fallback video file {tf}: {w_err}")
-    except Exception as save_err:
-        logger.warning(f"Failed to cache local video copy: {save_err}")
 
     # Try AWS services; handle sandbox / offline gracefully
     try:
