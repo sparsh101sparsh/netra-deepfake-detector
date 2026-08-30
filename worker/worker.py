@@ -19,6 +19,7 @@ import tempfile
 import threading
 import time
 import uuid
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union

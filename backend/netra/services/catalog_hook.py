@@ -42,7 +42,8 @@ def auto_catalog_scan(
     filename: Optional[str] = None,
     raw_text: Optional[str] = None,
     request: Optional[Any] = None,
-    explicit_job_id: Optional[str] = None
+    explicit_job_id: Optional[str] = None,
+    job_uuid: Optional[str] = None
 ) -> str:
     """
     Unified auto-ingestion hook across all 4 modalities.
@@ -170,15 +171,19 @@ def auto_catalog_scan(
     thumbnail_url = None
 
     if scan_type == "video":
-        if explicit_job_id:
-            media_url = f"/api/v1/threat-intelligence/{item_id}/media"
-            # If thumbnail keyframe exists
-            kf_dir = os.path.join(MEDIA_DIR, "keyframes")
-            cand = os.path.join(kf_dir, f"{explicit_job_id}_frame_000000_annotated.jpg")
-            if os.path.exists(cand):
-                thumbnail_url = f"/api/v1/media/keyframes/{os.path.basename(cand)}"
+        actual_job_id = job_uuid or (explicit_job_id.replace("JOB-", "") if explicit_job_id else None)
+        if actual_job_id:
+            media_url = f"/api/v1/jobs/{actual_job_id}/stream"
         elif result.get("media_url"):
             media_url = result["media_url"]
+
+        snapshots = result.get("keyframe_snapshots") or []
+        if snapshots and isinstance(snapshots, list) and len(snapshots) > 0:
+            first_snap = snapshots[0]
+            if isinstance(first_snap, dict):
+                thumbnail_url = first_snap.get("image_url") or first_snap.get("annotated_image_url")
+        if not thumbnail_url and actual_job_id:
+            thumbnail_url = f"/api/v1/jobs/{actual_job_id}/keyframes/{actual_job_id}_frame_000000_annotated.jpg"
     elif scan_type == "image" and file_bytes:
         ext = Path(filename or "sample.png").suffix or ".png"
         img_filename = f"{item_id}{ext}"

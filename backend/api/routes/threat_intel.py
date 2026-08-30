@@ -186,7 +186,6 @@ async def stream_threat_media(threat_id: str):
     media_url = item.get("media_url")
     
     # 1. Local video file check
-    # Check if this is a video job or locally uploaded file
     clean_id = threat_id.replace("JOB-", "").replace("THREAT-", "").replace("SCAN-", "")
     local_candidates = [
         os.path.join(MEDIA_DIR, "videos", f"{clean_id}.mp4"),
@@ -206,40 +205,17 @@ async def stream_threat_media(threat_id: str):
             media_type = "video/mp4" if ext == ".mp4" else ("image/png" if ext in (".png", ".jpg", ".jpeg") else "audio/wav")
             return FileResponse(cand, media_type=media_type)
 
-    # 2. Private S3 presigned redirect
-    if media_url and "amazonaws.com" in media_url:
-        try:
-            import boto3
-            from botocore.config import Config
-            s3_bucket = os.getenv("S3_BUCKET_MEDIA", "netra-media-mumbai-131746731374")
-            region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
-            ak = os.getenv("AWS_ACCESS_KEY_ID")
-            sk = os.getenv("AWS_SECRET_ACCESS_KEY")
-            
-            s3_client = boto3.client(
-                "s3",
-                region_name=region,
-                aws_access_key_id=ak.strip() if ak else None,
-                aws_secret_access_key=sk.strip() if sk else None,
-                config=Config(signature_version="s3v4")
-            )
-            # Extract key from URL
-            # e.g., https://netra-media-mumbai...s3.ap-south-1.amazonaws.com/{job_id}/input.mp4
-            s3_key = f"{clean_id}/input.mp4"
-            if ".amazonaws.com/" in media_url:
-                s3_key = media_url.split(".amazonaws.com/", 1)[1]
+    # 2. If item is a video job, stream via authenticated HTTP 206 backend proxy
+    if media_url and media_url.startswith("/api/v1/jobs/") and media_url.endswith("/stream"):
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=media_url, status_code=307)
 
-            presigned_url = s3_client.generate_presigned_url(
-                "get_object",
-                Params={"Bucket": s3_bucket, "Key": s3_key},
-                ExpiresIn=3600
-            )
-            from fastapi.responses import RedirectResponse
-            return RedirectResponse(url=presigned_url, status_code=307)
-        except Exception as s3_err:
-            logger.warning(f"Failed to generate S3 presigned URL for {threat_id}: {s3_err}")
+    if threat_id.startswith("JOB-"):
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=f"/api/v1/jobs/{clean_id}/stream", status_code=307)
 
-    if media_url:
+    # 3. Fallback to direct media_url (preventing self-redirect loop)
+    if media_url and media_url != request.url.path:
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url=media_url, status_code=307)
 
