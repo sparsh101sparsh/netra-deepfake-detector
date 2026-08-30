@@ -116,10 +116,31 @@ function formatIndianDate(dateStr?: string): string {
   return s;
 }
 
+function cleanArticleTitle(title: string): string {
+  if (!title) return "";
+  return title
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/\s*\|\s*.*$/i, "")
+    .replace(/\s*-\s*(The\s+)?(Times\s+of\s+India|Indian\s+Express|Hindustan\s+Times|NDTV|The\s+Hindu|Economic\s+Times|LiveMint|Deccan\s+Herald|Outlook\s+India).*$/i, "")
+    .trim();
+}
+
+function cleanRegion(region?: string): string {
+  if (!region) return "";
+  const trimmed = region.trim();
+  const match = trimmed.match(/\(([^)]+)\)/);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  return trimmed;
+}
+
 /**
  * ArticleCard component
- * High-density institutional threat intelligence card with thumbnail,
- * modus operandi details, risk pill, and external reference trigger.
+ * Streamlined threat intelligence card with uncluttered typography,
+ * unclipped thumbnail imagery, and clean metadata alignment.
  */
 export function ArticleCard({ article, className, compact = false }: ArticleCardProps) {
   const [imgError, setImgError] = useState(false);
@@ -128,103 +149,122 @@ export function ArticleCard({ article, className, compact = false }: ArticleCard
   const rawThumbnail = (article.thumbnail_url || article.image_url || "").trim();
   const initialThumbnail = rawThumbnail.includes("unsplash.com") ? "" : rawThumbnail;
 
-  const riskTone = resolveRiskTone(article.risk_level);
   const externalUrl = article.source_url || "#";
+  const cleanedTitle = cleanArticleTitle(article.title);
+  const cleanedCity = cleanRegion(article.affected_region);
 
   return (
     <article
       className={cn(
-        "group relative py-4 px-5 sm:px-6 hover:bg-[#18181B]/80 transition-all duration-150",
-        "flex flex-col gap-3",
+        "group relative py-3.5 px-4 sm:px-5 hover:bg-[#18181B]/70 transition-all duration-150",
+        "flex flex-col gap-2.5",
         className
       )}
     >
-      {/* Top row: Thumbnail + Core Content */}
-      <div className="flex gap-3.5 items-start">
-        {/* Thumbnail or Fallback Icon */}
+      {/* Top row: Thumbnail + Content */}
+      <div className="flex gap-3 items-start">
+        {/* Clean Thumbnail Without Text Overlays */}
         <div className="relative size-18 sm:size-20 rounded-lg bg-[#18181B] border border-white/10 shrink-0 overflow-hidden flex items-center justify-center">
           {!imgError && initialThumbnail ? (
             <img
               src={initialThumbnail}
-              alt={article.title}
+              alt={cleanedTitle}
               onError={() => setImgError(true)}
               className="size-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center p-2 text-center">
+            <div className="flex flex-col items-center justify-center p-2 text-center text-zinc-400">
               {getCategoryIcon(article.category)}
             </div>
           )}
-
-          {/* Category mini-badge on thumbnail */}
-          <div className="absolute top-1 left-1 max-w-[calc(100%-8px)]">
-            <span className="inline-block px-1.5 py-0.5 rounded text-[9.5px] font-semibold bg-[#0C0C0E]/90 backdrop-blur-md text-zinc-200 border border-white/10 truncate">
-              {formatCategoryLabel(article.category)}
-            </span>
-          </div>
         </div>
 
         {/* Headline & Description */}
-        <div className="flex-1 min-w-0 space-y-1.5">
-          {/* Source and Time Stamp */}
-          <div className="flex items-center justify-between gap-2 text-[11px] text-zinc-500">
-            <span className="font-medium text-zinc-300 flex items-center gap-1 truncate max-w-[65%]">
-              <Building2 className="size-3 text-zinc-400 shrink-0" />
-              <span className="truncate">{article.source_name || "Verified Cyber Intelligence"}</span>
+        <div className="flex-1 min-w-0 space-y-1">
+          {/* Category, Source & Timestamp */}
+          <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 flex-wrap">
+            <span className="font-semibold text-accent uppercase tracking-wider text-[10px]">
+              {formatCategoryLabel(article.category)}
             </span>
-            <span className="flex items-center gap-1 shrink-0 text-zinc-500 tabular-nums">
-              <Clock className="size-3" />
-              <span>{formatIndianDate(article.published_at)}</span>
+            <span className="text-zinc-600">•</span>
+            <span className="text-zinc-300 font-medium truncate max-w-[150px]">
+              {article.source_name || "National Cyber Advisory"}
+            </span>
+            <span className="text-zinc-600">•</span>
+            <span className="text-zinc-500 tabular-nums shrink-0">
+              {formatIndianDate(article.published_at)}
             </span>
           </div>
 
-          {/* Headline */}
-          <h4 className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors line-clamp-2 leading-snug">
-            {article.title}
+          {/* Cleaned Headline */}
+          <h4 className="text-[13.5px] sm:text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors line-clamp-2 leading-snug">
+            <a
+              href={externalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="focus-visible:outline-none hover:underline decoration-zinc-500 underline-offset-2"
+            >
+              {cleanedTitle}
+            </a>
           </h4>
 
-          {/* Summary / Modus Operandi */}
+          {/* Summary */}
           <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
             {article.modus_operandi || article.summary}
           </p>
         </div>
       </div>
 
-      {/* Bottom Metadata & External Link Row (Aligned cleanly across the sideline) */}
-      <div className="flex items-center justify-between gap-2 text-[11.5px]">
+      {/* Bottom Row: Subtle Badges & Link */}
+      <div className="flex items-center justify-between gap-2 pt-0.5 text-xs text-zinc-400">
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
-          {/* Risk Level Status Pill */}
-          <StatusPill tone={riskTone} size="sm" pulse={article.risk_level === "CRITICAL"}>
-            {article.risk_level || "EVALUATING"}
-          </StatusPill>
+          {/* Subtle Status Badge */}
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border",
+              article.risk_level === "CRITICAL"
+                ? "bg-red-500/10 text-red-400 border-red-500/20"
+                : article.risk_level === "HIGH"
+                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+            )}
+          >
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                article.risk_level === "CRITICAL" ? "bg-red-400" : "bg-amber-400"
+              )}
+            />
+            {article.risk_level || "ALERT"}
+          </span>
 
-          {/* Financial Loss Badge (Clean Dark Neutral Capsule) */}
+          {/* Financial Loss */}
           {article.financial_loss && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#18181B] text-zinc-300 border border-white/10 truncate max-w-[210px]">
+            <span className="text-[11px] font-medium text-zinc-300 bg-white/[0.04] px-2 py-0.5 rounded border border-white/5 truncate max-w-[190px]">
               Loss: {article.financial_loss}
             </span>
           )}
 
-          {/* Affected Region (if present and room allows) */}
-          {article.affected_region && !compact && (
-            <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-zinc-500 truncate max-w-[160px]">
+          {/* Affected Region */}
+          {cleanedCity && !compact && (
+            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-zinc-500 truncate max-w-[140px]">
               <MapPin className="size-3 text-zinc-500 shrink-0" />
-              <span className="truncate">{article.affected_region}</span>
+              <span className="truncate">{cleanedCity}</span>
             </span>
           )}
         </div>
 
-        {/* Read Original Article Link - positioned cleanly at the sideline */}
+        {/* Read Source Action */}
         <a
           href={externalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-zinc-400 group-hover:text-white font-medium px-2 py-1 rounded-md hover:bg-[#27272A] border border-transparent hover:border-white/10 transition-all shrink-0 text-[11.5px] group/link"
-          aria-label={`Read full article: ${article.title}`}
+          className="inline-flex items-center gap-1 text-[11.5px] font-medium text-zinc-400 group-hover:text-accent transition-colors shrink-0"
+          aria-label={`Read full story: ${cleanedTitle}`}
         >
-          <span>Read News</span>
-          <ArrowUpRight className="size-3 text-zinc-400 group-hover/link:text-white group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
+          <span>Read Source</span>
+          <ArrowUpRight className="size-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
         </a>
       </div>
     </article>

@@ -181,6 +181,19 @@ async def detect_image_unified(request: Request, file: UploadFile = File(...)):
             filename=file.filename or "uploaded_image.png",
             request=request
         )
+        # Central Auto-Catalog Ingestion Hook for Image Forensics
+        try:
+            from netra.services.catalog_hook import auto_catalog_scan
+            auto_catalog_scan(
+                scan_type="image",
+                result=result,
+                file_bytes=contents,
+                filename=file.filename or "uploaded_image.png",
+                request=request
+            )
+        except Exception as cat_err:
+            logger.warning(f"Image catalog auto-index failed: {cat_err}")
+
         return result
     except Exception as e:
         logger.error(f"Image dual-branch forensics analysis failed: {e}")
