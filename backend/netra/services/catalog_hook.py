@@ -237,8 +237,8 @@ def auto_catalog_scan(
         "extracted_iocs": iocs,
         "fir_dossier": {
             "incident_summary": summary,
-            "applicable_laws": ["IT Act 2000 Section 66D", "BNS 2023 Section 318(4)"],
-            "recommended_action": "Incident hash registered in NETRA threat ledger."
+            "applicable_laws": ["Synthetic Fraud Artifact Quarantine", "Communication Channel Isolation"],
+            "recommended_action": "Incident telemetry registered in NETRA threat ledger."
         },
         "upvotes_count": 1,
         "created_at": now_str

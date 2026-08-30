@@ -111,7 +111,7 @@ def analyze_scam_text_message(text: str) -> str:
             f"🛡️ *Immediate Protective Steps:*\n"
             f"1. *DO NOT* call the attacker phone number or click links.\n"
             f"2. *DO NOT* install any `.apk` or remote desktop apps (AnyDesk/TeamViewer).\n"
-            f"3. Dial *1930* (National Cyber Crime Helpline) or report to *cybercrime.gov.in*.\n\n"
+            f"3. Isolate device and revoke active communication channels immediately.\n\n"
             f"🌐 _Verified via NETRA Multi-Modal AI Engine_"
         )
     else:

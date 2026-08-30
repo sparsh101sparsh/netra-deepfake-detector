@@ -155,37 +155,37 @@ export const SystemTopologySection: React.FC = () => {
           </div>
         </div>
 
-        {/* Legal & Court Admissibility */}
+        {/* Forensic Media Verification & Technical Standards */}
         <div className="p-6 rounded-2xl bg-surface border border-line shadow-card space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-ink flex items-center gap-2">
               <Shield size={18} className="text-accent" />
-              Indian Law Enforcement & Court Admissibility
+              Forensic Verification & Technical Standards
             </h3>
             <span className="text-[10px] font-mono text-accent px-2 py-0.5 rounded bg-accent/10 border border-accent/30">
-              IT Act & BNS Ready
+              Multi-Model Engine
             </span>
           </div>
 
           <p className="text-xs text-ink-2 font-sans leading-relaxed">
-            NETRA is engineered to provide forensic evidence structured specifically for submission under the Indian legal framework:
+            NETRA is engineered to provide verifiable forensic evidence structured for enterprise verification and technical incident containment:
           </p>
 
           <div className="space-y-2 text-xs font-sans">
             <div className="p-2.5 rounded-lg bg-inset border border-line/60 text-ink-2">
               <span className="font-mono font-bold text-accent block text-[11px]">
-                Section 66D — Information Technology Act, 2000
+                Multi-Model Vision & Boundary Telemetry
               </span>
               <span>
-                Punishment for cheating by personation by using computer resource (up to 3 years imprisonment + fine).
+                GenD ViT-L/14 Foundation Model paired with EfficientNet-B4 Spatial Blending Seam Analysis.
               </span>
             </div>
             <div className="p-2.5 rounded-lg bg-inset border border-line/60 text-ink-2">
               <span className="font-mono font-bold text-accent block text-[11px]">
-                Section 318(4) — Bharatiya Nyaya Sanhita (BNS), 2023
+                Acoustic Prosody & Vocoder Discontinuity
               </span>
               <span>
-                Cheating and dishonestly inducing delivery of property via synthetic media deception.
+                Dual-layer Wav2Vec2 and spectral prosody variance detecting synthetic voice clones.
               </span>
             </div>
             <div className="p-2.5 rounded-lg bg-inset border border-line/60 text-ink-2">

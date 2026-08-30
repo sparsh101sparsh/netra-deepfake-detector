@@ -360,24 +360,24 @@ def extract_aligned_faces(frame_rgb):
     id: "scam_nlp",
     name: "Scam NLP & OCR Multi-Modal Threat Classifier",
     category: "NLP & Cyber Scam Intelligence",
-    tag: "Indian Scam Classifier",
+    tag: "Scam & Threat Classifier",
     hue: "#eab308",
     parameters: "Tesseract OCR + Whisper Base (74M) + Random Forest (100 Trees)",
     latency: "180 ms",
     hardware: "EC2 g4dn.xlarge (CPU + GPU)",
     inputShape: "Video Frames (OCR) + Audio Stream (Whisper) + Raw Text Message",
-    outputFormat: "Scam Threat Probability (0-100%) + Classified Category (Digital Arrest, KYC, Investment)",
+    outputFormat: "Scam Threat Probability (0-100%) + Classified Category (Digital Impersonation, KYC, Investment)",
     lossFunction: "Gini Impurity (Random Forest) + Cross-Entropy (Whisper)",
-    trainingDataset: "14,500 Indian Cyber Crime Complaints & FIR Transcripts (2023-2026)",
+    trainingDataset: "14,500 Multi-Vector Cyber Fraud & Impersonation Cases (2023-2026)",
     f1Score: "97.4%",
     aucRoc: "98.8%",
-    description: "Specialized cyber crime text analysis engine trained specifically on Indian fraud typologies (Digital Arrest by fake CBI/Cyber Police, Stock market pump-and-dump deepfakes, Bank KYC video spoofing, Virtual kidnapping). Extracts text from both visual video overlays (Tesseract) and spoken speech (Whisper STT) before applying TF-IDF and Random Forest classification.",
+    description: "Specialized threat text analysis engine trained on advanced fraud typologies (Digital Impersonation by fake authorities, Stock market pump-and-dump deepfakes, Bank KYC video spoofing, Virtual kidnapping). Extracts text from both visual video overlays (Tesseract) and spoken speech (Whisper STT) before applying TF-IDF and Random Forest classification.",
     architectureBreakdown: [
       "Tesseract OCR engine scanning onscreen warning banners, bank logos, and extortion phone numbers",
       "OpenAI Whisper Base model transcribing bilingual Hindi/English/Hinglish speech",
-      "TF-IDF Vectorizer with 5,000 sub-word n-grams optimized for Indian legal and scam terminology",
-      "100-Tree Random Forest Classifier trained on authenticated cyber cell scam transcripts",
-      "Structured output categorizing the attack vector with actionable citizen advice"
+      "TF-IDF Vectorizer with 5,000 sub-word n-grams optimized for legal and threat terminology",
+      "100-Tree Random Forest Classifier trained on authenticated threat case transcripts",
+      "Structured output categorizing the attack vector with actionable technical containment steps"
     ],
     failureModes: [
       "Regional dialects with heavy colloquialisms; mitigated by bilingual Hinglish phonetic normalization"
@@ -478,45 +478,45 @@ def extract_aligned_faces(frame_rgb):
     id: "bedrock_claude",
     name: "Amazon Bedrock (Claude 3.5 Sonnet & Nova Pro)",
     category: "Forensic Evidence Synthesis",
-    tag: "Court-Admissible Dossier",
+    tag: "Forensic Dossier Synthesis",
     hue: "#ec4899",
     parameters: "Anthropic Claude 3.5 Sonnet (20241022-v2:0) + Nova Pro Fallback",
     latency: "1.4 s",
     hardware: "AWS Managed Bedrock API (us-east-1)",
     inputShape: "Structured Evidence JSON Bundle + Senior Forensic Video Analyst Prompt",
-    outputFormat: "4-Section Legal Forensic Report (Markdown + PDF Ready)",
+    outputFormat: "4-Section Technical Forensic Report (Markdown + PDF Ready)",
     lossFunction: "RLHF with Constitutional AI Forensic Calibration",
-    trainingDataset: "Legal & Forensic Knowledge Base + Indian Cyber Law",
+    trainingDataset: "Digital Forensics Knowledge Base & Multi-Modal Impersonation Benchmark",
     f1Score: "99.2% Forensic Coherence",
     aucRoc: "Zero Hallucination (Grounded in JSON)",
-    description: "Acts as an expert forensic witness. Consumes the validated Evidence Bundle JSON and synthesizes an authoritative 4-part legal dossier formatted specifically for Indian Law Enforcement, Cyber Crime Cells, and High Court submissions under Sections 66D of IT Act and 318(4) of Bharatiya Nyaya Sanhita (BNS).",
+    description: "Acts as an expert forensic intelligence engine. Consumes the validated Evidence Bundle JSON and synthesizes an authoritative 4-part technical dossier detailing multi-detector metrics, visual boundary anomalies, and acoustic signatures.",
     architectureBreakdown: [
       "Senior Forensic Video Analyst Persona: Strict adherence to facts present in JSON evidence bundle",
       "Section 1: Executive Forensic Verdict (risk tier, bottom-line authenticity conclusion)",
       "Section 2: Spatial & Boundary Anomalies (frame-by-frame blending seam breakdown)",
       "Section 3: Acoustic & Vocoder Forensics (pitch contour flatlines and spectral rolloff)",
-      "Section 4: Investigative & Legal Roadmap (IT Act 66D, BNS 318(4), Bank asset freezing advisory)",
+      "Section 4: Technical Containment & Mitigation Roadmap (Incident Quarantine, Forensic Logs)",
       "Automatic failover to Amazon Nova Pro if Claude 3.5 experiences regional API throttling"
     ],
     failureModes: [
       "API ThrottlingException or 503 error; handled with exponential backoff and transparent fallback to Nova Pro"
     ],
     codeSnippet: `def synthesize_forensic_dossier(bundle: EvidenceBundle) -> str:
-    prompt = f"""You are a Senior Digital Forensics Analyst for Indian Cyber Crime Investigation.
-Examine the following detector evidence bundle and generate a formal 4-section court-ready forensic report:
+    prompt = f"""You are a Senior Digital Forensics Analyst.
+Examine the following detector evidence bundle and generate a formal 4-section forensic report:
 {bundle.model_dump_json(indent=2)}
 Format strictly into:
 1. EXECUTIVE VERDICT
 2. SPATIAL & VISUAL EVIDENCE
 3. ACOUSTIC & FREQUENCY ANALYSIS
-4. LEGAL & INVESTIGATIVE GUIDANCE (IT Act / BNS)"""
+4. TECHNICAL CONTAINMENT & MITIGATION GUIDANCE"""
     
     response = bedrock.invoke_model(
         modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
         body=json.dumps({"anthropic_version": "bedrock-2023-05-31", "messages": [{"role": "user", "content": prompt}], "max_tokens": 1500, "temperature": 0.1})
     )
     return json.loads(response["body"].read())["content"][0]["text"]`,
-    legalRelevance: "Court-admissible forensic documentation ready for formal submission with tamper-evident integrity verification."
+    legalRelevance: "Forensic documentation ready for formal verification with tamper-evident integrity."
   },
 
   verdict_delivery: {

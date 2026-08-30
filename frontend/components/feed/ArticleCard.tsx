@@ -129,7 +129,7 @@ export function ArticleCard({ article, className, compact = false }: ArticleCard
   const initialThumbnail = rawThumbnail.includes("unsplash.com") ? "" : rawThumbnail;
 
   const riskTone = resolveRiskTone(article.risk_level);
-  const externalUrl = article.source_url || "https://cybercrime.gov.in";
+  const externalUrl = article.source_url || "#";
 
   return (
     <article

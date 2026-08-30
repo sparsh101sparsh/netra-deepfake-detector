@@ -31,14 +31,14 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
     { label: "Reported Threat Catalog", href: "/reported", badge: "Database", external: false },
     { label: "Threat Trends & Analytics", href: "/trends", badge: "Live", external: false },
     { label: "Live Scam Feed (Tavily AI)", href: "/#feed", badge: "24H Sync", external: false },
-    { label: "National Cyber Crime Portal", href: "https://cybercrime.gov.in", badge: "Gov.in", external: true },
+    { label: "Global Threat Intelligence", href: "/#feed", badge: "Sync", external: false },
   ];
 
   const developersAndSafety = [
     { label: "REST API Documentation", href: "/developers", badge: "FastAPI", external: false },
     { label: "Model Architecture & Benchmarks", href: "/technology", badge: "Telemetry", external: false },
-    { label: "Sanchar Saathi (Chakshu)", href: "https://sancharsaathi.gov.in", badge: "DoT", external: true },
-    { label: "RBI Sachet Portal", href: "https://sachet.rbi.org.in", badge: "RBI", external: true },
+    { label: "Digital Forensics Standards", href: "/technology", badge: "Forensics", external: false },
+    { label: "Multi-Modal Safety Benchmarks", href: "/technology", badge: "Benchmarks", external: false },
   ];
 
   return (

@@ -401,17 +401,6 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
             <span>Download Forensic PDF</span>
           </Button>
 
-          {scam.is_scam && (
-            <a
-              href="https://cybercrime.gov.in"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded-lg bg-red px-3 py-1 text-xs font-semibold text-white hover:brightness-110 shadow-btn transition-all"
-            >
-              <span>Report to Cybercrime Cell</span>
-              <ArrowUpRight className="w-3 h-3" />
-            </a>
-          )}
           {onReset && (
             <Button variant="secondary" size="xs" onClick={onReset}>
               Close

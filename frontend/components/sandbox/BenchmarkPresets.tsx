@@ -105,7 +105,7 @@ export const BENCHMARK_PRESETS: BenchmarkPreset[] = [
         apks: ["bses-update.apk"],
         urls: [],
       },
-      recommendation: "Immediate Cyber Crime FIR recommended. Block phone 9876543210 and revoke UPI VPA.",
+      recommendation: "Immediate technical containment recommended. Block phone 9876543210 and revoke UPI VPA.",
     },
   },
   {
@@ -146,7 +146,7 @@ export const BENCHMARK_PRESETS: BenchmarkPreset[] = [
         apks: [],
         urls: ["https://cbi-verification-portal.fake"],
       },
-      recommendation: "High-priority national alert. Submit intelligence to National Cyber Crime Reporting Portal (I4C).",
+      recommendation: "High-priority security alert. Quarantine fraudulent domain and revoke associated network connections.",
     },
   },
   {
