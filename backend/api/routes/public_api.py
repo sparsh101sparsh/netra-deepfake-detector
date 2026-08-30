@@ -114,8 +114,8 @@ async def analyze_scam_text(
             "extracted_iocs": iocs,
             "fir_dossier": {
                 "incident_summary": f"Scam message: '{payload.message[:100]}...'",
-                "applicable_laws": ["IT Act Section 66D", "BNS Section 318(4)"],
-                "recommended_action": "Block sender and report to 1930 Cyber Fraud Helpline."
+                "applicable_laws": ["Synthetic Fraud Artifact Quarantine", "Communication Channel Isolation"],
+                "recommended_action": "Block sender and isolate communication channel immediately."
             }
         })
         

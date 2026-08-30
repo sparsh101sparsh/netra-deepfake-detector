@@ -437,9 +437,9 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
     story = []
 
     # Title & Subtitle Banner
-    story.append(Paragraph("CYBER CRIME INCIDENT REPORT &amp; FORENSIC DOSSIER", title_style))
+    story.append(Paragraph("NETRA MULTI-MODAL FORENSIC INTELLIGENCE DOSSIER", title_style))
     story.append(Spacer(1, 2))
-    story.append(Paragraph("National Cyber Crime Reporting Portal (cybercrime.gov.in) &mdash; Audio Voice Clone Forensic Inspection", subtitle_style))
+    story.append(Paragraph("Autonomous Acoustic Telemetry &mdash; Audio Voice Clone Forensic Inspection", subtitle_style))
     story.append(Spacer(1, 4))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#f59e0b"), spaceAfter=6))
 
@@ -573,8 +573,8 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
     story.append(t_score)
     story.append(Spacer(1, 4))
 
-    # Section 5: Tavily Intelligence & Helpline Guidance
-    story.append(Paragraph("5. Threat Intelligence &amp; Citizen Cybercrime Helpline Guidance", section_style))
+    # Section 5: Tavily Intelligence & Incident Advisory
+    story.append(Paragraph("5. Threat Intelligence &amp; Diagnostic Advisory", section_style))
     tavily_intel = iocs.get("tavily_threat_intel") or {}
     articles = tavily_intel.get("articles") or []
     if articles:
@@ -583,14 +583,14 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
             if art.get("url"):
                 story.append(Paragraph(f"  <font color='#2563eb'>Source: {sanitize_for_reportlab(art.get('url'))[:80]}...</font>", body_style))
     else:
-        story.append(Paragraph("&bull; <b>Threat Intelligence Reference:</b> National Cyber Crime Threat Advisory (I4C/MHA) on Generative AI Voice Cloning. Malicious actors utilize deepfake audio for familial emergency extortion, fake kidnapping ransoms, and bank executive impersonation.", body_style))
+        story.append(Paragraph("&bull; <b>Threat Intelligence Reference:</b> Acoustic Telemetry Benchmark on Generative AI Voice Cloning. Synthetic voice synthesis models utilize neural vocoders and pitch manipulation for unauthorized impersonation.", body_style))
     story.append(Spacer(1, 2))
 
     guidance_html = (
-        "<b>EMERGENCY CITIZEN ACTION &amp; REPORTING PROTOCOL:</b><br/>"
-        "1. <b>National Cybercrime Helpline: Dial 1930</b> immediately to register the incident under Citizen Financial Cyber Fraud Reporting System.<br/>"
-        "2. <b>National Cyber Crime Reporting Portal:</b> File formal complaint at <b>cybercrime.gov.in</b> within the <b>Golden Hour (first 2 hours)</b> to trigger inter-bank fund lien freezing.<br/>"
-        "3. <b>Evidence Preservation:</b> Retain original audio in native container (.opus / .ogg / .wav). Attach this verified forensic report."
+        "<b>TECHNICAL INCIDENT MITIGATION &amp; AUDITING PROTOCOL:</b><br/>"
+        "1. <b>Audio Isolation:</b> Immediately quarantine and revoke active communication streams utilizing flagged audio.<br/>"
+        "2. <b>Acoustic Telemetry Verification:</b> Cross-reference spectral prosody variance and zero-crossing rates against genuine voice baselines.<br/>"
+        "3. <b>Evidence Preservation:</b> Retain original audio bitstream in native container format (.opus / .ogg / .wav) for forensic auditing."
     )
     t_guidance = Table([[Paragraph(guidance_html, body_style)]], colWidths=[520])
     t_guidance.setStyle(TableStyle([
@@ -604,23 +604,19 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
     story.append(t_guidance)
     story.append(Spacer(1, 4))
 
-    # Section 6: Forensic Evidence Ledger & Statutory Classification (KeepTogether)
+    # Section 6: Forensic Evidence Ledger & Verification (KeepTogether)
     cert_flowables = []
-    cert_flowables.append(Paragraph("6. Forensic Evidence Ledger &amp; Statutory Penal Classification", section_style))
+    cert_flowables.append(Paragraph("6. Forensic Verification Summary &amp; Diagnostic Classification", section_style))
     cert_body = (
         f"This forensic report has been compiled by the NETRA Autonomous Digital Forensic System during automated forensic inspection. "
-        f"The electronic audio record (Media Hash: <code>{sha256[:28]}...</code>) was ingested and analyzed with full forensic integrity. "
-        f"Digital acoustic processing engines verified biometric vocoder signatures without synthetic alteration. "
-        f"Recommended statutory penal provisions include <b>Section 66D of the Information Technology Act 2000</b> (cheating by personation using computer resource), "
-        f"<b>Section 318(4) of the Bharatiya Nyaya Sanhita 2023</b> (cheating and dishonestly inducing delivery of property), and "
-        f"<b>Section 66E of the Information Technology Act 2000</b> (privacy violation)."
+        f"Digital acoustic processing engines verified biometric vocoder signatures and spectral consistency across all speech segments."
     )
     cert_flowables.append(Paragraph(cert_body, body_style))
     cert_flowables.append(Spacer(1, 3))
 
     sig_data = [
         [Paragraph("<b>Forensic Examiner:</b> NETRA Autonomous Forensic Intelligence Engine<br/><b>System Identifier:</b> NETRA-DAF-AUDIO-V5<br/><b>Status:</b> Automated Forensic Tool Verification Complete", table_cell),
-         Paragraph(f"<b>Verification Timestamp:</b> {created_at} UTC<br/><b>Media Fingerprint:</b> {sha256[:24]}...<br/><b>Statutory Classification:</b> IT Act 2000 &amp; BNS 2023", table_cell)]
+         Paragraph(f"<b>Verification Timestamp:</b> {created_at} UTC<br/><b>Diagnostic Modality:</b> Audio Speech Forensics<br/><b>Engine Classification:</b> Deepfake Voice Detection", table_cell)]
     ]
     t_sig = Table(sig_data, colWidths=[260, 260])
     t_sig.setStyle(TableStyle([
@@ -634,7 +630,7 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
     cert_flowables.append(Spacer(1, 4))
     cert_flowables.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=4))
     fn_style = ParagraphStyle('AudioFIRFootnote', parent=styles['Normal'], fontName='Helvetica', fontSize=7, leading=9, alignment=1, textColor=colors.HexColor("#64748b"))
-    cert_flowables.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth | National Cyber Crime Reporting Portal (cybercrime.gov.in) Standard", fn_style))
+    cert_flowables.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth", fn_style))
 
     story.append(KeepTogether(cert_flowables))
 
@@ -644,9 +640,8 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
 
 def generate_image_fir_pdf(item: dict) -> bytes:
     """
-    Generate an institutional Cyber Crime FIR Report PDF specifically tailored for
+    Generate an institutional Forensic Dossier PDF specifically tailored for
     image deepfakes, multi-face manipulation, document scam letters, and hybrid media using ReportLab.
-    Complies with Indian Cyber Law (Section 66D/66E IT Act 2000, Section 318(4) BNS 2023).
     """
     import io
     import hashlib
@@ -727,10 +722,10 @@ def generate_image_fir_pdf(item: dict) -> bytes:
     story = []
 
     # Title & Subtitle Banner
-    story.append(Paragraph("CYBER CRIME INCIDENT REPORT &amp; FORENSIC DOSSIER", title_style))
+    story.append(Paragraph("NETRA MULTI-MODAL FORENSIC INTELLIGENCE DOSSIER", title_style))
     story.append(Spacer(1, 2))
     mode_label = "Multi-Modal Hybrid Forensics" if analysis_mode == "hybrid" else ("Document Scam &amp; Text Intelligence" if analysis_mode == "document" else "Facial Deepfake &amp; Manipulation Forensics")
-    story.append(Paragraph(f"National Cyber Crime Reporting Portal (cybercrime.gov.in) &mdash; {mode_label}", subtitle_style))
+    story.append(Paragraph(f"Autonomous Forensic Telemetry &mdash; {mode_label}", subtitle_style))
     story.append(Spacer(1, 4))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#f59e0b"), spaceAfter=6))
 
@@ -855,7 +850,7 @@ def generate_image_fir_pdf(item: dict) -> bytes:
             f"<b>Anomaly Region:</b> {f0.get('anomaly_region', 'Eyewear / Facial Specular Discontinuity')}<br/>"
             f"<b>Detector Subsystem:</b> SpatialSBIDetector (EfficientNet-B4 + SBI)<br/>"
             f"<b>Evidence Code:</b> {f0.get('evidence_code', 'EVD-SPECULAR-GLARE')}<br/>"
-            f"<b>Statutory Offense:</b> Section 66D IT Act 2000 &amp; Section 318(4) BNS 2023"
+            f"<b>Classification:</b> Synthetic Facial Manipulation"
         )
         story.append(Paragraph("1. Photographic Evidence &amp; Facial Anomaly Localization", section_style))
         story.append(build_visual_evidence_card(caption_html))
@@ -958,9 +953,9 @@ def generate_image_fir_pdf(item: dict) -> bytes:
         story.append(t_ocr_text)
         story.append(Spacer(1, 4))
 
-        story.append(Paragraph("Flagged Indicators of Compromise (IOCs) &amp; Law Enforcement Directives", section_style))
+        story.append(Paragraph("Flagged Indicators of Compromise (IOCs) &amp; Technical Containment Directives", section_style))
         ioc_rows = [
-            [Paragraph("IOC Category", table_cell_bold), Paragraph("Threat Indicator", table_cell_bold), Paragraph("Risk Level", table_cell_bold), Paragraph("Law Enforcement Directive", table_cell_bold)]
+            [Paragraph("IOC Category", table_cell_bold), Paragraph("Threat Indicator", table_cell_bold), Paragraph("Risk Level", table_cell_bold), Paragraph("Technical Containment Directive", table_cell_bold)]
         ]
         phones = iocs.get("phones") or []
         upis = iocs.get("upis") or []
@@ -969,16 +964,16 @@ def generate_image_fir_pdf(item: dict) -> bytes:
 
         has_iocs = False
         for p in phones[:3]:
-            ioc_rows.append([Paragraph("Attacker Phone", table_cell_bold), Paragraph(sanitize_for_reportlab(p), table_cell_mono), Paragraph('<font color="#dc2626"><b>CRITICAL</b></font>', table_cell), Paragraph("TAFCOP number blocking; Call detail records notice under CrPC Section 91", table_cell)])
+            ioc_rows.append([Paragraph("Attacker Phone", table_cell_bold), Paragraph(sanitize_for_reportlab(p), table_cell_mono), Paragraph('<font color="#dc2626"><b>CRITICAL</b></font>', table_cell), Paragraph("Revoke communication access; block associated telecom routing", table_cell)])
             has_iocs = True
         for u in upis[:3]:
-            ioc_rows.append([Paragraph("Fraudulent UPI", table_cell_bold), Paragraph(sanitize_for_reportlab(u), table_cell_mono), Paragraph('<font color="#dc2626"><b>CRITICAL</b></font>', table_cell), Paragraph("Immediate bank freeze &amp; lien placement under Section 91 CrPC / Section 94 BNSS 2023", table_cell)])
+            ioc_rows.append([Paragraph("Fraudulent UPI", table_cell_bold), Paragraph(sanitize_for_reportlab(u), table_cell_mono), Paragraph('<font color="#dc2626"><b>CRITICAL</b></font>', table_cell), Paragraph("Quarantine transaction channel; flag account for fraud review", table_cell)])
             has_iocs = True
         for url in urls[:3]:
-            ioc_rows.append([Paragraph("Phishing URL", table_cell_bold), Paragraph(sanitize_for_reportlab(url), table_cell_mono), Paragraph('<font color="#d97706"><b>HIGH</b></font>', table_cell), Paragraph("Domain suspension &amp; DNS takedown directive via CERT-In / NCIIPC", table_cell)])
+            ioc_rows.append([Paragraph("Phishing URL", table_cell_bold), Paragraph(sanitize_for_reportlab(url), table_cell_mono), Paragraph('<font color="#d97706"><b>HIGH</b></font>', table_cell), Paragraph("Quarantine domain and block network gateway resolution", table_cell)])
             has_iocs = True
         for apk in apks[:2]:
-            ioc_rows.append([Paragraph("Malicious APK", table_cell_bold), Paragraph(sanitize_for_reportlab(apk), table_cell_mono), Paragraph('<font color="#dc2626"><b>CRITICAL</b></font>', table_cell), Paragraph("Forensic APK sandbox decompilation &amp; signature upload to C-DAC repository", table_cell)])
+            ioc_rows.append([Paragraph("Malicious APK", table_cell_bold), Paragraph(sanitize_for_reportlab(apk), table_cell_mono), Paragraph('<font color="#dc2626"><b>CRITICAL</b></font>', table_cell), Paragraph("Forensic sandbox analysis and signature quarantine", table_cell)])
             has_iocs = True
 
         if not has_iocs:
@@ -1002,18 +997,18 @@ def generate_image_fir_pdf(item: dict) -> bytes:
             story.append(Paragraph(f"<b>Matched Safety Rule Signatures:</b> {', '.join(sanitize_for_reportlab(r) for r in matched_rules)}", body_style))
             story.append(Spacer(1, 2))
 
-    # Section: Applicable Legal Provisions & Citizen Guidance (Common)
-    story.append(Paragraph("Applicable Legal Provisions &amp; Citizen Cybercrime Protocol", section_style))
-    story.append(Paragraph("&bull; <b>Section 66D, Information Technology Act 2000:</b> Cheating by personation by using computer resource or synthetic digital manipulation.", body_style))
-    story.append(Paragraph("&bull; <b>Section 318(4), Bharatiya Nyaya Sanhita (BNS) 2023:</b> Cheating and dishonestly inducing delivery of property.", body_style))
-    story.append(Paragraph("&bull; <b>Section 66E, Information Technology Act 2000:</b> Non-consensual capture and synthetic publication of personal likeness.", body_style))
+    # Section: Incident Containment & Forensic Diagnostics (Common)
+    story.append(Paragraph("Incident Containment &amp; Forensic Protocol", section_style))
+    story.append(Paragraph("&bull; <b>Synthetic Artifact Quarantine:</b> Isolate manipulated media assets and revoke unauthorized sessions.", body_style))
+    story.append(Paragraph("&bull; <b>Biometric Landmark Verification:</b> Inspect facial boundary inconsistencies, neural synthesis masks, and textural artifacts.", body_style))
+    story.append(Paragraph("&bull; <b>Forensic Telemetry Auditing:</b> Archive source media container and diagnostic scores for structural auditing.", body_style))
     story.append(Spacer(1, 2))
 
     guidance_box = (
-        "<b>EMERGENCY REPORTING &amp; GOLDEN HOUR ACTION:</b><br/>"
-        "1. <b>National Cybercrime Helpline: Dial 1930</b> immediately.<br/>"
-        "2. <b>National Cyber Crime Reporting Portal:</b> File formal complaint at <b>cybercrime.gov.in</b> within the <b>Golden Hour (first 2 hours)</b> to enable inter-bank lien placement.<br/>"
-        "3. <b>Evidence Preservation:</b> Preserve original image container with EXIF tags. Attach this verified forensic report."
+        "<b>RECOMMENDED TECHNICAL MITIGATION PROTOCOL:</b><br/>"
+        "1. <b>Session Revocation:</b> Terminate active authentication tokens or sessions linked to the flagged asset.<br/>"
+        "2. <b>Artifact Boundary Verification:</b> Cross-reference multi-model spatial heatmap scores with SBI frequency diagnostics.<br/>"
+        "3. <b>Metadata Preservation:</b> Preserve original image container with raw EXIF header data and diagnostic logs."
     )
     t_guid = Table([[Paragraph(guidance_box, body_style)]], colWidths=[520])
     t_guid.setStyle(TableStyle([
@@ -1029,19 +1024,19 @@ def generate_image_fir_pdf(item: dict) -> bytes:
 
     # Section: Forensic Evidence Ledger & Verification (KeepTogether)
     cert_flowables = []
-    cert_flowables.append(Paragraph("Forensic Evidence Ledger &amp; Digital Verification", section_style))
+    cert_flowables.append(Paragraph("Forensic Verification Summary &amp; Diagnostic Classification", section_style))
     cert_body = (
         f"This official forensic report has been compiled by the NETRA Autonomous Digital Threat Intelligence System during automated forensic analysis. "
-        f"The electronic visual record (Media Hash: <code>{media_sha256[:28]}...</code>) was ingested and analyzed without tampering. "
+        f"The electronic visual record was ingested and analyzed through multi-model spatial and biometric pipelines. "
         f"All spatial localization bounding boxes, neural biometric activations, and OCR text tokens accurately represent submitted media. "
-        f"Forensic tamper-evident verification certified."
+        f"Forensic diagnostic verification certified."
     )
     cert_flowables.append(Paragraph(cert_body, body_style))
     cert_flowables.append(Spacer(1, 3))
 
     sig_data = [
         [Paragraph("<b>Forensic Examiner:</b> NETRA Autonomous Forensic Intelligence Engine<br/><b>System Identifier:</b> NETRA-VISION-DUAL-V5<br/><b>Status:</b> Automated Tool Verification Certified", table_cell),
-         Paragraph(f"<b>Verification Timestamp:</b> {created_at} UTC<br/><b>Media Fingerprint:</b> {media_sha256[:24]}...<br/><b>Statutory Classification:</b> IT Act 2000 &amp; BNS 2023", table_cell)]
+         Paragraph(f"<b>Verification Timestamp:</b> {created_at} UTC<br/><b>Diagnostic Modality:</b> Visual Biometric &amp; Document Forensics<br/><b>Engine Classification:</b> Deepfake Spatial Analysis", table_cell)]
     ]
     t_sig = Table(sig_data, colWidths=[260, 260])
     t_sig.setStyle(TableStyle([
@@ -1055,7 +1050,7 @@ def generate_image_fir_pdf(item: dict) -> bytes:
     cert_flowables.append(Spacer(1, 4))
     cert_flowables.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=4))
     fn_style = ParagraphStyle('ImgFIRFootnote', parent=styles['Normal'], fontName='Helvetica', fontSize=7, leading=9, alignment=1, textColor=colors.HexColor("#64748b"))
-    cert_flowables.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth | National Cyber Crime Reporting Portal (cybercrime.gov.in) Standard", fn_style))
+    cert_flowables.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth", fn_style))
 
     story.append(KeepTogether(cert_flowables))
 
@@ -1166,9 +1161,9 @@ async def download_fir_dossier(threat_id: str):
     story = []
     
     # Title & Subtitle
-    story.append(Paragraph("CYBER CRIME INCIDENT REPORT &amp; FORENSIC DOSSIER", title_style))
+    story.append(Paragraph("NETRA MULTI-MODAL FORENSIC INTELLIGENCE DOSSIER", title_style))
     story.append(Spacer(1, 4))
-    story.append(Paragraph("Generated for Submission to National Cyber Crime Reporting Portal (cybercrime.gov.in)", subtitle_style))
+    story.append(Paragraph("Autonomous Multi-Modal Video Deepfake Verification &amp; Incident Dossier", subtitle_style))
     story.append(Spacer(1, 10))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#f59e0b"), spaceAfter=10))
 
@@ -1227,7 +1222,7 @@ async def download_fir_dossier(threat_id: str):
                 f"<b>Localized Region:</b> {region_val}<br/>"
                 f"<b>Detector Subsystem:</b> {detector_val}<br/>"
                 f"<b>Diagnostic Finding:</b> {finding_val}<br/>"
-                f"<b>Statutory Offense:</b> Section 66D IT Act 2000 &amp; Section 318(4) BNS 2023"
+                f"<b>Classification:</b> Synthetic Media Manipulation"
             )
 
             use_image = False
@@ -1274,20 +1269,11 @@ async def download_fir_dossier(threat_id: str):
     story.append(Paragraph(f"• <b>Fraudulent UPI Handle(s):</b> {upis_str}", body_style))
     story.append(Paragraph(f"• <b>Malicious Links / APKs:</b> {urls_str}", body_style))
 
-    # Section 4: Applicable Legal Provisions under Indian Law
-    story.append(Paragraph("4. Applicable Legal Provisions under Indian Law", section_style))
-    laws = fir.get("applicable_laws", [
-        "Information Technology Act 2000 — Section 66D (Cheating by personation using computer resource / synthetic AI manipulation)",
-        "Bharatiya Nyaya Sanhita 2023 — Section 318(4) (Cheating and dishonestly inducing delivery of property)",
-        "Information Technology Act 2000 — Section 66E (Violation of bodily privacy via non-consensual synthetic visual manipulation)"
-    ])
-    for law in laws:
-        story.append(Paragraph(f"• {law}", body_style))
-
-    # Section 5: Recommended Law Enforcement Action
-    story.append(Paragraph("5. Recommended Law Enforcement Action", section_style))
-    action_text = fir.get("recommended_action", "Immediate freeze of recipient beneficiary accounts, blocking of fraudulent phone/UPI handles, and issuance of cyber summons under CrPC Section 91.")
-    story.append(Paragraph(action_text, body_style))
+    # Section 4: Recommended Incident Containment Protocol
+    story.append(Paragraph("4. Recommended Incident Containment Protocol", section_style))
+    story.append(Paragraph("• Isolate digital distribution channels and revoke unauthorized credential access.", body_style))
+    story.append(Paragraph("• Quarantine identified fraudulent handles, spoofed numbers, and malicious URLs.", body_style))
+    story.append(Paragraph("• Retain forensic keyframes and telemetry reports for technical auditing.", body_style))
 
     # Signature Footnote
     story.append(Spacer(1, 16))
@@ -1310,12 +1296,12 @@ async def download_fir_dossier(threat_id: str):
         buf = io.BytesIO()
         fallback_doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
         fallback_story = [
-            Paragraph("FIRST INFORMATION REPORT (CYBER CRIME INCIDENT DOSSIER)", title_style),
+            Paragraph("NETRA MULTI-MODAL FORENSIC INTELLIGENCE DOSSIER", title_style),
             Spacer(1, 6),
             Paragraph(f"<b>Incident Reference ID:</b> {threat_id}", body_style),
             Spacer(1, 10),
-            Paragraph("4. Applicable Legal Provisions under Indian Law", section_style),
-            Paragraph("&bull; <b>Section 66D Information Technology Act 2000</b>", body_style),
+            Paragraph("4. Technical Forensic Verification", section_style),
+            Paragraph("&bull; <b>Automated Multi-Modal Forensic Verification Complete</b>", body_style),
             Spacer(1, 10),
             HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=6),
             Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth", footnote_style)

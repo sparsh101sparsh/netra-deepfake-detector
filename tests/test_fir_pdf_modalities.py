@@ -61,12 +61,11 @@ def test_audio_clone_fir_pdf_generation(client):
     assert "Audio Voice Clone Forensic Inspection" in full_text
     assert "Wiener Spectral Flatness" in full_text
     assert "16,000 Hz" in full_text
-    assert "Dial 1930" in full_text
-    assert "cybercrime.gov.in" in full_text
-    assert "Section 66D of the Information Technology Act 2000" in full_text
-    assert "Section 318(4) of the Bharatiya Nyaya Sanhita 2023" in full_text
-
-    # CRITICAL: Absolutely no Section 65B or Section 63 BSA
+    # CRITICAL: Pure technical forensics — zero Indian law/police citations
+    assert "Dial 1930" not in full_text
+    assert "cybercrime.gov.in" not in full_text
+    assert "Section 66D" not in full_text
+    assert "Section 318(4)" not in full_text
     assert "Section 65B" not in full_text
     assert "Section 63 BSA" not in full_text
     assert "65B" not in full_text
@@ -121,8 +120,8 @@ def test_image_pure_face_branch_a_fir_pdf_generation(client):
     assert "Multi-Face Forensic Breakdown Scorecard" in full_text
     assert "Eyewear / Specular Glare Plane" in full_text
     assert "SpatialSBIDetector" in full_text
-    assert "Section 66D" in full_text
-    assert "Section 318(4)" in full_text
+    assert "Section 66D" not in full_text
+    assert "Section 318(4)" not in full_text
 
     # CRITICAL: Absolutely no Section 65B or Section 63 BSA
     assert "Section 65B" not in full_text
@@ -175,8 +174,8 @@ def test_image_document_scam_branch_b_fir_pdf_generation(client):
     assert "Indicators of Compromise" in full_text
     assert "+91 9714275760" in full_text
     assert "kbc.winner@icici" in full_text
-    assert "TAFCOP" in full_text
-    assert "Section 66D" in full_text
+    assert "TAFCOP" not in full_text
+    assert "Section 66D" not in full_text
 
     # CRITICAL: Absolutely no Section 65B or Section 63 BSA
     assert "Section 65B" not in full_text

@@ -229,7 +229,7 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     kind: { label: "LLM Synthesis", hue: PURPLE },
     hue: PURPLE,
     title: "Amazon Bedrock (Claude 3.5 Sonnet)",
-    caption: "Synthesizes 4-section court-ready forensic report under IT Act 66D & BNS 318(4)",
+    caption: "Synthesizes 4-section technical forensic dossier with multi-modal anomaly telemetry",
     tag: "Bedrock API",
     latency: "1.4 s",
     icon: Sparkles,

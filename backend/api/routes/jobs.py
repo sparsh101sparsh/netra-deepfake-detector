@@ -603,7 +603,7 @@ async def get_report_pdf(job_id: str):
     )
 
     story = [
-        Paragraph("CYBER CRIME INCIDENT REPORT &amp; FORENSIC DOSSIER", title_style),
+        Paragraph("NETRA MULTI-MODAL FORENSIC INTELLIGENCE DOSSIER", title_style),
         Spacer(1, 3),
         Paragraph("Official Forensic AI Analysis Report | NETRA Autonomous Verification Engine", sub_style),
         Spacer(1, 6),
@@ -629,15 +629,12 @@ async def get_report_pdf(job_id: str):
     gend_score = float(result.get("gend_score") or parsed.get("gend_score") or 0.0)
     audio_score = float(result.get("audio_score") or parsed.get("audio_score") or 0.0)
 
-    sha256_seal = hashlib.sha256(f"NETRA-JOB-REPORT-{job_id}".encode()).hexdigest()
-    sha_hash = result.get("sha256") or result.get("file_hash") or sha256_seal
-
     meta_rows = [
         [Paragraph("Job Reference ID:", cell_bold), Paragraph(str(job_id), cell_norm)],
         [Paragraph("Analysis Date / Time:", cell_bold), Paragraph(datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"), cell_norm)],
         [Paragraph("Official Forensic Verdict:", cell_bold), Paragraph(f"<b>{verdict}</b> ({risk} RISK, {conf:.1f}% Index)", cell_norm)],
         [Paragraph("Primary Model Subsystem:", cell_bold), Paragraph("GenD Foundation ViT-L/14 + Spatial SBI + Wav2Vec2", cell_norm)],
-        [Paragraph("Chain of Custody:", cell_bold), Paragraph(f"Forensic Media Integrity Seal ({sha_hash[:32]}...)", cell_norm)]
+        [Paragraph("Detection Pipeline:", cell_bold), Paragraph("Multi-Model Vision, Boundary Seam &amp; Acoustic Verification", cell_norm)]
     ]
     t_meta = Table(meta_rows, colWidths=[150, 370])
     t_meta.setStyle(TableStyle([
@@ -709,7 +706,7 @@ async def get_report_pdf(job_id: str):
                 f"<b>Neural Anomaly Index:</b> {confidence_pct:.1f}% (CRITICAL)<br/>"
                 f"<b>Anomaly Region:</b> {region_val}<br/>"
                 f"<b>Detector Subsystem:</b> {detector_val}<br/>"
-                f"<b>Statutory Offense:</b> Section 66D IT Act 2000 &amp; Section 318(4) BNS 2023<br/>"
+                f"<b>Classification:</b> Synthetic Manipulation Artifact<br/>"
                 f"<b>Diagnostic Finding:</b> {finding_val}"
             )
 
@@ -776,11 +773,6 @@ async def get_report_pdf(job_id: str):
             story.append(t_frames)
             story.append(Spacer(1, 6))
 
-    # Section 3: Legal Provisions
-    story.append(Paragraph("3. Applicable Legal Provisions under Indian Law", section_style))
-    story.append(Paragraph("&bull; <b>Section 66D Information Technology Act 2000:</b> Cheating by personation using computer resource / synthetic AI manipulation.", body_style))
-    story.append(Paragraph("&bull; <b>Section 318(4) Bharatiya Nyaya Sanhita 2023:</b> Cheating and dishonestly inducing delivery of valuable property.", body_style))
-    story.append(Paragraph("&bull; <b>Section 66E Information Technology Act 2000:</b> Violation of bodily privacy and synthetic facial manipulation.", body_style))
     story.append(Spacer(1, 10))
 
     # Signature Footer
@@ -795,14 +787,11 @@ async def get_report_pdf(job_id: str):
         buf = io.BytesIO()
         fallback_doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
         fallback_story = [
-            Paragraph("CYBER CRIME INCIDENT REPORT &amp; FORENSIC DOSSIER", title_style),
+            Paragraph("NETRA MULTI-MODAL FORENSIC INTELLIGENCE DOSSIER", title_style),
             Spacer(1, 6),
             Paragraph("Official Forensic AI Analysis Report | NETRA Autonomous Verification Engine", sub_style),
             Spacer(1, 10),
             Paragraph(f"<b>Job Reference ID:</b> {job_id} | <b>Official Forensic Verdict:</b> {verdict} ({risk} RISK)", body_style),
-            Spacer(1, 10),
-            Paragraph("3. Applicable Legal Provisions under Indian Law", section_style),
-            Paragraph("&bull; <b>Section 66D Information Technology Act 2000:</b> Cheating by personation using computer resource.", body_style),
             Spacer(1, 10),
             HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=5),
             Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth", foot_style)

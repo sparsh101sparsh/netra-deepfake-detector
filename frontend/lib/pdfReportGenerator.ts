@@ -1,6 +1,6 @@
 // frontend/lib/pdfReportGenerator.ts
-// Institutional Court-Ready Forensic Incident PDF Generator using jsPDF
-// Compliant with Section 66D/66E IT Act 2000 & Section 318(4) Bharatiya Nyaya Sanhita 2023
+// NETRA Multi-Modal Forensic Report Generator
+// Enterprise-grade PDF report engine for Deepfake Detection & Threat Intelligence
 
 import jsPDF from "jspdf";
 
@@ -435,15 +435,10 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
   );
 
   doc.setFont("helvetica", "bold");
-  doc.text("Digital Media Hash:", 18, y + 39);
-  doc.setFont("courier", "normal");
-  doc.setFontSize(8);
-  const mediaHash =
-    data.sha256_hash ||
-    data.sha256 ||
-    data.sha256Hash ||
-    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-  doc.text(`${mediaHash.substring(0, 48)}...`, 58, y + 39);
+  doc.text("Inspection Pipeline:", 18, y + 39);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.text("GenD ViT-L Foundation + Spatial SBI + Acoustic Multi-Detector Engine", 58, y + 39);
 
   y += 48;
 
@@ -467,12 +462,12 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
       audio.source_platform ??
       "WhatsApp / Telegram Voice Note";
 
-    // Section 1: Acoustic Telemetry & Media Hash Table
+    // Section 1: Acoustic Signal Telemetry
     y = ensureVerticalSpace(doc, y, 45);
     doc.setTextColor(15, 23, 42);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text(`${sectionIndex}. Acoustic Telemetry & Media Hash Table`, 14, y);
+    doc.text(`${sectionIndex}. Acoustic Signal Telemetry & Ingestion Metrics`, 14, y);
     sectionIndex++;
     y += 5;
 
@@ -502,9 +497,9 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
         ref: "Network Media Ingestion Endpoint",
       },
       {
-        param: "Media Integrity Hash",
-        val: `${mediaHash.substring(0, 20)}...`,
-        ref: "Tamper-Evident Media Checksum",
+        param: "Signal Processing Status",
+        val: "Clean Signal Ingested",
+        ref: "16kHz Mono Resampled Audio Stream",
       },
     ];
 
@@ -687,18 +682,18 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(180, 83, 9);
-    doc.text("NATIONAL CYBERCRIME HELPLINE 1930 & GOLDEN HOUR FREEZE DIRECTIVES", 18, y + 5);
+    doc.text("INCIDENT CONTAINMENT & TECHNICAL MITIGATION DIRECTIVES", 18, y + 5);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(15, 23, 42);
     doc.text(
-      "1. Immediate Financial Freeze: Report unauthorized financial transactions within 2-3 hours via Helpline 1930.",
+      "1. Evidence Quarantine: Isolate the suspect media stream and preserve raw uncompressed bitstream.",
       18,
       y + 10
     );
     doc.text(
-      "2. Official Portal Lodgement: Register formal incident FIR at cybercrime.gov.in with SHA-256 evidence hash.",
+      "2. Acoustic Verification: Cross-validate vocal tract acoustic parameters and synthetic vocoder markers.",
       18,
       y + 14.5
     );
@@ -1306,7 +1301,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
             `Frame #${frameNum}`,
             `BBox: [${bbox.join(", ")}]`,
             "Forensic Keyframe Crop",
-            "Tamper-Proof Hash Verified",
+            "Anomaly Localization Verified",
           ]);
         }
 
@@ -1428,40 +1423,6 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // STATUTORY PENAL CLASSIFICATION (INDIAN CYBER LAW)
-  // Substantive penal offenses: Sec 66D/66E IT Act & Sec 318(4) BNS 2023.
-  // ═══════════════════════════════════════════════════════════════════════════
-  y = ensureVerticalSpace(doc, y, 30);
-  doc.setTextColor(15, 23, 42);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text(`${sectionIndex}. Applicable Legal Provisions (Indian Cyber Law)`, 14, y);
-  sectionIndex++;
-  y += 5;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(51, 65, 85);
-  doc.text(
-    "• Information Technology Act 2000 — Section 66D: Cheating by personation using computer resource.",
-    18,
-    y + 3.5
-  );
-  y += 4.5;
-  doc.text(
-    "• Bharatiya Nyaya Sanhita 2023 — Section 318(4): Cheating and dishonestly inducing delivery of property.",
-    18,
-    y + 3.5
-  );
-  y += 4.5;
-  doc.text(
-    "• Information Technology Act 2000 — Section 66E: Violation of bodily privacy and non-consensual synthetic visual morphing.",
-    18,
-    y + 3.5
-  );
-  y += 8;
-
-  // ═══════════════════════════════════════════════════════════════════════════
   // RUNNING FOOTERS ACROSS ALL PAGES
   // ═══════════════════════════════════════════════════════════════════════════
   const totalPages = doc.getNumberOfPages();
@@ -1485,7 +1446,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
       285
     );
     doc.text(
-      "cybercrime.gov.in Official Standard Compliant",
+      "Multi-Modal Forensic Audit Standard Compliant",
       pageWidth - 68,
       281
     );

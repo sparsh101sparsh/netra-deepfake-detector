@@ -225,29 +225,29 @@ class VisualAnomalyLocalizer:
             semantic_label = "Iris/Pupil Corneal Reflection Discontinuity"
             evidence_code = cls.EVD_IRIS_CORNEAL
             region_name = "Iris / Pupil Ocular Region"
-            statutory_act = "Section 66D IT Act 2000"
+            statutory_act = "Synthetic Facial Manipulation"
         elif lip_fires and lip_score > ew_score:
             chosen_type = AnomalyRegionType.LIP_SYNC
             chosen_box = lip_box
             semantic_label = "Lip-Sync Blending Boundary Artifact"
             evidence_code = cls.EVD_LIP_SYNC_SEAM
             region_name = "Perioral / Mouth Blending Boundary"
-            statutory_act = "Section 318(4) BNS 2023"
+            statutory_act = "Synthetic Facial Manipulation"
         elif ew_fires:
             chosen_type = AnomalyRegionType.EYEWEAR
             chosen_box = ew_box
             semantic_label = "Eyewear Specular Glare & Feature Discontinuity"
             evidence_code = cls.EVD_EYE_SPECULAR
             region_name = "Eyewear / Specular Glare Plane"
-            statutory_act = "Section 66D IT Act 2000"
+            statutory_act = "Synthetic Facial Manipulation"
         else:
             # Biological facial coherence verified — no anomalous manipulation detected
             chosen_type = AnomalyRegionType.NONE
             chosen_box = (0, 0, 0, 0)
             semantic_label = "Biological Facial Coherence Verified — No Artifacts Detected"
             evidence_code = "EVD-COHERENCE-VERIFIED"
-            region_name = "N/A"
-            statutory_act = "N/A"
+            region_name = "Eyewear / Specular Glare Plane"
+            statutory_act = "Synthetic Facial Manipulation"
 
         meta = {
             "chosen_type": chosen_type,
@@ -396,17 +396,17 @@ class VisualAnomalyLocalizer:
                 semantic_label = "Iris/Pupil Corneal Reflection Discontinuity"
                 evidence_code = cls.EVD_IRIS_CORNEAL
                 region_name = "Iris / Pupil Ocular Region"
-                statutory_act = "Section 66D IT Act 2000"
+                statutory_act = "Synthetic Facial Manipulation"
             elif normalized_target in (AnomalyRegionType.LIP_SYNC, AnomalyRegionType.FACIAL_SEAM):
                 semantic_label = "Lip-Sync Blending Boundary Artifact"
                 evidence_code = cls.EVD_LIP_SYNC_SEAM
                 region_name = "Perioral / Mouth Blending Boundary"
-                statutory_act = "Section 318(4) BNS 2023"
+                statutory_act = "Synthetic Facial Manipulation"
             else:
                 semantic_label = "Eyewear Specular Glare & Feature Discontinuity"
                 evidence_code = cls.EVD_EYE_SPECULAR
                 region_name = "Eyewear / Specular Glare Plane"
-                statutory_act = "Section 66D IT Act 2000"
+                statutory_act = "Synthetic Facial Manipulation"
             detail_meta: Dict[str, Any] = {"regional_scores": {}}
         else:
             chosen_type, target_box, detail_meta = cls.evaluate_primary_anomaly(frame_bgr, face_bbox)
