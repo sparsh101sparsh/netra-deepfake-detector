@@ -205,8 +205,20 @@ def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
         threat_id = f"JOB-{job_id[:8].upper()}"
         from ..db import get_threat_by_id
         existing = get_threat_by_id(threat_id)
-        cached_vid = os.path.join(MEDIA_DIR, "uploads", f"{job_id}.mp4")
-        file_path = cached_vid if os.path.exists(cached_vid) else None
+        clean_jid = job_id.replace("JOB-", "").lower()
+        file_path = None
+        for cand in [
+            os.path.join(MEDIA_DIR, f"{clean_jid}.mp4"),
+            os.path.join(MEDIA_DIR, "uploads", f"{clean_jid}.mp4"),
+            os.path.join(MEDIA_DIR, f"{job_id}.mp4"),
+            os.path.join(MEDIA_DIR, "uploads", f"{job_id}.mp4"),
+            os.path.join(MEDIA_DIR, f"{clean_jid}_web_h264.mp4"),
+            os.path.join(MEDIA_DIR, f"{job_id}_web_h264.mp4"),
+            os.path.join(MEDIA_DIR, "uploads", f"JOB-{clean_jid[:8].upper()}.mp4"),
+        ]:
+            if os.path.exists(cand) and os.path.getsize(cand) > 0:
+                file_path = cand
+                break
         res_meta = result.get("metadata", {}) or {}
         has_coords = res_meta.get("lat") is not None and res_meta.get("lng") is not None
 
@@ -459,8 +471,20 @@ async def stream_video(job_id: str, request: Request, range: Optional[str] = Hea
         logger.debug(f"S3 streaming not available for {s3_key}: {s3_err}")
 
     # 2. Fallback to local storage (for dataset_100 benchmark sequences and offline development)
+    clean_id = job_id.replace("JOB-", "").lower()
+    raw_clean_id = job_id.replace("JOB-", "")
     local_candidates = [
+        os.path.join(MEDIA_DIR, f"{clean_id}_web_h264.mp4"),
+        os.path.join(MEDIA_DIR, f"{raw_clean_id}_web_h264.mp4"),
         os.path.join(MEDIA_DIR, f"{job_id}_web_h264.mp4"),
+        os.path.join(MEDIA_DIR, f"{clean_id}.mp4"),
+        os.path.join(MEDIA_DIR, f"{raw_clean_id}.mp4"),
+        os.path.join(MEDIA_DIR, f"{job_id}.mp4"),
+        os.path.join(MEDIA_DIR, "uploads", f"{clean_id}.mp4"),
+        os.path.join(MEDIA_DIR, "uploads", f"{raw_clean_id}.mp4"),
+        os.path.join(MEDIA_DIR, "uploads", f"{job_id}.mp4"),
+        os.path.join(MEDIA_DIR, "uploads", f"JOB-{raw_clean_id[:8].upper()}.mp4"),
+        os.path.join(MEDIA_DIR, "uploads", f"JOB-{job_id[:8].upper()}.mp4"),
         os.path.join(MEDIA_DIR, "videos", "dataset_100", f"{job_id}.mp4"),
         os.path.join(backend_dir, "media", "videos", "dataset_100", f"{job_id}.mp4"),
     ]

@@ -150,9 +150,18 @@ def auto_catalog_scan(
         if not target_media and scan_type == "video":
             actual_job_id = job_uuid or (explicit_job_id.replace("JOB-", "") if explicit_job_id else None)
             if actual_job_id:
-                candidate = os.path.join(UPLOADS_DIR, f"{actual_job_id}.mp4")
-                if os.path.exists(candidate):
-                    target_media = candidate
+                clean_jid = actual_job_id.replace("JOB-", "").lower()
+                for candidate in [
+                    os.path.join(MEDIA_DIR, f"{clean_jid}.mp4"),
+                    os.path.join(UPLOADS_DIR, f"{clean_jid}.mp4"),
+                    os.path.join(MEDIA_DIR, f"{actual_job_id}.mp4"),
+                    os.path.join(UPLOADS_DIR, f"{actual_job_id}.mp4"),
+                    os.path.join(MEDIA_DIR, f"{actual_job_id}_web_h264.mp4"),
+                    os.path.join(UPLOADS_DIR, f"JOB-{actual_job_id[:8].upper()}.mp4"),
+                ]:
+                    if os.path.exists(candidate) and os.path.getsize(candidate) > 0:
+                        target_media = candidate
+                        break
 
         if lat is None and target_media:
             exif_geo = extract_media_exif_geolocation(target_media)
@@ -302,7 +311,7 @@ def auto_catalog_scan(
         "lng": lng,
         "city": city,
         "state": state,
-        "country": "India",
+        "country": "India" if (lat is not None or city) else None,
         "location_source": loc_source,
         "device_model": device_model,
         "software_used": software_used,
