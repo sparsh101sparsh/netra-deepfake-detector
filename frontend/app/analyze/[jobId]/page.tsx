@@ -81,8 +81,8 @@ export default function AnalysisPage({ params }: Props) {
   const [jobStatus, setJobStatus] = useState<JobStatusResponse | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoSources, setVideoSources] = useState<{ primaryUrl: string | null; streamUrl: string }>({
-    primaryUrl: null,
-    streamUrl: `/api/backend/api/v1/jobs/${jobId}/stream`,
+    primaryUrl: `/api/backend/api/v1/jobs/${jobId}/stream`,
+    streamUrl: `/api/v1/jobs/${jobId}/stream`,
   });
   const [error, setError] = useState<string | null>(null);
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
