@@ -125,34 +125,55 @@ export default function AnalysisPage({ params }: Props) {
           setJobStatus(status);
 
           if (status.status === "complete" || status.status === "error") {
-            if (pollingRef.current) clearInterval(pollingRef.current);
-            if (queueTimerRef.current) clearInterval(queueTimerRef.current);
+            if (pollingRef.current) {
+              clearInterval(pollingRef.current);
+              pollingRef.current = null;
+            }
+            if (queueTimerRef.current) {
+              clearInterval(queueTimerRef.current);
+              queueTimerRef.current = null;
+            }
 
             if (status.status === "error") {
               setError(status.error || "Analysis failed. Please try again.");
             } else {
-              const sources = await getVideoMediaSources(jobId);
-              if (!cancelled) {
-                setVideoSources(sources);
-                setVideoUrl(sources.primaryUrl || sources.streamUrl);
-              }
+              getVideoMediaSources(jobId)
+                .then((sources) => {
+                  if (!cancelled) {
+                    setVideoSources((prev) => {
+                      if (
+                        prev.primaryUrl === sources.primaryUrl &&
+                        prev.streamUrl === sources.streamUrl
+                      ) {
+                        return prev;
+                      }
+                      return sources;
+                    });
+                    setVideoUrl(sources.primaryUrl || sources.streamUrl);
+                  }
+                })
+                .catch(() => {});
             }
           }
         }
       } catch (err) {
         if (!cancelled) {
-          // If 404 or backend issue, keep polling gently without crashing unless critical
           console.warn("Poll attempt failed, will retry:", err);
         }
       }
     }
 
+    const timer = setInterval(poll, 2500);
+    pollingRef.current = timer;
     poll();
-    pollingRef.current = setInterval(poll, 2500);
 
     return () => {
       cancelled = true;
-      if (pollingRef.current) clearInterval(pollingRef.current);
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+      clearInterval(timer);
     };
   }, [jobId]);
 

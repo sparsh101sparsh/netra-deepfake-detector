@@ -316,9 +316,6 @@ function FaceScorecard({ face }: { face: FaceEntry }) {
           {metrics.eyewear_specular_score !== undefined && (
             <MetricBar label="Eyewear Specular Anomaly" value={metrics.eyewear_specular_score / 100} danger />
           )}
-          {metrics.lip_sync_laplacian_score !== undefined && (
-            <MetricBar label="Lip-Sync Boundary Seam" value={metrics.lip_sync_laplacian_score / 100} danger />
-          )}
         </div>
       )}
 
@@ -422,7 +419,6 @@ export function FacialAnomalyCard({ data, onReset, className }: FacialAnomalyCar
             sbiArtifactLevel: f.neural_metrics?.sbi_artifact_level,
             ocularSymmetry: f.neural_metrics?.ocular_reflection_symmetry,
             eyewearGlareArtifact: f.neural_metrics?.eyewear_specular_score,
-            lipSyncLaplacian: f.neural_metrics?.lip_sync_laplacian_score,
           },
         })),
       },

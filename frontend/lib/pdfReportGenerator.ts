@@ -850,11 +850,6 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
       activeMetrics.eyewear_specular_score ??
       activeMetrics.eyewearGlareArtifact ??
       0.91;
-    const lipSync =
-      activeMetrics.lip_sync_laplacian_score ??
-      activeMetrics.lipSyncLaplacian ??
-      0.82;
-
     const biomarkerRows = [
       {
         name: "SBI Artifact Level",
@@ -870,11 +865,6 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
         name: "Eyewear Specular Glare Score",
         val: `${(eyewear <= 1 ? eyewear * 100 : eyewear).toFixed(1)}%`,
         desc: "Spectacle lens reflection plane divergence",
-      },
-      {
-        name: "Lip-Sync Laplacian Score",
-        val: `${(lipSync <= 1 ? lipSync * 100 : lipSync).toFixed(1)}%`,
-        desc: "Perioral boundary Laplacian texture sharpness anomaly",
       },
     ];
 
