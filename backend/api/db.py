@@ -493,6 +493,77 @@ def insert_threat_item(item: Dict[str, Any]) -> str:
 
     return item_id
 
+_LAST_DYNAMO_SYNC = 0.0
+
+def sync_catalog_from_dynamodb():
+    """Sync recent CATALOG# items from AWS DynamoDB to local SQLite if running in production."""
+    if os.getenv("PYTEST_CURRENT_TEST"):
+        return
+    global _LAST_DYNAMO_SYNC
+    now = time.time()
+    if now - _LAST_DYNAMO_SYNC < 4.0:
+        return
+    _LAST_DYNAMO_SYNC = now
+    try:
+        table_name = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
+        region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
+        ak = os.getenv("AWS_ACCESS_KEY_ID")
+        sk = os.getenv("AWS_SECRET_ACCESS_KEY")
+        kwargs = {"region_name": region}
+        if ak and sk:
+            kwargs["aws_access_key_id"] = ak.strip()
+            kwargs["aws_secret_access_key"] = sk.strip()
+        import boto3
+        dynamo = boto3.client("dynamodb", **kwargs)
+        res = dynamo.scan(
+            TableName=table_name,
+            FilterExpression="begins_with(job_id, :prefix)",
+            ExpressionAttributeValues={":prefix": {"S": "CATALOG#"}},
+            Limit=100
+        )
+        conn = get_db()
+        for item in res.get("Items", []):
+            payload_str = item.get("payload", {}).get("S")
+            if not payload_str:
+                continue
+            try:
+                p = json.loads(payload_str)
+                p_id = str(p.get("id", ""))
+                p_title = str(p.get("title", ""))
+                if is_synthetic_test_threat(p_id, p_title):
+                    continue
+                p_type = p.get("type", "video_deepfake")
+                p_lat = None if p_type == "audio_clone" else p.get("lat")
+                p_lng = None if p_type == "audio_clone" else p.get("lng")
+                p_city = None if p_type == "audio_clone" else p.get("city")
+                p_state = None if p_type == "audio_clone" else p.get("state")
+                p_loc_source = "ONLINE_AUDIO_UNMAPPED" if p_type == "audio_clone" else p.get("location_source")
+
+                conn.execute("""
+                INSERT OR REPLACE INTO threat_catalog (
+                    id, title, type, threat_category, source_platform, fake_probability, verdict,
+                    risk_level, thumbnail_url, media_url, lat, lng, city, state, country,
+                    location_source, device_model, software_used, extracted_iocs, fir_dossier,
+                    upvotes_count, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    p_id, p.get("title"), p_type,
+                    p.get("threat_category", "IMPERSONATION"), p.get("source_platform", "Web"),
+                    p.get("fake_probability", 0.8), p.get("verdict", "SUSPICIOUS"),
+                    p.get("risk_level", "HIGH"), p.get("thumbnail_url"), p.get("media_url"),
+                    p_lat, p_lng, p_city, p_state, p.get("country", "India"),
+                    p_loc_source, p.get("device_model"), p.get("software_used"),
+                    json.dumps(p.get("extracted_iocs", {})) if isinstance(p.get("extracted_iocs"), dict) else str(p.get("extracted_iocs", "{}")),
+                    json.dumps(p.get("fir_dossier", {})) if isinstance(p.get("fir_dossier"), dict) else str(p.get("fir_dossier", "{}")),
+                    p.get("upvotes_count", 1), p.get("created_at")
+                ))
+            except Exception:
+                pass
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
 def get_threat_catalog(
     search: Optional[str] = None,
     category: Optional[str] = None,
@@ -500,6 +571,7 @@ def get_threat_catalog(
     limit: int = 100,
     offset: int = 0
 ) -> List[Dict]:
+    sync_catalog_from_dynamodb()
     conn = get_db()
     query = "SELECT * FROM threat_catalog WHERE 1=1"
     params = []

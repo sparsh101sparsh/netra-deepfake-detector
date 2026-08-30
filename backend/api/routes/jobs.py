@@ -188,7 +188,10 @@ def fetch_job_item(job_id: str) -> Optional[Dict[str, Any]]:
 def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
     """Ensure completed video jobs are indexed in Threat Catalog and Radar with EXIF GPS."""
     try:
-        if not parsed or parsed.get("status") != "complete":
+        if not parsed:
+            return
+        st = str(parsed.get("status", "")).strip().lower()
+        if st not in ("complete", "completed"):
             return
         result = parsed.get("result")
         if isinstance(result, str):
@@ -202,12 +205,13 @@ def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
         threat_id = f"JOB-{job_id[:8].upper()}"
         from ..db import get_threat_by_id
         existing = get_threat_by_id(threat_id)
-        res_meta = result.get("metadata", {})
+        cached_vid = os.path.join(MEDIA_DIR, "uploads", f"{job_id}.mp4")
+        file_path = cached_vid if os.path.exists(cached_vid) else None
+        res_meta = result.get("metadata", {}) or {}
         has_coords = res_meta.get("lat") is not None and res_meta.get("lng") is not None
-        if not existing or (has_coords and existing.get("lat") is None):
+
+        if not existing or (existing.get("lat") is None and (has_coords or file_path)):
             from netra.services.catalog_hook import auto_catalog_scan
-            cached_vid = os.path.join(MEDIA_DIR, "uploads", f"{job_id}.mp4")
-            file_path = cached_vid if os.path.exists(cached_vid) else None
             auto_catalog_scan(
                 scan_type="video",
                 result=result,

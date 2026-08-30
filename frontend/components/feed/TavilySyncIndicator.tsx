@@ -31,37 +31,39 @@ export function TavilySyncIndicator({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-between gap-2.5 select-none",
+        "flex items-center justify-between gap-2.5 select-none text-xs",
         className
       )}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <StatusPill
-          tone="accent"
-          size={compact ? "sm" : "md"}
-          pulse={true}
-          className="font-semibold tracking-wider text-[11px] uppercase shrink-0"
-        >
-          LIVE SCAM ALERTS
-        </StatusPill>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Live Threat Feed
+        </span>
 
-        {typeof totalCount === "number" && totalCount > 0 && !compact && (
-          <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-inset text-ink-2 border-[1.5px] border-line tabular-nums">
-            {totalCount} Verified Reports
+        {typeof totalCount === "number" && totalCount > 0 && (
+          <span className="text-[11px] text-zinc-400 font-medium">
+            • {totalCount} Advisories
           </span>
         )}
       </div>
 
-      <div className="flex items-center gap-2 shrink-0 text-right">
-        <div className="flex flex-col items-end">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-ink-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Syncs every 24h automatically
-          </span>
-          <span className="text-[10px] text-ink-3">
-            Daily intelligence sent to WhatsApp & Telegram bots
-          </span>
-        </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="text-[11px] text-zinc-500 hidden sm:inline-flex items-center gap-1">
+          Auto-syncs 24h
+        </span>
+        {onRefresh && (
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            title="Refresh feed intelligence"
+            className="p-1 rounded text-zinc-400 hover:text-white hover:bg-white/5 transition-colors focus-visible:outline-none"
+            aria-label="Refresh threat intelligence feed"
+          >
+            <RefreshCw className={cn("size-3.5", isRefreshing && "animate-spin text-accent")} />
+          </button>
+        )}
       </div>
     </div>
   );

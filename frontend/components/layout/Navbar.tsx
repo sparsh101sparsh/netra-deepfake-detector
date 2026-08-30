@@ -278,14 +278,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <NetraUserAvatar avatarIndex={user.avatarIndex} seed={user.email} size={26} />
                   <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-emerald-400 border border-surface shadow-sm" />
                 </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-xs font-semibold text-ink leading-tight truncate max-w-[90px] sm:max-w-[120px]">
-                    {(user.name || user.email || "User").split(" ")[0]}
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-400 leading-none truncate max-w-[90px] sm:max-w-[120px]">
-                    Verified
-                  </span>
-                </div>
+                <span className="text-xs font-semibold text-ink leading-none truncate max-w-[90px] sm:max-w-[120px]">
+                  {(user.name || user.email || "User").split(" ")[0]}
+                </span>
                 <ChevronDown className="size-3 text-zinc-400 group-hover:text-ink transition-colors ml-0.5" />
               </button>
             ) : (
