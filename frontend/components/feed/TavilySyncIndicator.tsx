@@ -36,8 +36,8 @@ export function TavilySyncIndicator({
       )}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#18181B] text-zinc-300 border border-white/10">
+          <span className="size-1.5 rounded-full bg-zinc-400" />
           Live Threat Feed
         </span>
 

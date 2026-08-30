@@ -222,15 +222,14 @@ def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
         res_meta = result.get("metadata", {}) or {}
         has_coords = res_meta.get("lat") is not None and res_meta.get("lng") is not None
 
-        if not existing or (existing.get("lat") is None and (has_coords or file_path)):
-            from netra.services.catalog_hook import auto_catalog_scan
-            auto_catalog_scan(
-                scan_type="video",
-                result=result,
-                file_path=file_path,
-                explicit_job_id=threat_id,
-                job_uuid=job_id
-            )
+        from netra.services.catalog_hook import auto_catalog_scan
+        auto_catalog_scan(
+            scan_type="video",
+            result=result,
+            file_path=file_path,
+            explicit_job_id=threat_id,
+            job_uuid=job_id
+        )
     except Exception as e:
         logger.debug(f"Catalog indexing hook for {job_id}: {e}")
 

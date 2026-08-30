@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import "leaflet/dist/leaflet.css";
 import {
   MapPin, X, Search, Video, Mic,
@@ -134,7 +134,12 @@ export function LiveThreatRadar() {
             }
             return true;
           });
-          setMarkers(cleanMarkers);
+          const sortedMarkers = [...cleanMarkers].sort((a, b) => {
+            const tA = new Date((a.created_at || "").replace(" ", "T")).getTime() || 0;
+            const tB = new Date((b.created_at || "").replace(" ", "T")).getTime() || 0;
+            return tB - tA;
+          });
+          setMarkers(sortedMarkers);
         } else {
           setMarkers([]);
         }
@@ -202,7 +207,56 @@ export function LiveThreatRadar() {
     };
   }, []);
 
-  // 3. Render Leaflet HTML Markers dynamically
+  // Filter & Search Helper Functions (Null-Safe & Modality Aware)
+  const matchesRadarFilter = (m: ThreatMarker, filter: string): boolean => {
+    if (filter === "ALL") return true;
+    const cat = (m.category || "").toUpperCase();
+    const typ = (m.type || "").toLowerCase();
+    if (filter === "DEEPFAKE") {
+      return typ.includes("deepfake") || cat.includes("SWAP") || cat.includes("DEEPFAKE") || cat.includes("IMPERSONATION");
+    }
+    if (filter === "VOICE") {
+      return typ.includes("audio") || cat.includes("VOICE") || cat.includes("AUDIO");
+    }
+    if (filter === "ARREST") {
+      return cat.includes("ARREST");
+    }
+    if (filter === "KYC") {
+      return cat.includes("KYC") || cat.includes("ELECTRIC");
+    }
+    if (filter === "RECRUIT") {
+      return cat.includes("JOB") || cat.includes("RECRUIT");
+    }
+    if (filter === "INVESTMENT") {
+      return cat.includes("STOCK") || cat.includes("INVEST") || cat.includes("FRAUD");
+    }
+    return cat === filter;
+  };
+
+  const matchesRadarSearch = (m: ThreatMarker, query: string): boolean => {
+    if (!query || !query.trim()) return true;
+    const q = query.toLowerCase().trim();
+    return (
+      (m.city || "").toLowerCase().includes(q) ||
+      (m.state || "").toLowerCase().includes(q) ||
+      (m.title || "").toLowerCase().includes(q) ||
+      (m.id || "").toLowerCase().includes(q) ||
+      (m.software_used || "").toLowerCase().includes(q)
+    );
+  };
+
+  // 3. Auto Latest-First Sorted & Filtered Markers (No UI sort element required)
+  const filteredMarkers = useMemo(() => {
+    return markers
+      .filter((m) => matchesRadarFilter(m, activeFilter) && matchesRadarSearch(m, searchQuery))
+      .sort((a, b) => {
+        const tA = new Date((a.created_at || "").replace(" ", "T")).getTime() || 0;
+        const tB = new Date((b.created_at || "").replace(" ", "T")).getTime() || 0;
+        return tB - tA;
+      });
+  }, [markers, activeFilter, searchQuery]);
+
+  // 4. Render Leaflet HTML Markers dynamically
   useEffect(() => {
     if (!isMapReady || !mapInstanceRef.current || !markersLayerGroupRef.current) return;
 
@@ -210,16 +264,8 @@ export function LiveThreatRadar() {
       const markersGroup = markersLayerGroupRef.current;
       markersGroup.clearLayers();
 
-      const filtered = markers.filter((m) => {
-        const matchesFilter = activeFilter === "ALL" || m.category === activeFilter;
-        const matchesSearch = searchQuery === "" || 
-          m.city.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          m.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          m.title.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesFilter && matchesSearch;
-      });
-
-      filtered.forEach((m) => {
+      filteredMarkers.forEach((m) => {
+        if (typeof m.lat !== "number" || typeof m.lng !== "number" || isNaN(m.lat) || isNaN(m.lng)) return;
         const isCritical = m.risk_level === "CRITICAL";
         const isSelected = selectedMarker?.id === m.id;
 
@@ -261,7 +307,7 @@ export function LiveThreatRadar() {
           setSelectedMarker(m);
         });
 
-        marker.bindTooltip(`📍 ${m.city} • ${m.title}`, {
+        marker.bindTooltip(`📍 ${m.city || "Detected Geolocation"} • ${m.title || "Threat"}`, {
           direction: "top",
           className: "leaflet-dark-tooltip",
           offset: [0, -12],
@@ -270,9 +316,9 @@ export function LiveThreatRadar() {
         markersGroup.addLayer(marker);
       });
     });
-  }, [markers, activeFilter, searchQuery, selectedMarker, isMapReady]);
+  }, [filteredMarkers, selectedMarker, isMapReady]);
 
-  // 4. Interactive Pan to Location when clicked from the right list
+  // 5. Interactive Pan to Location when clicked from the right list
   const handleSelectLocation = (marker: ThreatMarker) => {
     setSelectedMarker(marker);
     if (mapInstanceRef.current) {
@@ -281,15 +327,6 @@ export function LiveThreatRadar() {
       });
     }
   };
-
-  const filteredMarkers = markers.filter((m) => {
-    const matchesFilter = activeFilter === "ALL" || m.category === activeFilter;
-    const matchesSearch = searchQuery === "" || 
-      m.city.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      m.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.title.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
 
   return (
     <div className="w-full rounded-2xl overflow-hidden border-[1.5px] border-line bg-[#17191A] shadow-card flex flex-col font-sans select-none">

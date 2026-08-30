@@ -678,9 +678,9 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
                 {scrambledWordmark}
               </div>
 
-              {/* LUMINOUS VERTICAL HAIRLINE (Directly connecting NETRA to motto) */}
+              {/* LUMINOUS VERTICAL HAIRLINE (Optical beam connecting NETRA to motto) */}
               <div
-                className="w-[1.5px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.7)] mt-7 mb-5"
+                className="w-[1.5px] bg-gradient-to-b from-transparent via-white to-transparent shadow-[0_0_10px_rgba(255,255,255,0.8)] my-4"
                 style={{
                   height: `${hairlineHeight}px`,
                   opacity: hairlineOpacity,
@@ -688,7 +688,7 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
               />
 
               {/* TRILINGUAL MOTTO WITH LASER WIPES */}
-              <div className="relative w-full min-h-[4.2em] flex items-center justify-center text-center overflow-hidden">
+              <div className="relative w-full min-h-[4em] flex items-center justify-center text-center overflow-hidden">
                 {/* Laser lines */}
                 {laser1Opacity > 0 && (
                   <div
@@ -705,7 +705,7 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
 
                 {/* Sanskrit */}
                 <div
-                  className="absolute inset-0 flex items-center justify-center font-medium text-2xl sm:text-3xl text-white"
+                  className="absolute inset-0 flex items-center justify-center font-medium text-xl sm:text-2xl md:text-3xl text-white tracking-wide select-none"
                   style={{
                     fontFamily: "'Noto Sans Devanagari', sans-serif",
                     opacity: sanskritOpacity,
@@ -716,9 +716,9 @@ export const UltraFrameIntro: React.FC<UltraFrameIntroProps> = ({
                   मायातीतं सत्यस्य चक्षुः
                 </div>
 
-                {/* English — Final Holding State */}
+                {/* English — High-Contrast Institutional Typography */}
                 <div
-                  className="absolute inset-0 flex items-center justify-center font-mono font-semibold text-xs sm:text-base tracking-[0.22em] text-[#94A3B8]"
+                  className="absolute inset-0 flex items-center justify-center font-sans font-semibold text-xs sm:text-sm md:text-base tracking-[0.26em] text-white select-none uppercase"
                   style={{
                     opacity: englishOpacity,
                     filter: `blur(${englishBlur}px)`,

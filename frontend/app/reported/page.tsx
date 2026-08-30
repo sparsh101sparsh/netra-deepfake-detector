@@ -150,7 +150,12 @@ export default function ThreatCatalogPage() {
           }
           return true;
         });
-        setItems(fetchedItems);
+        const sortedItems = [...fetchedItems].sort((a, b) => {
+          const tA = new Date((a.created_at || "").replace(" ", "T")).getTime() || 0;
+          const tB = new Date((b.created_at || "").replace(" ", "T")).getTime() || 0;
+          return tB - tA;
+        });
+        setItems(sortedItems);
       })
       .catch((err) => {
         console.warn("Threat catalog fetch error:", err);

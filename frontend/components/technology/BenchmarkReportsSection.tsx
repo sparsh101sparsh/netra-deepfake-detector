@@ -26,24 +26,6 @@ interface ReportConfig {
 
 const REPORTS: ReportConfig[] = [
   {
-    id: "100_deepfakes",
-    title: "100-Deepfake Video Benchmark Ledger",
-    shortTitle: "100 Deepfakes Ledger (5 Pages • 270 KB)",
-    subtitle: "Official Verification Ledger: NETRA Merged Architecture vs. MesoNet Baselines",
-    pages: 5,
-    size: "270 KB",
-    pdfUrl: "/benchmarks/NETRA_vs_MesoNet_100_Deepfakes_Benchmark_Report.pdf",
-    badge: "Target Corpus (100 Videos)",
-    summary: "Complete per-sample forensic detection ledger across all 100 generated face-swapped videos targeting prominent Indian public figures, military leaders, and artists. Compares NETRA against Meso-4 and MesoInception-4 across every video sequence.",
-    stats: {
-      datasetSize: "100 Sequences",
-      netraAccuracy: "100.0%",
-      mesonetAccuracy: "74.0%",
-      aucScore: "0.998",
-      fpr: "0.0%",
-    },
-  },
-  {
     id: "2520_videos",
     title: "3X Massive 2,520-Video Comprehensive Evaluation",
     shortTitle: "2,520 Video Ledger (74 Pages • 5.0 MB)",
@@ -61,10 +43,28 @@ const REPORTS: ReportConfig[] = [
       fpr: "0.6%",
     },
   },
+  {
+    id: "100_deepfakes",
+    title: "100-Deepfake Video Benchmark Ledger",
+    shortTitle: "100 Deepfakes Ledger (5 Pages • 270 KB)",
+    subtitle: "Official Verification Ledger: NETRA Merged Architecture vs. MesoNet Baselines",
+    pages: 5,
+    size: "270 KB",
+    pdfUrl: "/benchmarks/NETRA_vs_MesoNet_100_Deepfakes_Benchmark_Report.pdf",
+    badge: "Target Corpus (100 Videos)",
+    summary: "Complete per-sample forensic detection ledger across all 100 generated face-swapped videos targeting prominent Indian public figures, military leaders, and artists. Compares NETRA against Meso-4 and MesoInception-4 across every video sequence.",
+    stats: {
+      datasetSize: "100 Sequences",
+      netraAccuracy: "100.0%",
+      mesonetAccuracy: "74.0%",
+      aucScore: "0.998",
+      fpr: "0.0%",
+    },
+  },
 ];
 
 export default function BenchmarkReportsSection() {
-  const [selectedReportId, setSelectedReportId] = useState<string>("100_deepfakes");
+  const [selectedReportId, setSelectedReportId] = useState<string>("2520_videos");
 
   const currentReport = REPORTS.find((r) => r.id === selectedReportId) || REPORTS[0];
 

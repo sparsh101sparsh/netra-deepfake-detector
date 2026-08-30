@@ -202,7 +202,7 @@ export function LiveCyberScamNewsFeed({
       <div className="p-5 sm:p-6 pb-3.5 border-b border-line shrink-0 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-red-500/10 border-[1.5px] border-red-500/30 flex items-center justify-center text-red-400 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-[#18181B] border border-white/10 flex items-center justify-center text-zinc-300 shrink-0">
               <Newspaper className="w-4 h-4" />
             </div>
             <div className="min-w-0">
