@@ -179,6 +179,16 @@ export default function AnalysisPage({ params }: Props) {
 
   const isComplete = jobStatus?.status === "complete";
   const result: DetectionResult | null = isComplete ? (jobStatus?.result ?? null) : null;
+  const posterImage = useMemo(() => {
+    if (!result) return undefined;
+    const keyframes = result.keyframe_snapshots || [];
+    if (keyframes.length > 0) {
+      return keyframes[0].annotated_image_url || keyframes[0].image_url || undefined;
+    }
+    const frames = result.frames || [];
+    const withImg = frames.find((f: any) => f.annotated_image_url);
+    return withImg?.annotated_image_url || undefined;
+  }, [result]);
   const currentProgress = Math.min(100, Math.max(0, jobStatus?.progress ?? 0));
   const currentStageKey = jobStatus?.current_stage ?? "queued";
   const activeStageIndex = useMemo(
@@ -673,6 +683,7 @@ export default function AnalysisPage({ params }: Props) {
                   videoRef={videoRef}
                   primaryUrl={videoSources.primaryUrl}
                   fallbackUrl={videoSources.streamUrl}
+                  poster={posterImage}
                   onLoadedMetadata={(e) => setVideoDuration(e.currentTarget.duration)}
                   className="w-full h-full object-contain"
                 />

@@ -298,29 +298,21 @@ async def websocket_progress(ws: WebSocket, job_id: str):
 async def get_video_presigned_url(job_id: str):
     """
     Returns primary streaming route for the job's input video.
-    Prioritizes direct HTTP 206 streaming proxy which supports Range headers,
-    CORS, and HEAD preflights with zero 403 Forbidden errors.
+    Prioritizes S3 presigned URL with inline playback and video/mp4 MIME type.
+    Falls back to streaming proxy /api/v1/jobs/{job_id}/stream.
     """
     from .detect import get_boto3_client as get_s3_client, get_s3_bucket
     s3_bucket = get_s3_bucket()
     s3_key = f"{job_id}/input.mp4"
     stream_url = f"/api/v1/jobs/{job_id}/stream"
 
-    # Check if local video file exists on disk
-    local_candidates = [
-        os.path.join(MEDIA_DIR, f"{job_id}.mp4"),
-        os.path.join(MEDIA_DIR, "videos", f"{job_id}.mp4"),
-        os.path.join(MEDIA_DIR, job_id, "input.mp4"),
-        os.path.join("/tmp", f"{job_id}.mp4"),
-    ]
-    has_local = any(os.path.exists(c) and os.path.getsize(c) > 0 for c in local_candidates)
+    job_item = fetch_job_item(job_id)
+    if job_item and job_item.get("s3_key"):
+        s3_key = job_item["s3_key"]
 
-    if has_local:
-        return {"url": stream_url, "stream_url": stream_url, "expires_in": 3600}
-
-    # Fallback to S3 presigned URL if present
     try:
         s3 = get_s3_client("s3")
+        s3.head_object(Bucket=s3_bucket, Key=s3_key)
         url = s3.generate_presigned_url(
             "get_object",
             Params={
@@ -333,7 +325,7 @@ async def get_video_presigned_url(job_id: str):
         )
         return {"url": url, "stream_url": stream_url, "expires_in": 3600}
     except Exception as e:
-        logger.warning(f"S3 presigned URL generation failed for job {job_id}: {e}")
+        logger.debug(f"S3 presigned URL generation fallback for job {job_id}: {e}")
         return {"url": stream_url, "stream_url": stream_url, "expires_in": 3600}
 
 
@@ -341,114 +333,20 @@ async def get_video_presigned_url(job_id: str):
 async def stream_video(job_id: str, request: Request, range: Optional[str] = Header(None)):
     """
     HTTP 206 Partial Content / Range video streaming proxy.
-    Streams directly from local media storage or proxies S3 byte chunks
-    with proper video/mp4 MIME type, Accept-Ranges, and HEAD preflight support.
+    Streams directly from S3 or proxies local dataset/media storage with
+    proper video/mp4 MIME type, Accept-Ranges, and HEAD preflight support.
     """
     from .detect import get_boto3_client as get_s3_client, get_s3_bucket
 
-    # 1. Check local media storage first
-    local_candidates = [
-        os.path.join(MEDIA_DIR, f"{job_id}_web_h264.mp4"),
-        os.path.join(MEDIA_DIR, f"{job_id}.mp4"),
-        os.path.join(MEDIA_DIR, "videos", f"{job_id}.mp4"),
-        os.path.join(MEDIA_DIR, job_id, "input.mp4"),
-        os.path.join("/tmp", f"{job_id}.mp4"),
-    ]
-
-    try:
-        job_item = fetch_job_item(job_id)
-        if job_item:
-            raw_fname = job_item.get("filename") or ""
-            if raw_fname:
-                base_fname = os.path.basename(raw_fname)
-                local_candidates.extend([
-                    os.path.join(MEDIA_DIR, "videos", "dataset_100", base_fname),
-                    os.path.join(backend_dir, "media", "videos", "dataset_100", base_fname),
-                ])
-    except Exception:
-        pass
-
-    local_path = None
-    for cand in local_candidates:
-        if os.path.exists(cand) and os.path.getsize(cand) > 0:
-            local_path = cand
-            break
-
-    # Resolve Range header
-    range_header = request.headers.get("range") or request.headers.get("Range") or range
-
-    if local_path:
-        file_size = os.path.getsize(local_path)
-        if request.method == "HEAD":
-            headers = {
-                "Accept-Ranges": "bytes",
-                "Content-Length": str(file_size),
-                "Content-Type": "video/mp4",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
-            }
-            return Response(status_code=200, headers=headers, media_type="video/mp4")
-
-        if range_header:
-            try:
-                range_str = range_header.replace("bytes=", "").strip()
-                parts = range_str.split("-")
-                start = int(parts[0]) if parts[0] else 0
-                end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1
-                end = min(end, file_size - 1)
-                chunk_len = max(0, end - start + 1)
-            except Exception:
-                start = 0
-                end = file_size - 1
-                chunk_len = file_size
-
-            def local_chunk_generator():
-                with open(local_path, "rb") as f:
-                    f.seek(start)
-                    remaining = chunk_len
-                    while remaining > 0:
-                        read_len = min(64 * 1024, remaining)
-                        data = f.read(read_len)
-                        if not data:
-                            break
-                        remaining -= len(data)
-                        yield data
-
-            headers = {
-                "Content-Range": f"bytes {start}-{end}/{file_size}",
-                "Accept-Ranges": "bytes",
-                "Content-Length": str(chunk_len),
-                "Content-Type": "video/mp4",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
-            }
-            return StreamingResponse(local_chunk_generator(), status_code=206, headers=headers, media_type="video/mp4")
-        else:
-            def full_local_generator():
-                with open(local_path, "rb") as f:
-                    while True:
-                        data = f.read(64 * 1024)
-                        if not data:
-                            break
-                        yield data
-
-            headers = {
-                "Accept-Ranges": "bytes",
-                "Content-Length": str(file_size),
-                "Content-Type": "video/mp4",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
-            }
-            return StreamingResponse(full_local_generator(), status_code=200, headers=headers, media_type="video/mp4")
-
-    # 2. Fallback to direct S3 streaming if local file not found
+    job_item = fetch_job_item(job_id)
     s3_bucket = get_s3_bucket()
     s3_key = f"{job_id}/input.mp4"
-    try:
-        if job_item and job_item.get("s3_key"):
-            s3_key = job_item["s3_key"]
-    except Exception:
-        pass
+    if job_item and job_item.get("s3_key"):
+        s3_key = job_item["s3_key"]
+
+    range_header = request.headers.get("range") or request.headers.get("Range") or range
+
+    # 1. Prioritize S3 cloud storage (contains processed, streamable H.264 video)
     try:
         s3 = get_s3_client("s3")
         head = s3.head_object(Bucket=s3_bucket, Key=s3_key)
@@ -507,9 +405,95 @@ async def stream_video(job_id: str, request: Request, range: Optional[str] = Hea
                 headers=headers,
                 media_type="video/mp4"
             )
-    except Exception as e:
-        logger.error(f"Error streaming video for job {job_id}: {e}")
-        raise HTTPException(status_code=404, detail=f"Video stream unavailable for job {job_id}: {str(e)}")
+    except Exception as s3_err:
+        logger.debug(f"S3 streaming not available for {s3_key}: {s3_err}")
+
+    # 2. Fallback to local storage (for dataset_100 benchmark sequences and offline development)
+    local_candidates = [
+        os.path.join(MEDIA_DIR, f"{job_id}_web_h264.mp4"),
+        os.path.join(MEDIA_DIR, "videos", "dataset_100", f"{job_id}.mp4"),
+        os.path.join(backend_dir, "media", "videos", "dataset_100", f"{job_id}.mp4"),
+    ]
+    if job_item:
+        raw_fname = job_item.get("filename") or ""
+        if raw_fname:
+            base_fname = os.path.basename(raw_fname)
+            local_candidates.extend([
+                os.path.join(MEDIA_DIR, "videos", "dataset_100", base_fname),
+                os.path.join(backend_dir, "media", "videos", "dataset_100", base_fname),
+            ])
+
+    local_path = None
+    for cand in local_candidates:
+        if os.path.exists(cand) and os.path.getsize(cand) > 0:
+            local_path = cand
+            break
+
+    if not local_path:
+        raise HTTPException(status_code=404, detail="Video recording unavailable in storage")
+
+    file_size = os.path.getsize(local_path)
+    if request.method == "HEAD":
+        headers = {
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(file_size),
+            "Content-Type": "video/mp4",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
+        }
+        return Response(status_code=200, headers=headers, media_type="video/mp4")
+
+    if range_header:
+        try:
+            range_str = range_header.replace("bytes=", "").strip()
+            parts = range_str.split("-")
+            start = int(parts[0]) if parts[0] else 0
+            end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1
+            end = min(end, file_size - 1)
+            chunk_len = max(0, end - start + 1)
+        except Exception:
+            start = 0
+            end = file_size - 1
+            chunk_len = file_size
+
+        def local_chunk_generator():
+            with open(local_path, "rb") as f:
+                f.seek(start)
+                remaining = chunk_len
+                while remaining > 0:
+                    read_len = min(64 * 1024, remaining)
+                    data = f.read(read_len)
+                    if not data:
+                        break
+                    remaining -= len(data)
+                    yield data
+
+        headers = {
+            "Content-Range": f"bytes {start}-{end}/{file_size}",
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(chunk_len),
+            "Content-Type": "video/mp4",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
+        }
+        return StreamingResponse(local_chunk_generator(), status_code=206, headers=headers, media_type="video/mp4")
+    else:
+        def full_local_generator():
+            with open(local_path, "rb") as f:
+                while True:
+                    data = f.read(64 * 1024)
+                    if not data:
+                        break
+                    yield data
+
+        headers = {
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(file_size),
+            "Content-Type": "video/mp4",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length, Content-Type",
+        }
+        return StreamingResponse(full_local_generator(), status_code=200, headers=headers, media_type="video/mp4")
 
 
 @router.api_route("/jobs/{job_id}/keyframes/{filename}", methods=["GET", "HEAD"])

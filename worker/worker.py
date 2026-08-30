@@ -528,6 +528,68 @@ def write_error_to_dynamo(
         logger.error(f"Failed to write error for job {job_id}: {e}")
 
 
+def ensure_web_streamable(video_path: str, s3_client, bucket: str, s3_key: str):
+    """
+    Ensure video is encoded in browser-standard H.264 (avc1) with yuv420p and +faststart.
+    If not, transcode with ffmpeg and overwrite S3 so browsers can stream it.
+    """
+    if not os.path.exists(video_path) or os.path.getsize(video_path) == 0:
+        return
+
+    try:
+        probe_cmd = [
+            "ffprobe", "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "stream=codec_name,pix_fmt",
+            "-of", "csv=p=0",
+            video_path
+        ]
+        probe_res = subprocess.run(probe_cmd, capture_output=True, text=True, timeout=10)
+        out = probe_res.stdout.strip()
+        parts = out.split(",") if out else []
+        codec = parts[0].strip().lower() if len(parts) > 0 else ""
+        pix_fmt = parts[1].strip().lower() if len(parts) > 1 else ""
+
+        needs_transcode = (codec != "h264" or pix_fmt != "yuv420p")
+
+        if not needs_transcode:
+            logger.info(f"Video {s3_key} is already browser-compatible H.264 ({codec}, {pix_fmt})")
+            return
+
+        logger.info(f"Video {s3_key} is '{codec}/{pix_fmt}', transcoding to H.264 (avc1, yuv420p, +faststart) for web playback...")
+        h264_tmp = f"{video_path}.web.mp4"
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", video_path,
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-preset", "fast",
+            "-crf", "22",
+            "-c:a", "aac",
+            "-b:a", "128k",
+            "-movflags", "+faststart",
+            h264_tmp
+        ]
+        t_res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=180)
+        if t_res.returncode == 0 and os.path.exists(h264_tmp) and os.path.getsize(h264_tmp) > 0:
+            os.replace(h264_tmp, video_path)
+            logger.info(f"Transcoded {s3_key} successfully ({os.path.getsize(video_path)} bytes). Updating S3...")
+            s3_client.upload_file(
+                video_path,
+                bucket,
+                s3_key,
+                ExtraArgs={
+                    "ContentType": "video/mp4",
+                    "ContentDisposition": "inline"
+                }
+            )
+            logger.info(f"Successfully updated S3 object s3://{bucket}/{s3_key} with web-streamable H.264 video.")
+        elif os.path.exists(h264_tmp):
+            os.remove(h264_tmp)
+    except Exception as e:
+        logger.warning(f"ensure_web_streamable failed for {video_path}: {e}")
+
+
 # ==============================================================================
 # PIPELINE EXECUTION
 # ==============================================================================
@@ -570,6 +632,10 @@ def process_job(
         logger.info(
             f"Downloaded video: {os.path.getsize(video_path) / 1024:.1f} KB"
         )
+
+        # Ensure video is encoded in browser-standard H.264 (avc1) with +faststart
+        # If input is mpeg4, avi, mov, or non-yuv420p, transcode and re-upload to S3
+        ensure_web_streamable(video_path, s3, S3_BUCKET_MEDIA, s3_key)
 
         # === STAGE 2: Extract frames + audio (15%) ===
         update_job_progress(
