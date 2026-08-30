@@ -60,20 +60,50 @@ def analyze_metadata(video_path: str) -> Dict:
 
         # Extract Geolocation and Camera EXIF tags from format & stream tags
         fmt_tags = fmt.get("tags", {})
-        loc_str = fmt_tags.get("location") or fmt_tags.get("location-eng") or fmt_tags.get("com.apple.quicktime.location.ISO6709")
-        lat, lng = None, None
-        if loc_str:
-            import re
-            m = re.match(r'([+-]\d+\.?\d*)([+-]\d+\.?\d*)', loc_str)
-            if m:
-                try:
-                    lat = float(m.group(1))
-                    lng = float(m.group(2))
-                except Exception:
-                    pass
-
+        loc_str = (
+            fmt_tags.get("location")
+            or fmt_tags.get("location-eng")
+            or fmt_tags.get("com.apple.quicktime.location.ISO6709")
+            or fmt_tags.get("xyz")
+        )
         device_model = fmt_tags.get("model") or fmt_tags.get("com.apple.quicktime.model") or fmt_tags.get("make") or "Digital Video Camera"
         software = fmt_tags.get("encoder") or fmt_tags.get("software") or "Standard Video Encoder"
+
+        if not loc_str:
+            for stream in metadata.get("streams", []):
+                st_tags = stream.get("tags", {})
+                loc_str = (
+                    st_tags.get("location")
+                    or st_tags.get("location-eng")
+                    or st_tags.get("com.apple.quicktime.location.ISO6709")
+                    or st_tags.get("xyz")
+                )
+                if loc_str:
+                    if not device_model or device_model == "Digital Video Camera":
+                        device_model = st_tags.get("model") or st_tags.get("make") or device_model
+                    if not software or software == "Standard Video Encoder":
+                        software = st_tags.get("encoder") or st_tags.get("handler_name") or software
+                    break
+
+        lat, lng, city, state, loc_source = None, None, None, None, None
+        if loc_str:
+            import re
+            m = re.match(r'([+-]\d+(?:\.\d+)?)\s*([+-]\d+(?:\.\d+)?)', loc_str)
+            if m:
+                try:
+                    lat = round(float(m.group(1)), 6)
+                    lng = round(float(m.group(2)), 6)
+                    loc_source = "EXACT_GPS"
+                    try:
+                        from netra.pipeline.indian_gazetteer import _find_nearest_indian_city
+                        nearest_city, nearest_state = _find_nearest_indian_city(lat, lng)
+                        city = nearest_city or "Detected Geolocation"
+                        state = nearest_state or "GPS Coordinates"
+                    except Exception:
+                        city = "Detected Geolocation"
+                        state = "GPS Coordinates"
+                except Exception:
+                    pass
 
         if reencode_count > 1:
             anomalies.append(f"reencoded_{reencode_count}_times")
@@ -86,6 +116,9 @@ def analyze_metadata(video_path: str) -> Dict:
             "bit_rate": bit_rate,
             "lat": lat,
             "lng": lng,
+            "city": city,
+            "state": state,
+            "location_source": loc_source,
             "device_model": device_model,
             "software_used": software,
         }

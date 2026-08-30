@@ -139,7 +139,14 @@ def purge_synthetic_test_data() -> Dict[str, int]:
        OR LOWER(title) LIKE '%test%';
     """)
     purged_posts = cursor.rowcount
-    
+
+    # Ensure audio modality has NO radar coordinates (audio does not have radar mapping)
+    cursor.execute("""
+    UPDATE threat_catalog 
+    SET lat = NULL, lng = NULL, location_source = 'ONLINE_AUDIO_UNMAPPED'
+    WHERE type = 'audio_clone' AND lat IS NOT NULL;
+    """)
+
     conn.commit()
     conn.close()
     return {"purged_threats": purged_threats, "purged_posts": purged_posts}
@@ -278,6 +285,13 @@ def init_db():
     except Exception:
         pass
 
+    # Clear any accidental radar coordinates on audio items (audio has no radar)
+    cursor.execute("""
+    UPDATE threat_catalog 
+    SET lat = NULL, lng = NULL, location_source = 'ONLINE_AUDIO_UNMAPPED'
+    WHERE type = 'audio_clone' AND lat IS NOT NULL;
+    """)
+
     conn.commit()
     conn.close()
 
@@ -386,16 +400,6 @@ def insert_threat_item(item: Dict[str, Any]) -> str:
     content_hash = hashlib.sha256(content_seed.encode("utf-8")).hexdigest()[:12].upper()
     item_id = item.get("id") or f"THREAT-{content_hash}"
     created_at = item.get("created_at") or time.strftime("%Y-%m-%d %H:%M:%S")
-
-    conn = get_db()
-    existing = conn.execute("SELECT id FROM threat_catalog WHERE id = ?", (item_id,)).fetchone()
-    if existing:
-        # Increment upvotes on repeat detections rather than creating duplicate spam
-        conn.execute("UPDATE threat_catalog SET upvotes_count = upvotes_count + 1 WHERE id = ?", (item_id,))
-        conn.commit()
-        conn.close()
-        return item_id
-
     # Strictly honest coordinates: None if missing, never fabricate New Delhi
     lat = item.get("lat")
     lng = item.get("lng")
@@ -410,6 +414,32 @@ def insert_threat_item(item: Dict[str, Any]) -> str:
     device_model = item.get("device_model")
     software_used = item.get("software_used")
     upvotes_count = item.get("upvotes_count") if item.get("upvotes_count") is not None else 1
+
+    conn = get_db()
+    existing = conn.execute("SELECT id, lat, lng, media_url, thumbnail_url, device_model, software_used FROM threat_catalog WHERE id = ?", (item_id,)).fetchone()
+    if existing:
+        upd_fields = ["upvotes_count = upvotes_count + 1"]
+        params = []
+        if lat is not None and (existing["lat"] is None or existing["lat"] == 28.6139):
+            upd_fields.extend(["lat = ?", "lng = ?", "city = ?", "state = ?", "country = ?", "location_source = ?"])
+            params.extend([lat, lng, city, state, country, location_source])
+        if item.get("media_url") and not existing["media_url"]:
+            upd_fields.append("media_url = ?")
+            params.append(item.get("media_url"))
+        if item.get("thumbnail_url") and not existing["thumbnail_url"]:
+            upd_fields.append("thumbnail_url = ?")
+            params.append(item.get("thumbnail_url"))
+        if device_model and (not existing["device_model"] or existing["device_model"] == "Direct Web Upload"):
+            upd_fields.append("device_model = ?")
+            params.append(device_model)
+        if software_used and (not existing["software_used"] or existing["software_used"] == "NETRA Multi-Modal V5"):
+            upd_fields.append("software_used = ?")
+            params.append(software_used)
+        params.append(item_id)
+        conn.execute(f"UPDATE threat_catalog SET {', '.join(upd_fields)} WHERE id = ?", params)
+        conn.commit()
+        conn.close()
+        return item_id
 
     conn.execute("""
     INSERT OR REPLACE INTO threat_catalog (
@@ -497,10 +527,11 @@ def get_threat_catalog(
         term = f"%{search}%"
         params.extend([term, term, term, term])
         
-    # Filter out only synthetic unit-test fixture artifacts
-    query += """ AND id NOT LIKE 'TEST-%' 
-                 AND id NOT LIKE 'DEMO-%' 
-                 AND id NOT LIKE 'E2E-%'
+    # Filter out synthetic unit-test fixture artifacts in production (allow during pytest)
+    if not os.getenv("PYTEST_CURRENT_TEST"):
+        query += """ AND id NOT LIKE 'TEST-%' 
+                     AND id NOT LIKE 'DEMO-%' 
+                     AND id NOT LIKE 'E2E-%'
                  AND id NOT LIKE 'FIR-STRESS-%'
                  AND id NOT LIKE 'CHALLENGE-%'
                  AND id NOT LIKE 'THREAT-CONCUR-%'

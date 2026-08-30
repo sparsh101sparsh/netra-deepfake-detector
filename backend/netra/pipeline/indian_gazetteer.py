@@ -164,42 +164,95 @@ def extract_indian_location_from_text(text: Optional[str]) -> Optional[Dict[str,
     }
 
 
+def _val_to_float(v: Any) -> float:
+    """Safely convert Pillow IFDRational, (numerator, denominator) tuples, and strings to float."""
+    if hasattr(v, "numerator") and hasattr(v, "denominator"):
+        return float(v.numerator) / float(v.denominator) if v.denominator != 0 else 0.0
+    if isinstance(v, (tuple, list)) and len(v) == 2:
+        return float(v[0]) / float(v[1]) if v[1] != 0 else 0.0
+    try:
+        return float(v)
+    except Exception:
+        return 0.0
+
+
+def _dms_to_dec(dms: Any) -> float:
+    """Converts Degrees/Minutes/Seconds tuple to decimal degrees."""
+    try:
+        d = _val_to_float(dms[0])
+        m = _val_to_float(dms[1])
+        s = _val_to_float(dms[2])
+        return d + m / 60.0 + s / 3600.0
+    except Exception:
+        return 0.0
+
+
 # ─── EXIF Metadata Geolocation Extractor ──────────────────────────────────────
 def extract_media_exif_geolocation(file_bytes_or_path: Any) -> Optional[Dict[str, Any]]:
     """
     Extracts exact physical GPS coordinates, device make, and model from image or video EXIF.
     Returns lat, lng, device_model, software_used, location_source="EXACT_GPS".
     """
+    # 1. Check Image EXIF (JPEG, PNG, WebP)
     try:
         from PIL import Image, ExifTags
         img = None
         if isinstance(file_bytes_or_path, (bytes, bytearray)):
-            img = Image.open(io.BytesIO(file_bytes_or_path))
+            try:
+                img = Image.open(io.BytesIO(file_bytes_or_path))
+            except Exception:
+                img = None
         elif isinstance(file_bytes_or_path, str) and os.path.exists(file_bytes_or_path):
-            img = Image.open(file_bytes_or_path)
-            
+            ext = os.path.splitext(file_bytes_or_path)[1].lower()
+            if ext in (".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"):
+                try:
+                    img = Image.open(file_bytes_or_path)
+                except Exception:
+                    img = None
+
         if img:
-            exif = img.get_exif()
+            exif = img.get_exif() if hasattr(img, "get_exif") else None
+            make = ""
+            model = ""
+            software = ""
             if exif:
                 make = str(exif.get(ExifTags.Base.Make, "")).strip()
                 model = str(exif.get(ExifTags.Base.Model, "")).strip()
                 software = str(exif.get(ExifTags.Base.Software, "")).strip()
-                device = f"{make} {model}".strip() or "Digital Camera / Mobile"
-                
-                # Check GPS IFD (34853)
-                gps_ifd = exif.get_ifd(ExifTags.IFD.GPSInfo)
-                if gps_ifd and 2 in gps_ifd and 4 in gps_ifd:
-                    def _dms_to_dec(dms):
-                        return float(dms[0]) + float(dms[1]) / 60.0 + float(dms[2]) / 3600.0
+            device = f"{make} {model}".strip() or "Digital Camera / Mobile"
 
-                    lat = _dms_to_dec(gps_ifd[2])
-                    lng = _dms_to_dec(gps_ifd[4])
-                    if gps_ifd.get(1) == 'S': lat = -lat
-                    if gps_ifd.get(3) == 'W': lng = -lng
+            # Check GPS IFD: try get_ifd(34853), exif[34853], and _getexif()[34853]
+            gps_ifd = {}
+            if exif:
+                try:
+                    gps_ifd = exif.get_ifd(ExifTags.IFD.GPSInfo) if hasattr(exif, "get_ifd") else {}
+                except Exception:
+                    gps_ifd = {}
+                if not gps_ifd:
+                    gps_ifd = exif.get(34853) or {}
 
-                    # Reverse geocode to nearest Indian city if within bounds
+            if not gps_ifd and hasattr(img, "_getexif"):
+                try:
+                    raw_exif = img._getexif() or {}
+                    gps_ifd = raw_exif.get(34853) or {}
+                except Exception:
+                    gps_ifd = {}
+
+            lat_dms = gps_ifd.get(2) or gps_ifd.get("GPSLatitude")
+            lng_dms = gps_ifd.get(4) or gps_ifd.get("GPSLongitude")
+            lat_ref = gps_ifd.get(1) or gps_ifd.get("GPSLatitudeRef") or "N"
+            lng_ref = gps_ifd.get(3) or gps_ifd.get("GPSLongitudeRef") or "E"
+
+            if lat_dms and lng_dms:
+                lat = _dms_to_dec(lat_dms)
+                lng = _dms_to_dec(lng_dms)
+                if str(lat_ref).upper() == "S":
+                    lat = -lat
+                if str(lng_ref).upper() == "W":
+                    lng = -lng
+
+                if lat != 0.0 or lng != 0.0:
                     nearest_city, nearest_state = _find_nearest_indian_city(lat, lng)
-
                     return {
                         "lat": round(lat, 6),
                         "lng": round(lng, 6),
@@ -209,31 +262,75 @@ def extract_media_exif_geolocation(file_bytes_or_path: Any) -> Optional[Dict[str
                         "software_used": software or "Camera Firmware",
                         "location_source": "EXACT_GPS",
                     }
-                elif device and device != "Digital Camera / Mobile":
-                    return {
-                        "lat": None,
-                        "lng": None,
-                        "city": None,
-                        "state": None,
-                        "device_model": device,
-                        "software_used": software or "Camera Firmware",
-                        "location_source": "DEVICE_EXIF_NO_GPS",
-                    }
+            elif device and device != "Digital Camera / Mobile":
+                return {
+                    "lat": None,
+                    "lng": None,
+                    "city": None,
+                    "state": None,
+                    "device_model": device,
+                    "software_used": software or "Camera Firmware",
+                    "location_source": "DEVICE_EXIF_NO_GPS",
+                }
     except Exception:
         pass
-        
-    # Check Video EXIF via ffprobe if path string is provided
+
+    # 2. Check Video EXIF via ffprobe (MP4, MOV, MKV, WebM)
+    probe_target = None
+    cleanup_temp = False
     if isinstance(file_bytes_or_path, str) and os.path.exists(file_bytes_or_path):
+        probe_target = file_bytes_or_path
+    elif isinstance(file_bytes_or_path, (bytes, bytearray)) and len(file_bytes_or_path) > 16:
+        # If in-memory bytes look like video container, write temp file for ffprobe
+        import tempfile
         try:
-            cmd = ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", file_bytes_or_path]
+            tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
+            tmp.write(file_bytes_or_path[:min(len(file_bytes_or_path), 5 * 1024 * 1024)])
+            tmp.close()
+            probe_target = tmp.name
+            cleanup_temp = True
+        except Exception:
+            probe_target = None
+
+    if probe_target:
+        try:
+            cmd = ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", probe_target]
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
             if res.returncode == 0:
-                tags = json.loads(res.stdout).get("format", {}).get("tags", {})
-                loc = tags.get("location") or tags.get("location-eng") or tags.get("com.apple.quicktime.location.ISO6709")
-                device = tags.get("model") or tags.get("com.apple.quicktime.model") or tags.get("make") or "Video Capture Device"
-                software = tags.get("encoder") or tags.get("software") or "Video Encoder"
+                data = json.loads(res.stdout)
+                fmt_tags = data.get("format", {}).get("tags", {})
+                loc = (
+                    fmt_tags.get("location")
+                    or fmt_tags.get("location-eng")
+                    or fmt_tags.get("com.apple.quicktime.location.ISO6709")
+                    or fmt_tags.get("xyz")
+                )
+                device = (
+                    fmt_tags.get("model")
+                    or fmt_tags.get("com.apple.quicktime.model")
+                    or fmt_tags.get("make")
+                    or "Video Capture Device"
+                )
+                software = fmt_tags.get("encoder") or fmt_tags.get("software") or "Video Encoder"
+
+                if not loc:
+                    for stream in data.get("streams", []):
+                        st_tags = stream.get("tags", {})
+                        loc = (
+                            st_tags.get("location")
+                            or st_tags.get("location-eng")
+                            or st_tags.get("com.apple.quicktime.location.ISO6709")
+                            or st_tags.get("xyz")
+                        )
+                        if loc:
+                            if not device or device == "Video Capture Device":
+                                device = st_tags.get("model") or st_tags.get("make") or device
+                            if not software or software == "Video Encoder":
+                                software = st_tags.get("encoder") or st_tags.get("handler_name") or software
+                            break
+
                 if loc:
-                    m = re.match(r'([+-]\d+\.?\d*)([+-]\d+\.?\d*)', loc)
+                    m = re.match(r'([+-]\d+(?:\.\d+)?)\s*([+-]\d+(?:\.\d+)?)', loc)
                     if m:
                         lat, lng = float(m.group(1)), float(m.group(2))
                         nearest_city, nearest_state = _find_nearest_indian_city(lat, lng)
@@ -248,6 +345,12 @@ def extract_media_exif_geolocation(file_bytes_or_path: Any) -> Optional[Dict[str
                         }
         except Exception:
             pass
+        finally:
+            if cleanup_temp and probe_target and os.path.exists(probe_target):
+                try:
+                    os.unlink(probe_target)
+                except Exception:
+                    pass
 
     return None
 

@@ -185,6 +185,40 @@ def fetch_job_item(job_id: str) -> Optional[Dict[str, Any]]:
     return item
 
 
+def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
+    """Ensure completed video jobs are indexed in Threat Catalog and Radar with EXIF GPS."""
+    try:
+        if not parsed or parsed.get("status") != "complete":
+            return
+        result = parsed.get("result")
+        if isinstance(result, str):
+            try:
+                result = json.loads(result)
+            except Exception:
+                pass
+        if not isinstance(result, dict):
+            return
+
+        threat_id = f"JOB-{job_id[:8].upper()}"
+        from ..db import get_threat_by_id
+        existing = get_threat_by_id(threat_id)
+        res_meta = result.get("metadata", {})
+        has_coords = res_meta.get("lat") is not None and res_meta.get("lng") is not None
+        if not existing or (has_coords and existing.get("lat") is None):
+            from netra.services.catalog_hook import auto_catalog_scan
+            cached_vid = os.path.join(MEDIA_DIR, "uploads", f"{job_id}.mp4")
+            file_path = cached_vid if os.path.exists(cached_vid) else None
+            auto_catalog_scan(
+                scan_type="video",
+                result=result,
+                file_path=file_path,
+                explicit_job_id=threat_id,
+                job_uuid=job_id
+            )
+    except Exception as e:
+        logger.debug(f"Catalog indexing hook for {job_id}: {e}")
+
+
 @router.get("/jobs/{job_id}")
 @router.get("/detect/status/{job_id}")
 async def get_job_status(job_id: str):
@@ -238,20 +272,7 @@ async def get_job_status(job_id: str):
                 result = parsed["result"]
 
     # Auto-index completed jobs into Threat Catalog for public ledger verification
-    if status == "complete" and isinstance(result, dict):
-        try:
-            from ..db import get_threat_by_id
-            threat_id = f"JOB-{job_id[:8].upper()}"
-            if not get_threat_by_id(threat_id):
-                from netra.services.catalog_hook import auto_catalog_scan
-                auto_catalog_scan(
-                    scan_type="video",
-                    result=result,
-                    explicit_job_id=threat_id,
-                    job_uuid=job_id
-                )
-        except Exception as cat_err:
-            logger.debug(f"Catalog hook note for {job_id}: {cat_err}")
+    _auto_index_completed_job(job_id, parsed)
 
     error = parsed.get("error")
     return {
@@ -303,6 +324,8 @@ async def websocket_progress(ws: WebSocket, job_id: str):
             })
 
             if status in ("complete", "error"):
+                if status == "complete":
+                    _auto_index_completed_job(job_id, parsed)
                 break
             await asyncio.sleep(2)
     except Exception:
