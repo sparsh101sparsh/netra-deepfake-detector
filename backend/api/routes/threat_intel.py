@@ -3,11 +3,13 @@ NETRA Threat Intelligence & Community Catalog Routes
 Provides live threat radar data, catalog search, crowdsourced upvoting, and cybercrime FIR export.
 """
 
+from __future__ import annotations
+
 from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from fastapi.responses import JSONResponse, Response
 import os
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple, List, Union, Callable
 from pydantic import BaseModel
 import json
 import time
@@ -20,7 +22,7 @@ KEYFRAMES_DIR = os.path.join(MEDIA_DIR, "keyframes")
 
 
 def resolve_snapshot_image_path(snap: dict) -> Optional[str]:
-    """Resolve keyframe snapshot image path from image_path or KEYFRAMES_DIR."""
+    """Resolve keyframe snapshot image path from image_path, KEYFRAMES_DIR, or S3."""
     img_p = snap.get("image_path")
     if img_p and os.path.exists(img_p):
         return img_p
@@ -28,6 +30,7 @@ def resolve_snapshot_image_path(snap: dict) -> Optional[str]:
         candidate = os.path.join(KEYFRAMES_DIR, os.path.basename(img_p))
         if os.path.exists(candidate):
             return candidate
+    filename = None
     for url_key in ("annotated_image_url", "image_url"):
         url_val = snap.get(url_key)
         if url_val:
@@ -35,6 +38,30 @@ def resolve_snapshot_image_path(snap: dict) -> Optional[str]:
             candidate = os.path.join(KEYFRAMES_DIR, filename)
             if os.path.exists(candidate):
                 return candidate
+
+    if filename:
+        try:
+            from .detect import get_boto3_client, get_s3_bucket
+            s3 = get_boto3_client("s3")
+            bucket = get_s3_bucket()
+            job_id = filename.split("_frame_")[0] if "_frame_" in filename else ""
+            candidate_keys = []
+            if job_id:
+                candidate_keys.append(f"{job_id}/keyframes/{filename}")
+            candidate_keys.extend([f"keyframes/{filename}", filename])
+
+            for k in candidate_keys:
+                try:
+                    os.makedirs(KEYFRAMES_DIR, exist_ok=True)
+                    dest_path = os.path.join(KEYFRAMES_DIR, filename)
+                    s3.download_file(bucket, k, dest_path)
+                    if os.path.exists(dest_path) and os.path.getsize(dest_path) > 0:
+                        return dest_path
+                except Exception:
+                    continue
+        except Exception as e:
+            logger.debug(f"Could not resolve keyframe snapshot from S3: {e}")
+
     return None
 
 from ..db import (

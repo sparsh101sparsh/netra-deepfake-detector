@@ -5,7 +5,7 @@ enriched with real-time worker fleet presence and forensic stage telemetry.
 """
 
 from fastapi import APIRouter, HTTPException, WebSocket, Header, Request
-from fastapi.responses import JSONResponse, StreamingResponse, Response
+from fastapi.responses import JSONResponse, StreamingResponse, Response, FileResponse
 import boto3
 import json
 import os
@@ -32,7 +32,7 @@ KEYFRAMES_DIR = os.path.join(MEDIA_DIR, "keyframes")
 
 
 def resolve_job_snapshot_image(snap: dict) -> Optional[str]:
-    """Resolve keyframe snapshot image path from image_path or KEYFRAMES_DIR."""
+    """Resolve keyframe snapshot image path from image_path, KEYFRAMES_DIR, or download from S3."""
     img_p = snap.get("image_path")
     if img_p and os.path.exists(img_p):
         return img_p
@@ -40,6 +40,7 @@ def resolve_job_snapshot_image(snap: dict) -> Optional[str]:
         candidate = os.path.join(KEYFRAMES_DIR, os.path.basename(img_p))
         if os.path.exists(candidate):
             return candidate
+    filename = None
     for url_key in ("annotated_image_url", "image_url"):
         url_val = snap.get(url_key)
         if url_val:
@@ -47,6 +48,31 @@ def resolve_job_snapshot_image(snap: dict) -> Optional[str]:
             candidate = os.path.join(KEYFRAMES_DIR, filename)
             if os.path.exists(candidate):
                 return candidate
+
+    # Download from S3 if missing from local disk cache
+    if filename:
+        try:
+            from .detect import get_boto3_client, get_s3_bucket
+            s3 = get_boto3_client("s3")
+            bucket = get_s3_bucket()
+            job_id = filename.split("_frame_")[0] if "_frame_" in filename else ""
+            candidate_keys = []
+            if job_id:
+                candidate_keys.append(f"{job_id}/keyframes/{filename}")
+            candidate_keys.extend([f"keyframes/{filename}", filename])
+
+            for k in candidate_keys:
+                try:
+                    os.makedirs(KEYFRAMES_DIR, exist_ok=True)
+                    dest_path = os.path.join(KEYFRAMES_DIR, filename)
+                    s3.download_file(bucket, k, dest_path)
+                    if os.path.exists(dest_path) and os.path.getsize(dest_path) > 0:
+                        return dest_path
+                except Exception:
+                    continue
+        except Exception as e:
+            logger.debug(f"Could not resolve keyframe snapshot from S3: {e}")
+
     return None
 
 STAGE_LABELS = {
@@ -461,6 +487,78 @@ async def stream_video(job_id: str, request: Request, range: Optional[str] = Hea
     except Exception as e:
         logger.error(f"Error streaming video for job {job_id}: {e}")
         raise HTTPException(status_code=404, detail=f"Video stream unavailable for job {job_id}: {str(e)}")
+
+
+@router.api_route("/jobs/{job_id}/keyframes/{filename}", methods=["GET", "HEAD"])
+async def stream_job_keyframe(job_id: str, filename: str, request: Request):
+    """
+    Streams forensic keyframe JPG from local media or S3 bucket.
+    """
+    local_path = os.path.join(KEYFRAMES_DIR, filename)
+    if os.path.exists(local_path) and os.path.getsize(local_path) > 0:
+        return FileResponse(local_path, media_type="image/jpeg")
+
+    candidate_keys = [
+        f"{job_id}/keyframes/{filename}",
+        f"keyframes/{filename}",
+        filename,
+    ]
+
+    try:
+        from .detect import get_boto3_client, get_s3_bucket
+        s3 = get_boto3_client("s3")
+        bucket = get_s3_bucket()
+
+        found_key = None
+        for key in candidate_keys:
+            try:
+                s3.head_object(Bucket=bucket, Key=key)
+                found_key = key
+                break
+            except Exception:
+                continue
+
+        if not found_key:
+            raise HTTPException(status_code=404, detail="Keyframe image not found")
+
+        if request.method == "HEAD":
+            head = s3.head_object(Bucket=bucket, Key=found_key)
+            return Response(
+                status_code=200,
+                headers={
+                    "Content-Type": "image/jpeg",
+                    "Content-Length": str(head.get("ContentLength", 0)),
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "public, max-age=86400",
+                },
+                media_type="image/jpeg"
+            )
+
+        obj = s3.get_object(Bucket=bucket, Key=found_key)
+        img_bytes = obj["Body"].read()
+
+        try:
+            os.makedirs(KEYFRAMES_DIR, exist_ok=True)
+            with open(local_path, "wb") as f:
+                f.write(img_bytes)
+        except Exception:
+            pass
+
+        return Response(
+            content=img_bytes,
+            status_code=200,
+            headers={
+                "Content-Type": "image/jpeg",
+                "Access-Control-Allow-Origin": "*",
+                "Cache-Control": "public, max-age=86400",
+            },
+            media_type="image/jpeg"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to stream keyframe {filename} for job {job_id}: {e}")
+        raise HTTPException(status_code=404, detail=f"Keyframe retrieval failed: {e}")
 
 
 @router.get("/jobs/{job_id}/report.pdf")

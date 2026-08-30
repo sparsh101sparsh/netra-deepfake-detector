@@ -8,11 +8,13 @@ Extracts authentic editorial images directly from news publication URLs:
 - Intelligent filtering of tracking beacons, icons, and low-res logos
 """
 
+from __future__ import annotations
+
 import re
 import json
 import urllib.request
 import urllib.parse
-from typing import Optional, List
+from typing import Optional, List, Any
 import logging
 
 logger = logging.getLogger("cyber_scam_feed.image_scraper")

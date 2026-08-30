@@ -227,14 +227,14 @@ function tryEmbedBase64Image(
   }
 }
 
-// Non-blocking, best-effort fetch for image URLs with 1000ms timeout
+// Resilient fetch for keyframe and evidence images with 8000ms timeout
 async function fetchImageAsBase64(url: string): Promise<string | null> {
   if (typeof window === "undefined" || typeof fetch !== "function") {
     return null;
   }
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
     if (!response.ok) return null;

@@ -27,4 +27,6 @@ threat_catalog.db
 *.db-wal
 backend/media/images/SCAN-*
 backend/media/uploads/SCAN-*
+backend/media/keyframes/*
+!backend/media/keyframes/.gitkeep
 .agents/
