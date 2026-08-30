@@ -167,7 +167,7 @@ export function ResilientVideoPlayer({
           autoPlay={autoPlay}
           controls={controls}
           playsInline={playsInline}
-          crossOrigin="anonymous"
+          crossOrigin={activeSrc && !activeSrc.startsWith("blob:") && activeSrc.startsWith("http") ? "anonymous" : undefined}
           preload="metadata"
           onLoadedMetadata={onLoadedMetadata}
           onLoadedData={handleLoadedData}
