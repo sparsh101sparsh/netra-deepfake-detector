@@ -30,12 +30,65 @@ export function ResilientVideoPlayer({
 }: ResilientVideoPlayerProps) {
   const internalRef = useRef<HTMLVideoElement | null>(null);
   const activeRef = externalRef || internalRef;
+  const blobUrlRef = useRef<string | null>(null);
 
   const [activeSrc, setActiveSrc] = useState<string | null>(primaryUrl || fallbackUrl || null);
-  const [streamMode, setStreamMode] = useState<"primary" | "fallback" | "error">("primary");
+  const [streamMode, setStreamMode] = useState<"primary" | "fallback" | "blob" | "error">("primary");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState<number>(0);
+
+  // Clean up in-memory blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+      }
+    };
+  }, []);
+
+  // Neural In-Memory Blob Stream Loader (Open-Source Video Engine Pattern)
+  // Bypasses browser HEAD pre-flight checks and CORS/Range errors by fetching full MP4 via GET
+  const loadBlobStream = useCallback(
+    async (streamEndpoint: string) => {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+        console.info("[NETRA VideoPlayer] Ingesting video via GET for in-memory blob stream:", streamEndpoint);
+
+        const response = await fetch(streamEndpoint, { method: "GET" });
+        if (!response.ok) {
+          throw new Error(`Video server returned HTTP ${response.status}`);
+        }
+        const blobData = await response.blob();
+        if (!blobData || blobData.size === 0) {
+          throw new Error("Empty media payload received from server");
+        }
+
+        if (blobUrlRef.current) {
+          URL.revokeObjectURL(blobUrlRef.current);
+        }
+
+        const objectUrl = URL.createObjectURL(new Blob([blobData], { type: "video/mp4" }));
+        blobUrlRef.current = objectUrl;
+        setActiveSrc(objectUrl);
+        setStreamMode("blob");
+        setIsLoading(false);
+        setErrorMessage(null);
+
+        if (activeRef.current) {
+          activeRef.current.load();
+          activeRef.current.play().catch(() => {});
+        }
+      } catch (err: any) {
+        console.warn("[NETRA VideoPlayer] In-memory blob streaming failed:", err);
+        setStreamMode("error");
+        setIsLoading(false);
+        setErrorMessage(err?.message || "Direct video playback encountered a network or format error.");
+      }
+    },
+    [activeRef]
+  );
 
   // Sync state when primaryUrl or fallbackUrl prop updates
   useEffect(() => {
@@ -64,18 +117,22 @@ export function ResilientVideoPlayer({
       );
 
       if (streamMode === "primary" && fallbackUrl && fallbackUrl !== activeSrc) {
-        console.info("[NETRA VideoPlayer] Automatically failing over to backend streaming proxy:", fallbackUrl);
+        console.info("[NETRA VideoPlayer] Failing over to proxy stream:", fallbackUrl);
         setStreamMode("fallback");
         setActiveSrc(fallbackUrl);
         setIsLoading(true);
         setErrorMessage(null);
+      } else if (streamMode !== "blob" && (fallbackUrl || activeSrc)) {
+        // Auto-failover to in-memory Blob stream using standard HTTP GET
+        console.info("[NETRA VideoPlayer] Direct stream interrupted, activating Neural Blob Engine...");
+        loadBlobStream(fallbackUrl || activeSrc!);
       } else {
         setStreamMode("error");
         setIsLoading(false);
         setErrorMessage("Direct video playback encountered a network or format error.");
       }
     },
-    [streamMode, fallbackUrl, activeSrc, activeRef]
+    [streamMode, fallbackUrl, activeSrc, activeRef, loadBlobStream]
   );
 
   const handleLoadedData = useCallback(() => {
@@ -84,30 +141,20 @@ export function ResilientVideoPlayer({
   }, []);
 
   const handleManualRetry = useCallback(() => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    setStreamMode("primary");
-    setActiveSrc(primaryUrl || fallbackUrl || null);
-    setRetryKey((prev) => prev + 1);
-
-    if (activeRef.current) {
-      activeRef.current.load();
-      activeRef.current.play().catch(() => {});
+    const target = fallbackUrl || primaryUrl || activeSrc;
+    if (target) {
+      loadBlobStream(target);
+    } else {
+      setRetryKey((prev) => prev + 1);
     }
-  }, [primaryUrl, fallbackUrl, activeRef]);
+  }, [fallbackUrl, primaryUrl, activeSrc, loadBlobStream]);
 
   const handleSwitchToFallback = useCallback(() => {
-    if (fallbackUrl) {
-      setStreamMode("fallback");
-      setActiveSrc(fallbackUrl);
-      setIsLoading(true);
-      setErrorMessage(null);
-      if (activeRef.current) {
-        activeRef.current.load();
-        activeRef.current.play().catch(() => {});
-      }
+    const target = fallbackUrl || activeSrc;
+    if (target) {
+      loadBlobStream(target);
     }
-  }, [fallbackUrl, activeRef]);
+  }, [fallbackUrl, activeSrc, loadBlobStream]);
 
   return (
     <div className="relative w-full h-full flex items-center justify-center bg-black select-none group">
@@ -143,6 +190,12 @@ export function ResilientVideoPlayer({
           <div className="px-2 py-0.5 rounded-md bg-accent/20 border border-accent/40 text-[10px] font-mono text-accent flex items-center gap-1 backdrop-blur-md">
             <ShieldCheck className="w-3 h-3 text-accent" />
             <span>NEURAL PROXY ACTIVE</span>
+          </div>
+        )}
+        {streamMode === "blob" && !errorMessage && (
+          <div className="px-2 py-0.5 rounded-md bg-accent/25 border border-accent/50 text-[10px] font-mono text-accent flex items-center gap-1 backdrop-blur-md">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <span>NEURAL BUFFERED STREAM</span>
           </div>
         )}
       </div>
