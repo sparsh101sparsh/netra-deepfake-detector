@@ -145,23 +145,42 @@ def update_local_job(job_id: str, updates: Dict[str, Any]):
 
 
 def fetch_job_item(job_id: str) -> Optional[Dict[str, Any]]:
-    """Fetch job item from DynamoDB table, falling back to local store."""
+    """Fetch job item from DynamoDB table, falling back to local store.
+    Supports full UUIDs and short prefix lookups (e.g. JOB-D8F262FB or d8f262fb).
+    """
+    clean_id = job_id.replace("JOB-", "").lower()
     item = None
 
     try:
         dynamo = get_dynamo_client()
         resp = dynamo.get_item(
             TableName=DYNAMO_TABLE,
-            Key={"job_id": {"S": job_id}}
+            Key={"job_id": {"S": clean_id}}
         )
         raw_item = resp.get("Item")
         if raw_item:
             item = _parse_dynamo_item(raw_item)
+        elif len(clean_id) < 36:
+            # Prefix scan fallback for short IDs
+            scan_resp = dynamo.scan(
+                TableName=DYNAMO_TABLE,
+                FilterExpression="begins_with(job_id, :prefix)",
+                ExpressionAttributeValues={":prefix": {"S": clean_id}},
+                Limit=1
+            )
+            items = scan_resp.get("Items", [])
+            if items:
+                item = _parse_dynamo_item(items[0])
     except Exception:
         pass
 
     if not item:
-        item = get_local_job(job_id)
+        item = get_local_job(clean_id)
+        if not item and len(clean_id) < 36:
+            for k, v in _local_jobs_store.items():
+                if k.lower().startswith(clean_id):
+                    item = v
+                    break
 
     return item
 
