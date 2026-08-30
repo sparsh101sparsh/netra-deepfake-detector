@@ -228,10 +228,11 @@ async def get_job_status(job_id: str):
                 auto_catalog_scan(
                     scan_type="video",
                     result=result,
-                    explicit_job_id=threat_id
+                    explicit_job_id=threat_id,
+                    job_uuid=job_id
                 )
         except Exception as cat_err:
-            pass
+            logger.debug(f"Catalog hook note for {job_id}: {cat_err}")
 
     error = parsed.get("error")
     return {

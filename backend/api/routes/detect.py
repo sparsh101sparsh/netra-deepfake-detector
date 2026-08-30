@@ -69,6 +69,7 @@ async def detect_full(file: UploadFile = File(...)):
     dynamo_table = get_dynamo_table()
     now_iso = datetime.now(timezone.utc).isoformat()
 
+
     # Save to local fallback registry first
     job_record = {
         "job_id": job_id,
@@ -81,6 +82,7 @@ async def detect_full(file: UploadFile = File(...)):
         "file_size_mb": round(size_mb, 2),
         "result": None,
         "error": None,
+        "filename": file.filename,
     }
     save_local_job(job_record)
 
