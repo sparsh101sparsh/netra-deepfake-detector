@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timezone
 
-from .routes import detect, jobs, workers, scam, public_api, threat_intel, news_routes, community, bot_ingest, audio_detect
+from .routes import detect, jobs, workers, scam, public_api, threat_intel, news_routes, community, bot_ingest, audio_detect, whatsapp_webhook
 from netra.services.tavily_crawler import start_24h_background_worker
 
 from contextlib import asynccontextmanager
@@ -52,6 +52,9 @@ app.include_router(public_api.router, prefix="/api/v1/public")
 app.include_router(news_routes.router, prefix="/api/v1")
 app.include_router(community.router, prefix="/api/v1")
 app.include_router(bot_ingest.router, prefix="/api/v1")
+app.include_router(whatsapp_webhook.router, prefix="/api/v1")
+app.include_router(whatsapp_webhook.router, prefix="")
+
 
 # Media Storage Mounting (videos, images, audio)
 MEDIA_DIR = os.getenv("NETRA_MEDIA_DIR", os.path.join(backend_dir, "media"))

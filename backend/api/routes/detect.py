@@ -70,6 +70,21 @@ async def detect_full(file: UploadFile = File(...)):
     now_iso = datetime.now(timezone.utc).isoformat()
 
 
+    # Cache local copy to disk immediately
+    uploads_dir = os.path.join(MEDIA_DIR, "uploads")
+    os.makedirs(uploads_dir, exist_ok=True)
+    for p in [
+        os.path.join(MEDIA_DIR, f"{job_id}.mp4"),
+        os.path.join(MEDIA_DIR, f"{job_id}_web_h264.mp4"),
+        os.path.join(uploads_dir, f"{job_id}.mp4"),
+        os.path.join(uploads_dir, f"JOB-{job_id[:8].upper()}.mp4"),
+    ]:
+        try:
+            with open(p, "wb") as f_out:
+                f_out.write(contents)
+        except Exception:
+            pass
+
     # Save to local fallback registry first
     job_record = {
         "job_id": job_id,
