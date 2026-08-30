@@ -265,41 +265,19 @@ export interface VideoMediaSources {
   streamUrl: string;
 }
 
-/** Get S3 presigned URL and streaming proxy URL for resilient video playback. */
+/** Get streaming proxy URLs for resilient video playback. */
 export async function getVideoMediaSources(jobId: string): Promise<VideoMediaSources> {
-  const fallbackStream = `${API_BASE}/api/v1/jobs/${jobId}/stream`;
-  try {
-    const res = await fetch(`${API_BASE}/api/v1/jobs/${jobId}/video-url`, {
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      return { primaryUrl: fallbackStream, streamUrl: fallbackStream };
-    }
-    const data = await res.json();
-    const stream = `/api/v1/jobs/${jobId}/stream`;
-    const backendStream = `${API_BASE}/api/v1/jobs/${jobId}/stream`;
-    let primary = backendStream;
-    if (data.url) {
-      primary = data.url.startsWith("http") ? data.url : `${API_BASE}${data.url}`;
-    }
-    return { primaryUrl: primary, streamUrl: stream };
-  } catch {
-    return { primaryUrl: `${API_BASE}/api/v1/jobs/${jobId}/stream`, streamUrl: `/api/v1/jobs/${jobId}/stream` };
-  }
+  const stream = `/api/v1/jobs/${jobId}/stream`;
+  const backendStream = `${API_BASE}/api/v1/jobs/${jobId}/stream`;
+  return {
+    primaryUrl: stream,
+    streamUrl: backendStream,
+  };
 }
 
-/** Get presigned S3 URL for video playback. */
+/** Get primary stream URL for video playback. */
 export async function getVideoUrl(jobId: string): Promise<string | null> {
-  try {
-    const res = await fetch(`${API_BASE}/api/v1/jobs/${jobId}/video-url`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.url || null;
-  } catch {
-    return null;
-  }
+  return `/api/v1/jobs/${jobId}/stream`;
 }
 
 /** WebSocket connection for real-time progress.

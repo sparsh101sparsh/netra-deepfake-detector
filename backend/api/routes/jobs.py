@@ -298,35 +298,12 @@ async def websocket_progress(ws: WebSocket, job_id: str):
 async def get_video_presigned_url(job_id: str):
     """
     Returns primary streaming route for the job's input video.
-    Prioritizes S3 presigned URL with inline playback and video/mp4 MIME type.
-    Falls back to streaming proxy /api/v1/jobs/{job_id}/stream.
+    Returns the secure streaming proxy route (/api/v1/jobs/{job_id}/stream)
+    which uses backend IAM credentials to stream verified H.264 video with HTTP 206 partial content.
     """
-    from .detect import get_boto3_client as get_s3_client, get_s3_bucket
-    s3_bucket = get_s3_bucket()
-    s3_key = f"{job_id}/input.mp4"
     stream_url = f"/api/v1/jobs/{job_id}/stream"
+    return {"url": stream_url, "stream_url": stream_url, "expires_in": 3600}
 
-    job_item = fetch_job_item(job_id)
-    if job_item and job_item.get("s3_key"):
-        s3_key = job_item["s3_key"]
-
-    try:
-        s3 = get_s3_client("s3")
-        s3.head_object(Bucket=s3_bucket, Key=s3_key)
-        url = s3.generate_presigned_url(
-            "get_object",
-            Params={
-                "Bucket": s3_bucket,
-                "Key": s3_key,
-                "ResponseContentType": "video/mp4",
-                "ResponseContentDisposition": "inline",
-            },
-            ExpiresIn=3600  # 1 hour
-        )
-        return {"url": url, "stream_url": stream_url, "expires_in": 3600}
-    except Exception as e:
-        logger.debug(f"S3 presigned URL generation fallback for job {job_id}: {e}")
-        return {"url": stream_url, "stream_url": stream_url, "expires_in": 3600}
 
 
 @router.api_route("/jobs/{job_id}/stream", methods=["GET", "HEAD"])
