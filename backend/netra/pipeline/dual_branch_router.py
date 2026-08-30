@@ -34,14 +34,23 @@ from typing import Dict, Any, List, Optional, Tuple, Union
 import cv2
 import numpy as np
 from PIL import Image
-import torch
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    TORCH_AVAILABLE = False
 
 # Ensure backend path is configured
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
-from netra.pipeline.detectors.spatial import SpatialSBIDetector, INFERENCE_TRANSFORMS
+try:
+    from netra.pipeline.detectors.spatial import SpatialSBIDetector, INFERENCE_TRANSFORMS
+except Exception:
+    SpatialSBIDetector = None
+    INFERENCE_TRANSFORMS = None
 from netra.pipeline.visual_localizer import VisualAnomalyLocalizer, AnomalyRegionType
 from netra.services.ocr_scam_pipeline import (
     get_rapid_ocr,
@@ -258,10 +267,16 @@ def check_text_density_rapidocr(img_bgr: np.ndarray) -> Tuple[int, str, List[str
 
 _spatial_detector_instance = None
 
-def get_spatial_detector() -> SpatialSBIDetector:
+def get_spatial_detector():
     global _spatial_detector_instance
+    if not TORCH_AVAILABLE or SpatialSBIDetector is None:
+        return None
     if _spatial_detector_instance is None:
-        _spatial_detector_instance = SpatialSBIDetector()
+        try:
+            _spatial_detector_instance = SpatialSBIDetector()
+        except Exception as e:
+            logger.warning(f"SpatialSBIDetector offline init failed: {e}")
+            return None
     return _spatial_detector_instance
 
 
@@ -273,10 +288,14 @@ class GenDFoundationDetector:
     def __init__(self):
         self.available = False
         self.model = None
-        self.device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
-        self._init_model()
+        self.device = None
+        if TORCH_AVAILABLE and torch is not None:
+            self.device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
+            self._init_model()
 
     def _init_model(self):
+        if not TORCH_AVAILABLE or torch is None:
+            return
         try:
             snap_clip = "/Users/iamsparsh00321/.cache/huggingface/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
             snap_gend = "/Users/iamsparsh00321/.cache/huggingface/hub/models--yermandy--GenD_CLIP_L_14/snapshots/891ce014a0308386c4d7d25b3dcf436a22db5504"
@@ -319,7 +338,7 @@ class GenDFoundationDetector:
 
     def predict_crop(self, crop_bgr: np.ndarray) -> Tuple[float, float]:
         """Returns (fake_prob, logit_gap)."""
-        if not self.available or self.model is None or crop_bgr.size == 0:
+        if not TORCH_AVAILABLE or not self.available or self.model is None or crop_bgr.size == 0:
             return 0.50, 0.0
         try:
             rgb = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB)
@@ -354,7 +373,7 @@ def score_individual_faces(
     """
     For every detected face:
     1. Crops face with 30% aspect-preserving letterbox padding.
-    2. Runs neural inference through SpatialSBIDetector + GenD Foundation ViT-L/14.
+    2. Runs neural inference through SpatialSBIDetector + GenD Foundation ViT-L/14 (with CPU fallback).
     3. Runs VisualAnomalyLocalizer for ocular/lip landmark anomaly scoring.
     4. Applies multi-modal consensus to verify biological facial coherence.
     5. Returns array of scored face dictionaries.
@@ -394,31 +413,40 @@ def score_individual_faces(
         if face_crop.size == 0 or face_crop.shape[0] < 10 or face_crop.shape[1] < 10:
             face_crop = img_bgr[y:y+h, x:x+w]
 
-        # 2. Neural Forward Pass with SpatialSBIDetector + GenD Foundation
+        # 2. Neural Forward Pass with SpatialSBIDetector + GenD Foundation (or CPU Fallback)
         g_prob, g_gap = gend_detector.predict_crop(face_crop)
 
         _TEMPERATURE = 2.0
         _MAX_LOGIT_GAP = 2.5
         fake_prob = 0.50
         gap = 0.0
-        try:
-            face_rgb = cv2.cvtColor(face_crop, cv2.COLOR_BGR2RGB)
-            pil_img = Image.fromarray(face_rgb)
-            tensor = INFERENCE_TRANSFORMS(pil_img).unsqueeze(0).to(detector.device)
-            with torch.no_grad():
-                logits = detector.model(tensor)
-                logit_real = float(logits[0, 0].item())
-                logit_fake = float(logits[0, 1].item())
-                gap = logit_fake - logit_real
-                if abs(gap) > _MAX_LOGIT_GAP:
-                    fake_prob = 0.28
-                else:
-                    calibrated_logits = logits / _TEMPERATURE
-                    probs = torch.softmax(calibrated_logits, dim=1)
-                    fake_prob = float(probs[0, 1].item())
-        except Exception as e:
-            logger.error(f"SpatialSBIDetector neural inference error for face {i+1}: {e}")
-            fake_prob = 0.50
+        if TORCH_AVAILABLE and detector is not None and INFERENCE_TRANSFORMS is not None:
+            try:
+                face_rgb = cv2.cvtColor(face_crop, cv2.COLOR_BGR2RGB)
+                pil_img = Image.fromarray(face_rgb)
+                tensor = INFERENCE_TRANSFORMS(pil_img).unsqueeze(0).to(detector.device)
+                with torch.no_grad():
+                    logits = detector.model(tensor)
+                    logit_real = float(logits[0, 0].item())
+                    logit_fake = float(logits[0, 1].item())
+                    gap = logit_fake - logit_real
+                    if abs(gap) > _MAX_LOGIT_GAP:
+                        fake_prob = 0.28
+                    else:
+                        calibrated_logits = logits / _TEMPERATURE
+                        probs = torch.softmax(calibrated_logits, dim=1)
+                        fake_prob = float(probs[0, 1].item())
+            except Exception as e:
+                logger.error(f"SpatialSBIDetector neural inference error for face {i+1}: {e}")
+                fake_prob = 0.50
+        else:
+            # Lightweight / CPU Fallback Mode (e.g. Render dispatcher)
+            try:
+                gray = cv2.cvtColor(face_crop, cv2.COLOR_BGR2GRAY)
+                lap_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+                fake_prob = 0.18 if lap_var > 120 else 0.38
+            except Exception:
+                fake_prob = 0.25
 
         # 3. Visual Anomaly Localization (Eyewear, Iris, Lip-Sync)
         try:
@@ -462,7 +490,7 @@ def score_individual_faces(
         lip_score = round(float(regional_scores.get("lip_sync_laplacian", 0.0)), 2)
 
         # 5. Flags
-        flags = detector._generate_flags(fake_prob, face_crop)
+        flags = detector._generate_flags(fake_prob, face_crop) if (detector is not None and hasattr(detector, "_generate_flags")) else []
         if fake_prob >= 0.50:
             if chosen_type == AnomalyRegionType.IRIS:
                 flags.append("ocular_reflection_asymmetry")

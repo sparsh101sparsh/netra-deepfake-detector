@@ -1041,7 +1041,9 @@ def process_job(
             auto_catalog_scan(
                 scan_type="video",
                 result=final_result,
-                explicit_job_id=f"JOB-{job_id[:8].upper()}"
+                file_path=video_path,
+                explicit_job_id=f"JOB-{job_id[:8].upper()}",
+                job_uuid=job_id
             )
         except Exception:
             try:
@@ -1049,7 +1051,9 @@ def process_job(
                 auto_catalog_scan(
                     scan_type="video",
                     result=final_result,
-                    explicit_job_id=f"JOB-{job_id[:8].upper()}"
+                    file_path=video_path,
+                    explicit_job_id=f"JOB-{job_id[:8].upper()}",
+                    job_uuid=job_id
                 )
             except Exception as cat_err:
                 logger.debug(f"Worker auto_catalog_scan hook: {cat_err}")

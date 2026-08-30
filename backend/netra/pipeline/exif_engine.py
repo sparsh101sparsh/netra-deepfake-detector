@@ -20,15 +20,25 @@ INDIAN_METROS = [
     {"city": "Ahmedabad", "state": "Gujarat", "lat": 23.0225, "lng": 72.5714}
 ]
 
+def _val_to_float(v):
+    if hasattr(v, "numerator") and hasattr(v, "denominator"):
+        return float(v.numerator) / float(v.denominator) if v.denominator != 0 else 0.0
+    if isinstance(v, (tuple, list)) and len(v) == 2:
+        return float(v[0]) / float(v[1]) if v[1] != 0 else 0.0
+    try:
+        return float(v)
+    except Exception:
+        return 0.0
+
 def _convert_dms_to_decimal(dms, ref):
     if not dms or not ref:
         return None
     try:
-        degrees = float(dms[0])
-        minutes = float(dms[1]) / 60.0
-        seconds = float(dms[2]) / 3600.0
+        degrees = _val_to_float(dms[0])
+        minutes = _val_to_float(dms[1]) / 60.0
+        seconds = _val_to_float(dms[2]) / 3600.0
         decimal = degrees + minutes + seconds
-        if ref.upper() in ['S', 'W']:
+        if str(ref).upper() in ['S', 'W']:
             decimal = -decimal
         return round(decimal, 6)
     except Exception:
@@ -165,7 +175,24 @@ class ForensicMetadataExtractor:
                     metadata["codec"] = v_streams[0].get("codec_name", "unknown")
                     
                 # Look for ISO 6709 location tag in MP4 atoms
-                loc = tags.get("location") or tags.get("location-eng")
+                loc = (
+                    tags.get("location")
+                    or tags.get("location-eng")
+                    or tags.get("com.apple.quicktime.location.ISO6709")
+                    or tags.get("xyz")
+                )
+                if not loc:
+                    for stream in ff_json.get("streams", []):
+                        st_tags = stream.get("tags", {})
+                        loc = (
+                            st_tags.get("location")
+                            or st_tags.get("location-eng")
+                            or st_tags.get("com.apple.quicktime.location.ISO6709")
+                            or st_tags.get("xyz")
+                        )
+                        if loc:
+                            break
+
                 if loc:
                     lat, lng = self._parse_iso6709(loc)
                     if lat and lng:
@@ -190,7 +217,7 @@ class ForensicMetadataExtractor:
     def _parse_iso6709(self, loc_str: str) -> Tuple[Optional[float], Optional[float]]:
         try:
             import re
-            m = re.match(r'([+-]\d+\.?\d*)([+-]\d+\.?\d*)', loc_str)
+            m = re.match(r'([+-]\d+(?:\.\d+)?)\s*([+-]\d+(?:\.\d+)?)', loc_str)
             if m:
                 return round(float(m.group(1)), 6), round(float(m.group(2)), 6)
         except Exception:

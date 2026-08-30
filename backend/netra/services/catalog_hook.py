@@ -103,68 +103,112 @@ def auto_catalog_scan(
         else:
             scam_category = "DIGITAL_ARREST"
 
-    # ── 3. 4-Tier Geolocation Resolution ──────────────────────────────────────
+    # ── 3. Multi-Tier Geolocation Resolution ──────────────────────────────────
     lat, lng, city, state, loc_source = None, None, None, None, "ONLINE_UNMAPPED"
     device_model = "Direct Web Upload"
     software_used = "NETRA Multi-Modal V5"
 
-    # Tier 1: EXIF GPS from Image or Video
-    target_media = file_bytes or file_path
-    if target_media:
-        exif_geo = extract_media_exif_geolocation(target_media)
-        if exif_geo:
-            device_model = exif_geo.get("device_model") or device_model
-            software_used = exif_geo.get("software_used") or software_used
-            if exif_geo.get("lat") is not None and exif_geo.get("lng") is not None:
-                lat = exif_geo["lat"]
-                lng = exif_geo["lng"]
-                city = exif_geo["city"]
-                state = exif_geo["state"]
-                loc_source = "EXACT_GPS"
+    if scan_type == "audio":
+        # User requirement: Audio has NO Netra Radar mapping (strictly None for lat/lng)
+        lat = None
+        lng = None
+        city = None
+        state = None
+        loc_source = "ONLINE_AUDIO_UNMAPPED"
+        device_model = result.get("source_platform") or "Microphone / Audio Capture"
+        software_used = result.get("codec") or "Audio Forensic Analyzer"
+    else:
+        # Tier 0: Check if result already carries EXIF geolocation metadata (e.g. from worker or image router)
+        meta = result.get("metadata") or {}
+        exif_meta = result.get("exif_geolocation") or {}
+        res_lat = meta.get("lat") if meta.get("lat") is not None else exif_meta.get("lat")
+        res_lng = meta.get("lng") if meta.get("lng") is not None else exif_meta.get("lng")
+        if res_lat is None and result.get("lat") is not None:
+            res_lat = result.get("lat")
+            res_lng = result.get("lng")
 
-    # Tier 2: NLP Gazetteer Extraction from Text / OCR / Transcript
-    if lat is None:
-        text_corpus = ""
-        if raw_text:
-            text_corpus += " " + raw_text
-        if result.get("extracted_text"):
-            text_corpus += " " + str(result.get("extracted_text"))
-        if result.get("reason"):
-            text_corpus += " " + str(result.get("reason"))
-        if result.get("incident_summary"):
-            text_corpus += " " + str(result.get("incident_summary"))
+        if res_lat is not None and res_lng is not None:
+            try:
+                lat = round(float(res_lat), 6)
+                lng = round(float(res_lng), 6)
+                loc_source = meta.get("location_source") or exif_meta.get("location_source") or "EXACT_GPS"
+                nearest_city, nearest_state = None, None
+                try:
+                    from netra.pipeline.indian_gazetteer import _find_nearest_indian_city
+                    nearest_city, nearest_state = _find_nearest_indian_city(lat, lng)
+                except Exception:
+                    pass
+                city = meta.get("city") or exif_meta.get("city") or nearest_city or "Detected Geolocation"
+                state = meta.get("state") or exif_meta.get("state") or nearest_state or "GPS Coordinates"
+                device_model = meta.get("device_model") or exif_meta.get("device_model") or device_model
+                software_used = meta.get("software_used") or exif_meta.get("software_used") or software_used
+            except Exception:
+                pass
 
-        nlp_loc = extract_indian_location_from_text(text_corpus)
-        if nlp_loc:
-            lat = nlp_loc["lat"]
-            lng = nlp_loc["lng"]
-            city = nlp_loc["city"]
-            state = nlp_loc["state"]
-            loc_source = "EXTRACTED_ENTITY"
+        # Tier 1: EXIF GPS from Image or Video File
+        target_media = file_bytes or file_path
+        if not target_media and scan_type == "video":
+            actual_job_id = job_uuid or (explicit_job_id.replace("JOB-", "") if explicit_job_id else None)
+            if actual_job_id:
+                candidate = os.path.join(UPLOADS_DIR, f"{actual_job_id}.mp4")
+                if os.path.exists(candidate):
+                    target_media = candidate
 
-    # Tier 3: Client IP Geolocation via Cloudflare or Request IP
-    if lat is None and request:
-        try:
-            cf_city = request.headers.get("cf-ipcity")
-            cf_country = request.headers.get("cf-ipcountry", "IN")
-            if cf_city and cf_country == "IN":
-                city_match = extract_indian_location_from_text(cf_city)
-                if city_match:
-                    lat = city_match["lat"]
-                    lng = city_match["lng"]
-                    city = city_match["city"]
-                    state = city_match["state"]
-                    loc_source = "ESTIMATED_TELECOM"
-        except Exception:
-            pass
+        if lat is None and target_media:
+            exif_geo = extract_media_exif_geolocation(target_media)
+            if exif_geo:
+                device_model = exif_geo.get("device_model") or device_model
+                software_used = exif_geo.get("software_used") or software_used
+                if exif_geo.get("lat") is not None and exif_geo.get("lng") is not None:
+                    lat = exif_geo["lat"]
+                    lng = exif_geo["lng"]
+                    city = exif_geo["city"]
+                    state = exif_geo["state"]
+                    loc_source = "EXACT_GPS"
 
-    # Tier 4: National Cyber Command Hub Fallback
-    if lat is None:
-        lat = 28.6139
-        lng = 77.2090
-        city = "New Delhi (National Cyber Command Hub)"
-        state = "Delhi"
-        loc_source = "NATIONAL_CYBER_COMMAND"
+        # Tier 2: NLP Gazetteer Extraction from Text / OCR / Transcript
+        if lat is None:
+            text_corpus = ""
+            if raw_text:
+                text_corpus += " " + raw_text
+            if result.get("extracted_text"):
+                text_corpus += " " + str(result.get("extracted_text"))
+            if result.get("reason"):
+                text_corpus += " " + str(result.get("reason"))
+            if result.get("incident_summary"):
+                text_corpus += " " + str(result.get("incident_summary"))
+
+            nlp_loc = extract_indian_location_from_text(text_corpus)
+            if nlp_loc:
+                lat = nlp_loc["lat"]
+                lng = nlp_loc["lng"]
+                city = nlp_loc["city"]
+                state = nlp_loc["state"]
+                loc_source = "EXTRACTED_ENTITY"
+
+        # Tier 3: Client IP Geolocation via Cloudflare or Request IP
+        if lat is None and request:
+            try:
+                cf_city = request.headers.get("cf-ipcity")
+                cf_country = request.headers.get("cf-ipcountry", "IN")
+                if cf_city and cf_country == "IN":
+                    city_match = extract_indian_location_from_text(cf_city)
+                    if city_match:
+                        lat = city_match["lat"]
+                        lng = city_match["lng"]
+                        city = city_match["city"]
+                        state = city_match["state"]
+                        loc_source = "ESTIMATED_TELECOM"
+            except Exception:
+                pass
+
+        # Tier 4: Honest Unmapped Handling (do not fabricate New Delhi on Radar)
+        if lat is None:
+            lat = None
+            lng = None
+            city = "Unmapped Ingestion"
+            state = "Digital Vector"
+            loc_source = "ONLINE_UNMAPPED"
 
     # ── 4. Playable Media URL & Thumbnail Setup ───────────────────────────────
     media_url = None
@@ -184,24 +228,47 @@ def auto_catalog_scan(
                 thumbnail_url = first_snap.get("image_url") or first_snap.get("annotated_image_url")
         if not thumbnail_url and actual_job_id:
             thumbnail_url = f"/api/v1/jobs/{actual_job_id}/keyframes/{actual_job_id}_frame_000000_annotated.jpg"
-    elif scan_type == "image" and file_bytes:
-        ext = Path(filename or "sample.png").suffix or ".png"
-        img_filename = f"{item_id}{ext}"
-        saved_path = os.path.join(UPLOADS_DIR, img_filename)
-        with open(saved_path, "wb") as f:
-            f.write(file_bytes)
-        media_url = f"/api/v1/media/uploads/{img_filename}"
+    elif scan_type == "image":
+        if file_bytes:
+            ext = Path(filename or "sample.png").suffix or ".png"
+            img_filename = f"{item_id}{ext}"
+            saved_path = os.path.join(UPLOADS_DIR, img_filename)
+            with open(saved_path, "wb") as f:
+                f.write(file_bytes)
+            media_url = f"/api/v1/media/uploads/{img_filename}"
+        elif file_path and os.path.exists(file_path):
+            import shutil
+            ext = Path(file_path).suffix or ".png"
+            img_filename = f"{item_id}{ext}"
+            saved_path = os.path.join(UPLOADS_DIR, img_filename)
+            if file_path != saved_path:
+                shutil.copyfile(file_path, saved_path)
+            media_url = f"/api/v1/media/uploads/{img_filename}"
+        elif result.get("media_url"):
+            media_url = result["media_url"]
+
         if result.get("facial_analysis") and result["facial_analysis"].get("annotated_preview_url"):
             thumbnail_url = result["facial_analysis"]["annotated_preview_url"]
         else:
             thumbnail_url = media_url
-    elif scan_type == "audio" and file_bytes:
-        ext = Path(filename or "sample.wav").suffix or ".wav"
-        aud_filename = f"{item_id}{ext}"
-        saved_path = os.path.join(UPLOADS_DIR, aud_filename)
-        with open(saved_path, "wb") as f:
-            f.write(file_bytes)
-        media_url = f"/api/v1/media/uploads/{aud_filename}"
+    elif scan_type == "audio":
+        if file_bytes:
+            ext = Path(filename or "sample.wav").suffix or ".wav"
+            aud_filename = f"{item_id}{ext}"
+            saved_path = os.path.join(UPLOADS_DIR, aud_filename)
+            with open(saved_path, "wb") as f:
+                f.write(file_bytes)
+            media_url = f"/api/v1/media/uploads/{aud_filename}"
+        elif file_path and os.path.exists(file_path):
+            import shutil
+            ext = Path(file_path).suffix or ".wav"
+            aud_filename = f"{item_id}{ext}"
+            saved_path = os.path.join(UPLOADS_DIR, aud_filename)
+            if file_path != saved_path:
+                shutil.copyfile(file_path, saved_path)
+            media_url = f"/api/v1/media/uploads/{aud_filename}"
+        elif result.get("media_url"):
+            media_url = result["media_url"]
 
     # ── 5. Standardize Title & Summary ────────────────────────────────────────
     title_sub = filename or (raw_text[:40] + "..." if raw_text else "Direct Upload")
