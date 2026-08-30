@@ -168,8 +168,8 @@ export const PIPELINE_STAGES: PipelineStageConfig[] = [
   {
     id: "complete",
     title: "Verdict Finalization",
-    category: "Cryptographic Audit",
-    description: "Validating cryptographic integrity & persisting audit verdict",
+    category: "Forensic Audit",
+    description: "Validating forensic integrity & persisting audit verdict",
     targetProgress: 100,
     aliases: ["complete", "Finalizing results", "Analysis complete", "done"],
   },

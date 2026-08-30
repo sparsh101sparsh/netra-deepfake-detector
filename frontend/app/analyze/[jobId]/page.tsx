@@ -461,7 +461,7 @@ export default function AnalysisPage({ params }: Props) {
                 <div className="flex justify-between items-center text-[11px] font-mono text-ink-3">
                   <span>0% Media Ingest</span>
                   <span>50% Neural Embeddings</span>
-                  <span>100% Cryptographic Verdict</span>
+                  <span>100% Forensic Verdict</span>
                 </div>
               </div>
 
@@ -870,7 +870,7 @@ export default function AnalysisPage({ params }: Props) {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 rounded-2xl bg-surface border border-line text-xs text-ink-3 font-mono">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-green-400" />
-                <span>Cryptographically persisted to DynamoDB netra-jobs</span>
+                <span>Forensically persisted to DynamoDB netra-jobs</span>
               </div>
               <button
                 onClick={() => (window.location.href = "/")}

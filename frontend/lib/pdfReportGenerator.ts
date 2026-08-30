@@ -372,7 +372,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.text(
-    "STATUTORY COMPLIANCE: IT ACT 2000 & BHARATIYA NYAYA SANHITA 2023",
+    "BEYOND ILLUSION. THE ARCHITECTURE OF TRUTH. | FORENSIC AI ENGINE",
     18,
     y + 9
   );
@@ -435,7 +435,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
   );
 
   doc.setFont("helvetica", "bold");
-  doc.text("Cryptographic Hash:", 18, y + 39);
+  doc.text("Digital Media Hash:", 18, y + 39);
   doc.setFont("courier", "normal");
   doc.setFontSize(8);
   const mediaHash =
@@ -443,7 +443,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
     data.sha256 ||
     data.sha256Hash ||
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-  doc.text(`SHA-256: ${mediaHash.substring(0, 48)}...`, 58, y + 39);
+  doc.text(`${mediaHash.substring(0, 48)}...`, 58, y + 39);
 
   y += 48;
 
@@ -502,9 +502,9 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
         ref: "Network Media Ingestion Endpoint",
       },
       {
-        param: "Media Cryptographic Hash",
+        param: "Media Integrity Hash",
         val: `${mediaHash.substring(0, 20)}...`,
-        ref: "SHA-256 Non-Repudiation Checksum",
+        ref: "Tamper-Evident Media Checksum",
       },
     ];
 
@@ -741,7 +741,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
         `Resolved Faces: ${faceCount}`,
         "Spatial SBI Seam Boundary",
         "Ocular Glare Discontinuity",
-        "Cryptographic Hash Verified",
+        "Media Integrity Verified",
       ]);
     }
 
@@ -774,7 +774,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
       y + 32
     );
     doc.text(
-      `• Digital Forensics Node: Cryptographic SHA-256 evidence sealed.`,
+      `• Digital Forensics Node: Tamper-evident evidence sealed.`,
       textX,
       y + 38
     );
@@ -1086,7 +1086,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
       drawDiagnosticFallbackCard(doc, 16, y + 2, 50, 34, "ANOMALY DETECTED HERE", [
         `Resolved Faces: ${faceCount}`,
         "Spatial SBI Seam Detected",
-        "Cryptographic Sealed",
+        "Forensically Verified",
       ]);
     }
 
@@ -1305,8 +1305,8 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
           drawDiagnosticFallbackCard(doc, 16, y + 3, 55, 42, "ANOMALY DETECTED HERE", [
             `Frame #${frameNum}`,
             `BBox: [${bbox.join(", ")}]`,
-            "Cryptographic Keyframe Crop",
-            "SHA-256 Hash Verified",
+            "Forensic Keyframe Crop",
+            "Tamper-Proof Hash Verified",
           ]);
         }
 
@@ -1480,7 +1480,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
       281
     );
     doc.text(
-      `Cryptographic SHA-256 Non-Repudiation Verified | Page ${i} of ${totalPages}`,
+      `NETRA Architecture of Truth | Forensic Audit Trail | Page ${i} of ${totalPages}`,
       14,
       285
     );

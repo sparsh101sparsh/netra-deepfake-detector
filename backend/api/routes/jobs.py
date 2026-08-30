@@ -539,7 +539,7 @@ async def get_report_pdf(job_id: str):
         [Paragraph("Analysis Date / Time:", cell_bold), Paragraph(datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"), cell_norm)],
         [Paragraph("Official Forensic Verdict:", cell_bold), Paragraph(f"<b>{verdict}</b> ({risk} RISK, {conf:.1f}% Index)", cell_norm)],
         [Paragraph("Primary Model Subsystem:", cell_bold), Paragraph("GenD Foundation ViT-L/14 + Spatial SBI + Wav2Vec2", cell_norm)],
-        [Paragraph("Cryptographic Chain of Custody:", cell_bold), Paragraph(f"SHA-256 Non-Repudiation Seal ({sha_hash[:32]}...)", cell_norm)]
+        [Paragraph("Chain of Custody:", cell_bold), Paragraph(f"Forensic Media Integrity Seal ({sha_hash[:32]}...)", cell_norm)]
     ]
     t_meta = Table(meta_rows, colWidths=[150, 370])
     t_meta.setStyle(TableStyle([
@@ -688,7 +688,7 @@ async def get_report_pdf(job_id: str):
     # Signature Footer
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=5))
     foot_style = ParagraphStyle('Foot', parent=styles['Normal'], fontName='Helvetica', fontSize=7.5, leading=10, alignment=1, textColor=colors.HexColor("#64748b"))
-    story.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified", foot_style))
+    story.append(Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth", foot_style))
 
     try:
         doc.build(story)
@@ -707,7 +707,7 @@ async def get_report_pdf(job_id: str):
             Paragraph("&bull; <b>Section 66D Information Technology Act 2000:</b> Cheating by personation using computer resource.", body_style),
             Spacer(1, 10),
             HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#94a3b8"), spaceAfter=5),
-            Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Cryptographic SHA-256 Non-Repudiation Verified", foot_style)
+            Paragraph("Digitally Verified by NETRA Autonomous Forensic Intelligence Engine | Architecture of Truth", foot_style)
         ]
         fallback_doc.build(fallback_story)
     pdf_bytes = buf.getvalue()
