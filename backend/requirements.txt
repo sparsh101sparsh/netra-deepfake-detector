@@ -20,5 +20,4 @@ reportlab>=4.0.0
 rapidocr-onnxruntime>=1.2.3
 opencv-python-headless>=4.8.0.76
 requests>=2.31.0
-imageio-ffmpeg>=0.4.9
 
