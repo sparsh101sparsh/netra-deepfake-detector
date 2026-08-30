@@ -67,14 +67,26 @@ export default function ThreatCatalogPage() {
       })
       .then((data) => {
         const rawItems: ThreatItem[] = data?.results || data?.items || [];
-        // Filter out only synthetic unit-test fixture artifacts
+        // Filter out synthetic stress test fixtures and benchmark mocks
         const fetchedItems = rawItems.filter((it) => {
           const id = (it.id || "").toUpperCase();
           const title = (it.title || "").toLowerCase();
-          if (id.startsWith("TEST-") || id.startsWith("DEMO-") || id.startsWith("E2E-") || id.startsWith("FIR-STRESS-")) {
+          if (
+            id.startsWith("TEST-") ||
+            id.startsWith("DEMO-") ||
+            id.startsWith("E2E-") ||
+            id.includes("STRESS") ||
+            id.includes("MOCK") ||
+            id.startsWith("FIR-STRESS-")
+          ) {
             return false;
           }
-          if (title.includes("[test_fixture]") || title.includes("adversarial benchmark mock")) {
+          if (
+            title.includes("[test_fixture]") ||
+            title.includes("adversarial benchmark mock") ||
+            title.includes("stress threat") ||
+            title.includes("mock")
+          ) {
             return false;
           }
           return true;

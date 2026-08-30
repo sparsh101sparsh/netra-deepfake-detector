@@ -888,24 +888,22 @@ def generate_image_fir_pdf(item: dict) -> bytes:
 
         story.append(Paragraph("3. Neural Biomarker &amp; Anomaly Metrics Breakdown", section_style))
         nm_rows = [
-            [Paragraph("Face ID", table_cell_bold), Paragraph("SBI Artifact Level", table_cell_bold), Paragraph("Ocular Symmetry", table_cell_bold), Paragraph("Eyewear Glare", table_cell_bold), Paragraph("Lip-Sync Lapl.", table_cell_bold), Paragraph("Biometric Status", table_cell_bold)]
+            [Paragraph("Face ID", table_cell_bold), Paragraph("SBI Artifact Level", table_cell_bold), Paragraph("Ocular Symmetry", table_cell_bold), Paragraph("Eyewear Glare", table_cell_bold), Paragraph("Biometric Status", table_cell_bold)]
         ]
         for f in faces[:4]:
             nm = f.get("neural_metrics") or {}
             sbi = nm.get("sbi_artifact_level", 0.88)
             oc_sym = nm.get("ocular_reflection_symmetry", 0.35)
             glare = nm.get("eyewear_specular_score", 58.2)
-            lip = nm.get("lip_sync_laplacian_score", 12.4)
             status_text = '<font color="#dc2626"><b>SYNTHETIC</b></font>' if sbi >= 0.5 else '<font color="#059669"><b>NATURAL</b></font>'
             nm_rows.append([
                 Paragraph(str(f.get("face_id", "face_1")), table_cell),
                 Paragraph(f"{sbi:.4f}", table_cell),
                 Paragraph(f"{oc_sym*100:.1f}%", table_cell),
                 Paragraph(f"{glare:.2f}", table_cell),
-                Paragraph(f"{lip:.2f}", table_cell),
                 Paragraph(status_text, table_cell),
             ])
-        t_nm = Table(nm_rows, colWidths=[60, 95, 95, 90, 90, 90])
+        t_nm = Table(nm_rows, colWidths=[70, 115, 115, 110, 110])
         t_nm.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1e293b")),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),

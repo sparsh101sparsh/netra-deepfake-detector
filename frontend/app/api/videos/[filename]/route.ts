@@ -18,6 +18,8 @@ export async function GET(
   const candidatePaths = [
     path.join(process.cwd(), "public", "dataset_100", "videos", safeFilename),
     path.join(process.cwd(), "public", "dataset_100", safeFilename),
+    path.join(process.cwd(), ".next", "standalone", "public", "dataset_100", "videos", safeFilename),
+    path.join(process.cwd(), "frontend", "public", "dataset_100", "videos", safeFilename),
     path.join(process.cwd(), "..", "backend", "media", "videos", "dataset_100", safeFilename),
     path.join(process.cwd(), "..", "generated_100_deepfake_videos", safeFilename),
     path.join("/Users/iamsparsh00321/Desktop/newantigravworkfolder/generated_100_deepfake_videos", safeFilename),

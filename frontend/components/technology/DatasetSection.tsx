@@ -100,16 +100,40 @@ export default function DatasetSection() {
               {/* Video Player Container */}
               <div className="relative aspect-video bg-black/80 overflow-hidden flex items-center justify-center">
                 {activePlayingVideo === video.filename ? (
-                  <video
-                    autoPlay
-                    controls
-                    playsInline
-                    className="w-full h-full object-cover"
-                  >
-                    <source src={primarySrc} type="video/mp4" />
-                    <source src={fallbackSrc} type="video/mp4" />
-                    Your browser does not support HTML5 video playback.
-                  </video>
+                  <div className="relative w-full h-full">
+                    <video
+                      key={video.filename}
+                      src={primarySrc}
+                      poster={posterUrl}
+                      autoPlay
+                      controls
+                      playsInline
+                      preload="auto"
+                      className="w-full h-full object-cover"
+                      onCanPlay={(e) => {
+                        e.currentTarget.play().catch(() => {});
+                      }}
+                      onError={(e) => {
+                        const videoEl = e.currentTarget;
+                        if (videoEl.src && !videoEl.src.includes("/api/videos/")) {
+                          videoEl.src = fallbackSrc;
+                          videoEl.load();
+                          videoEl.play().catch(() => {});
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      title="Close video"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePlayingVideo(null);
+                      }}
+                      className="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-black/70 hover:bg-black text-white/80 hover:text-white border border-white/20 flex items-center justify-center text-xs backdrop-blur-sm cursor-pointer transition-all"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ) : (
                   <div className="relative w-full h-full flex items-center justify-center bg-black/40">
                     <img

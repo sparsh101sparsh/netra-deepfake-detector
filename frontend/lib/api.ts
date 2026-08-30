@@ -277,9 +277,7 @@ export async function getVideoMediaSources(jobId: string): Promise<VideoMediaSou
     }
     const data = await res.json();
     const stream = data.stream_url ? `${API_BASE}${data.stream_url}` : fallbackStream;
-    // Prioritize streaming proxy over private S3 URLs that throw 403 Forbidden
-    const isPrivateS3 = data.url && data.url.includes(".s3.amazonaws.com");
-    const primary = isPrivateS3 ? stream : (data.url || stream);
+    const primary = data.url || stream;
     return { primaryUrl: primary, streamUrl: stream };
   } catch {
     return { primaryUrl: fallbackStream, streamUrl: fallbackStream };
