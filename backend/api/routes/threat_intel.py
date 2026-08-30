@@ -66,7 +66,7 @@ def resolve_snapshot_image_path(snap: dict) -> Optional[str]:
 
 from ..db import (
     get_threat_catalog, get_threat_by_id, upvote_threat_item, insert_threat_item,
-    create_api_key, list_api_keys, delete_api_key
+    create_api_key, list_api_keys, delete_api_key, purge_synthetic_test_data
 )
 
 router = APIRouter()
@@ -171,6 +171,17 @@ async def report_new_threat(payload: ReportThreatRequest):
         "message": "Threat successfully indexed in NETRA Global Catalog.",
         "id": item_id
     }
+
+@router.api_route("/threat-intelligence/sanitize", methods=["GET", "POST"])
+async def sanitize_threat_data():
+    """Administrative maintenance endpoint: purges all prototype, test, and demo data from catalog & community."""
+    stats = purge_synthetic_test_data()
+    return {
+        "status": "success",
+        "message": "Synthetic test, prototype, and demo records purged successfully.",
+        "details": stats
+    }
+
 
 @router.get("/threat-intelligence/{threat_id}/media")
 async def stream_threat_media(threat_id: str):

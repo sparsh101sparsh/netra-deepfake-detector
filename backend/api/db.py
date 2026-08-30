@@ -19,6 +19,131 @@ def get_db():
     conn.execute("PRAGMA busy_timeout=30000;")
     return conn
 
+def is_synthetic_test_threat(item_id: str, title: str) -> bool:
+    iid = (item_id or "").upper()
+    t = (title or "").lower()
+    
+    test_prefixes = (
+        "TEST-", "DEMO-", "E2E-", "FIR-STRESS-", "CHALLENGE-",
+        "THREAT-CONCUR-", "THREAT-ADV-", "THREAT-SPECIAL-",
+        "THREAT-7546", "THREAT-D38F", "THREAT-A471", "THREAT-9F10",
+        "THREAT-ADE2", "THREAT-74AF", "THREAT-1D18", "THREAT-F988",
+        "THREAT-2509", "THREAT-CC00", "THREAT-AF34", "THREAT-02FE",
+        "THREAT-A753", "THREAT-B119", "THREAT-10C4", "THREAT-2380",
+        "THREAT-8097", "THREAT-D82F", "THREAT-1294", "THREAT-F9B0",
+        "THREAT-EEF0", "THREAT-B359", "THREAT-C0B8", "THREAT-66BC",
+        "THREAT-9285", "THREAT-4BD6", "THREAT-0235", "THREAT-E1B0",
+        "THREAT-E0C4"
+    )
+    if any(iid.startswith(pfx) for pfx in test_prefixes):
+        return True
+        
+    test_keywords = (
+        "[test_fixture]", "adversarial benchmark mock", "stress threat",
+        "concurrent threat", "load threat", "edge case coords",
+        "adversarial image test", "concurrency burst", "notice: fake warrant",
+        "alert: scam <official notice>", "reported electricity kyc",
+        "reported digital arrest", "meeting at 5 pm for coffee",
+        "your electricity power bill is unpaid", "congratulations! you won rs 10 crore",
+        "hey mom, i bought the groceries", "dear customer, your sbi yono",
+        "your electricity will be disconnected", "hello, please find the meeting agenda",
+        "noise.opus", "three_faces_test", "two_faces_test", "numerical_audit",
+        "blank.jpg", "s0.jpg", "scenario_1", "scenario_2", "scenario_3", "scenario_4"
+    )
+    if any(kw in t for kw in test_keywords):
+        return True
+        
+    return False
+
+def purge_synthetic_test_data() -> Dict[str, int]:
+    """Purges all prototype, test, benchmark, and stress records from threat_catalog and community_posts."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+    DELETE FROM threat_catalog 
+    WHERE id LIKE 'TEST-%' 
+       OR id LIKE 'DEMO-%' 
+       OR id LIKE 'E2E-%'
+       OR id LIKE 'FIR-STRESS-%'
+       OR id LIKE 'CHALLENGE-%'
+       OR id LIKE 'THREAT-CONCUR-%'
+       OR id LIKE 'THREAT-ADV-%'
+       OR id LIKE 'THREAT-SPECIAL-%'
+       OR id LIKE 'THREAT-7546%'
+       OR id LIKE 'THREAT-D38F%'
+       OR id LIKE 'THREAT-A471%'
+       OR id LIKE 'THREAT-9F10%'
+       OR id LIKE 'THREAT-ADE2%'
+       OR id LIKE 'THREAT-74AF%'
+       OR id LIKE 'THREAT-1D18%'
+       OR id LIKE 'THREAT-F988%'
+       OR id LIKE 'THREAT-2509%'
+       OR id LIKE 'THREAT-CC00%'
+       OR id LIKE 'THREAT-AF34%'
+       OR id LIKE 'THREAT-02FE%'
+       OR id LIKE 'THREAT-A753%'
+       OR id LIKE 'THREAT-B119%'
+       OR id LIKE 'THREAT-10C4%'
+       OR id LIKE 'THREAT-2380%'
+       OR id LIKE 'THREAT-8097%'
+       OR id LIKE 'THREAT-D82F%'
+       OR id LIKE 'THREAT-1294%'
+       OR id LIKE 'THREAT-F9B0%'
+       OR id LIKE 'THREAT-EEF0%'
+       OR id LIKE 'THREAT-B359%'
+       OR id LIKE 'THREAT-C0B8%'
+       OR id LIKE 'THREAT-66BC%'
+       OR id LIKE 'THREAT-9285%'
+       OR id LIKE 'THREAT-4BD6%'
+       OR id LIKE 'THREAT-0235%'
+       OR id LIKE 'THREAT-E1B0%'
+       OR id LIKE 'THREAT-E0C4%'
+       OR title LIKE '%[TEST_FIXTURE]%' 
+       OR title LIKE '%Adversarial Benchmark Mock%'
+       OR title LIKE '%Stress Threat%'
+       OR title LIKE '%Concurrent Threat%'
+       OR title LIKE '%Load Threat%'
+       OR title LIKE '%Edge Case Coords%'
+       OR title LIKE '%Adversarial Image Test%'
+       OR title LIKE '%Concurrency Burst%'
+       OR title LIKE '%Notice: Fake Warrant%'
+       OR title LIKE '%Alert: Scam <Official Notice>%'
+       OR title LIKE '%Reported Electricity Kyc%'
+       OR title LIKE '%Reported Digital Arrest%'
+       OR title LIKE '%Meeting at 5 PM for coffee%'
+       OR title LIKE '%Your electricity power bill is unpaid%'
+       OR title LIKE '%Congratulations! You won Rs 10 Crore%'
+       OR title LIKE '%Hey mom, I bought the groceries%'
+       OR title LIKE '%Dear customer, your SBI YONO%'
+       OR title LIKE '%Your electricity will be disconnected%'
+       OR title LIKE '%Hello, please find the meeting agenda%'
+       OR title LIKE '%noise.opus%'
+       OR title LIKE '%three_faces_test%'
+       OR title LIKE '%two_faces_test%'
+       OR title LIKE '%numerical_audit%'
+       OR title LIKE '%blank.jpg%'
+       OR title LIKE '%s0.jpg%'
+       OR title LIKE '%scenario_1%'
+       OR title LIKE '%scenario_2%'
+       OR title LIKE '%scenario_3%'
+       OR title LIKE '%scenario_4%';
+    """)
+    purged_threats = cursor.rowcount
+    
+    cursor.execute("""
+    DELETE FROM community_posts 
+    WHERE id LIKE 'post-%'
+       OR id LIKE 'stress-post-%'
+       OR id LIKE 'test-%'
+       OR LOWER(title) LIKE '%stress post%'
+       OR LOWER(title) LIKE '%test%';
+    """)
+    purged_posts = cursor.rowcount
+    
+    conn.commit()
+    conn.close()
+    return {"purged_threats": purged_threats, "purged_posts": purged_posts}
+
 def init_db():
     db_path = os.getenv("NETRA_DB_PATH", DB_PATH)
     conn = sqlite3.connect(db_path, timeout=30.0)
@@ -103,16 +228,7 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_community_created ON community_posts(created_at);")
     
     # Purge only synthetic automated test-runner artifacts so user scans persist reliably
-    cursor.execute("""
-    DELETE FROM threat_catalog 
-    WHERE id LIKE 'TEST-%' 
-       OR id LIKE 'DEMO-%'
-       OR id LIKE 'E2E-%' 
-       OR id LIKE 'FIR-STRESS-%' 
-       OR title LIKE '%[TEST_FIXTURE]%' 
-       OR title LIKE '%Adversarial Benchmark Mock%';
-    """)
-    cursor.execute("DELETE FROM community_posts WHERE id LIKE 'post-%';")
+    purge_synthetic_test_data()
 
     # Cloud Rehydration: If local SQLite is fresh/empty, restore records from AWS DynamoDB
     try:
@@ -140,9 +256,7 @@ def init_db():
                     p = json.loads(payload_str)
                     p_id = str(p.get("id", ""))
                     p_title = str(p.get("title", ""))
-                    if (p_id.startswith("SCAN-") or p_id.startswith("JOB-") or 
-                        "Analysis:" in p_title or "Video Forensic Analysis" in p_title or 
-                        "faint_text" in p_title or "faces_" in p_title or "banner_art" in p_title):
+                    if is_synthetic_test_threat(p_id, p_title):
                         continue
                     cursor.execute("""
                     INSERT OR IGNORE INTO threat_catalog (
@@ -386,8 +500,70 @@ def get_threat_catalog(
     # Filter out only synthetic unit-test fixture artifacts
     query += """ AND id NOT LIKE 'TEST-%' 
                  AND id NOT LIKE 'DEMO-%' 
+                 AND id NOT LIKE 'E2E-%'
+                 AND id NOT LIKE 'FIR-STRESS-%'
+                 AND id NOT LIKE 'CHALLENGE-%'
+                 AND id NOT LIKE 'THREAT-CONCUR-%'
+                 AND id NOT LIKE 'THREAT-ADV-%'
+                 AND id NOT LIKE 'THREAT-SPECIAL-%'
+                 AND id NOT LIKE 'THREAT-7546%'
+                 AND id NOT LIKE 'THREAT-D38F%'
+                 AND id NOT LIKE 'THREAT-A471%'
+                 AND id NOT LIKE 'THREAT-9F10%'
+                 AND id NOT LIKE 'THREAT-ADE2%'
+                 AND id NOT LIKE 'THREAT-74AF%'
+                 AND id NOT LIKE 'THREAT-1D18%'
+                 AND id NOT LIKE 'THREAT-F988%'
+                 AND id NOT LIKE 'THREAT-2509%'
+                 AND id NOT LIKE 'THREAT-CC00%'
+                 AND id NOT LIKE 'THREAT-AF34%'
+                 AND id NOT LIKE 'THREAT-02FE%'
+                 AND id NOT LIKE 'THREAT-A753%'
+                 AND id NOT LIKE 'THREAT-B119%'
+                 AND id NOT LIKE 'THREAT-10C4%'
+                 AND id NOT LIKE 'THREAT-2380%'
+                 AND id NOT LIKE 'THREAT-8097%'
+                 AND id NOT LIKE 'THREAT-D82F%'
+                 AND id NOT LIKE 'THREAT-1294%'
+                 AND id NOT LIKE 'THREAT-F9B0%'
+                 AND id NOT LIKE 'THREAT-EEF0%'
+                 AND id NOT LIKE 'THREAT-B359%'
+                 AND id NOT LIKE 'THREAT-C0B8%'
+                 AND id NOT LIKE 'THREAT-66BC%'
+                 AND id NOT LIKE 'THREAT-9285%'
+                 AND id NOT LIKE 'THREAT-4BD6%'
+                 AND id NOT LIKE 'THREAT-0235%'
+                 AND id NOT LIKE 'THREAT-E1B0%'
+                 AND id NOT LIKE 'THREAT-E0C4%'
                  AND title NOT LIKE '%[TEST_FIXTURE]%' 
-                 AND title NOT LIKE '%Adversarial Benchmark Mock%'"""
+                 AND title NOT LIKE '%Adversarial Benchmark Mock%'
+                 AND title NOT LIKE '%Stress Threat%'
+                 AND title NOT LIKE '%Concurrent Threat%'
+                 AND title NOT LIKE '%Load Threat%'
+                 AND title NOT LIKE '%Edge Case Coords%'
+                 AND title NOT LIKE '%Adversarial Image Test%'
+                 AND title NOT LIKE '%Concurrency Burst%'
+                 AND title NOT LIKE '%Notice: Fake Warrant%'
+                 AND title NOT LIKE '%Alert: Scam <Official Notice>%'
+                 AND title NOT LIKE '%Reported Electricity Kyc%'
+                 AND title NOT LIKE '%Reported Digital Arrest%'
+                 AND title NOT LIKE '%Meeting at 5 PM for coffee%'
+                 AND title NOT LIKE '%Your electricity power bill is unpaid%'
+                 AND title NOT LIKE '%Congratulations! You won Rs 10 Crore%'
+                 AND title NOT LIKE '%Hey mom, I bought the groceries%'
+                 AND title NOT LIKE '%Dear customer, your SBI YONO%'
+                 AND title NOT LIKE '%Your electricity will be disconnected%'
+                 AND title NOT LIKE '%Hello, please find the meeting agenda%'
+                 AND title NOT LIKE '%noise.opus%'
+                 AND title NOT LIKE '%three_faces_test%'
+                 AND title NOT LIKE '%two_faces_test%'
+                 AND title NOT LIKE '%numerical_audit%'
+                 AND title NOT LIKE '%blank.jpg%'
+                 AND title NOT LIKE '%s0.jpg%'
+                 AND title NOT LIKE '%scenario_1%'
+                 AND title NOT LIKE '%scenario_2%'
+                 AND title NOT LIKE '%scenario_3%'
+                 AND title NOT LIKE '%scenario_4%'"""
 
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
@@ -560,6 +736,12 @@ def get_community_posts(
         term = f"%{search.lower()}%"
         params.extend([term, term, term, term])
         
+    query += """ AND id NOT LIKE 'post-%' 
+                 AND id NOT LIKE 'stress-post-%' 
+                 AND id NOT LIKE 'test-%' 
+                 AND LOWER(title) NOT LIKE '%stress post%' 
+                 AND LOWER(title) NOT LIKE '%test%'"""
+
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
     

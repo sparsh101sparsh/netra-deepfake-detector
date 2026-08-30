@@ -77,7 +77,40 @@ export default function ThreatCatalogPage() {
             id.startsWith("E2E-") ||
             id.includes("STRESS") ||
             id.includes("MOCK") ||
-            id.startsWith("FIR-STRESS-")
+            id.startsWith("FIR-STRESS-") ||
+            id.startsWith("CHALLENGE-") ||
+            id.startsWith("THREAT-CONCUR-") ||
+            id.startsWith("THREAT-ADV-") ||
+            id.startsWith("THREAT-SPECIAL-") ||
+            id.startsWith("THREAT-7546") ||
+            id.startsWith("THREAT-D38F") ||
+            id.startsWith("THREAT-A471") ||
+            id.startsWith("THREAT-9F10") ||
+            id.startsWith("THREAT-ADE2") ||
+            id.startsWith("THREAT-74AF") ||
+            id.startsWith("THREAT-1D18") ||
+            id.startsWith("THREAT-F988") ||
+            id.startsWith("THREAT-2509") ||
+            id.startsWith("THREAT-CC00") ||
+            id.startsWith("THREAT-AF34") ||
+            id.startsWith("THREAT-02FE") ||
+            id.startsWith("THREAT-A753") ||
+            id.startsWith("THREAT-B119") ||
+            id.startsWith("THREAT-10C4") ||
+            id.startsWith("THREAT-2380") ||
+            id.startsWith("THREAT-8097") ||
+            id.startsWith("THREAT-D82F") ||
+            id.startsWith("THREAT-1294") ||
+            id.startsWith("THREAT-F9B0") ||
+            id.startsWith("THREAT-EEF0") ||
+            id.startsWith("THREAT-B359") ||
+            id.startsWith("THREAT-C0B8") ||
+            id.startsWith("THREAT-66BC") ||
+            id.startsWith("THREAT-9285") ||
+            id.startsWith("THREAT-4BD6") ||
+            id.startsWith("THREAT-0235") ||
+            id.startsWith("THREAT-E1B0") ||
+            id.startsWith("THREAT-E0C4")
           ) {
             return false;
           }
@@ -85,6 +118,32 @@ export default function ThreatCatalogPage() {
             title.includes("[test_fixture]") ||
             title.includes("adversarial benchmark mock") ||
             title.includes("stress threat") ||
+            title.includes("concurrent threat") ||
+            title.includes("load threat") ||
+            title.includes("edge case coords") ||
+            title.includes("adversarial image test") ||
+            title.includes("concurrency burst") ||
+            title.includes("notice: fake warrant") ||
+            title.includes("alert: scam <official notice>") ||
+            title.includes("reported electricity kyc") ||
+            title.includes("reported digital arrest") ||
+            title.includes("meeting at 5 pm") ||
+            title.includes("electricity power bill is unpaid") ||
+            title.includes("congratulations! you won") ||
+            title.includes("hey mom, i bought") ||
+            title.includes("dear customer, your sbi yono") ||
+            title.includes("electricity will be disconnected") ||
+            title.includes("hello, please find the meeting agenda") ||
+            title.includes("noise.opus") ||
+            title.includes("three_faces_test") ||
+            title.includes("two_faces_test") ||
+            title.includes("numerical_audit") ||
+            title.includes("blank.jpg") ||
+            title.includes("s0.jpg") ||
+            title.includes("scenario_1") ||
+            title.includes("scenario_2") ||
+            title.includes("scenario_3") ||
+            title.includes("scenario_4") ||
             title.includes("mock")
           ) {
             return false;

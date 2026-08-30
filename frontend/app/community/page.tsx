@@ -35,11 +35,23 @@ export default function CommunityPage() {
     setIsLoading(true);
     setError(null);
     let localPosts: CommunityPost[] = [];
+    const isRealPost = (p: any) => {
+      const id = (p?.id || "").toLowerCase();
+      const title = (p?.title || "").toLowerCase();
+      if (id.startsWith("post-") || id.startsWith("stress-post-") || id.startsWith("test-")) return false;
+      if (title.includes("stress post") || title.includes("test")) return false;
+      return true;
+    };
+
     if (typeof window !== "undefined") {
       const savedLocalPosts = localStorage.getItem("netra_community_posts");
       if (savedLocalPosts) {
         try {
-          localPosts = JSON.parse(savedLocalPosts);
+          const parsed = JSON.parse(savedLocalPosts);
+          if (Array.isArray(parsed)) {
+            localPosts = parsed.filter(isRealPost);
+            localStorage.setItem("netra_community_posts", JSON.stringify(localPosts));
+          }
         } catch {}
       }
     }
@@ -50,7 +62,7 @@ export default function CommunityPage() {
         return res.json();
       })
       .then((data) => {
-        const backendPosts = data?.posts || [];
+        const backendPosts: CommunityPost[] = (data?.posts || []).filter(isRealPost);
         const backendIds = new Set(backendPosts.map((p: any) => p.id));
         const uniqueLocal = localPosts.filter((p) => !backendIds.has(p.id));
         setPosts([...uniqueLocal, ...backendPosts]);
