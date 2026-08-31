@@ -26,6 +26,10 @@ DYNAMO_TABLE = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
 # In-memory job registry for local fallback and offline/test workflows
 _local_jobs_store: Dict[str, Dict[str, Any]] = {}
 
+# Track job IDs already successfully cataloged this process lifetime.
+# Prevents _auto_index_completed_job from re-running on every status poll.
+_indexed_jobs: set = set()
+
 backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MEDIA_DIR = os.getenv("NETRA_MEDIA_DIR", os.path.join(backend_dir, "media"))
 KEYFRAMES_DIR = os.path.join(MEDIA_DIR, "keyframes")
@@ -186,7 +190,10 @@ def fetch_job_item(job_id: str) -> Optional[Dict[str, Any]]:
 
 
 def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
-    """Ensure completed video jobs are indexed in Threat Catalog and Radar with EXIF GPS."""
+    """Ensure completed video jobs are indexed in Threat Catalog and Radar with EXIF GPS.
+    Uses _indexed_jobs to prevent duplicate catalog writes on every status poll.
+    """
+    global _indexed_jobs
     try:
         if not parsed:
             return
@@ -203,8 +210,11 @@ def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
             return
 
         threat_id = f"JOB-{job_id[:8].upper()}"
-        from ..db import get_threat_by_id
-        existing = get_threat_by_id(threat_id)
+
+        # Skip if already cataloged in this process lifetime
+        if threat_id in _indexed_jobs:
+            return
+
         clean_jid = job_id.replace("JOB-", "").lower()
         file_path = None
         for cand in [
@@ -219,8 +229,6 @@ def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
             if os.path.exists(cand) and os.path.getsize(cand) > 0:
                 file_path = cand
                 break
-        res_meta = result.get("metadata", {}) or {}
-        has_coords = res_meta.get("lat") is not None and res_meta.get("lng") is not None
 
         from netra.services.catalog_hook import auto_catalog_scan
         auto_catalog_scan(
@@ -230,6 +238,8 @@ def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
             explicit_job_id=threat_id,
             job_uuid=job_id
         )
+        # Mark as indexed so subsequent polls don't re-run this
+        _indexed_jobs.add(threat_id)
     except Exception as e:
         logger.debug(f"Catalog indexing hook for {job_id}: {e}")
 

@@ -407,6 +407,59 @@ def delete_api_key(key_id: str) -> bool:
     return deleted
 
 # Threat Catalog Functions
+
+def _dynamo_persist_catalog_item(
+    item_id: str,
+    item: Dict[str, Any],
+    media_type: str,
+    verdict: str,
+    lat: Optional[float],
+    lng: Optional[float],
+    city: Optional[str],
+    state: Optional[str],
+    location_source: Optional[str],
+    created_at: str,
+) -> None:
+    """
+    Shared helper: writes a catalog item to DynamoDB with a CATALOG# prefix key.
+    Called on both INSERT and UPDATE paths so Render's ephemeral SQLite is always backed by cloud.
+    Silently swallows all exceptions to avoid blocking the main request.
+    """
+    table_name = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
+    region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
+    ak = os.getenv("AWS_ACCESS_KEY_ID")
+    sk = os.getenv("AWS_SECRET_ACCESS_KEY")
+    kwargs = {"region_name": region}
+    if ak and sk:
+        kwargs["aws_access_key_id"] = ak.strip()
+        kwargs["aws_secret_access_key"] = sk.strip()
+    import boto3
+    dynamo = boto3.client("dynamodb", **kwargs)
+    payload_data = dict(item)
+    payload_data["id"] = item_id
+    payload_data["created_at"] = created_at
+    payload_data["type"] = media_type
+    payload_data["verdict"] = verdict
+    # Ensure lat/lng in payload reflect the latest resolved values
+    if lat is not None:
+        payload_data["lat"] = lat
+        payload_data["lng"] = lng
+        payload_data["city"] = city
+        payload_data["state"] = state
+        payload_data["location_source"] = location_source
+    dynamo.put_item(
+        TableName=table_name,
+        Item={
+            "job_id": {"S": f"CATALOG#{item_id}"},
+            "status": {"S": "catalog_archived"},
+            "payload": {"S": json.dumps(payload_data, default=str)},
+            "created_at": {"S": created_at},
+            "type": {"S": str(media_type)},
+            "verdict": {"S": str(verdict)}
+        }
+    )
+
+
 def insert_threat_item(item: Dict[str, Any]) -> str:
     title = item.get("title") or "Untitled Incident"
     media_type = item.get("type") or "scam_text"
@@ -463,6 +516,12 @@ def insert_threat_item(item: Dict[str, Any]) -> str:
         conn.execute(f"UPDATE threat_catalog SET {', '.join(upd_fields)} WHERE id = ?", params)
         conn.commit()
         conn.close()
+        # CRITICAL FIX: Always sync updated record to DynamoDB — Render has ephemeral SQLite.
+        # Without this, updates after initial insert are lost on container restart.
+        try:
+            _dynamo_persist_catalog_item(item_id, item, media_type, verdict, lat, lng, city, state, location_source, created_at)
+        except Exception:
+            pass
         return item_id
 
     conn.execute("""
@@ -488,30 +547,7 @@ def insert_threat_item(item: Dict[str, Any]) -> str:
 
     # Cloud Persistence: Mirror to AWS DynamoDB so Render restarts never lose records
     try:
-        table_name = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
-        region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
-        ak = os.getenv("AWS_ACCESS_KEY_ID")
-        sk = os.getenv("AWS_SECRET_ACCESS_KEY")
-        kwargs = {"region_name": region}
-        if ak and sk:
-            kwargs["aws_access_key_id"] = ak.strip()
-            kwargs["aws_secret_access_key"] = sk.strip()
-        import boto3
-        dynamo = boto3.client("dynamodb", **kwargs)
-        payload_data = dict(item)
-        payload_data["id"] = item_id
-        payload_data["created_at"] = created_at
-        dynamo.put_item(
-            TableName=table_name,
-            Item={
-                "job_id": {"S": f"CATALOG#{item_id}"},
-                "status": {"S": "catalog_archived"},
-                "payload": {"S": json.dumps(payload_data)},
-                "created_at": {"S": created_at},
-                "type": {"S": str(media_type)},
-                "verdict": {"S": str(verdict)}
-            }
-        )
+        _dynamo_persist_catalog_item(item_id, item, media_type, verdict, lat, lng, city, state, location_source, created_at)
     except Exception:
         pass
 
@@ -520,12 +556,12 @@ def insert_threat_item(item: Dict[str, Any]) -> str:
 _LAST_DYNAMO_SYNC = 0.0
 
 def sync_catalog_from_dynamodb():
-    """Sync recent CATALOG# items from AWS DynamoDB to local SQLite if running in production."""
+    """Sync CATALOG# items from AWS DynamoDB to local SQLite on container restart / cache miss."""
     if os.getenv("PYTEST_CURRENT_TEST"):
         return
     global _LAST_DYNAMO_SYNC
     now = time.time()
-    if now - _LAST_DYNAMO_SYNC < 4.0:
+    if now - _LAST_DYNAMO_SYNC < 30.0:
         return
     _LAST_DYNAMO_SYNC = now
     try:
@@ -543,7 +579,7 @@ def sync_catalog_from_dynamodb():
             TableName=table_name,
             FilterExpression="begins_with(job_id, :prefix)",
             ExpressionAttributeValues={":prefix": {"S": "CATALOG#"}},
-            Limit=100
+            Limit=200
         )
         conn = get_db()
         for item in res.get("Items", []):
