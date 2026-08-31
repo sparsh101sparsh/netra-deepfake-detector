@@ -261,7 +261,7 @@ def run_resilient_video_pipeline(
             pass
 
         # Central Threat Catalog & Radar Ingestion
-        _auto_index_completed_job(job_id, complete_record)
+        _auto_index_completed_job(job_id, complete_record, filename=filename)
         logger.info(f"Resilient video pipeline completed {job_id} successfully (verdict={verdict}, coords={lat},{lng})")
 
     except Exception as pipe_err:
@@ -408,7 +408,11 @@ async def detect_full(
 
 @router.post("/detect/image-ocr")
 @router.post("/detect/image")
-async def detect_image_unified(request: Request, file: UploadFile = File(...)):
+async def detect_image_unified(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...)
+):
     """
     Accepts an uploaded image, routes intelligently through NETRA's Dual-Branch Router:
     - Branch A (Pure Face): Multi-face localization, EfficientNet-B4 + SBI deepfake detection, VisualAnomalyLocalizer
@@ -432,20 +436,23 @@ async def detect_image_unified(request: Request, file: UploadFile = File(...)):
         result = process_image_forensics(
             image_bytes=contents,
             filename=file.filename or "uploaded_image.png",
-            request=request
+            request=request,
+            skip_auto_catalog=True
         )
-        # Central Auto-Catalog Ingestion Hook for Image Forensics
+        # Asynchronous Central Auto-Catalog Ingestion Hook for Image Forensics
         try:
             from netra.services.catalog_hook import auto_catalog_scan
-            auto_catalog_scan(
+            background_tasks.add_task(
+                auto_catalog_scan,
                 scan_type="image",
                 result=result,
                 file_bytes=contents,
                 filename=file.filename or "uploaded_image.png",
-                request=request
+                request=request,
+                explicit_job_id=result.get("scan_id")
             )
         except Exception as cat_err:
-            logger.warning(f"Image catalog auto-index failed: {cat_err}")
+            logger.warning(f"Image catalog background auto-index enqueue failed: {cat_err}")
 
         return result
     except Exception as e:

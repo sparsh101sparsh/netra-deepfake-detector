@@ -26,6 +26,22 @@ from contextlib import asynccontextmanager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     start_24h_background_worker()
+    
+    # Background model pre-warming daemon thread (non-blocking)
+    import threading
+    def _warmup_models():
+        try:
+            from netra.pipeline.rapidocr_engine import get_rapid_ocr
+            get_rapid_ocr()
+        except Exception:
+            pass
+        try:
+            from netra.services.scam_detector import scam_detector_engine
+            scam_detector_engine.predict_scam("Sample verification ping")
+        except Exception:
+            pass
+    threading.Thread(target=_warmup_models, daemon=True, name="netra-prewarm").start()
+
     yield
 
 app = FastAPI(
