@@ -164,6 +164,13 @@ class GenDForensicEngine:
 
         resolved_path = resolve_gend_safetensors_path(self.safetensors_path)
         if not resolved_path:
+            # Only attempt 1.1GB hub download if explicitly authorized by environment
+            allow_dl = os.getenv("GEND_ALLOW_DOWNLOAD", "false").strip().lower() in ("true", "1", "yes")
+            if not allow_dl:
+                logger.info("GenD safetensors file not found locally. Remote download skipped (GEND_ALLOW_DOWNLOAD!=true). Falling back to Spatial/Laplacian detector.")
+                self.is_remote_loaded = False
+                return
+
             # Fallback: attempt huggingface_hub download if online
             try:
                 from huggingface_hub import hf_hub_download

@@ -279,8 +279,17 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             onScanComplete?.(data);
             return;
           }
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.detail || `OCR endpoint returned status ${res.status}`);
+          let errMsg = `OCR endpoint returned status ${res.status}`;
+          try {
+            const errData = await res.json();
+            errMsg = errData.detail || errData.message || errMsg;
+          } catch {
+            try {
+              const txt = await res.text();
+              if (txt && txt.length < 200 && !txt.includes("<html")) errMsg = txt;
+            } catch {}
+          }
+          throw new Error(errMsg);
         } catch (err: any) {
           clearInterval(progressInterval);
           console.warn("Image OCR error:", err);
@@ -309,8 +318,17 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             onScanComplete?.(data);
             return;
           }
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.detail || `Audio detection returned status ${res.status}`);
+          let errMsg = `Audio detection returned status ${res.status}`;
+          try {
+            const errData = await res.json();
+            errMsg = errData.detail || errData.message || errMsg;
+          } catch {
+            try {
+              const txt = await res.text();
+              if (txt && txt.length < 200 && !txt.includes("<html")) errMsg = txt;
+            } catch {}
+          }
+          throw new Error(errMsg);
         } catch (err: any) {
           clearInterval(progressInterval);
           console.warn("Audio detection error:", err);
@@ -339,8 +357,17 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             return;
           }
         }
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || `Detection engine returned status ${res.status}`);
+        let errMsg = `Detection engine returned status ${res.status}`;
+        try {
+          const errData = await res.json();
+          errMsg = errData.detail || errData.message || errMsg;
+        } catch {
+          try {
+            const txt = await res.text();
+            if (txt && txt.length < 200 && !txt.includes("<html")) errMsg = txt;
+          } catch {}
+        }
+        throw new Error(errMsg);
       } catch (err: any) {
         clearInterval(progressInterval);
         console.warn("Video detection dispatch error:", err);

@@ -66,7 +66,7 @@ def resolve_snapshot_image_path(snap: dict) -> Optional[str]:
 
 from ..db import (
     get_threat_catalog, get_threat_by_id, upvote_threat_item, insert_threat_item,
-    create_api_key, list_api_keys, delete_api_key, purge_synthetic_test_data
+    get_radar_threat_items, create_api_key, list_api_keys, delete_api_key, purge_synthetic_test_data
 )
 
 router = APIRouter()
@@ -114,7 +114,7 @@ async def fetch_threat_catalog(
 @router.get("/threat-intelligence/radar")
 async def fetch_threat_radar():
     """Fetch live map markers for the Geolocation Threat Radar (Landing Page)."""
-    items = get_threat_catalog(limit=100)
+    items = get_radar_threat_items(limit=100)
     # Format for MapLibre GeoJSON / Marker stream
     markers = []
     for item in items:

@@ -189,7 +189,7 @@ def fetch_job_item(job_id: str) -> Optional[Dict[str, Any]]:
     return item
 
 
-def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
+def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any], filename: Optional[str] = None):
     """Ensure completed video jobs are indexed in Threat Catalog and Radar with EXIF GPS.
     Uses _indexed_jobs to prevent duplicate catalog writes on every status poll.
     """
@@ -215,19 +215,25 @@ def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
         if threat_id in _indexed_jobs:
             return
 
+        resolved_filename = filename or parsed.get("filename")
+
         clean_jid = job_id.replace("JOB-", "").lower()
         file_path = None
-        for cand in [
-            os.path.join(MEDIA_DIR, f"{clean_jid}.mp4"),
-            os.path.join(MEDIA_DIR, "uploads", f"{clean_jid}.mp4"),
-            os.path.join(MEDIA_DIR, f"{job_id}.mp4"),
-            os.path.join(MEDIA_DIR, "uploads", f"{job_id}.mp4"),
-            os.path.join(MEDIA_DIR, f"{clean_jid}_web_h264.mp4"),
-            os.path.join(MEDIA_DIR, f"{job_id}_web_h264.mp4"),
-            os.path.join(MEDIA_DIR, "uploads", f"JOB-{clean_jid[:8].upper()}.mp4"),
-        ]:
-            if os.path.exists(cand) and os.path.getsize(cand) > 0:
-                file_path = cand
+        cand_exts = [".mp4", ".mov", ".webm", ".avi", ""]
+        for ext in cand_exts:
+            for cand in [
+                os.path.join(MEDIA_DIR, f"{clean_jid}{ext}"),
+                os.path.join(MEDIA_DIR, "uploads", f"{clean_jid}{ext}"),
+                os.path.join(MEDIA_DIR, f"{job_id}{ext}"),
+                os.path.join(MEDIA_DIR, "uploads", f"{job_id}{ext}"),
+                os.path.join(MEDIA_DIR, f"{clean_jid}_web_h264{ext}"),
+                os.path.join(MEDIA_DIR, f"{job_id}_web_h264{ext}"),
+                os.path.join(MEDIA_DIR, "uploads", f"JOB-{clean_jid[:8].upper()}{ext}"),
+            ]:
+                if os.path.exists(cand) and os.path.getsize(cand) > 0:
+                    file_path = cand
+                    break
+            if file_path:
                 break
 
         from netra.services.catalog_hook import auto_catalog_scan
@@ -235,6 +241,7 @@ def _auto_index_completed_job(job_id: str, parsed: Dict[str, Any]):
             scan_type="video",
             result=result,
             file_path=file_path,
+            filename=resolved_filename,
             explicit_job_id=threat_id,
             job_uuid=job_id
         )

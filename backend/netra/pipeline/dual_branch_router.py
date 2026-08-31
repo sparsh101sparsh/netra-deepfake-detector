@@ -654,7 +654,8 @@ def generate_annotated_preview(
 def process_image_forensics(
     image_bytes: bytes,
     filename: str = "uploaded_image.png",
-    request: Optional[Any] = None
+    request: Optional[Any] = None,
+    skip_auto_catalog: bool = False
 ) -> Dict[str, Any]:
     """
     Core entrypoint for Intelligent Dual-Branch Routing & Multi-Face Forensics.
@@ -970,18 +971,46 @@ def process_image_forensics(
         "extracted_apks": extracted_iocs.get("apks", [])
     }
 
-    # 7. Central Auto-Catalog Ingestion Hook
+    # Extract EXIF metadata & GPS coordinates if present
+    exif_geo = None
     try:
-        from netra.services.catalog_hook import auto_catalog_scan
-        auto_catalog_scan(
-            scan_type="image",
-            result=response,
-            file_bytes=image_bytes,
-            filename=filename,
-            request=request,
-            explicit_job_id=scan_id
-        )
-    except Exception as cat_err:
-        logger.warning(f"Dual-branch auto-cataloging hook failed: {cat_err}")
+        from netra.pipeline.indian_gazetteer import extract_media_exif_geolocation
+        exif_geo = extract_media_exif_geolocation(image_bytes)
+    except Exception:
+        pass
+
+    lat = exif_geo.get("lat") if exif_geo else None
+    lng = exif_geo.get("lng") if exif_geo else None
+    city = exif_geo.get("city") if exif_geo else None
+    state = exif_geo.get("state") if exif_geo else None
+    device_model = exif_geo.get("device_model", "Digital Camera / Mobile") if exif_geo else "Digital Camera / Mobile"
+    software_used = exif_geo.get("software_used", "Camera Firmware") if exif_geo else "NETRA Multi-Modal V5"
+    loc_source = exif_geo.get("location_source", "EXACT_GPS" if lat is not None else "ONLINE_UNMAPPED") if exif_geo else "ONLINE_UNMAPPED"
+
+    response["metadata"] = {
+        "lat": lat,
+        "lng": lng,
+        "city": city,
+        "state": state,
+        "device_model": device_model,
+        "software_used": software_used,
+        "location_source": loc_source
+    }
+    response["exif_geolocation"] = exif_geo
+
+    # 7. Central Auto-Catalog Ingestion Hook
+    if not skip_auto_catalog:
+        try:
+            from netra.services.catalog_hook import auto_catalog_scan
+            auto_catalog_scan(
+                scan_type="image",
+                result=response,
+                file_bytes=image_bytes,
+                filename=filename,
+                request=request,
+                explicit_job_id=scan_id
+            )
+        except Exception as cat_err:
+            logger.warning(f"Dual-branch auto-cataloging hook failed: {cat_err}")
 
     return response

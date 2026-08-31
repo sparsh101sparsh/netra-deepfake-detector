@@ -50,15 +50,7 @@ def is_synthetic_test_threat(item_id: str, title: str) -> bool:
     test_keywords = (
         "[test_fixture]", "adversarial benchmark mock", "stress threat",
         "concurrent threat", "load threat", "edge case coords",
-        "adversarial image test", "concurrency burst", "notice: fake warrant",
-        "alert: scam <official notice>", "reported electricity kyc",
-        "reported digital arrest", "meeting at 5 pm for coffee",
-        "your electricity power bill is unpaid", "congratulations! you won rs 10 crore",
-        "hey mom, i bought the groceries", "dear customer, your sbi yono",
-        "your electricity will be disconnected", "hello, please find the meeting agenda",
-        "noise.opus", "three_faces_test", "two_faces_test", "numerical_audit",
-        "blank.jpg", "s0.jpg", "scenario_1", "scenario_2", "scenario_3", "scenario_4",
-        "user_mumbai_camera", "mumbai_photo.jpg", "verify_db_insert", "test_voice.wav"
+        "adversarial image test", "concurrency burst", "numerical_audit"
     )
     if any(kw in t for kw in test_keywords):
         return True
@@ -123,31 +115,7 @@ def purge_synthetic_test_data() -> Dict[str, int]:
        OR title LIKE '%Edge Case Coords%'
        OR title LIKE '%Adversarial Image Test%'
        OR title LIKE '%Concurrency Burst%'
-       OR title LIKE '%Notice: Fake Warrant%'
-       OR title LIKE '%Alert: Scam <Official Notice>%'
-       OR title LIKE '%Reported Electricity Kyc%'
-       OR title LIKE '%Reported Digital Arrest%'
-       OR title LIKE '%Meeting at 5 PM for coffee%'
-       OR title LIKE '%Your electricity power bill is unpaid%'
-       OR title LIKE '%Congratulations! You won Rs 10 Crore%'
-       OR title LIKE '%Hey mom, I bought the groceries%'
-       OR title LIKE '%Dear customer, your SBI YONO%'
-       OR title LIKE '%Your electricity will be disconnected%'
-       OR title LIKE '%Hello, please find the meeting agenda%'
-       OR title LIKE '%noise.opus%'
-       OR title LIKE '%three_faces_test%'
-       OR title LIKE '%two_faces_test%'
-       OR title LIKE '%numerical_audit%'
-       OR title LIKE '%blank.jpg%'
-       OR title LIKE '%s0.jpg%'
-       OR title LIKE '%scenario_1%'
-       OR title LIKE '%scenario_2%'
-       OR title LIKE '%scenario_3%'
-       OR title LIKE '%scenario_4%'
-       OR title LIKE '%user_mumbai_camera%'
-       OR title LIKE '%mumbai_photo.jpg%'
-       OR title LIKE '%verify_db_insert%'
-       OR title LIKE '%test_voice.wav%';
+       OR title LIKE '%numerical_audit%';
     """)
     purged_threats = cursor.rowcount
     
@@ -709,35 +677,11 @@ def get_threat_catalog(
                  AND title NOT LIKE '%Adversarial Benchmark Mock%'
                  AND title NOT LIKE '%Stress Threat%'
                  AND title NOT LIKE '%Concurrent Threat%'
-                 AND title NOT LIKE '%Load Threat%'
-                 AND title NOT LIKE '%Edge Case Coords%'
-                 AND title NOT LIKE '%Adversarial Image Test%'
-                 AND title NOT LIKE '%Concurrency Burst%'
-                 AND title NOT LIKE '%Notice: Fake Warrant%'
-                 AND title NOT LIKE '%Alert: Scam <Official Notice>%'
-                 AND title NOT LIKE '%Reported Electricity Kyc%'
-                 AND title NOT LIKE '%Reported Digital Arrest%'
-                 AND title NOT LIKE '%Meeting at 5 PM for coffee%'
-                 AND title NOT LIKE '%Your electricity power bill is unpaid%'
-                 AND title NOT LIKE '%Congratulations! You won Rs 10 Crore%'
-                 AND title NOT LIKE '%Hey mom, I bought the groceries%'
-                 AND title NOT LIKE '%Dear customer, your SBI YONO%'
-                 AND title NOT LIKE '%Your electricity will be disconnected%'
-                 AND title NOT LIKE '%Hello, please find the meeting agenda%'
-                 AND title NOT LIKE '%noise.opus%'
-                 AND title NOT LIKE '%three_faces_test%'
-                 AND title NOT LIKE '%two_faces_test%'
-                 AND title NOT LIKE '%numerical_audit%'
-                 AND title NOT LIKE '%blank.jpg%'
-                 AND title NOT LIKE '%s0.jpg%'
-                 AND title NOT LIKE '%scenario_1%'
-                 AND title NOT LIKE '%scenario_2%'
-                 AND title NOT LIKE '%scenario_3%'
-                 AND title NOT LIKE '%scenario_4%'
-                 AND title NOT LIKE '%user_mumbai_camera%'
-                 AND title NOT LIKE '%mumbai_photo.jpg%'
-                 AND title NOT LIKE '%verify_db_insert%'
-                 AND title NOT LIKE '%test_voice.wav%'"""
+                  AND title NOT LIKE '%Load Threat%'
+                  AND title NOT LIKE '%Edge Case Coords%'
+                  AND title NOT LIKE '%Adversarial Image Test%'
+                  AND title NOT LIKE '%Concurrency Burst%'
+                  AND title NOT LIKE '%numerical_audit%'"""
 
     query += " ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
@@ -754,6 +698,46 @@ def get_threat_catalog(
         except: pass
         results.append(d)
         
+    return results
+
+
+def get_radar_threat_items(limit: int = 100) -> List[Dict]:
+    """
+    Fetch threat items specifically for the Geolocation Threat Radar map.
+    Guarantees:
+    - Only returns items with valid lat and lng coordinates.
+    - Excludes audio items (audio has no geolocation radar mapping).
+    - Strictly ordered latest first (created_at DESC).
+    """
+    sync_catalog_from_dynamodb()
+    conn = get_db()
+    query = """
+        SELECT * FROM threat_catalog
+        WHERE lat IS NOT NULL AND lng IS NOT NULL
+          AND type != 'audio_clone'
+    """
+    if not os.getenv("PYTEST_CURRENT_TEST"):
+        query += """ AND id NOT LIKE 'TEST-%'
+                     AND id NOT LIKE 'DEMO-%'
+                     AND id NOT LIKE 'E2E-%'
+                     AND id NOT LIKE 'FIR-STRESS-%'
+                     AND id NOT LIKE 'CHALLENGE-%'
+                     AND title NOT LIKE '%[TEST_FIXTURE]%'
+                     AND title NOT LIKE '%Adversarial Benchmark Mock%'"""
+
+    query += " ORDER BY created_at DESC, rowid DESC LIMIT ?"
+    rows = conn.execute(query, (limit,)).fetchall()
+    conn.close()
+
+    results = []
+    for r in rows:
+        d = dict(r)
+        try: d["extracted_iocs"] = json.loads(d["extracted_iocs"])
+        except: pass
+        try: d["fir_dossier"] = json.loads(d["fir_dossier"])
+        except: pass
+        results.append(d)
+
     return results
 
 def get_threat_by_id(threat_id: str) -> Optional[Dict]:
