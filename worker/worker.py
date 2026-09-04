@@ -486,11 +486,31 @@ def update_job_progress(
         logger.error(f"Failed to update DynamoDB progress for job {job_id}: {e}")
 
 
+def sanitize_for_dynamodb(data: Any) -> Any:
+    """Recursively strip large base64 image strings to guarantee item size is well under DynamoDB's 400KB limit."""
+    if isinstance(data, dict):
+        clean = {}
+        for k, v in data.items():
+            if k in ("annotated_preview_base64", "annotated_image_preview"):
+                continue
+            if isinstance(v, str) and (v.startswith("data:image/") or len(v) > 30000):
+                continue
+            clean[k] = sanitize_for_dynamodb(v)
+        return clean
+    elif isinstance(data, list):
+        return [sanitize_for_dynamodb(item) for item in data]
+    return data
+
+
 def write_result_to_dynamo(
     job_id: str, result: dict, worker_id: Optional[str] = None
 ):
     """Write final complete result to DynamoDB."""
     try:
+        # Prepare payload for DynamoDB: strip large base64 blobs to stay well under DynamoDB's 400KB item limit
+        clean_result = sanitize_for_dynamodb(result)
+        result_json = json.dumps(clean_result)
+
         now_str = datetime.now(timezone.utc).isoformat()
         expr = "SET #s = :s, progress = :p, current_stage = :cs, #r = :r, completed_at = :ca, updated_at = :ua"
         names = {"#s": "status", "#r": "result"}
@@ -498,7 +518,7 @@ def write_result_to_dynamo(
             ":s": {"S": "complete"},
             ":p": {"N": "100"},
             ":cs": {"S": "Analysis complete"},
-            ":r": {"S": json.dumps(result)},
+            ":r": {"S": result_json},
             ":ca": {"S": now_str},
             ":ua": {"S": now_str},
         }

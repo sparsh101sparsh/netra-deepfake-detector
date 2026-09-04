@@ -365,6 +365,8 @@ def run_resilient_image_pipeline(
 
         # Best-effort DynamoDB write
         try:
+            clean_res = dict(result)
+            clean_res.pop("annotated_preview_base64", None)
             dynamo = get_boto3_client("dynamodb")
             dynamo.update_item(
                 TableName=get_dynamo_table(),
@@ -375,7 +377,7 @@ def run_resilient_image_pipeline(
                     ":s": {"S": "complete"},
                     ":p": {"N": "100"},
                     ":cs": {"S": "Analysis complete"},
-                    ":r": {"S": json.dumps(result)},
+                    ":r": {"S": json.dumps(clean_res)},
                     ":ca": {"S": now_iso},
                 }
             )
