@@ -121,11 +121,10 @@ def purge_synthetic_test_data() -> Dict[str, int]:
     
     cursor.execute("""
     DELETE FROM community_posts 
-    WHERE id LIKE 'post-%'
-       OR id LIKE 'stress-post-%'
-       OR id LIKE 'test-%'
-       OR LOWER(title) LIKE '%stress post%'
-       OR LOWER(title) LIKE '%test%';
+    WHERE id LIKE 'stress-post-%'
+       OR id LIKE 'test-fixture-%'
+       OR LOWER(title) LIKE '%[stress post]%'
+       OR LOWER(title) LIKE '%[test_fixture]%';
     """)
     purged_posts = cursor.rowcount
 
@@ -899,11 +898,10 @@ def get_community_posts(
         term = f"%{search.lower()}%"
         params.extend([term, term, term, term])
         
-    query += """ AND id NOT LIKE 'post-%' 
-                 AND id NOT LIKE 'stress-post-%' 
-                 AND id NOT LIKE 'test-%' 
-                 AND LOWER(title) NOT LIKE '%stress post%' 
-                 AND LOWER(title) NOT LIKE '%test%'"""
+    query += """ AND id NOT LIKE 'stress-post-%' 
+                 AND id NOT LIKE 'test-fixture-%' 
+                 AND LOWER(title) NOT LIKE '%[stress post]%' 
+                 AND LOWER(title) NOT LIKE '%[test_fixture]%'"""
 
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
