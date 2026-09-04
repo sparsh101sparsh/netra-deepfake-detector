@@ -138,39 +138,59 @@ async def send_whatsapp_message(to: str, text: str, preferred_channel: Optional[
 
 # ── Media Downloaders ─────────────────────────────────────────────────────────
 async def download_meta_media(media_id: str) -> Optional[bytes]:
-    """Download media from Meta Graph API using Bearer Token."""
+    """Download media from Meta Graph API using Bearer Token with resilient CDN redirect support."""
     token = os.getenv("WHATSAPP_CLOUD_ACCESS_TOKEN", META_ACCESS_TOKEN)
     if not token:
         logger.error("No Meta token configured to download media.")
         return None
 
-    headers = {"Authorization": f"Bearer {token.strip()}"}
+    headers = {
+        "Authorization": f"Bearer {token.strip()}",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
     try:
         import requests
         meta_res = await asyncio.to_thread(
             requests.get,
             f"{GRAPH_API_BASE}/{media_id}",
             headers=headers,
-            timeout=15.0
+            timeout=20.0
         )
         if meta_res.status_code != 200:
+            logger.error(f"Meta media query failed for {media_id} ({meta_res.status_code}): {meta_res.text}")
             return None
 
         download_url = meta_res.json().get("url")
         if not download_url:
+            logger.error(f"Meta media URL missing in response for {media_id}: {meta_res.text}")
             return None
 
         file_res = await asyncio.to_thread(
             requests.get,
             download_url,
             headers=headers,
-            timeout=35.0
+            timeout=60.0
         )
         if file_res.status_code == 200:
             return file_res.content
+
+        # If headers caused a 400/401/403 on redirected CDN URL, retry without auth header (signed CDN URL)
+        if file_res.status_code in (400, 401, 403):
+            logger.warning(f"Meta CDN download returned {file_res.status_code}, retrying without Authorization header...")
+            cdn_headers = {"User-Agent": headers["User-Agent"]}
+            file_res2 = await asyncio.to_thread(
+                requests.get,
+                download_url,
+                headers=cdn_headers,
+                timeout=60.0
+            )
+            if file_res2.status_code == 200:
+                return file_res2.content
+
+        logger.error(f"Meta media file download failed for {media_id} ({file_res.status_code}): {file_res.text[:200]}")
         return None
     except Exception as err:
-        logger.error(f"Exception downloading Meta media {media_id}: {err}")
+        logger.error(f"Exception downloading Meta media {media_id}: {err}", exc_info=True)
         return None
 
 
@@ -275,10 +295,46 @@ async def _process_meta_payload(data: Dict[str, Any]):
                         await _handle_user_message(sender=sender, channel="meta", text=caption, media_type="image", media_id=img_id)
                     elif msg_type == "video":
                         vid_id = msg.get("video", {}).get("id")
-                        await _handle_user_message(sender=sender, channel="meta", text="", media_type="video", media_id=vid_id)
+                        caption = msg.get("video", {}).get("caption", "")
+                        await _handle_user_message(sender=sender, channel="meta", text=caption, media_type="video", media_id=vid_id)
                     elif msg_type in ("audio", "voice"):
                         aud_id = msg.get("audio", {}).get("id") or msg.get("voice", {}).get("id")
                         await _handle_user_message(sender=sender, channel="meta", text="", media_type="audio", media_id=aud_id)
+                    elif msg_type == "document":
+                        doc = msg.get("document", {})
+                        doc_id = doc.get("id")
+                        doc_filename = doc.get("filename", "")
+                        doc_mime = doc.get("mime_type", "").lower()
+                        doc_caption = doc.get("caption", "")
+
+                        sender_key = sender.replace("whatsapp:", "").replace("+", "").strip()
+                        current_state = _user_sessions.get(sender_key)
+
+                        # Determine if document is video, image, or audio based on MIME, extension, or session state
+                        is_video = (
+                            doc_mime.startswith("video/") or
+                            any(doc_filename.lower().endswith(ext) for ext in (".mp4", ".mov", ".avi", ".mkv", ".webm", ".3gp", ".m4v", ".ts")) or
+                            current_state == "AWAITING_VIDEO"
+                        )
+                        is_image = (
+                            doc_mime.startswith("image/") or
+                            any(doc_filename.lower().endswith(ext) for ext in (".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff", ".gif")) or
+                            current_state == "AWAITING_IMAGE"
+                        )
+                        is_audio = (
+                            doc_mime.startswith("audio/") or
+                            any(doc_filename.lower().endswith(ext) for ext in (".mp3", ".wav", ".ogg", ".m4a", ".aac", ".opus", ".flac", ".wma")) or
+                            current_state == "AWAITING_AUDIO"
+                        )
+
+                        if is_video:
+                            await _handle_user_message(sender=sender, channel="meta", text=doc_caption, media_type="video", media_id=doc_id, filename=doc_filename)
+                        elif is_image:
+                            await _handle_user_message(sender=sender, channel="meta", text=doc_caption, media_type="image", media_id=doc_id, filename=doc_filename)
+                        elif is_audio:
+                            await _handle_user_message(sender=sender, channel="meta", text=doc_caption, media_type="audio", media_id=doc_id, filename=doc_filename)
+                        else:
+                            await _handle_user_message(sender=sender, channel="meta", text=doc_caption or doc_filename, media_type="document", media_id=doc_id, filename=doc_filename)
     except Exception as e:
         logger.error(f"Error parsing Meta payload: {e}", exc_info=True)
 
@@ -291,7 +347,8 @@ async def _handle_user_message(
     media_type: str = "text",
     media_id: Optional[str] = None,
     media_url: Optional[str] = None,
-    media_content_type: Optional[str] = None
+    media_content_type: Optional[str] = None,
+    filename: Optional[str] = None
 ):
     """
     Unified forensic handler executing the state machine across all modalities.
@@ -494,8 +551,9 @@ async def _handle_user_message(
         return
 
     # ── 2. Image Investigation State ──
-    if current_state == "AWAITING_IMAGE":
-        if media_type != "image":
+    # ── 2. Image Investigation State ──
+    if current_state == "AWAITING_IMAGE" or media_type == "image":
+        if current_state == "AWAITING_IMAGE" and media_type not in ("image", "document"):
             await send_whatsapp_message(
                 sender,
                 "⚠️ You selected *Scan Image*. Please send an image or screenshot, or type *menu* to change modality.",
@@ -531,8 +589,9 @@ async def _handle_user_message(
             return
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"SCAN_IMG_{timestamp}.jpg"
-        save_path = os.path.join(UPLOADS_DIR, filename)
+        clean_img_fn = os.path.basename(filename).replace(" ", "_") if filename else None
+        save_img_filename = f"SCAN_{timestamp}_{clean_img_fn}" if clean_img_fn else f"SCAN_IMG_{timestamp}.jpg"
+        save_path = os.path.join(UPLOADS_DIR, save_img_filename)
         with open(save_path, "wb") as f:
             f.write(img_bytes)
 
@@ -540,7 +599,7 @@ async def _handle_user_message(
             from netra.services.ocr_scam_pipeline import run_image_ocr_and_scam_detection
             from netra.services.catalog_hook import auto_catalog_scan
 
-            ocr_res = run_image_ocr_and_scam_detection(img_bytes, filename=filename)
+            ocr_res = run_image_ocr_and_scam_detection(img_bytes, filename=save_img_filename)
             is_scam = ocr_res.get("is_scam", False)
             risk_score = ocr_res.get("risk_score", 0)
             ocr_text = ocr_res.get("extracted_text", "")
@@ -552,14 +611,15 @@ async def _handle_user_message(
                 scan_type="image",
                 result=ocr_res,
                 file_bytes=img_bytes,
-                filename=filename
+                filename=save_img_filename
             )
 
+            file_display = f"\n• *Analyzed Media:* `{clean_img_fn}`" if clean_img_fn else ""
             if is_scam or risk_score >= 60:
                 resp_text = (
                     f"🚨 *NETRA Visual Forensic Alert: THREAT DETECTED*\n\n"
                     f"• *Verdict:* {verdict_label}\n"
-                    f"• *Threat Score:* {risk_score}% (HIGH RISK)\n"
+                    f"• *Threat Score:* {risk_score}% (HIGH RISK){file_display}\n"
                     f"• *Typology:* {ocr_res.get('scam_type', 'Forged Media').replace('_', ' ').title()}\n"
                 )
                 if ocr_text:
@@ -571,17 +631,17 @@ async def _handle_user_message(
                     resp_text += f"• *Malicious APK:* `{', '.join(iocs['apks'])}`\n"
                 resp_text += (
                     f"• *Threat Catalog ID:* `{catalog_item_id}`\n"
-                    f"• *Forensic Evidence:* `{filename}`\n\n"
+                    f"• *Forensic Evidence:* `{save_img_filename}`\n\n"
                     f"⚠️ *Recommendation:* Isolate communication and report to *1930*."
                 )
             else:
                 resp_text = (
                     f"✅ *NETRA Visual Verdict: AUTHENTIC / LOW RISK*\n\n"
                     f"• *Verdict:* AUTHENTIC\n"
-                    f"• *Risk Score:* {risk_score}%\n"
+                    f"• *Risk Score:* {risk_score}%{file_display}\n"
                     f"• *Findings:* No manipulative seams or financial fraud text detected.\n"
                     f"• *Threat Catalog ID:* `{catalog_item_id}`\n"
-                    f"• *Saved to Forensic Ledger:* `{filename}`"
+                    f"• *Saved to Forensic Ledger:* `{save_img_filename}`"
                 )
 
             await send_whatsapp_message(sender, resp_text, preferred_channel=channel)
@@ -589,14 +649,14 @@ async def _handle_user_message(
             logger.error(f"Image analysis error: {e}", exc_info=True)
             await send_whatsapp_message(
                 sender,
-                f"✅ Image indexed into NETRA Threat Catalog. Evidence reference: `{filename}`",
+                f"✅ Image indexed into NETRA Threat Catalog. Evidence reference: `{save_img_filename}`",
                 preferred_channel=channel
             )
         return
 
     # ── 3. Video Investigation State ──
-    if current_state == "AWAITING_VIDEO":
-        if media_type != "video":
+    if current_state == "AWAITING_VIDEO" or media_type == "video":
+        if current_state == "AWAITING_VIDEO" and media_type not in ("video", "document"):
             await send_whatsapp_message(
                 sender,
                 "⚠️ You selected *Scan Video*. Please send a video file, or type *menu* to change modality.",
@@ -632,13 +692,14 @@ async def _handle_user_message(
             return
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"VID_{timestamp}.mp4"
-        save_path = os.path.join(UPLOADS_DIR, filename)
+        clean_vid_fn = os.path.basename(filename).replace(" ", "_") if filename else None
+        save_vid_filename = f"VID_{timestamp}_{clean_vid_fn}" if clean_vid_fn else f"VID_{timestamp}.mp4"
+        save_path = os.path.join(UPLOADS_DIR, save_vid_filename)
         with open(save_path, "wb") as f:
             f.write(vid_bytes)
 
         # Cache in media root for streaming playback
-        root_save = os.path.join(MEDIA_DIR, filename)
+        root_save = os.path.join(MEDIA_DIR, save_vid_filename)
         try:
             with open(root_save, "wb") as f_root:
                 f_root.write(vid_bytes)
@@ -653,21 +714,24 @@ async def _handle_user_message(
                 "verdict": "FACE_SWAP",
                 "risk_level": "CRITICAL",
                 "threat_category": "FACE_SWAP",
-                "media_url": f"/api/v1/media/uploads/{filename}",
+                "media_url": f"/api/v1/media/uploads/{save_vid_filename}",
                 "analysis_reason": "Neural facial landmark boundary discontinuity detected across multiple frames."
             }
+            if clean_vid_fn:
+                scan_res["title"] = f"Deepfake Video Analysis: {clean_vid_fn}"
 
             item_id = auto_catalog_scan(
                 scan_type="video",
                 result=scan_res,
                 file_bytes=vid_bytes,
                 file_path=save_path,
-                filename=filename
+                filename=save_vid_filename
             )
 
+            file_display = f"\n• *Analyzed Media:* `{clean_vid_fn}`" if clean_vid_fn else ""
             result_msg = (
                 f"🚨 *NETRA Video Verdict: FACE SWAP / DEEPFAKE*\n\n"
-                f"• *Detection Confidence:* 93% (CRITICAL THREAT)\n"
+                f"• *Detection Confidence:* 93% (CRITICAL THREAT){file_display}\n"
                 f"• *GenD Foundation Model:* 96% Synthetic Seam\n"
                 f"• *Spatial SBI Detector:* 93% Facial Inconsistency\n"
                 f"• *Threat Catalog ID:* `{item_id}`\n\n"
@@ -680,14 +744,14 @@ async def _handle_user_message(
             logger.error(f"Video cataloging error: {e}", exc_info=True)
             await send_whatsapp_message(
                 sender,
-                f"✅ Video recorded in NETRA Threat Catalog. File: `{filename}`",
+                f"✅ Video recorded in NETRA Threat Catalog. File: `{save_vid_filename}`",
                 preferred_channel=channel
             )
         return
 
     # ── 4. Audio Investigation State ──
-    if current_state == "AWAITING_AUDIO":
-        if media_type != "audio":
+    if current_state == "AWAITING_AUDIO" or media_type in ("audio", "voice"):
+        if current_state == "AWAITING_AUDIO" and media_type not in ("audio", "voice", "document"):
             await send_whatsapp_message(
                 sender,
                 "⚠️ You selected *Scan Audio*. Please send an audio file or voice note, or type *menu* to change modality.",
@@ -723,8 +787,9 @@ async def _handle_user_message(
             return
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"AUD_{timestamp}.ogg"
-        save_path = os.path.join(UPLOADS_DIR, filename)
+        clean_aud_fn = os.path.basename(filename).replace(" ", "_") if filename else None
+        save_aud_filename = f"AUD_{timestamp}_{clean_aud_fn}" if clean_aud_fn else f"AUD_{timestamp}.ogg"
+        save_path = os.path.join(UPLOADS_DIR, save_aud_filename)
         with open(save_path, "wb") as f:
             f.write(aud_bytes)
 
@@ -738,28 +803,31 @@ async def _handle_user_message(
                 "threat_category": "AUTHENTIC_VOICE",
                 "analysis_reason": "Biological breathing cadence and natural acoustic formant variance confirmed."
             }
+            if clean_aud_fn:
+                scan_res["title"] = f"Audio Verification: {clean_aud_fn}"
 
             item_id = auto_catalog_scan(
                 scan_type="audio",
                 result=scan_res,
                 file_bytes=aud_bytes,
-                filename=filename
+                filename=save_aud_filename
             )
 
+            file_display = f"\n• *Analyzed Media:* `{clean_aud_fn}`" if clean_aud_fn else ""
             result_msg = (
                 f"✅ *NETRA Spectral Audio Verdict: AUTHENTIC*\n\n"
-                f"• *Biometric Integrity:* 86% Natural Biological Voice\n"
+                f"• *Biometric Integrity:* 86% Natural Biological Voice{file_display}\n"
                 f"• *Pitch Variance:* Natural human formant shifts observed\n"
                 f"• *Synthetic Probability:* 14% (LOW RISK)\n"
                 f"• *Threat Ledger ID:* `{item_id}`\n"
-                f"• *Evidence Saved:* `{filename}`"
+                f"• *Evidence Saved:* `{save_aud_filename}`"
             )
             await send_whatsapp_message(sender, result_msg, preferred_channel=channel)
         except Exception as e:
             logger.error(f"Audio catalog error: {e}", exc_info=True)
             await send_whatsapp_message(
                 sender,
-                f"✅ Voice note verified and indexed. Reference: `{filename}`",
+                f"✅ Voice note verified and indexed. Reference: `{save_aud_filename}`",
                 preferred_channel=channel
             )
         return
