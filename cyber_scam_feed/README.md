@@ -20,8 +20,7 @@ A production-grade, real-time cyber threat intelligence pipeline and multi-chann
    - SQLite state store (`scam_feed.db`) with deterministic SHA-256 content hashes.
    - 100% duplicate suppression across consecutive runs.
 
-4. **Multi-Channel Dispatch Ready**:
-   - Telegram Bot API formatters (HTML with alert badges, emojis, and deep links).
+4. **Broadcast Dispatch Ready**:
    - WhatsApp broadcast templates with formatted markdown.
 
 5. **Visual Feed Dashboard**:
@@ -41,7 +40,7 @@ A production-grade, real-time cyber threat intelligence pipeline and multi-chann
 python3 -m cyber_scam_feed.main --run
 ```
 
-### 3. Run with Telegram & WhatsApp Alert Previews
+### 3. Run with WhatsApp Alert Previews
 ```bash
 python3 -m cyber_scam_feed.main --run --previews
 ```

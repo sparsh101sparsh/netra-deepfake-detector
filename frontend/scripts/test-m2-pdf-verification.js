@@ -42,7 +42,7 @@ async function runTests() {
       durationSeconds: 6.45,
       sampleRateHz: 16000,
       codec: "Opus/OGG 16kHz",
-      sourcePlatform: "WhatsApp / Telegram Voice Note",
+      sourcePlatform: "WhatsApp Voice Note",
       acousticFlags: [
         "vocoder_synthetic_artifacts",
         "vocoder_spectral_flatness_anomaly",

@@ -1,7 +1,7 @@
 """
 Unit tests for Cyber Scam Feed modules.
 Tests NLP entity extraction, regex word boundaries, date normalization,
-Telegram HTML escaping, deduplication, JSON serialization, and Tavily payload.
+HTML escaping, deduplication, JSON serialization, and Tavily payload.
 """
 
 import unittest
@@ -239,46 +239,9 @@ class TestCyberScamFeed(unittest.TestCase):
             url="https://thehindu.com/test",
             verified=True
         )
-        tg = AlertNotifier.format_telegram(report)
-        self.assertIn("CRITICAL", tg)
-        self.assertIn("Digital Arrest", tg)
-        self.assertIn("₹5 Crore", tg)
-
         wa = AlertNotifier.format_whatsapp(report)
         self.assertIn("CRITICAL", wa)
         self.assertIn("https://thehindu.com/test", wa)
-
-    def test_telegram_html_escaping(self):
-        """Verify HTML entities are properly escaped to prevent Telegram parse errors."""
-        report = ScamReport(
-            id="test-hash-escape",
-            title="Scammers steal > ₹50 Cr & target <Judges>",
-            summary="Fake CBI app uses <script>alert('pwn')</script> & exploits accessibility",
-            category="Apk Trojan",
-            severity="CRITICAL",
-            financial_loss_str="> ₹50 Crore",
-            financial_loss_inr=500_000_000.0,
-            location="Delhi <NCR> & Mumbai",
-            sources=["NDTV & PTI"],
-            source_display="NDTV & PTI",
-            published_date="2026-09-03",
-            url="https://example.com/article?id=123&track=yes",
-            verified=True
-        )
-        tg = AlertNotifier.format_telegram(report)
-
-        # Should NOT contain raw unescaped <Judges> or <script>
-        self.assertNotIn("<Judges>", tg)
-        self.assertNotIn("<script>", tg)
-        self.assertNotIn("<NCR>", tg)
-
-        # Should contain escaped equivalents
-        self.assertIn("&lt;Judges&gt;", tg)
-        self.assertIn("&gt; ₹50 Cr", tg)
-        self.assertIn("&lt;script&gt;", tg)
-        self.assertIn("NDTV &amp; PTI", tg)
-        self.assertIn("&lt;NCR&gt;", tg)
-        self.assertIn("https://example.com/article?id=123&amp;track=yes", tg)
 
     @patch("urllib.request.urlopen")
     def test_tavily_engine_include_domains_payload(self, mock_urlopen):

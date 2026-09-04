@@ -177,7 +177,7 @@ def init_db():
         title TEXT NOT NULL,
         type TEXT NOT NULL, -- video_deepfake, image_deepfake, scam_text, audio_clone
         threat_category TEXT NOT NULL, -- DIGITAL_ARREST, ELECTRICITY_KYC, STOCK_FRAUD, JOB_SCAM, VOICE_CLONE, IMPERSONATION
-        source_platform TEXT NOT NULL, -- WhatsApp, Telegram, SMS, Instagram, YouTube, Web
+        source_platform TEXT NOT NULL, -- WhatsApp, SMS, Instagram, YouTube, Web
         fake_probability REAL NOT NULL,
         verdict TEXT NOT NULL,
         risk_level TEXT NOT NULL,

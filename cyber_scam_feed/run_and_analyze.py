@@ -138,14 +138,10 @@ def run_empirical_audit():
 
     # Verify Notification Formatting
     top_report = all_reports[0]
-    tg_msg = AlertNotifier.format_telegram(top_report)
     wa_msg = AlertNotifier.format_whatsapp(top_report)
 
-    assert "LIVE CYBER SCAM ALERT" in tg_msg
-    assert "CRITICAL" in tg_msg or "HIGH" in tg_msg
-    assert top_report.url in tg_msg
     assert "CRITICAL" in wa_msg or "HIGH" in wa_msg
-    print("[✓] Telegram and WhatsApp notification payloads successfully formatted.")
+    print("[✓] WhatsApp notification payload successfully formatted.")
 
     # -------------------------------------------------------------
     # WRITE EMPIRICAL ANALYSIS REPORT
@@ -175,10 +171,7 @@ def run_empirical_audit():
         for title, loss_str, inr in losses_extracted:
             f.write(f"| {title} | `{loss_str}` | ₹{inr:,.0f} | {top_report.location} |\n")
 
-        f.write("\n## 4. Sample Multi-Channel Notification Payload\n\n")
-        f.write("### Telegram (HTML Format)\n```html\n")
-        f.write(tg_msg)
-        f.write("\n```\n\n")
+        f.write("\n## 4. Sample WhatsApp Notification Payload\n\n")
         f.write("### WhatsApp Format\n```text\n")
         f.write(wa_msg)
         f.write("\n```\n")

@@ -1,6 +1,6 @@
 """
 NETRA — Dedicated Standalone Audio Deepfake & Voice Clone Detector
-Accepts raw WhatsApp voice notes (.opus, .ogg), Telegram audios (.mp3, .m4a),
+Accepts raw WhatsApp voice notes (.opus, .ogg), standard audios (.mp3, .m4a),
 and standard recordings (.wav), executing acoustic spectral forensics and vocoder checks.
 Lightweight API container implementation: 100% pure Python standard library + NumPy.
 """
@@ -277,7 +277,7 @@ def decode_audio_bytes_pure(input_bytes: bytes, filename: str) -> Tuple[np.ndarr
 @router.post("/detect/audio", response_model=AudioDetectResponse)
 async def detect_audio(file: UploadFile = File(...), request: Request = None):
     """
-    Direct endpoint for WhatsApp / Telegram Voice Notes and recordings.
+    Direct endpoint for WhatsApp Voice Notes and recordings.
     Extracts acoustic frequency anomalies, vocoder pitch flattening, and synthetic voice indicators.
     """
     t0 = time.time()
@@ -323,7 +323,7 @@ async def detect_audio(file: UploadFile = File(...), request: Request = None):
 
     # Identify source platform
     if "opus" in ext or "ogg" in ext or "voice" in filename.lower():
-        source_platform = "WhatsApp / Telegram Voice Note"
+        source_platform = "WhatsApp Voice Note"
     else:
         source_platform = "Digital Audio Stream"
 

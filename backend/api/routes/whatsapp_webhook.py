@@ -3,8 +3,7 @@ backend/api/routes/whatsapp_webhook.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Official NETRA WhatsApp Forensic Intelligence & Threat Defense Bot
 Integrated with:
-  - Meta WhatsApp Cloud API (Primary zero-friction channel)
-  - Twilio WhatsApp Sandbox (Secondary fallback)
+  - Meta WhatsApp Cloud API (Primary native channel)
   - Tavily Real-Time Cyber Threat Intelligence Search & Cross-Check
   - 4-Modality Forensic State Machine:
       1 / /scan_text  -> Financial Scam & Phishing Detection + Tavily Cross-Check
@@ -40,11 +39,6 @@ META_ACCESS_TOKEN = os.getenv("WHATSAPP_CLOUD_ACCESS_TOKEN") or os.getenv("WHATS
 PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID") or DEFAULT_PHONE_ID
 VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "netra_whatsapp_verify_token_2026")
 GRAPH_API_BASE = "https://graph.facebook.com/v21.0"
-
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
-TWILIO_API_KEY_SID = os.getenv("TWILIO_API_KEY_SID") or os.getenv("TWILIO_ACCOUNT_SID")
-TWILIO_API_KEY_SECRET = os.getenv("TWILIO_API_KEY_SECRET") or os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")
 
 # Directories
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -91,18 +85,18 @@ def _format_scam_updates() -> str:
     )
 
 
-# ── Outbound Dispatchers (Meta & Twilio) ───────────────────────────────────────
+# ── Outbound Dispatcher (Meta WhatsApp Cloud API) ────────────────────────────
 async def send_meta_whatsapp_message(to: str, text: str) -> bool:
     """Send text message back to WhatsApp user via Meta Cloud Graph API."""
     token = os.getenv("WHATSAPP_CLOUD_ACCESS_TOKEN", META_ACCESS_TOKEN)
-    phone_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID", PHONE_NUMBER_ID)
+    phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID", PHONE_NUMBER_ID)
 
-    if not token or not phone_id:
+    if not token or not phone_number_id:
         logger.warning("Meta WhatsApp credentials not configured.")
         return False
 
     clean_to = to.strip().replace("whatsapp:", "").replace("+", "")
-    url = f"{GRAPH_API_BASE}/{phone_id}/messages"
+    url = f"{GRAPH_API_BASE}/{phone_number_id}/messages"
     headers = {
         "Authorization": f"Bearer {token.strip()}",
         "Content-Type": "application/json",
@@ -134,61 +128,12 @@ async def send_meta_whatsapp_message(to: str, text: str) -> bool:
         return False
 
 
-async def send_twilio_whatsapp_message(to: str, text: str) -> bool:
-    """Send WhatsApp message using Twilio Messages REST API."""
-    account_sid = os.getenv("TWILIO_ACCOUNT_SID", TWILIO_ACCOUNT_SID)
-    api_key_sid = os.getenv("TWILIO_API_KEY_SID", TWILIO_API_KEY_SID)
-    api_key_secret = os.getenv("TWILIO_API_KEY_SECRET", TWILIO_API_KEY_SECRET)
-    from_number = os.getenv("TWILIO_WHATSAPP_NUMBER", TWILIO_WHATSAPP_NUMBER)
-
-    if not account_sid or not api_key_sid or not api_key_secret:
-        return False
-
-    clean_to = to.strip()
-    if not clean_to.startswith("whatsapp:"):
-        clean_to = f"whatsapp:{clean_to}"
-
-    url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
-    payload = {
-        "From": from_number,
-        "To": clean_to,
-        "Body": text
-    }
-
-    try:
-        import requests
-        resp = await asyncio.to_thread(
-            requests.post,
-            url,
-            data=payload,
-            auth=(api_key_sid, api_key_secret),
-            timeout=15.0
-        )
-        if resp.status_code in (200, 201):
-            logger.info(f"Twilio WhatsApp message sent successfully to {clean_to}")
-            return True
-        return False
-    except Exception as e:
-        logger.error(f"Exception sending Twilio WhatsApp message to {clean_to}: {e}")
-        return False
-
-
-async def send_whatsapp_message(to: str, text: str, preferred_channel: Optional[str] = None) -> bool:
+async def send_whatsapp_message(to: str, text: str, preferred_channel: Optional[str] = "meta") -> bool:
     """
-    Unified WhatsApp Outbound Dispatcher.
-    Routes intelligently: defaults to Meta Cloud API, falls back to Twilio if requested.
+    Native Meta WhatsApp Cloud API Outbound Dispatcher.
+    Delivers messages directly to citizens with zero external proxy dependency.
     """
-    if preferred_channel == "twilio":
-        sent = await send_twilio_whatsapp_message(to, text)
-        if sent:
-            return True
-        return await send_meta_whatsapp_message(to, text)
-    else:
-        # Prioritize Meta Cloud API (zero-friction)
-        sent = await send_meta_whatsapp_message(to, text)
-        if sent:
-            return True
-        return await send_twilio_whatsapp_message(to, text)
+    return await send_meta_whatsapp_message(to, text)
 
 
 # ── Media Downloaders ─────────────────────────────────────────────────────────
@@ -229,28 +174,6 @@ async def download_meta_media(media_id: str) -> Optional[bytes]:
         return None
 
 
-async def download_twilio_media(media_url: str) -> Optional[bytes]:
-    """Download media from Twilio signed URL using Basic Auth."""
-    api_key_sid = os.getenv("TWILIO_API_KEY_SID", TWILIO_API_KEY_SID)
-    api_key_secret = os.getenv("TWILIO_API_KEY_SECRET", TWILIO_API_KEY_SECRET)
-    try:
-        import requests
-        auth = (api_key_sid, api_key_secret) if api_key_sid and api_key_secret else None
-        resp = await asyncio.to_thread(
-            requests.get,
-            media_url,
-            auth=auth,
-            allow_redirects=True,
-            timeout=35.0
-        )
-        if resp.status_code == 200:
-            return resp.content
-        return None
-    except Exception as e:
-        logger.error(f"Exception downloading Twilio media: {e}")
-        return None
-
-
 # ── Webhook Verification Handshake (GET) ──────────────────────────────────────
 @router.get("/whatsapp/webhook")
 async def verify_webhook(request: Request):
@@ -278,20 +201,15 @@ async def verify_webhook(request: Request):
 @router.get("/whatsapp/status")
 async def whatsapp_status():
     """Diagnostic check for WhatsApp bot credentials and active channels."""
-    twilio_ready = bool(TWILIO_ACCOUNT_SID and TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET)
     meta_ready = bool(META_ACCESS_TOKEN and PHONE_NUMBER_ID)
     return {
         "status": "online",
+        "meta_cloud_api": "active",
         "channels": {
             "meta_cloud_api": {
                 "configured": meta_ready,
                 "phone_number_id": PHONE_NUMBER_ID,
-                "status": "active_primary"
-            },
-            "twilio_sandbox": {
-                "configured": twilio_ready,
-                "whatsapp_number": TWILIO_WHATSAPP_NUMBER,
-                "status": "active_fallback"
+                "status": "active"
             }
         },
         "tavily_search": {
@@ -315,12 +233,12 @@ async def whatsapp_status():
 @router.post("/whatsapp/webhook")
 async def handle_whatsapp_message(request: Request):
     """
-    Unified entrypoint receiving incoming WhatsApp messages from both
-    Meta Cloud API (JSON) and Twilio Sandbox (Form URL-Encoded).
+    Direct entrypoint receiving incoming WhatsApp messages via Meta WhatsApp Cloud API.
+    Operates natively without sandbox or join codes.
     """
     content_type = request.headers.get("content-type", "")
 
-    # ── CASE A: Meta WhatsApp Cloud API (JSON) ──
+    # ── Meta WhatsApp Cloud API (JSON) ──
     if "application/json" in content_type:
         try:
             data = await request.json()
@@ -330,38 +248,7 @@ async def handle_whatsapp_message(request: Request):
         asyncio.create_task(_process_meta_payload(data))
         return JSONResponse({"status": "received"}, status_code=200)
 
-    # ── CASE B: Twilio Sandbox (Form URL-Encoded) ──
-    form = await request.form()
-    sender = form.get("From")
-    body = (form.get("Body") or "").strip()
-    num_media = int(form.get("NumMedia") or 0)
-    media_url = form.get("MediaUrl0")
-    media_content_type = (form.get("MediaContentType0") or "").lower()
-
-    if sender:
-        media_type = "text"
-        if num_media > 0:
-            if media_content_type.startswith("image/"):
-                media_type = "image"
-            elif media_content_type.startswith("video/"):
-                media_type = "video"
-            elif media_content_type.startswith("audio/"):
-                media_type = "audio"
-            else:
-                media_type = "image"
-
-        asyncio.create_task(
-            _handle_user_message(
-                sender=sender,
-                channel="twilio",
-                text=body,
-                media_type=media_type,
-                media_url=media_url,
-                media_content_type=media_content_type
-            )
-        )
-
-    return PlainTextResponse("ok", status_code=200)
+    return JSONResponse({"status": "unsupported content type"}, status_code=415)
 
 
 # ── Meta Payload Unpacker ─────────────────────────────────────────────────────
@@ -624,10 +511,16 @@ async def _handle_user_message(
         )
 
         img_bytes = None
-        if channel == "meta" and media_id:
+        if media_id:
             img_bytes = await download_meta_media(media_id)
-        elif channel == "twilio" and media_url:
-            img_bytes = await download_twilio_media(media_url)
+        elif media_url:
+            try:
+                import requests
+                resp = await asyncio.to_thread(requests.get, media_url, timeout=30.0)
+                if resp.status_code == 200:
+                    img_bytes = resp.content
+            except Exception as e:
+                logger.error(f"Failed to fetch image media_url: {e}")
 
         if not img_bytes:
             await send_whatsapp_message(
@@ -719,10 +612,16 @@ async def _handle_user_message(
         )
 
         vid_bytes = None
-        if channel == "meta" and media_id:
+        if media_id:
             vid_bytes = await download_meta_media(media_id)
-        elif channel == "twilio" and media_url:
-            vid_bytes = await download_twilio_media(media_url)
+        elif media_url:
+            try:
+                import requests
+                resp = await asyncio.to_thread(requests.get, media_url, timeout=30.0)
+                if resp.status_code == 200:
+                    vid_bytes = resp.content
+            except Exception as e:
+                logger.error(f"Failed to fetch video media_url: {e}")
 
         if not vid_bytes:
             await send_whatsapp_message(
@@ -804,10 +703,16 @@ async def _handle_user_message(
         )
 
         aud_bytes = None
-        if channel == "meta" and media_id:
+        if media_id:
             aud_bytes = await download_meta_media(media_id)
-        elif channel == "twilio" and media_url:
-            aud_bytes = await download_twilio_media(media_url)
+        elif media_url:
+            try:
+                import requests
+                resp = await asyncio.to_thread(requests.get, media_url, timeout=30.0)
+                if resp.status_code == 200:
+                    aud_bytes = resp.content
+            except Exception as e:
+                logger.error(f"Failed to fetch audio media_url: {e}")
 
         if not aud_bytes:
             await send_whatsapp_message(

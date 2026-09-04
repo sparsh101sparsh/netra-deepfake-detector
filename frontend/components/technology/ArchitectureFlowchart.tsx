@@ -66,7 +66,7 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     kind: { label: "Trigger", hue: PURPLE },
     hue: PURPLE,
     title: "Multi-Modal Ingestion Gateway",
-    caption: "Web Dropzone (MP4/MOV/PNG) & Twilio WhatsApp/Telegram Webhooks",
+    caption: "Web Dropzone (MP4/MOV/PNG) & Meta WhatsApp Cloud API Webhooks",
     tag: "FastAPI Ingress",
     latency: "< 120 ms",
     icon: Upload,
@@ -205,7 +205,7 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     condition: true,
   },
 
-  // Row 5: Structured Evidence & LLM Synthesis
+  // Row 5: Structured Evidence & Forensic Dossier Synthesis
   {
     id: "evidence_pack",
     modelId: "evidence_pack",
@@ -221,17 +221,17 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     icon: Database,
   },
   {
-    id: "bedrock_claude",
-    modelId: "bedrock_claude",
+    id: "forensic_dossier",
+    modelId: "forensic_dossier",
     row: 5,
     x: 0.72,
     w: 360,
-    kind: { label: "LLM Synthesis", hue: PURPLE },
+    kind: { label: "Dossier Engine", hue: PURPLE },
     hue: PURPLE,
-    title: "Amazon Bedrock (Claude 3.5 Sonnet)",
-    caption: "Synthesizes 4-section technical forensic dossier with multi-modal anomaly telemetry",
-    tag: "Bedrock API",
-    latency: "1.4 s",
+    title: "Forensic Dossier Synthesizer",
+    caption: "Compiles 4-section technical forensic dossier from verified multi-detector telemetry",
+    tag: "Deterministic Engine",
+    latency: "< 10 ms",
     icon: Sparkles,
   },
 
@@ -267,8 +267,8 @@ export const ARCHITECTURE_EDGES = [
   { from: "aux_engine", to: "gated_fusion" },
   { from: "scam_nlp", to: "gated_fusion" },
   { from: "gated_fusion", to: "evidence_pack" },
-  { from: "evidence_pack", to: "bedrock_claude" },
-  { from: "bedrock_claude", to: "verdict_delivery" },
+  { from: "evidence_pack", to: "forensic_dossier" },
+  { from: "forensic_dossier", to: "verdict_delivery" },
 ];
 
 const EST_H: Record<string, number> = {
@@ -283,7 +283,7 @@ const EST_H: Record<string, number> = {
   scam_nlp: 92,
   gated_fusion: 140,
   evidence_pack: 92,
-  bedrock_claude: 92,
+  forensic_dossier: 92,
   verdict_delivery: 92,
 };
 

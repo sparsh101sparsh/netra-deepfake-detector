@@ -69,11 +69,6 @@ def show_alert_previews(storage: ScamStorage):
 
     report = reports[0]
     print("\n" + "=" * 76)
-    print("📲  TELEGRAM BOT MESSAGE PREVIEW (HTML Mode)")
-    print("=" * 76)
-    print(AlertNotifier.format_telegram(report))
-
-    print("\n" + "=" * 76)
     print("💬  WHATSAPP BOT MESSAGE PREVIEW")
     print("=" * 76)
     print(AlertNotifier.format_whatsapp(report))
@@ -89,7 +84,7 @@ def main():
     parser.add_argument("--interval-hours", type=float, default=24.0, help="Sync loop interval in hours")
     parser.add_argument("--list", action="store_true", help="List verified reports from database")
     parser.add_argument("--limit", type=int, default=10, help="Number of reports to display/fetch")
-    parser.add_argument("--previews", action="store_true", help="Display Telegram and WhatsApp formatted alert messages")
+    parser.add_argument("--previews", action="store_true", help="Display WhatsApp formatted alert message")
     parser.add_argument("--export-json", type=str, help="Custom export path for feed.json")
     parser.add_argument("--export-html", type=str, help="Custom export path for dashboard.html")
     parser.add_argument("--query", type=str, help="Run custom scam search query")

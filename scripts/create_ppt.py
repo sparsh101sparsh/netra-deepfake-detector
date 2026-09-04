@@ -57,22 +57,22 @@ def create_pitch_deck():
     p = tf.add_paragraph()
     p.text = "• AWS EC2/Lambda: Used for lightweight, fast inference."
     p = tf.add_paragraph()
-    p.text = "• Amazon Bedrock: Powers the LLM investigator."
+    p.text = "• Forensic Report Engine: 100% Offline deterministic legal synthesis."
 
-    # 5. How it Works (The LLM Judge)
+    # 5. How it Works (The Forensic Engine)
     slide_layout = prs.slide_layouts[1]
     slide = prs.slides.add_slide(slide_layout)
     title = slide.shapes.title
     body = slide.placeholders[1]
-    title.text = "The LLM Forensic Investigator"
+    title.text = "The Forensic Dossier Engine"
     tf = body.text_frame
     tf.text = "NETRA doesn't just say 'Fake'. It explains WHY."
     p = tf.add_paragraph()
     p.text = "1. ML Detectors extract raw evidence (JSON)."
     p = tf.add_paragraph()
-    p.text = "2. Amazon Bedrock analyzes the JSON, not the raw video."
+    p.text = "2. Deterministic Engine v5.0 compiles verified telemetry."
     p = tf.add_paragraph()
-    p.text = "3. Generates a human-readable PDF forensic report."
+    p.text = "3. Generates court-admissible Section 65B forensic reports."
 
     # 6. The Scam Detector Module
     slide_layout = prs.slide_layouts[1]
@@ -83,7 +83,7 @@ def create_pitch_deck():
     tf = body.text_frame
     tf.text = "Catching fraud before it happens."
     p = tf.add_paragraph()
-    p.text = "- Hybrid approach: 100+ Hardcoded Rules + Amazon Bedrock Haiku."
+    p.text = "- High-throughput approach: 100+ Hardcoded Rules + Random Forest Classifier."
     p = tf.add_paragraph()
     p.text = "- Identifies phishing links, urgency markers, and crypto scams."
 

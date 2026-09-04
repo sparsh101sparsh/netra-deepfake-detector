@@ -3,6 +3,52 @@
   "nodes": [
     {
       "parameters": {
+        "httpMethod": "GET",
+        "path": "netra-community-bot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-verify",
+      "name": "Meta Webhook Verification",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Meta WhatsApp Webhook Challenge Handshake\nconst query = $input.first().json.query || $input.first().json.params || {};\nconst mode = query['hub.mode'];\nconst challenge = query['hub.challenge'];\nconst token = query['hub.verify_token'];\nconst expectedToken = $env.META_WHATSAPP_VERIFY_TOKEN || 'netra_whatsapp_verify_token_2026';\n\nif (mode === 'subscribe' && (!token || token === expectedToken)) {\n  return {\n    json: {\n      status: 200,\n      challenge: challenge || 'OK'\n    }\n  };\n}\n\nreturn {\n  json: {\n    status: 403,\n    challenge: 'Forbidden'\n  }\n};"
+      },
+      "id": "node-verify-handshake",
+      "name": "Verify Webhook Handshake",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.challenge }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "node-respond-verify",
+      "name": "Respond Verification Challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        100
+      ]
+    },
+    {
+      "parameters": {
         "httpMethod": "POST",
         "path": "netra-community-bot",
         "responseMode": "responseNode",
@@ -14,13 +60,26 @@
       "typeVersion": 2,
       "position": [
         240,
-        300
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalization Code Node for Meta WhatsApp Webhook & Direct Payloads\nconst input = $input.first().json;\nconst body = input.body || input;\n\nlet sender_id = 'community_user';\nlet media_type = 'text';\nlet content = '';\nlet message_id = '';\nlet phone_number_id = '';\n\n// 1. Meta WhatsApp Cloud API Webhook Notification Format\nif (body.entry && Array.isArray(body.entry) && body.entry.length > 0) {\n  const entry0 = body.entry[0];\n  const changes0 = (entry0.changes && entry0.changes.length > 0) ? entry0.changes[0] : null;\n  const value = changes0 ? changes0.value : null;\n\n  if (value) {\n    if (value.metadata && value.metadata.phone_number_id) {\n      phone_number_id = value.metadata.phone_number_id;\n    }\n    if (value.messages && Array.isArray(value.messages) && value.messages.length > 0) {\n      const msg = value.messages[0];\n      sender_id = msg.from || (value.contacts && value.contacts[0] ? value.contacts[0].wa_id : 'community_user');\n      message_id = msg.id || '';\n      const rawType = msg.type || 'text';\n\n      if (rawType === 'text') {\n        media_type = 'text';\n        content = (msg.text && msg.text.body) ? msg.text.body : '';\n      } else if (rawType === 'image') {\n        media_type = 'image';\n        content = (msg.image && (msg.image.url || msg.image.id)) ? (msg.image.url || msg.image.id) : (msg.caption || '');\n      } else if (rawType === 'video') {\n        media_type = 'video';\n        content = (msg.video && (msg.video.url || msg.video.id)) ? (msg.video.url || msg.video.id) : (msg.caption || '');\n      } else if (rawType === 'audio' || rawType === 'voice') {\n        media_type = 'audio';\n        const audObj = msg.audio || msg.voice;\n        content = (audObj && (audObj.url || audObj.id)) ? (audObj.url || audObj.id) : '';\n      } else {\n        media_type = 'text';\n        content = msg.caption || '';\n      }\n    }\n  }\n} else {\n  // 2. Flattened Direct Payloads ($json.body.media_type / $json.body.text for testing)\n  sender_id = body.sender_id || body.sender || body.from || 'community_user';\n  media_type = (body.media_type || 'text').toLowerCase();\n  message_id = body.message_id || body.id || `wamid.direct_${Date.now()}`;\n  phone_number_id = body.phone_number_id || '';\n\n  if (media_type === 'text') {\n    content = body.content || body.text || '';\n  } else if (media_type === 'image') {\n    content = body.content || body.image_url || body.image || '';\n  } else if (media_type === 'video') {\n    content = body.content || body.video_url || body.video || '';\n  } else if (media_type === 'audio') {\n    content = body.content || body.audio_url || body.audio || '';\n  } else {\n    content = body.content || body.text || '';\n  }\n}\n\n// Normalize sender_id\nsender_id = String(sender_id).replace(/^whatsapp:/i, '').replace(/^\\+/, '');\n\nreturn {\n  json: {\n    sender_id,\n    media_type,\n    content,\n    message_id,\n    phone_number_id,\n    source_platform: 'whatsapp',\n    raw_body: body\n  }\n};"
+      },
+      "id": "node-normalize-payload",
+      "name": "Normalize WhatsApp Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        350
       ]
     },
     {
       "parameters": {
         "dataType": "string",
-        "value1": "={{ $json.body.media_type || 'text' }}",
+        "value1": "={{ $json.media_type }}",
         "rules": {
           "rules": [
             {
@@ -28,6 +87,12 @@
             },
             {
               "value2": "image"
+            },
+            {
+              "value2": "video"
+            },
+            {
+              "value2": "audio"
             }
           ]
         }
@@ -37,8 +102,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        460,
-        300
+        720,
+        350
       ]
     },
     {
@@ -60,15 +125,15 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"media_type\": \"text\",\n  \"content\": \"{{ $json.body.text || $json.body.content }}\",\n  \"sender_id\": \"{{ $json.body.sender || $json.body.from || 'community_user' }}\",\n  \"source_platform\": \"whatsapp\"\n}",
+        "jsonBody": "={\n  \"media_type\": \"text\",\n  \"content\": \"{{ $json.content }}\",\n  \"sender_id\": \"{{ $json.sender_id }}\",\n  \"source_platform\": \"whatsapp\"\n}",
         "options": {}
       },
       "id": "node-netra-text-eval",
-      "name": "NETRA AI Text Engine",
+      "name": "NETRA AI Text Evaluator",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        700,
+        960,
         200
       ]
     },
@@ -91,16 +156,78 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"media_type\": \"image\",\n  \"content\": \"{{ $json.body.image_url || $json.body.content }}\",\n  \"sender_id\": \"{{ $json.body.sender || $json.body.from || 'community_user' }}\",\n  \"source_platform\": \"whatsapp\"\n}",
+        "jsonBody": "={\n  \"media_type\": \"image\",\n  \"content\": \"{{ $json.content }}\",\n  \"sender_id\": \"{{ $json.sender_id }}\",\n  \"source_platform\": \"whatsapp\"\n}",
         "options": {}
       },
       "id": "node-netra-image-eval",
-      "name": "NETRA RapidOCR & Seam Engine",
+      "name": "NETRA AI Image Evaluator",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        700,
-        420
+        960,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NETRA_API_URL || 'https://netra-api-pmr7.onrender.com' }}/api/v1/ingest/bot",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Bot-Secret",
+              "value": "={{ $env.BOT_SECRET_KEY || 'netra_bot_secret_2026' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"media_type\": \"video\",\n  \"content\": \"{{ $json.content }}\",\n  \"sender_id\": \"{{ $json.sender_id }}\",\n  \"source_platform\": \"whatsapp\"\n}",
+        "options": {}
+      },
+      "id": "node-netra-video-eval",
+      "name": "NETRA AI Video Evaluator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        960,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NETRA_API_URL || 'https://netra-api-pmr7.onrender.com' }}/api/v1/ingest/bot",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Bot-Secret",
+              "value": "={{ $env.BOT_SECRET_KEY || 'netra_bot_secret_2026' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"media_type\": \"audio\",\n  \"content\": \"{{ $json.content }}\",\n  \"sender_id\": \"{{ $json.sender_id }}\",\n  \"source_platform\": \"whatsapp\"\n}",
+        "options": {}
+      },
+      "id": "node-netra-audio-eval",
+      "name": "NETRA AI Audio Evaluator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        960,
+        560
       ]
     },
     {
@@ -108,19 +235,19 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.is_scam }}",
+              "value1": "={{ $json.is_scam === true || Number($json.risk_score || 0) >= 70 }}",
               "value2": true
             }
           ]
         }
       },
       "id": "node-threat-gate",
-      "name": "High Threat Gate",
+      "name": "Threat Severity Gate",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        940,
-        300
+        1200,
+        380
       ]
     },
     {
@@ -142,7 +269,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"report_token\": \"{{ $json.report_token }}\",\n  \"title\": \"n8n Incident: {{ $json.scam_type }}\",\n  \"source_platform\": \"whatsapp\"\n}",
+        "jsonBody": "={\n  \"report_token\": \"{{ $json.report_token }}\",\n  \"title\": \"n8n Incident: {{ $json.scam_type || 'Unknown Threat' }}\",\n  \"city\": \"Bengaluru\",\n  \"state\": \"Karnataka\",\n  \"source_platform\": \"whatsapp\"\n}",
         "options": {}
       },
       "id": "node-confirm-catalog",
@@ -150,27 +277,59 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1180,
-        200
+        1440,
+        280
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Format Institutional Cybercrime Response\nconst prev = $input.first().json;\nconst isScam = prev.is_scam;\nconst risk = prev.risk_score || 0;\nconst typ = (prev.scam_type || 'Unknown Threat').replace(/_/g, ' ').toUpperCase();\nconst reason = prev.analysis_reason || 'Identified by neural inspection.';\nconst iocs = prev.extracted_iocs || {};\n\nlet msg = '';\nif (isScam) {\n  msg = `\ud83d\udea8 *NETRA CRIME ALERT: ${typ} DETECTED*\\n\\n` +\n        `\u2022 *Verdict:* FRAUD / FINANCIAL SCAM\\n` +\n        `\u2022 *Risk Score:* ${risk}% (CRITICAL THREAT)\\n` +\n        `\u2022 *Findings:* ${reason}\\n` +\n        `\u2022 *Statutory Citations:* BNS 2023 Sec 318(4) & IT Act 2000 Sec 66D\\n`;\n  if (iocs.upis && iocs.upis.length) msg += `\u2022 *Attacker UPI:* ${iocs.upis.join(', ')}\\n`;\n  if (iocs.phones && iocs.phones.length) msg += `\u2022 *Attacker Phone:* ${iocs.phones.join(', ')}\\n`;\n  msg += `\\n\u26a0\ufe0f *Advisory:* Never share OTPs or send money. Report immediately to *1930*.`;\n} else {\n  msg = `\u2705 *NETRA Verification: AUTHENTIC / LOW RISK*\\n\\n` +\n        `\u2022 *Verdict:* AUTHENTIC\\n` +\n        `\u2022 *Risk Score:* ${risk}%\\n` +\n        `\u2022 *Findings:* No malicious patterns identified.`;\n}\n\nreturn {\n  json: {\n    status: \"success\",\n    is_scam: isScam,\n    risk_score: risk,\n    message: msg,\n    timestamp: new Date().toISOString()\n  }\n};"
+        "jsCode": "// Format Institutional Cybercrime Response with Statutory Citations\nlet evalResult = {};\ntry {\n  evalResult = $('Threat Severity Gate').first().json;\n} catch (e) {\n  evalResult = $input.first().json;\n}\n\nlet normalizer = {};\ntry {\n  normalizer = $('Normalize WhatsApp Payload').first().json;\n} catch (e) {}\n\nconst inputJson = $input.first().json;\nlet catalogId = inputJson.catalog_id || evalResult.catalog_id || null;\ntry {\n  if (!catalogId && $('Index in Threat Catalog').all().length > 0) {\n    catalogId = $('Index in Threat Catalog').first().json.catalog_id || null;\n  }\n} catch (e) {}\n\nconst isScam = evalResult.is_scam === true;\nconst risk = evalResult.risk_score || 0;\nconst typ = (evalResult.scam_type || 'Cyber Threat').replace(/_/g, ' ').toUpperCase();\nconst reason = evalResult.analysis_reason || 'Identified via NETRA AI multi-modal forensic inspection.';\nconst iocs = evalResult.extracted_iocs || {};\nconst sender_id = normalizer.sender_id || evalResult.sender_id || 'community_user';\nconst message_id = normalizer.message_id || '';\n\nlet msg = '';\nif (isScam || risk >= 70) {\n  msg = `🚨 *NETRA CRIME ALERT: ${typ} DETECTED*\\n\\n` +\n        `• *Verdict:* FRAUD / CYBER THREAT DETECTED\\n` +\n        `• *Risk Score:* ${risk}% (CRITICAL THREAT)\\n` +\n        `• *Findings:* ${reason}\\n` +\n        (catalogId ? `• *Threat Catalog ID:* ${catalogId}\\n` : '') +\n        `• *Statutory Citations:* BNS 2023 Sec 318(4) & IT Act 2000 Sec 66D\\n`;\n  if (iocs.urls && iocs.urls.length) msg += `• *Flagged Domains/URLs:* ${iocs.urls.join(', ')}\\n`;\n  if (iocs.upis && iocs.upis.length) msg += `• *Attacker UPI:* ${iocs.upis.join(', ')}\\n`;\n  if (iocs.phones && iocs.phones.length) msg += `• *Attacker Phone:* ${iocs.phones.join(', ')}\\n`;\n  msg += `\\n⚠️ *Advisory:* Never share OTPs, download unverified APKs, or send money. Report immediately to National Cyber Helpline *1930*.`;\n} else {\n  msg = `✅ *NETRA Verification: AUTHENTIC / LOW RISK*\\n\\n` +\n        `• *Verdict:* AUTHENTIC\\n` +\n        `• *Risk Score:* ${risk}%\\n` +\n        `• *Findings:* No malicious patterns or generative artifacts identified.\\n` +\n        `• *Statutory Reference:* BNS 2023 Sec 318(4) & IT Act 2000 Sec 66D\\n` +\n        `\\n⚠️ *Advisory:* Stay vigilant. For cyber extortion or online scams, contact *1930*.`;\n}\n\nreturn {\n  json: {\n    status: \"success\",\n    is_scam: isScam,\n    risk_score: risk,\n    scam_type: evalResult.scam_type,\n    catalog_id: catalogId,\n    sender_id: sender_id,\n    message_id: message_id,\n    message: msg,\n    timestamp: new Date().toISOString()\n  }\n};"
       },
       "id": "node-format-response",
       "name": "Format Forensic Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1400,
-        300
+        1680,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.META_WHATSAPP_PHONE_NUMBER_ID || '1329851416876776' }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.META_WHATSAPP_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.sender_id }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"preview_url\": false,\n    \"body\": \"{{ $json.message }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node-dispatch-whatsapp",
+      "name": "Dispatch Meta WhatsApp Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "continueOnFail": true,
+      "position": [
+        1920,
+        380
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ $json }}",
+        "responseBody": "={{ $('Format Forensic Response').item.json || $json }}",
         "options": {}
       },
       "id": "node-respond-webhook",
@@ -178,8 +337,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1620,
-        300
+        2160,
+        380
       ]
     },
     {
@@ -199,7 +358,7 @@
       "typeVersion": 1.1,
       "position": [
         240,
-        600
+        750
       ]
     },
     {
@@ -214,7 +373,7 @@
       "typeVersion": 4.1,
       "position": [
         480,
-        600
+        750
       ]
     },
     {
@@ -229,12 +388,90 @@
       "typeVersion": 4.1,
       "position": [
         720,
-        600
+        750
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format 24-Hour Autonomous Threat Intelligence Bulletin\nconst input = $input.first().json;\nconst feed = input.feed || [];\n\nlet bulletin = `📢 *NETRA 24-HOUR NATIONAL CYBER THREAT BULLETIN*\\n` +\n               `*Autonomous Intelligence Feed | Powered by Tavily & NETRA Core*\\n\\n`;\n\nif (feed.length === 0) {\n  bulletin += `• No critical national threat escalations recorded in the past 24 hours.\\n` +\n              `• Surveillance radar continues normal monitoring.\\n\\n`;\n} else {\n  feed.slice(0, 3).forEach((item, index) => {\n    const title = item.title || 'Emerging Cyber Fraud Wave';\n    const src = item.source || 'National Cybercrime Feed';\n    const summary = item.summary || item.snippet || 'High vigilance advised for suspicious digital communications.';\n    bulletin += `*${index + 1}. ${title}*\\n` +\n                `• *Source:* ${src}\\n` +\n                `• *Intel:* ${summary}\\n\\n`;\n  });\n}\n\nbulletin += `⚖️ *Statutory Citations:* BNS 2023 Sec 318(4) & IT Act 2000 Sec 66D\\n` +\n            `🚨 *National Cyber Helpline:* 1930 | Report at https://cybercrime.gov.in\\n` +\n            `🛡️ *NETRA Cyber Defense Division*`;\n\nreturn {\n  json: {\n    bulletin_text: bulletin,\n    subscriber_recipient: $env.WHATSAPP_BROADCAST_RECIPIENT || '919876543210',\n    timestamp: new Date().toISOString(),\n    news_count: feed.length\n  }\n};"
+      },
+      "id": "node-format-bulletin",
+      "name": "Format 24h Threat Bulletin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        750
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.META_WHATSAPP_PHONE_NUMBER_ID || '1329851416876776' }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.META_WHATSAPP_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.subscriber_recipient }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"preview_url\": false,\n    \"body\": \"{{ $json.bulletin_text }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node-broadcast-bulletin",
+      "name": "Broadcast 24h Threat Bulletin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "continueOnFail": true,
+      "position": [
+        1200,
+        750
       ]
     }
   ],
   "connections": {
+    "Meta Webhook Verification": {
+      "main": [
+        [
+          {
+            "node": "Verify Webhook Handshake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Webhook Handshake": {
+      "main": [
+        [
+          {
+            "node": "Respond Verification Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Citizen Message Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize WhatsApp Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize WhatsApp Payload": {
       "main": [
         [
           {
@@ -249,43 +486,79 @@
       "main": [
         [
           {
-            "node": "NETRA AI Text Engine",
+            "node": "NETRA AI Text Evaluator",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "NETRA RapidOCR & Seam Engine",
+            "node": "NETRA AI Image Evaluator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NETRA AI Video Evaluator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NETRA AI Audio Evaluator",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "NETRA AI Text Engine": {
+    "NETRA AI Text Evaluator": {
       "main": [
         [
           {
-            "node": "High Threat Gate",
+            "node": "Threat Severity Gate",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "NETRA RapidOCR & Seam Engine": {
+    "NETRA AI Image Evaluator": {
       "main": [
         [
           {
-            "node": "High Threat Gate",
+            "node": "Threat Severity Gate",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "High Threat Gate": {
+    "NETRA AI Video Evaluator": {
+      "main": [
+        [
+          {
+            "node": "Threat Severity Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NETRA AI Audio Evaluator": {
+      "main": [
+        [
+          {
+            "node": "Threat Severity Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Threat Severity Gate": {
       "main": [
         [
           {
@@ -318,6 +591,17 @@
       "main": [
         [
           {
+            "node": "Dispatch Meta WhatsApp Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch Meta WhatsApp Response": {
+      "main": [
+        [
+          {
             "node": "Send Webhook Response",
             "type": "main",
             "index": 0
@@ -341,6 +625,28 @@
         [
           {
             "node": "Fetch 24h News Bulletin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch 24h News Bulletin": {
+      "main": [
+        [
+          {
+            "node": "Format 24h Threat Bulletin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format 24h Threat Bulletin": {
+      "main": [
+        [
+          {
+            "node": "Broadcast 24h Threat Bulletin",
             "type": "main",
             "index": 0
           }

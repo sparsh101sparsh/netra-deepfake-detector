@@ -11,16 +11,11 @@ Challenges:
    - Weird, malformed, non-standard, empty, None, and non-string dates
    - Non-leap year edge cases (e.g. 2026-02-29)
    - RFC-2822, ISO-8601 with fractional seconds / offsets, slash-separated dates
-3. format_telegram:
-   - XSS / script injection in title, summary, location, source, URL
-   - Raw HTML characters (<, >, &, ", ')
-   - Tag balance and Telegram HTML parser compatibility
 """
 
 import unittest
 import re
 from datetime import datetime, timezone
-import xml.etree.ElementTree as ET
 
 from cyber_scam_feed.models import ScamReport
 from cyber_scam_feed.nlp_extractor import (
@@ -259,87 +254,6 @@ class TestDateNormalizationAdversarial(unittest.TestCase):
             self.assertEqual(normalize_published_date(s), today)
 
 
-class TestTelegramFormattingAdversarial(unittest.TestCase):
-    """Adversarial stress testing of Telegram HTML formatting and XSS sanitization."""
-
-    def test_malicious_xss_injection_all_fields(self):
-        """Inject script, iframe, and tag breakouts across all report fields."""
-        malicious_report = ScamReport(
-            id="adv-xss-01",
-            title="<script>alert('pwn')</script> Judge duped > ₹10 Cr & <b style='color:red'>Hacked</b>",
-            summary="Attacker injected <img src=x onerror=alert(1)> and <iframe> into <tag> MO",
-            category="<script>evil()</script>",
-            severity="CRITICAL<script>",
-            financial_loss_str="> ₹10 Crore & <undisclosed>",
-            financial_loss_inr=100_000_000.0,
-            location="<script>alert('loc')</script> Mumbai & Delhi <NCR>",
-            sources=["<The Hindu>", "PTI & <Reuters>"],
-            source_display="<The Hindu> & <PTI>",
-            published_date="2026-09-03<script>",
-            url="https://thehindu.com/article?id=123&test='param'&xss=<script>",
-            verified=True
-        )
-
-        formatted = AlertNotifier.format_telegram(malicious_report)
-
-        # 1. Raw unsafe tags must NOT exist in the output
-        forbidden_substrings = [
-            "<script>",
-            "</script>",
-            "<img src=x",
-            "<iframe>",
-            "<tag>",
-            "<undisclosed>",
-            "<The Hindu>",
-            "<PTI>",
-            "<Reuters>",
-            "<NCR>",
-            "<b style='color:red'>"
-        ]
-        for sub in forbidden_substrings:
-            self.assertNotIn(sub, formatted, f"Found unescaped unsafe substring: '{sub}'")
-
-        # 2. Escaped entities must be present
-        self.assertIn("&lt;script&gt;", formatted)
-        self.assertIn("&lt;img src=x", formatted)
-        self.assertIn("&amp;", formatted)
-        self.assertIn("&gt; ₹10 Cr", formatted)
-        self.assertIn("&lt;NCR&gt;", formatted)
-
-    def test_telegram_html_well_formedness(self):
-        """Verify formatted Telegram message is valid XML/HTML compatible with Telegram parser."""
-        report = ScamReport(
-            id="adv-wellformed-01",
-            title="Digital Arrest Probe & SC Directives",
-            summary="Fake CBI officers used Skype video calls & forged letters.",
-            category="Digital Arrest",
-            severity="CRITICAL",
-            financial_loss_str="₹150+ Crore",
-            financial_loss_inr=1_500_000_000.0,
-            location="Pan-India",
-            sources=["The Indian Express"],
-            source_display="The Indian Express",
-            published_date="2026-09-03",
-            url="https://indianexpress.com/article/probe?ref=feed&sort=desc",
-            verified=True
-        )
-
-        formatted = AlertNotifier.format_telegram(report)
-
-        # Wrap in a root tag to parse as XML
-        xml_doc = f"<root>{formatted}</root>"
-        try:
-            root = ET.fromstring(xml_doc)
-            self.assertEqual(root.tag, "root")
-        except ET.ParseError as e:
-            self.fail(f"Telegram HTML failed XML validation: {e}\nContent:\n{formatted}")
-
-        # Ensure only allowed Telegram HTML tags exist: b, i, code, a
-        allowed_tags = {"root", "b", "i", "code", "a"}
-        found_tags = {elem.tag for elem in root.iter()}
-        disallowed = found_tags - allowed_tags
-        self.assertEqual(len(disallowed), 0, f"Disallowed tags found in Telegram output: {disallowed}")
-
-
 if __name__ == "__main__":
     unittest.main()
+

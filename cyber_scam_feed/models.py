@@ -58,7 +58,7 @@ class FeedSummary:
     title: str = "Live Cyber Scam Feed (Powered By Tavily)"
     subtitle: str = "Real-time alerts and reports aggregated from national cybercrime warnings."
     sync_interval: str = "Syncs every 24h automatically"
-    sync_channels: str = "Daily intelligence sent to WhatsApp & Telegram bots"
+    sync_channels: str = "Daily intelligence sent to WhatsApp bot"
     total_reports: int = 0
     critical_count: int = 0
     high_count: int = 0

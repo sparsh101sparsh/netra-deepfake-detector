@@ -40,7 +40,7 @@ def test_null_and_extreme_parameter_ingestion():
                 "title": f"Null Payload {uuid.uuid4().hex[:6]}",
                 "type": "scam_text",
                 "threat_category": "ELECTRICITY_KYC",
-                "source_platform": "Telegram",
+                "source_platform": "whatsapp",
                 "fake_probability": 0.95,
                 "city": None,
                 "state": None,
@@ -214,7 +214,7 @@ def test_extreme_wal_concurrency_stress():
                     "title": f"Concurrent Incident {idx}",
                     "type": "scam_text",
                     "threat_category": "JOB_SCAM",
-                    "source_platform": "Telegram",
+                    "source_platform": "whatsapp",
                     "fake_probability": 0.88,
                     "city": "Bengaluru",
                     "state": "Karnataka"

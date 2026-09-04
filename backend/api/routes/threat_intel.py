@@ -472,7 +472,7 @@ def generate_audio_clone_fir_pdf(item: dict) -> bytes:
          Paragraph("Sampling Rate:", table_cell_bold), Paragraph(f"{sample_rate:,} Hz (Forensic SR)", table_cell)],
         [Paragraph("Audio Codec:", table_cell_bold), Paragraph(str(codec), table_cell),
          Paragraph("Audio Channels:", table_cell_bold), Paragraph("1 Channel (Mono Linear PCM)", table_cell)],
-        [Paragraph("Ingestion Source:", table_cell_bold), Paragraph(str(item.get("source_platform", "WhatsApp / Telegram Voice Note")), table_cell),
+        [Paragraph("Ingestion Source:", table_cell_bold), Paragraph(str(item.get("source_platform", "WhatsApp Voice Note")), table_cell),
          Paragraph("Processing Latency:", table_cell_bold), Paragraph(f"{iocs.get('processing_time_ms', 245)} ms (Zero-GPU CPU DSP)", table_cell)],
     ]
     t_telemetry = Table(telemetry_data, colWidths=[110, 150, 110, 150])

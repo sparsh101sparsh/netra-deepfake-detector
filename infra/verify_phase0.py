@@ -18,7 +18,6 @@ Checks:
   ✅ .env.example file has all required keys
   ✅ budget-tracker.md exists
   ✅ .gitignore protects .env and model files
-  ⚠️  Bedrock access (warns if not pre-approved — human step)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 import boto3
@@ -55,7 +54,6 @@ REQUIRED_ENV_KEYS = [
     "SQS_QUEUE_URL", "SQS_QUEUE_NAME",
     "DYNAMO_TABLE_JOBS", "DYNAMO_TABLE_RATELIMITS",
     "ECR_REPO_API", "ECR_REPO_WORKER",
-    "BEDROCK_MODEL_ID", "BEDROCK_FALLBACK_MODEL_ID",
     "USE_PRETRAINED_ONLY",
     "ALERT_EMAIL",
 ]
@@ -235,30 +233,6 @@ def check_budget_tracker():
     else:
         fail("budget-tracker.md MISSING — create it with initial $0 entry")
 
-# ─── Bedrock (warns — human step) ─────────────────────────────────────────────
-
-def check_bedrock():
-    print("\n🤖 Amazon Bedrock (human must approve access)")
-    bedrock = boto3.client("bedrock", region_name=REGION)
-    try:
-        models = bedrock.list_foundation_models()["modelSummaries"]
-        ids    = [m["modelId"] for m in models]
-
-        claude = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-        nova   = "amazon.nova-pro-v1:0"
-
-        if claude in ids:
-            ok(f"Bedrock Claude 3.5 Sonnet accessible")
-        else:
-            warn(f"Claude 3.5 Sonnet NOT accessible — human must enable in AWS Console")
-
-        if nova in ids:
-            ok(f"Bedrock Nova Pro accessible")
-        else:
-            warn(f"Nova Pro NOT accessible — human must enable in AWS Console")
-    except Exception as e:
-        warn(f"Cannot verify Bedrock access: {e}. Human must enable models manually.")
-
 # ─── Entry point ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -273,7 +247,6 @@ if __name__ == "__main__":
     check_env_example()
     check_gitignore()
     check_budget_tracker()
-    check_bedrock()
 
     print("\n" + "=" * 55)
     print(f"  ✅ Passed:  {passed}")

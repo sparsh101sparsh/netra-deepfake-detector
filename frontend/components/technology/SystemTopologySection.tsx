@@ -29,7 +29,7 @@ export const SystemTopologySection: React.FC = () => {
               1. Detectors Detect
             </h3>
             <p className="text-xs text-ink-2 font-sans leading-relaxed">
-              Never ask a generalist LLM to inspect raw video pixels or audio waveforms. Isolated ML specialist models (EfficientNet-B4, Wav2Vec2, CLIP) independently evaluate physical, spectral, and semantic manipulation vectors.
+              Never rely on ungrounded generative AI to inspect raw video pixels or audio waveforms. Isolated ML specialist models (EfficientNet-B4, Wav2Vec2, CLIP) independently evaluate physical, spectral, and semantic manipulation vectors.
             </p>
             <div className="text-[10px] font-mono text-accent pt-2 border-t border-line">
               Hard Evidence Formulation
@@ -42,10 +42,10 @@ export const SystemTopologySection: React.FC = () => {
               <Lock size={20} />
             </div>
             <h3 className="text-base font-bold text-ink flex items-center gap-1.5">
-              2. Zero-Pixel LLM Synthesis
+              2. Zero-Pixel Evidence Synthesis
             </h3>
             <p className="text-xs text-ink-2 font-sans leading-relaxed">
-              Amazon Bedrock consumes strictly validated Pydantic JSON evidence packs containing timestamps, bounding boxes, and confidence margins. Media pixels never leave the private AWS VPC, preventing data leakage.
+              Deterministic forensic engine consumes strictly validated Pydantic JSON evidence packs containing timestamps, bounding boxes, and confidence margins. Media pixels never leave the private AWS VPC, preventing data leakage.
             </p>
             <div className="text-[10px] font-mono text-purple-400 pt-2 border-t border-line">
               Privacy-Preserving Telemetry
@@ -94,7 +94,7 @@ export const SystemTopologySection: React.FC = () => {
             { step: "06", name: "Wav2Vec2 Voice DSP", pct: "68%", time: "140ms" },
             { step: "07", name: "Auxiliary EXIF & Jitter", pct: "78%", time: "30ms" },
             { step: "08", name: "Gated Fusion Arbitrator", pct: "85%", time: "5ms" },
-            { step: "09", name: "Bedrock Legal Dossier", pct: "95%", time: "1.2s" },
+            { step: "09", name: "Forensic Evidence Dossier", pct: "95%", time: "20ms" },
             { step: "10", name: "DynamoDB & SQS ACK", pct: "100%", time: "40ms" },
           ].map((item) => (
             <div key={item.step} className="p-3 rounded-xl bg-inset border border-line text-left space-y-1">
@@ -150,8 +150,10 @@ export const SystemTopologySection: React.FC = () => {
             </div>
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-inset border border-line/60">
               <span className="text-ink-3">Forensic Synthesis:</span>
-              <span className="text-pink-400 font-semibold">Amazon Bedrock (Claude 3.5 Sonnet)</span>
+              <span className="text-pink-400 font-semibold">Deterministic Forensic Report Engine</span>
             </div>
+          </div>
+        </div>
           </div>
         </div>
 

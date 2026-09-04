@@ -5,7 +5,7 @@
 **Auditor:** Teamwork Security Dossier Worker (`teamwork_preview_worker_audit_md`)  
 **Audit Methodology Engine:** OWASP Web Security Testing Guide (WSTG) v4.2, OWASP API Security Top 10 (2023), OWASP Top 10 for Large Language Model Applications (2025), CyberStrike Multi-Agent Orchestration & Methodology State Machine, Common Vulnerability Scoring System (CVSS) v3.1  
 **Target Repository:** Project NETRA (`backend/`, `worker/`, `frontend/`, `infra/`)  
-**Scope:** 100% of exposed backend API endpoints (42 routes/interfaces), background SQS workers (`worker/worker.py`), local and AWS cloud persistence layers (SQLite, AWS S3, DynamoDB, Bedrock), third-party threat feeds, and frontend integration surfaces (`frontend/lib/api.ts`).  
+**Scope:** 100% of exposed backend API endpoints (42 routes/interfaces), background SQS workers (`worker/worker.py`), local and AWS cloud persistence layers (SQLite, AWS S3, DynamoDB), third-party threat feeds, and frontend integration surfaces (`frontend/lib/api.ts`).  
 **Classification:** STRICTLY CONFIDENTIAL // INSTITUTIONAL SECURITY REVIEW & HARDENING DIRECTIVE  
 
 ---
@@ -35,7 +35,7 @@ NETRA operates across a hybrid architecture combining local compute runtimes and
 - **FastAPI Application Runtime (`backend/api/server.py`)**: Asynchronous API server handling real-time image OCR, audio spectrogram analysis, text scam intelligence, job state queries, developer key issuance, and PDF report compilation.
 - **Asynchronous Processing Workers (`worker/worker.py`)**: Distributed worker daemon consuming jobs from AWS SQS (`netra-jobs`), pulling video inputs from AWS S3, and running a 10-stage neural inference pipeline (OpenCV, FFmpeg, EfficientNet-B4 + SBI, CLIP probe, Wav2Vec2 audio analysis, GenD ViT-L/14).
 - **Dual-Persistence Layer**: Fast, local SQLite store operating in Write-Ahead Logging (WAL) mode (`netra.db`, `scam_feed.db`) replicated asynchronously to AWS DynamoDB (`netra-jobs`, `netra-workers`, `netra-rate-limits`) and media artifacts saved to AWS S3 (`netra-media-mumbai-131746731374`).
-- **External Integration Mesh**: Amazon Bedrock (Anthropic Claude 3.5 Sonnet / Nova Pro), Tavily Threat Search API, Twilio WhatsApp Webhooks, and Telegram Bot Webhooks.
+- **External Integration Mesh**: Tavily Threat Search API, Twilio WhatsApp Webhooks, and Telegram Bot Webhooks.
 - **Client Presentation Layer**: Next.js 14 web client (`frontend/`) interacting via reverse proxy routes to the backend REST and WebSocket interfaces.
 
 ### 2.2 CyberStrike Multi-Agent Methodology Overview
@@ -811,7 +811,6 @@ The following table documents 100% of the active, auxiliary, and dormant interfa
 
 #### VULN-01: Active Cloud & Service Plaintext Credentials in `.env` and Source Code Fallbacks
 - **Affected Source Files & Line Numbers**:
-  - `.env:33` (`AWS_BEARER_TOKEN_BEDROCK`)
   - `.env:47` (`HF_TOKEN`)
   - `.env:56` (`TELEGRAM_BOT_TOKEN`)
   - `.env:57` (`RENDER_API_KEY`)
@@ -884,7 +883,6 @@ A comprehensive scan of the repository identified active credentials stored in p
 | :--- | :--- | :--- | :--- |
 | `AWS_ACCESS_KEY_ID=[REDACTED]` | `.env:73` | IAM User: Full S3, SQS, DynamoDB access | **REVOCATION REQUIRED** |
 | `AWS_SECRET_ACCESS_KEY=[REDACTED]` | `.env:74` | IAM Secret for `AWS_ACCESS_KEY_ID` | **REVOCATION REQUIRED** |
-| `AWS_BEARER_TOKEN_BEDROCK` | `.env:33` | Amazon Bedrock Claude / Nova model invocation | **ROTATION REQUIRED** |
 | `HF_TOKEN=[REDACTED]` | `.env:47` | Hugging Face gated model checkpoint downloads | **ROTATION REQUIRED** |
 | `TELEGRAM_BOT_TOKEN=[REDACTED]` | `.env:56` | Telegram Bot API control & message dispatch | **REVOCATION REQUIRED** |
 | `RENDER_API_KEY=[REDACTED]` | `.env:57` | Render cloud infrastructure deployment API | **REVOCATION REQUIRED** |

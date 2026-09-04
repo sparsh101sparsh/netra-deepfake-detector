@@ -138,7 +138,7 @@ def test_scam_text_boundary_payloads():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 4. UNIFIED BOT INGESTION CONTRACT (n8n / WhatsApp / Telegram)
+# 4. UNIFIED BOT INGESTION CONTRACT (n8n / Meta WhatsApp)
 # ══════════════════════════════════════════════════════════════════════════════
 
 def test_bot_ingest_and_confirmation_lifecycle():
@@ -223,7 +223,7 @@ def test_zero_fake_coordinates_invariant():
         "title": "Unlocated Threat Incident",
         "type": "scam_text",
         "threat_category": "STOCK_FRAUD",
-        "source_platform": "Telegram",
+        "source_platform": "whatsapp",
         "city": None,
         "state": None,
         "lat": None,

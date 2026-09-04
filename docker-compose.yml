@@ -15,7 +15,6 @@ services:
       - S3_BUCKET_MEDIA=${S3_BUCKET_MEDIA:-netra-media-uploads}
       - SQS_QUEUE_URL=${SQS_QUEUE_URL}
       - DYNAMO_TABLE_JOBS=${DYNAMO_TABLE_JOBS:-netra-jobs}
-      - BEDROCK_MODEL_ID=${BEDROCK_MODEL_ID:-anthropic.claude-3-5-sonnet-20241022-v2:0}
     env_file:
       - .env
     healthcheck:

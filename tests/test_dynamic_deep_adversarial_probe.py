@@ -54,7 +54,7 @@ def test_deep_null_safety():
             "title": "Boundary Zero Values",
             "type": "audio_clone",
             "threat_category": "VOICE_CLONE",
-            "source_platform": "Telegram",
+            "source_platform": "whatsapp",
             "fake_probability": 0.0,
             "lat": 0.0,
             "lng": 0.0,
