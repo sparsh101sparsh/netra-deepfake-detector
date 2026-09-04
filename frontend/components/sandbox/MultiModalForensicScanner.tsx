@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { 
   Scan, RefreshCw, Sparkles, Phone, CreditCard, Link2, Box, 
   Check, Copy, ShieldAlert, FileText, Send, AlertTriangle, ArrowRight, Zap, Play, CheckCircle2,
-  Mic, Volume2, Globe, ExternalLink, Download
+  Mic, Volume2, Globe, ExternalLink, Download, Eye
 } from "lucide-react";
 import { CyberIcon, CyberIconType } from "@/components/CyberIcons";
 import { SegmentedControl } from "@/components/atoms/SegmentedControl";
@@ -51,7 +51,15 @@ export interface MultiModalScannerProps {
 // HybridDossier: Shown when analysis_mode === "hybrid"
 // Renders both Facial Deepfake Inspection + OCR Scam Dossier in a segmented tab view
 // ─────────────────────────────────────────────────────────────────────────────
-function HybridDossier({ data, onReset }: { data: DualBranchResult; onReset: () => void }) {
+function HybridDossier({
+  data,
+  onReset,
+  clientPreviewUrl,
+}: {
+  data: DualBranchResult;
+  onReset: () => void;
+  clientPreviewUrl?: string | null;
+}) {
   const [activeTab, setActiveTab] = useState<"face" | "text">("face");
   const faceCount = data.facial_analysis?.face_count ?? (data.facial_analysis?.faces?.length ?? 0);
   const totalIOCs =
@@ -61,137 +69,186 @@ function HybridDossier({ data, onReset }: { data: DualBranchResult; onReset: () 
     (data.extracted_iocs?.apks?.length ?? 0);
 
   const hasFacialData = faceCount > 0;
-  const hasTextData = (data.ocr_analysis?.lines_count ?? 0) > 0 || (data.scam_analysis?.risk_score ?? 0) > 0 || totalIOCs > 0;
+  const hasTextData =
+    (data.ocr_analysis?.lines_count ?? 0) > 0 ||
+    (data.scam_analysis?.risk_score ?? 0) > 0 ||
+    totalIOCs > 0;
 
   const compositeScore = data.composite_risk_score ?? 0;
   const compositeLevel = data.composite_risk_level ?? "LOW";
   const scoreTone = compositeScore >= 75 ? "critical" : compositeScore >= 40 ? "orange" : "active";
 
-  return (
-    <div className="space-y-3 animate-in fade-in duration-200">
-      {/* Composite Header */}
-      <div className="rounded-xl bg-canvas border-[1.5px] border-amber-500/30 bg-amber-500/5 px-4 py-3 flex items-center justify-between gap-3">
-        <div>
-          <div className="text-xs font-bold uppercase tracking-wide text-amber-400">
-            Hybrid Threat Detected
-          </div>
-          <div className="text-[11.5px] text-zinc-300 leading-relaxed mt-0.5">
-            {data.composite_verdict || "Image contains both facial content and scam text"}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="primary"
-            size="xs"
-            onClick={() => generateForensicPDF({
-              id: data.scan_id || `HYB-${Date.now().toString(36).toUpperCase()}`,
-              title: "Hybrid Multi-Vector Forensic Investigation Dossier",
-              verdict: data.composite_verdict || "HYBRID FACIAL DEEPFAKE & DOCUMENT SCAM DETECTED",
-              confidence: compositeScore,
-              riskLevel: compositeLevel,
-              mediaType: "image_hybrid",
-              city: (data as any)?.city || "New Delhi",
-              state: (data as any)?.state || "Delhi",
-              lat: (data as any)?.lat ?? 28.6139,
-              lng: (data as any)?.lng ?? 77.2090,
-              locationSource: (data as any)?.location_source || "MULTI_VECTOR_HYBRID_ANALYSIS",
-              facialAnalysis: {
-                faceCount: data.facial_analysis?.face_count,
-                compositeVerdict: data.facial_analysis?.composite_face_verdict,
-                maxFakeProbability: data.facial_analysis?.max_fake_probability,
-                annotatedPreviewBase64: data.facial_analysis?.annotated_preview_base64 || undefined,
-                annotatedPreviewUrl: data.facial_analysis?.annotated_preview_url || undefined,
-                faces: data.facial_analysis?.faces?.map((f, idx) => ({
-                  faceId: f.face_id || `face_${idx + 1}`,
-                  fakeProbability: f.fake_probability,
-                  verdict: f.verdict,
-                  bbox: f.bbox,
-                  anomalyRegion: f.anomaly_region,
-                  evidenceCode: f.evidence_code,
-                })),
-              },
-              ocrAnalysis: {
-                engine: data.ocr_analysis?.engine,
-                fullText: data.ocr_analysis?.full_text,
-                linesCount: data.ocr_analysis?.lines_count,
-              },
-              scamAnalysis: {
-                isScam: data.scam_analysis?.is_scam,
-                riskScore: data.scam_analysis?.risk_score,
-                riskLevel: data.scam_analysis?.risk_level,
-                matchedRules: data.scam_analysis?.matched_rules,
-                analysisReason: data.scam_analysis?.analysis_reason,
-              },
-              iocs: {
-                phones: data.extracted_iocs?.phones,
-                upis: data.extracted_iocs?.upis,
-                urls: data.extracted_iocs?.urls,
-                apks: data.extracted_iocs?.apks,
-              },
-              tavilyMatches: data.tavily_threat_intel?.articles,
-              summary: `Composite risk: ${compositeScore}% (${compositeLevel}). Analyzed ${faceCount} face(s) and ${totalIOCs} IOC(s).`,
-            })}
-            className="inline-flex items-center gap-1.5"
-          >
-            <Download className="w-3 h-3" />
-            <span>PDF Dossier</span>
-          </Button>
+  const handleExportPDF = () => {
+    generateForensicPDF({
+      id: data.scan_id || `HYB-${Date.now().toString(36).toUpperCase()}`,
+      title: "Hybrid Multi-Vector Forensic Investigation Dossier",
+      verdict: data.composite_verdict || "HYBRID FACIAL DEEPFAKE & DOCUMENT SCAM DETECTED",
+      confidence: compositeScore,
+      riskLevel: compositeLevel,
+      mediaType: "image_hybrid",
+      city: (data as any)?.city || "New Delhi",
+      state: (data as any)?.state || "Delhi",
+      lat: (data as any)?.lat ?? 28.6139,
+      lng: (data as any)?.lng ?? 77.2090,
+      locationSource: (data as any)?.location_source || "MULTI_VECTOR_HYBRID_ANALYSIS",
+      facialAnalysis: {
+        faceCount: data.facial_analysis?.face_count,
+        compositeVerdict: data.facial_analysis?.composite_face_verdict,
+        maxFakeProbability: data.facial_analysis?.max_fake_probability,
+        annotatedPreviewBase64: data.facial_analysis?.annotated_preview_base64 || undefined,
+        annotatedPreviewUrl: data.facial_analysis?.annotated_preview_url || undefined,
+        faces: data.facial_analysis?.faces?.map((f, idx) => ({
+          faceId: f.face_id || `face_${idx + 1}`,
+          fakeProbability: f.fake_probability,
+          verdict: f.verdict,
+          bbox: f.bbox,
+          anomalyRegion: f.anomaly_region,
+          evidenceCode: f.evidence_code,
+        })),
+      },
+      ocrAnalysis: {
+        engine: data.ocr_analysis?.engine,
+        fullText: data.ocr_analysis?.full_text,
+        linesCount: data.ocr_analysis?.lines_count,
+      },
+      scamAnalysis: {
+        isScam: data.scam_analysis?.is_scam,
+        riskScore: data.scam_analysis?.risk_score,
+        riskLevel: data.scam_analysis?.risk_level,
+        matchedRules: data.scam_analysis?.matched_rules,
+        analysisReason: data.scam_analysis?.analysis_reason,
+      },
+      iocs: {
+        phones: data.extracted_iocs?.phones,
+        upis: data.extracted_iocs?.upis,
+        urls: data.extracted_iocs?.urls,
+        apks: data.extracted_iocs?.apks,
+      },
+      tavilyMatches: data.tavily_threat_intel?.articles,
+      summary: `Composite risk: ${compositeScore}% (${compositeLevel}). Analyzed ${faceCount} face(s) and ${totalIOCs} IOC(s).`,
+    });
+  };
 
-          <StatusPill tone={scoreTone} size="sm" pulse={compositeScore >= 75}>
-            {compositeScore}% Risk · {compositeLevel}
-          </StatusPill>
+  return (
+    <div className="space-y-4 animate-in fade-in duration-200">
+      {/* ── Unified Hero Verdict Header ── */}
+      <div className="rounded-xl border border-line bg-inset/50 p-4 space-y-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div
+              className={cn(
+                "w-8 h-8 rounded-lg border flex items-center justify-center shrink-0",
+                compositeScore >= 75
+                  ? "text-red-400 border-red-500/30 bg-red-500/10"
+                  : compositeScore >= 40
+                  ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
+                  : "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
+              )}
+            >
+              {compositeScore >= 75 ? (
+                <AlertTriangle className="w-4 h-4" />
+              ) : (
+                <ShieldAlert className="w-4 h-4" />
+              )}
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wide text-ink">
+                {data.composite_verdict || "Hybrid Multi-Vector Threat Detected"}
+              </h3>
+              <div className="text-[11px] text-ink-3 font-mono mt-0.5">
+                Dual-Branch Pipeline: {faceCount} Subject(s) · {totalIOCs} Threat IOC(s)
+                {data.scan_id && <span> · {data.scan_id}</span>}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <StatusPill tone={scoreTone} size="sm" pulse={compositeScore >= 75}>
+              {compositeScore}% Risk · {compositeLevel}
+            </StatusPill>
+          </div>
         </div>
+
+        {data.recommendation && (
+          <p className="text-[11.5px] text-ink-2 leading-relaxed pt-2 border-t border-line/60">
+            {data.recommendation}
+          </p>
+        )}
       </div>
 
-      {/* Tab Switcher */}
+      {/* ── Segmented Tab Switcher ── */}
       <div className="flex items-center gap-1 bg-inset rounded-xl p-1 border border-line">
         <button
+          type="button"
           onClick={() => setActiveTab("face")}
           className={cn(
-            "flex-1 rounded-lg py-1.5 px-2 text-[11.5px] font-semibold transition-all duration-150 flex items-center justify-center gap-1.5",
+            "flex-1 rounded-lg py-1.5 px-3 text-xs font-semibold transition-all flex items-center justify-center gap-2",
             activeTab === "face"
-              ? "bg-surface text-amber-400 border border-amber-500/30 shadow-sm"
-              : "text-zinc-500 hover:text-zinc-300"
+              ? "bg-surface text-ink border border-line shadow-sm"
+              : "text-ink-3 hover:text-ink"
           )}
         >
-          <span>🎭 Facial Deepfake Analysis</span>
-          <span
-            className={cn(
-              "px-1.5 py-0.5 rounded text-[10px] font-mono",
-              activeTab === "face" ? "bg-amber-500/20 text-amber-300" : "bg-white/5 text-zinc-400"
-            )}
-          >
-            ({faceCount} Face{faceCount !== 1 ? "s" : ""})
+          <span className="flex items-center gap-1.5">
+            <Eye className="w-3.5 h-3.5 text-accent" />
+            <span>Facial Deepfake Analysis</span>
+          </span>
+          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white/5 text-ink-2">
+            {faceCount} Face{faceCount !== 1 ? "s" : ""}
           </span>
         </button>
+
         <button
+          type="button"
           onClick={() => setActiveTab("text")}
           className={cn(
-            "flex-1 rounded-lg py-1.5 px-2 text-[11.5px] font-semibold transition-all duration-150 flex items-center justify-center gap-1.5",
+            "flex-1 rounded-lg py-1.5 px-3 text-xs font-semibold transition-all flex items-center justify-center gap-2",
             activeTab === "text"
-              ? "bg-surface text-amber-400 border border-amber-500/30 shadow-sm"
-              : "text-zinc-500 hover:text-zinc-300"
+              ? "bg-surface text-ink border border-line shadow-sm"
+              : "text-ink-3 hover:text-ink"
           )}
         >
-          <span>📄 Text Scam Intelligence</span>
-          <span
-            className={cn(
-              "px-1.5 py-0.5 rounded text-[10px] font-mono",
-              activeTab === "text" ? "bg-amber-500/20 text-amber-300" : "bg-white/5 text-zinc-400"
-            )}
-          >
-            ({totalIOCs} IOC{totalIOCs !== 1 ? "s" : ""})
+          <span className="flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-accent" />
+            <span>Text Scam Intelligence</span>
+          </span>
+          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white/5 text-ink-2">
+            {totalIOCs} IOC{totalIOCs !== 1 ? "s" : ""}
           </span>
         </button>
       </div>
 
-      {/* Active Tab Content */}
+      {/* ── Active Tab Content (Embedded) ── */}
       {activeTab === "face" && hasFacialData && (
-        <FacialAnomalyCard data={data} onReset={onReset} />
+        <FacialAnomalyCard
+          data={data}
+          embedded={true}
+          clientPreviewUrl={clientPreviewUrl}
+        />
       )}
       {activeTab === "text" && hasTextData && (
-        <OCRDossier data={data as OCRDossierResult} onReset={onReset} />
+        <OCRDossier
+          data={data as OCRDossierResult}
+          embedded={true}
+        />
       )}
+
+      {/* ── Single Unified Action Footer ── */}
+      <div className="flex items-center justify-between pt-3 border-t border-line">
+        <Button variant="ghost" size="sm" onClick={onReset}>
+          <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+          Scan Another Image
+        </Button>
+
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleExportPDF}
+          className="gap-1.5 text-xs font-mono"
+        >
+          <Download className="w-3.5 h-3.5 text-accent" />
+          Download Court Evidence PDF
+        </Button>
+      </div>
     </div>
   );
 }
@@ -261,6 +318,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [lastSelectedFile, setLastSelectedFile] = useState<File | null>(null);
+  const [clientPreviewUrl, setClientPreviewUrl] = useState<string | null>(null);
 
   // Result States for Non-Redirecting Modalities
   const [imageOcrResult, setImageOcrResult] = useState<DualBranchResult | null>(null);
@@ -311,6 +369,13 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
       setIsUploading(true);
       setUploadProgress(0);
       setLastSelectedFile(file);
+
+      if (file.type.startsWith("image/")) {
+        try {
+          const url = URL.createObjectURL(file);
+          setClientPreviewUrl(url);
+        } catch {}
+      }
 
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => Math.min(prev + 12, 92));
@@ -642,6 +707,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
               setUploadError(null);
               setImageOcrResult(null);
               setAudioResult(null);
+              setClientPreviewUrl(null);
             }}
             renderOption={(opt) => {
               const iconMap: Record<ScannerModality, CyberIconType> = {
@@ -855,26 +921,38 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             const isDocument = mode === "document";
             const isHybrid = mode === "hybrid";
 
+            const handleResetImage = () => {
+              setImageOcrResult(null);
+              setClientPreviewUrl(null);
+            };
+
             if (isPureFace) {
               // Branch A: Facial anomaly & deepfake inspection card only
               return (
                 <FacialAnomalyCard
                   data={imageOcrResult}
-                  onReset={() => setImageOcrResult(null)}
+                  clientPreviewUrl={clientPreviewUrl}
+                  onReset={handleResetImage}
                 />
               );
             }
 
             if (isHybrid) {
-              // Branch C: Hybrid — both detectors fired, show tabbed view
-              return <HybridDossier data={imageOcrResult} onReset={() => setImageOcrResult(null)} />;
+              // Branch C: Hybrid — both detectors fired, show clean tabbed view
+              return (
+                <HybridDossier
+                  data={imageOcrResult}
+                  clientPreviewUrl={clientPreviewUrl}
+                  onReset={handleResetImage}
+                />
+              );
             }
 
             // Branch B (document) or inconclusive — OCR Scam Dossier
             return (
               <OCRDossier
                 data={imageOcrResult as OCRDossierResult}
-                onReset={() => setImageOcrResult(null)}
+                onReset={handleResetImage}
               />
             );
           })()

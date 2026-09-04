@@ -65,9 +65,10 @@ export interface OCRDossierProps {
   data: OCRDossierResult;
   onReset?: () => void;
   className?: string;
+  embedded?: boolean;
 }
 
-export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
+export function OCRDossier({ data, onReset, className, embedded }: OCRDossierProps) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const ocr = data.ocr_analysis || {};
@@ -132,6 +133,153 @@ export function OCRDossier({ data, onReset, className }: OCRDossierProps) {
       ],
     },
   ];
+
+  if (embedded) {
+    return (
+      <div className={cn("space-y-4 animate-in fade-in duration-200", className)}>
+        {/* Extracted OCR Text Pane */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-medium text-ink-2 flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-ink-3" />
+              Extracted Document Text
+            </span>
+            <span className="font-mono text-[11px] text-ink-3">
+              {ocr.full_text?.length || 0} characters
+            </span>
+          </div>
+          <div className="relative rounded-xl bg-canvas border border-line p-3.5 text-xs text-ink font-mono leading-relaxed max-h-36 overflow-y-auto select-text">
+            {ocr.full_text || "No legible text extracted from document."}
+          </div>
+        </div>
+
+        {/* Structured Details Chips with 1-Click Copy */}
+        {totalIOCs > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-ink flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-accent" />
+                Extracted Threat Indicators (Phones, UPI, URLs)
+              </span>
+              <span className="font-mono text-[10.5px] text-ink-3">Click to copy</span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {iocs.phones?.map((phone) => (
+                <button
+                  key={`phone-${phone}`}
+                  type="button"
+                  onClick={() => handleCopy(phone, `phone-${phone}`)}
+                  className="group inline-flex items-center gap-1.5 rounded-lg bg-red-tint border border-red/30 px-2.5 py-1 text-xs font-mono text-red hover:bg-red/20 transition-colors"
+                >
+                  <Phone className="w-3 h-3 shrink-0" />
+                  <span>{phone}</span>
+                  {copiedKey === `phone-${phone}` ? (
+                    <Check className="w-3 h-3 text-green shrink-0" />
+                  ) : (
+                    <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
+                  )}
+                </button>
+              ))}
+
+              {iocs.upis?.map((upi) => (
+                <button
+                  key={`upi-${upi}`}
+                  type="button"
+                  onClick={() => handleCopy(upi, `upi-${upi}`)}
+                  className="group inline-flex items-center gap-1.5 rounded-lg bg-orange-tint border border-orange/30 px-2.5 py-1 text-xs font-mono text-orange hover:bg-orange/20 transition-colors"
+                >
+                  <CreditCard className="w-3 h-3 shrink-0" />
+                  <span>{upi}</span>
+                  {copiedKey === `upi-${upi}` ? (
+                    <Check className="w-3 h-3 text-green shrink-0" />
+                  ) : (
+                    <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
+                  )}
+                </button>
+              ))}
+
+              {iocs.urls?.map((url) => (
+                <button
+                  key={`url-${url}`}
+                  type="button"
+                  onClick={() => handleCopy(url, `url-${url}`)}
+                  className="group inline-flex items-center gap-1.5 rounded-lg bg-accent-tint border border-accent/30 px-2.5 py-1 text-xs font-mono text-accent hover:bg-accent/20 transition-colors"
+                >
+                  <Link2 className="w-3 h-3 shrink-0" />
+                  <span className="truncate max-w-[200px]">{url}</span>
+                  {copiedKey === `url-${url}` ? (
+                    <Check className="w-3 h-3 text-green shrink-0" />
+                  ) : (
+                    <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
+                  )}
+                </button>
+              ))}
+
+              {iocs.apks?.map((apk) => (
+                <button
+                  key={`apk-${apk}`}
+                  type="button"
+                  onClick={() => handleCopy(apk, `apk-${apk}`)}
+                  className="group inline-flex items-center gap-1.5 rounded-lg bg-purple-tint border border-purple/30 px-2.5 py-1 text-xs font-mono text-purple hover:bg-purple/20 transition-colors"
+                >
+                  <Box className="w-3 h-3 shrink-0" />
+                  <span>{apk}</span>
+                  {copiedKey === `apk-${apk}` ? (
+                    <Check className="w-3 h-3 text-green shrink-0" />
+                  ) : (
+                    <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Forensic Checklist */}
+        <div className="space-y-2">
+          <span className="text-xs font-semibold text-ink-2">Text & Fraud Verification Checklist</span>
+          <TaskRows rows={taskRows} />
+        </div>
+
+        {/* Tavily Threat Intel Advisory */}
+        {data.tavily_threat_intel?.verified_threat && (
+          <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-3.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5" />
+                Tavily Live Threat Cross-Check Advisory
+              </span>
+              <span className="text-[10px] text-zinc-400 font-mono">
+                {data.tavily_threat_intel.matches_count} Active Match(es)
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {data.tavily_threat_intel.articles?.slice(0, 2).map((art, idx) => (
+                <a
+                  key={idx}
+                  href={art.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block p-2 rounded-lg bg-surface/80 border border-line hover:border-amber-500/40 transition-colors"
+                >
+                  <div className="text-xs font-semibold text-zinc-200 flex items-center justify-between">
+                    <span className="truncate">{art.title}</span>
+                    <ArrowUpRight className="w-3 h-3 text-zinc-400 shrink-0 ml-1" />
+                  </div>
+                  {art.snippet && (
+                    <div className="text-[11px] text-zinc-400 mt-0.5 line-clamp-1">
+                      {art.snippet}
+                    </div>
+                  )}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
