@@ -59,20 +59,6 @@ export default function ForensicHub() {
           className="fixed inset-0 z-50 overflow-hidden cursor-pointer w-screen h-screen bg-[#060608] flex items-center justify-center"
         >
           <UltraFrameIntro onComplete={handleFinishIntro} showControls={false} className="w-full h-full" />
-          
-          {/* Subtle Non-Intrusive Skip Indicator */}
-          <div className="absolute top-5 right-5 sm:top-6 sm:right-8 z-50 pointer-events-auto">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleFinishIntro();
-              }}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-mono text-zinc-400 hover:text-white transition-all shadow-sm focus-visible:outline-none"
-              aria-label="Skip Introduction"
-            >
-              <span>ESC to skip</span>
-            </button>
-          </div>
         </div>
       )}
 
