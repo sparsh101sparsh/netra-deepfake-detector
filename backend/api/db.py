@@ -52,8 +52,10 @@ def is_synthetic_test_threat(item_id: str, title: str) -> bool:
         
     test_keywords = (
         "[test_fixture]", "adversarial benchmark mock", "stress threat",
-        "concurrent threat", "load threat", "edge case coords",
-        "adversarial image test", "concurrency burst", "numerical_audit"
+        "concurrent threat", "concurrent incident", "null payload", "test payload",
+        "empty str payload", "extreme range",
+        "load threat", "edge case coords", "adversarial image test",
+        "concurrency burst", "numerical_audit", "stress incident", "mock incident"
     )
     if any(kw in t for kw in test_keywords):
         return True
@@ -114,6 +116,10 @@ def purge_synthetic_test_data() -> Dict[str, int]:
        OR title LIKE '%Adversarial Benchmark Mock%'
        OR title LIKE '%Stress Threat%'
        OR title LIKE '%Concurrent Threat%'
+       OR title LIKE '%Concurrent Incident%'
+       OR title LIKE '%Null Payload%'
+       OR title LIKE '%Empty Str Payload%'
+       OR title LIKE '%Extreme Range%'
        OR title LIKE '%Load Threat%'
        OR title LIKE '%Edge Case Coords%'
        OR title LIKE '%Adversarial Image Test%'
@@ -681,14 +687,18 @@ def get_threat_catalog(
                  AND id NOT LIKE 'THREAT-E1B0%'
                  AND id NOT LIKE 'THREAT-E0C4%'
                  AND title NOT LIKE '%[TEST_FIXTURE]%' 
-                 AND title NOT LIKE '%Adversarial Benchmark Mock%'
-                 AND title NOT LIKE '%Stress Threat%'
-                 AND title NOT LIKE '%Concurrent Threat%'
-                  AND title NOT LIKE '%Load Threat%'
-                  AND title NOT LIKE '%Edge Case Coords%'
-                  AND title NOT LIKE '%Adversarial Image Test%'
-                  AND title NOT LIKE '%Concurrency Burst%'
-                  AND title NOT LIKE '%numerical_audit%'"""
+                  AND title NOT LIKE '%Adversarial Benchmark Mock%'
+                  AND title NOT LIKE '%Stress Threat%'
+                  AND title NOT LIKE '%Concurrent Threat%'
+                  AND title NOT LIKE '%Concurrent Incident%'
+                  AND title NOT LIKE '%Null Payload%'
+                  AND title NOT LIKE '%Empty Str Payload%'
+                  AND title NOT LIKE '%Extreme Range%'
+                   AND title NOT LIKE '%Load Threat%'
+                   AND title NOT LIKE '%Edge Case Coords%'
+                   AND title NOT LIKE '%Adversarial Image Test%'
+                   AND title NOT LIKE '%Concurrency Burst%'
+                   AND title NOT LIKE '%numerical_audit%'"""
 
     query += " ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
@@ -699,6 +709,8 @@ def get_threat_catalog(
     results = []
     for r in rows:
         d = dict(r)
+        if not os.getenv("PYTEST_CURRENT_TEST") and is_synthetic_test_threat(d.get("id"), d.get("title")):
+            continue
         try: d["extracted_iocs"] = json.loads(d["extracted_iocs"])
         except: pass
         try: d["fir_dossier"] = json.loads(d["fir_dossier"])
@@ -730,6 +742,10 @@ def get_radar_threat_items(limit: int = 100) -> List[Dict]:
                      AND id NOT LIKE 'FIR-STRESS-%'
                      AND id NOT LIKE 'CHALLENGE-%'
                      AND title NOT LIKE '%[TEST_FIXTURE]%'
+                     AND title NOT LIKE '%Concurrent Incident%'
+                     AND title NOT LIKE '%Null Payload%'
+                     AND title NOT LIKE '%Empty Str Payload%'
+                     AND title NOT LIKE '%Extreme Range%'
                      AND title NOT LIKE '%Adversarial Benchmark Mock%'"""
 
     query += " ORDER BY created_at DESC, rowid DESC LIMIT ?"
@@ -739,6 +755,8 @@ def get_radar_threat_items(limit: int = 100) -> List[Dict]:
     results = []
     for r in rows:
         d = dict(r)
+        if not os.getenv("PYTEST_CURRENT_TEST") and is_synthetic_test_threat(d.get("id"), d.get("title")):
+            continue
         try: d["extracted_iocs"] = json.loads(d["extracted_iocs"])
         except: pass
         try: d["fir_dossier"] = json.loads(d["fir_dossier"])
