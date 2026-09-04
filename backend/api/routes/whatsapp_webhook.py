@@ -73,25 +73,31 @@ async def send_meta_whatsapp_message(to: str, text: str) -> bool:
 
     try:
         print(f"📤 Sending WhatsApp message to {clean_to}: {text[:50]}...", flush=True)
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.post(url, headers=headers, json=payload)
-            if resp.status_code in (200, 201):
-                print(f"✅ WhatsApp message delivered to {clean_to}!", flush=True)
-                return True
-            print(f"❌ Meta WhatsApp send failed ({resp.status_code}): {resp.text}", flush=True)
-            logger.error(f"Meta WhatsApp send failed ({resp.status_code}): {resp.text}")
-            return False
-    except Exception as e:
-        print(f"❌ Exception sending Meta WhatsApp message to {clean_to}: {e}", flush=True)
-        logger.error(f"Exception sending Meta WhatsApp message to {clean_to}: {e}")
+        import requests
+        resp = await asyncio.to_thread(
+            requests.post,
+            url,
+            headers=headers,
+            json=payload,
+            timeout=12.0
+        )
+        if resp.status_code in (200, 201):
+            print(f"✅ WhatsApp message delivered to {clean_to}!", flush=True)
+            return True
+        print(f"❌ Meta WhatsApp send failed ({resp.status_code}): {resp.text}", flush=True)
+        logger.error(f"Meta WhatsApp send failed ({resp.status_code}): {resp.text}")
         return False
-
+    except Exception as e:
+        import traceback
+        print(f"❌ Exception sending Meta WhatsApp message to {clean_to}: {repr(e)}\n{traceback.format_exc()}", flush=True)
+        logger.error(f"Exception sending Meta WhatsApp message to {clean_to}: {repr(e)}")
+        return False
 
 
 # ── Helper: Download Media from Meta Graph API ────────────────────────────────
 async def download_meta_media(media_id: str) -> Optional[bytes]:
     """Fetch temporary download URL using media_id, then download media bytes."""
-    token = os.getenv("WHATSAPP_CLOUD_ACCESS_TOKEN", META_ACCESS_TOKEN)
+    token = os.getenv("WHATSAPP_CLOUD_ACCESS_TOKEN") or META_ACCESS_TOKEN or DEFAULT_META_TOKEN
     if not token:
         logger.error("No token configured to download media")
         return None
@@ -99,26 +105,37 @@ async def download_meta_media(media_id: str) -> Optional[bytes]:
     headers = {"Authorization": f"Bearer {token.strip()}"}
 
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            # 1. Retrieve the secure download URL
-            meta_res = await client.get(f"{GRAPH_API_BASE}/{media_id}", headers=headers)
-            if meta_res.status_code != 200:
-                logger.error(f"Failed to query media metadata ({meta_res.status_code}): {meta_res.text}")
-                return None
-
-            download_url = meta_res.json().get("url")
-            if not download_url:
-                logger.error("No media URL in Meta response")
-                return None
-
-            # 2. Download the binary payload
-            file_res = await client.get(download_url, headers=headers)
-            if file_res.status_code == 200:
-                return file_res.content
-            logger.error(f"Failed downloading media payload: {file_res.status_code}")
+        import requests
+        # 1. Retrieve the secure download URL
+        meta_res = await asyncio.to_thread(
+            requests.get,
+            f"{GRAPH_API_BASE}/{media_id}",
+            headers=headers,
+            timeout=15.0
+        )
+        if meta_res.status_code != 200:
+            logger.error(f"Failed to query media metadata ({meta_res.status_code}): {meta_res.text}")
             return None
+
+        download_url = meta_res.json().get("url")
+        if not download_url:
+            logger.error("No media URL in Meta response")
+            return None
+
+        # 2. Download the binary payload
+        file_res = await asyncio.to_thread(
+            requests.get,
+            download_url,
+            headers=headers,
+            timeout=30.0
+        )
+        if file_res.status_code == 200:
+            return file_res.content
+        logger.error(f"Failed downloading media payload: {file_res.status_code}")
+        return None
     except Exception as err:
-        logger.error(f"Exception downloading Meta media {media_id}: {err}")
+        import traceback
+        logger.error(f"Exception downloading Meta media {media_id}: {err}\n{traceback.format_exc()}")
         return None
 
 
