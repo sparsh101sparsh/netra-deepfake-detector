@@ -227,3 +227,22 @@ def test_image_and_video_whatsapp_scans():
             assert found_video_catalog
 
     asyncio.run(_run())
+
+
+def test_tavily_search_command():
+    """Verify /search command queries Tavily intelligence store."""
+    async def _run():
+        test_sender = "919999900000"
+        with patch("api.routes.whatsapp_webhook.send_whatsapp_message", new_callable=AsyncMock) as mock_send:
+            mock_send.return_value = True
+            await _handle_user_message(sender=test_sender, channel="meta", text="/search digital arrest")
+            assert mock_send.called
+            found = False
+            for call in mock_send.call_args_list:
+                msg = call[0][1]
+                if "Tavily Live Threat Intelligence" in msg or "Tavily" in msg:
+                    found = True
+                    break
+            assert found
+
+    asyncio.run(_run())
