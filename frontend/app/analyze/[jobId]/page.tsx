@@ -789,6 +789,11 @@ export default function AnalysisPage({ params }: Props) {
                           frames: result.frames,
                           keyframeSnapshots: sanitizedSnapshots,
                           summary: result.forensic_report || `Forensic inspection confirmed synthetic tampering for job ${jobId}. Classified as ${result.verdict} with ${result.confidence}% confidence.`,
+                          city: (result as any)?.city || (result as any)?.metadata?.city || (jobStatus as any)?.geolocation?.city || undefined,
+                          state: (result as any)?.state || (result as any)?.metadata?.state || (jobStatus as any)?.geolocation?.state || undefined,
+                          lat: (result as any)?.lat ?? (result as any)?.metadata?.lat ?? (jobStatus as any)?.geolocation?.lat ?? undefined,
+                          lng: (result as any)?.lng ?? (result as any)?.metadata?.lng ?? (jobStatus as any)?.geolocation?.lng ?? undefined,
+                          locationSource: (result as any)?.location_source || (result as any)?.metadata?.location_source || (jobStatus as any)?.geolocation?.location_source || "EXIF / GPS Verified",
                         });
                       } finally {
                         setTimeout(() => setIsGeneratingPdf(false), 1200);

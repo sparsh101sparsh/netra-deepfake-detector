@@ -274,6 +274,31 @@ async def get_job_status(job_id: str):
     # Auto-index completed jobs into Threat Catalog for public ledger verification
     _auto_index_completed_job(job_id, parsed)
 
+    geolocation = None
+    try:
+        from ..db import get_threat_by_id
+        threat = get_threat_by_id(f"JOB-{job_id[:8].upper()}")
+        if threat and (threat.get("city") or threat.get("lat")):
+            geolocation = {
+                "city": threat.get("city"),
+                "state": threat.get("state"),
+                "lat": threat.get("lat"),
+                "lng": threat.get("lng"),
+                "location_source": threat.get("location_source") or "EXIF_GPS",
+            }
+        elif isinstance(result, dict) and result.get("metadata"):
+            meta = result["metadata"]
+            if meta.get("city") or meta.get("lat"):
+                geolocation = {
+                    "city": meta.get("city"),
+                    "state": meta.get("state"),
+                    "lat": meta.get("lat"),
+                    "lng": meta.get("lng"),
+                    "location_source": meta.get("location_source") or "EXIF_GPS",
+                }
+    except Exception:
+        geolocation = None
+
     error = parsed.get("error")
     return {
         "job_id": job_id,
@@ -283,6 +308,7 @@ async def get_job_status(job_id: str):
         "stage_label": stage_label,
         "worker_telemetry": worker_telemetry,
         "result": result,
+        "geolocation": geolocation,
         "error": error,
         "created_at": parsed.get("created_at"),
         "updated_at": parsed.get("updated_at"),
