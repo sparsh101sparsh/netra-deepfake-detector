@@ -358,14 +358,71 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             if (res && res.ok) break;
           }
 
-          clearInterval(progressInterval);
-          setUploadProgress(100);
-
           if (res && res.ok) {
-            const data: OCRDossierResult = await res.json();
-            setImageOcrResult(data);
-            onScanComplete?.(data);
-            return;
+            const initialData = await res.json();
+
+            // Handle asynchronous queued job polling via AWS /jobs/{job_id}
+            if (
+              initialData.job_id &&
+              (initialData.status === "queued" ||
+                initialData.status === "processing" ||
+                (!initialData.analysis_mode && !initialData.composite_verdict))
+            ) {
+              const jobId = initialData.job_id;
+              let isDone = false;
+              let pollAttempts = 0;
+              const maxPolls = 60; // 60 * 1.5s = 90s max
+
+              while (!isDone && pollAttempts < maxPolls) {
+                pollAttempts++;
+                await new Promise((resolve) => setTimeout(resolve, 1500));
+
+                let jobRes: Response | null = null;
+                const pollEndpoints = [
+                  `/api/backend/api/v1/jobs/${jobId}`,
+                  `/api/v1/jobs/${jobId}`,
+                ];
+                for (const pEp of pollEndpoints) {
+                  try {
+                    const pr = await fetch(pEp);
+                    if (pr.ok) {
+                      jobRes = pr;
+                      break;
+                    }
+                  } catch {}
+                }
+
+                if (jobRes && jobRes.ok) {
+                  const jobData = await jobRes.json();
+                  if (typeof jobData.progress === "number") {
+                    setUploadProgress(Math.min(99, Math.max(15, jobData.progress)));
+                  }
+                  if (jobData.status === "complete") {
+                    setUploadProgress(100);
+                    clearInterval(progressInterval);
+                    const finalResult = (jobData.result || jobData) as DualBranchResult;
+                    setImageOcrResult(finalResult);
+                    onScanComplete?.(finalResult);
+                    isDone = true;
+                    return;
+                  } else if (jobData.status === "error") {
+                    throw new Error(jobData.error || "Image forensic analysis failed.");
+                  }
+                }
+              }
+
+              if (!isDone) {
+                throw new Error("Forensic job timed out. Please try again.");
+              }
+            } else {
+              // Direct synchronous / completed response
+              clearInterval(progressInterval);
+              setUploadProgress(100);
+              const data = initialData as DualBranchResult;
+              setImageOcrResult(data);
+              onScanComplete?.(data);
+              return;
+            }
           }
 
           let errMsg = lastStatus ? `OCR endpoint returned status ${lastStatus}` : (lastErr || "Forensic node unreachable");

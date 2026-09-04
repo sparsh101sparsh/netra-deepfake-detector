@@ -420,6 +420,24 @@ class ModelRegistry:
 
         self.fusion_engine = GatedFusionEngine()
 
+        # 7. RapidOCR Text Extraction Engine
+        try:
+            from netra.services.ocr_scam_pipeline import get_rapid_ocr
+            self.rapid_ocr = get_rapid_ocr()
+            logger.info("ModelRegistry: RapidOCR prewarmed successfully.")
+        except Exception as ocr_err:
+            logger.warning(f"ModelRegistry: RapidOCR prewarming warning: {ocr_err}")
+            self.rapid_ocr = None
+
+        # 8. Deterministic Random Forest Scam Classifier
+        try:
+            from netra.pipeline.scam_detector import ScamDetector
+            self.scam_detector = ScamDetector()
+            logger.info("ModelRegistry: ScamDetector prewarmed successfully.")
+        except Exception as scam_err:
+            logger.warning(f"ModelRegistry: ScamDetector prewarming warning: {scam_err}")
+            self.scam_detector = None
+
         logger.info("ModelRegistry: Prewarming complete. All models resident in memory.")
 
     @classmethod
@@ -1059,6 +1077,131 @@ def process_job(
                 logger.debug(f"Worker auto_catalog_scan hook: {cat_err}")
 
 
+def process_image_job(
+    job_id: str,
+    s3_key: str,
+    worker_id: Optional[str] = None,
+):
+    """
+    Autonomous worker execution for Image Forensics & Document OCR:
+    1. 15% (image_download): Download image from S3 bucket
+    2. 35% (image_visual_ocr): Scanning dual-branch visual & OCR streams
+    3. 65% (image_facial_threat): Synthesizing facial anomaly maps & IOC threat cross-match
+    4. 90% (image_dossier): Finalizing hybrid forensic dossier & uploading annotated preview
+    5. 100% (complete): DynamoDB completion write & threat catalog indexing
+    """
+    logger.info(f"Processing image job {job_id} (s3_key: {s3_key})")
+
+    # === STAGE 1: Download image from S3 (15%) ===
+    update_job_progress(
+        job_id,
+        "processing",
+        15,
+        "Downloading media & verifying headers",
+        worker_id=worker_id,
+    )
+
+    image_bytes = None
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filename = os.path.basename(s3_key)
+        local_path = os.path.join(tmpdir, filename)
+        try:
+            s3.download_file(S3_BUCKET_MEDIA, s3_key, local_path)
+            with open(local_path, "rb") as f:
+                image_bytes = f.read()
+            logger.info(f"Downloaded image {s3_key}: {len(image_bytes) / 1024:.1f} KB")
+        except Exception as dl_err:
+            logger.warning(f"S3 download failed for {s3_key} ({dl_err}), checking local cache...")
+            for candidate_dir in [
+                os.path.join(MEDIA_DIR, "images"),
+                os.path.join(MEDIA_DIR, "uploads"),
+                MEDIA_DIR,
+            ]:
+                candidate = os.path.join(candidate_dir, filename)
+                if os.path.exists(candidate):
+                    with open(candidate, "rb") as f:
+                        image_bytes = f.read()
+                    logger.info(f"Resolved image from local cache: {candidate}")
+                    break
+
+        if not image_bytes:
+            raise ValueError(f"Could not retrieve image payload for s3_key {s3_key}")
+
+        # === STAGE 2: Scanning dual-branch visual & OCR streams (35%) ===
+        update_job_progress(
+            job_id,
+            "processing",
+            35,
+            "Scanning dual-branch visual & OCR streams",
+            worker_id=worker_id,
+        )
+
+        # === STAGE 3: Synthesizing facial anomaly maps & IOC threat cross-match (65%) ===
+        update_job_progress(
+            job_id,
+            "processing",
+            65,
+            "Synthesizing facial anomaly maps & IOC threat cross-match",
+            worker_id=worker_id,
+        )
+
+        from netra.pipeline.dual_branch_router import process_image_forensics
+        result = process_image_forensics(
+            image_bytes=image_bytes,
+            filename=filename,
+            skip_auto_catalog=True
+        )
+
+        # === STAGE 4: Finalizing hybrid forensic dossier & uploading annotated preview (90%) ===
+        update_job_progress(
+            job_id,
+            "processing",
+            90,
+            "Finalizing hybrid forensic dossier",
+            worker_id=worker_id,
+        )
+
+        # If an annotated preview image was generated, upload to S3
+        preview_url = result.get("annotated_preview_url")
+        if preview_url:
+            preview_filename = os.path.basename(preview_url.split("?")[0])
+            local_preview = os.path.join(MEDIA_DIR, "images", preview_filename)
+            if os.path.exists(local_preview):
+                s3_ann_key = f"images/{job_id}_annotated.jpg"
+                try:
+                    s3.upload_file(
+                        local_preview,
+                        S3_BUCKET_MEDIA,
+                        s3_ann_key,
+                        ExtraArgs={"ContentType": "image/jpeg"}
+                    )
+                    result["annotated_s3_key"] = s3_ann_key
+                    result["annotated_s3_url"] = f"https://{S3_BUCKET_MEDIA}.s3.{REGION}.amazonaws.com/{s3_ann_key}"
+                    logger.info(f"Uploaded annotated preview to S3: {s3_ann_key}")
+                except Exception as s3_up_err:
+                    logger.debug(f"S3 upload of annotated preview skipped: {s3_up_err}")
+
+        # === STAGE 5: 100% Complete ===
+        write_result_to_dynamo(job_id, result, worker_id=worker_id)
+        logger.info(
+            f"Image job {job_id} complete — verdict: {result.get('composite_verdict', 'COMPLETE')}, risk: {result.get('composite_risk_score', 0)}"
+        )
+
+        # Auto-catalog into threat radar
+        try:
+            from netra.services.catalog_hook import auto_catalog_scan
+            auto_catalog_scan(
+                scan_type="image",
+                result=result,
+                file_bytes=image_bytes,
+                filename=filename,
+                explicit_job_id=result.get("scan_id", f"JOB-{job_id[:8].upper()}"),
+                job_uuid=job_id
+            )
+        except Exception as cat_err:
+            logger.debug(f"Worker image auto-catalog scan hook: {cat_err}")
+
+
 # ==============================================================================
 # MAIN WORKER DAEMON LOOP
 # ==============================================================================
@@ -1164,6 +1307,12 @@ def run_worker():
 
                 job_id = job_id.strip()
                 s3_key = s3_key.strip()
+                job_type = str(body.get("type", "")).strip().lower()
+                if not job_type:
+                    if s3_key.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".bmp")) or "images/" in s3_key:
+                        job_type = "image"
+                    else:
+                        job_type = "video"
 
                 # Process job with visibility heartbeat and worker busy state
                 worker_registry.set_busy(job_id)
@@ -1177,12 +1326,19 @@ def run_worker():
 
                 delete_message = False
                 try:
-                    process_job(
-                        job_id,
-                        s3_key,
-                        worker_id=worker_registry.worker_id,
-                        models=models,
-                    )
+                    if job_type == "image":
+                        process_image_job(
+                            job_id,
+                            s3_key,
+                            worker_id=worker_registry.worker_id,
+                        )
+                    else:
+                        process_job(
+                            job_id,
+                            s3_key,
+                            worker_id=worker_registry.worker_id,
+                            models=models,
+                        )
                     delete_message = True
                 except (ValueError, getattr(cv2, "error", ValueError) if cv2 is not None else ValueError) as e:
                     # Permanent corrupt media error: write to DynamoDB and delete message to prevent poison pill loop

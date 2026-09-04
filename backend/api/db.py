@@ -8,8 +8,11 @@ import os
 import json
 import hashlib
 import time
+import logging
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
+
+logger = logging.getLogger("netra.db")
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
