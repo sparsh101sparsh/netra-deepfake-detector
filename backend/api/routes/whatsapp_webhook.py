@@ -53,9 +53,11 @@ async def send_meta_whatsapp_message(to: str, text: str) -> bool:
     phone_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID", PHONE_NUMBER_ID)
 
     if not token or not phone_id:
+        print("⚠️ Meta WhatsApp credentials not configured — skipping send", flush=True)
         logger.warning("Meta WhatsApp credentials not configured — skipping send")
         return False
 
+    clean_to = to.strip().replace("+", "")
     url = f"{GRAPH_API_BASE}/{phone_id}/messages"
     headers = {
         "Authorization": f"Bearer {token.strip()}",
@@ -64,21 +66,26 @@ async def send_meta_whatsapp_message(to: str, text: str) -> bool:
     payload = {
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
-        "to": to.strip().replace("+", ""),
+        "to": clean_to,
         "type": "text",
         "text": {"preview_url": False, "body": text}
     }
 
     try:
+        print(f"📤 Sending WhatsApp message to {clean_to}: {text[:50]}...", flush=True)
         async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.post(url, headers=headers, json=payload)
             if resp.status_code in (200, 201):
+                print(f"✅ WhatsApp message delivered to {clean_to}!", flush=True)
                 return True
+            print(f"❌ Meta WhatsApp send failed ({resp.status_code}): {resp.text}", flush=True)
             logger.error(f"Meta WhatsApp send failed ({resp.status_code}): {resp.text}")
             return False
     except Exception as e:
-        logger.error(f"Exception sending Meta WhatsApp message to {to}: {e}")
+        print(f"❌ Exception sending Meta WhatsApp message to {clean_to}: {e}", flush=True)
+        logger.error(f"Exception sending Meta WhatsApp message to {clean_to}: {e}")
         return False
+
 
 
 # ── Helper: Download Media from Meta Graph API ────────────────────────────────
@@ -152,11 +159,17 @@ async def handle_whatsapp_message(request: Request):
     if "application/json" in content_type:
         try:
             data = await request.json()
-        except Exception:
+            print(f"👉 [WHATSAPP WEBHOOK] Received JSON payload: {json.dumps(data)}", flush=True)
+        except Exception as e:
+            print(f"❌ [WHATSAPP WEBHOOK] Invalid JSON: {e}", flush=True)
             return JSONResponse({"status": "invalid json"}, status_code=400)
 
-        # Immediate 200 OK so Meta doesn't retry
-        asyncio.create_task(_process_meta_payload(data))
+        try:
+            await _process_meta_payload(data)
+        except Exception as err:
+            print(f"❌ [WHATSAPP WEBHOOK] Processing error: {err}", flush=True)
+            logger.error(f"Error processing meta payload: {err}", exc_info=True)
+
         return JSONResponse({"status": "received"}, status_code=200)
 
     # ── CASE B: Twilio Sandbox (Form URL-Encoded) ──
@@ -174,10 +187,11 @@ async def handle_whatsapp_message(request: Request):
 
 # ── Async Meta Processing Worker ──────────────────────────────────────────────
 async def _process_meta_payload(data: Dict[str, Any]):
-    """Background processor for Meta Cloud API payloads."""
+    """Processor for Meta Cloud API payloads."""
     try:
         entries = data.get("entry", [])
         if not entries:
+            print("ℹ️ [WHATSAPP] Empty entries in payload", flush=True)
             return
 
         for entry in entries:
@@ -185,11 +199,16 @@ async def _process_meta_payload(data: Dict[str, Any]):
                 value = change.get("value", {})
                 messages = value.get("messages", [])
                 if not messages:
+                    # Could be status update (sent/delivered/read)
+                    statuses = value.get("statuses", [])
+                    if statuses:
+                        print(f"ℹ️ [WHATSAPP STATUS] {statuses[0].get('status')} for {statuses[0].get('recipient_id')}", flush=True)
                     continue
 
                 for msg in messages:
                     sender = msg.get("from")
                     msg_type = msg.get("type")
+                    print(f"📩 [WHATSAPP MSG] From: {sender}, Type: {msg_type}", flush=True)
                     if not sender:
                         continue
 
@@ -198,10 +217,12 @@ async def _process_meta_payload(data: Dict[str, Any]):
                     # 1. Text message
                     if msg_type == "text":
                         text = msg.get("text", {}).get("body", "").strip()
+                        print(f"💬 [WHATSAPP TEXT] From {sender}: '{text}'", flush=True)
                         lower = text.lower()
 
                         # Main Menu Commands
                         if lower in ("menu", "hi", "hello", "start", "/start", "help"):
+
                             _user_sessions.pop(sender, None)
                             menu_msg = (
                                 "🛡️ *NETRA Forensic Scanner*\n\n"

@@ -13,6 +13,7 @@ if os.path.exists(root_env): load_dotenv(root_env)
 if os.path.exists(backend_env): load_dotenv(backend_env)
 
 from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timezone
@@ -143,6 +144,42 @@ app.mount("/api/v1/media", StaticFiles(directory=MEDIA_DIR), name="media")
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "5.0", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy_policy():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head><title>NETRA - Privacy Policy</title><meta charset="utf-8"><style>body{font-family:sans-serif;max-width:800px;margin:40px auto;line-height:1.6;padding:0 20px;color:#333;}</style></head>
+    <body>
+        <h1>NETRA AI - Privacy Policy</h1>
+        <p><strong>Last Updated:</strong> September 2026</p>
+        <p>NETRA ("we", "our") is an AI forensic media integrity defense and threat intelligence system. This Privacy Policy explains how we process information when you interact with the NETRA WhatsApp Bot and API services.</p>
+        <h2>1. Information We Collect</h2>
+        <p>We receive incoming media (audio, video, images, or text) submitted voluntarily by users for synthetic media and deepfake detection analysis.</p>
+        <h2>2. Use of Information</h2>
+        <p>Submitted media is strictly evaluated using automated forensic models to determine authenticity and detect synthetic manipulations or fraudulent indicators.</p>
+        <h2>3. Data Retention and Protection</h2>
+        <p>Data submitted for forensic analysis is retained only as long as necessary to provide detection reports and populate aggregated threat intelligence metrics. We do not sell or monetize personal user data.</p>
+        <h2>4. Contact</h2>
+        <p>For inquiries regarding this policy, contact support@netra.gov.in.</p>
+    </body>
+    </html>
+    """
+
+@app.get("/terms", response_class=HTMLResponse)
+async def terms_of_service():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head><title>NETRA - Terms of Service</title><meta charset="utf-8"><style>body{font-family:sans-serif;max-width:800px;margin:40px auto;line-height:1.6;padding:0 20px;color:#333;}</style></head>
+    <body>
+        <h1>NETRA AI - Terms of Service</h1>
+        <p>NETRA provides AI-driven digital forensics and scam text scanning services for informational and media integrity validation purposes.</p>
+    </body>
+    </html>
+    """
+
 
 @app.get("/")
 async def root():
