@@ -268,7 +268,6 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
 
   // Text Threat Triage State
   const [rawText, setRawText] = useState("");
-  const [textCity, setTextCity] = useState("");
   const [isAnalyzingText, setIsAnalyzingText] = useState(false);
   const [textResult, setTextResult] = useState<{
     is_scam: boolean;
@@ -640,19 +639,8 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
               />
             </div>
 
-            {/* Jurisdiction & Action Toolbar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs text-ink-2">
-                <span className="font-medium">Origin City (optional):</span>
-                <input
-                  type="text"
-                  value={textCity}
-                  onChange={(e) => setTextCity(e.target.value)}
-                  className="rounded-lg bg-canvas border-[1.5px] border-line px-2.5 py-1 text-xs text-ink font-medium focus:outline-none focus:border-white/30 w-36"
-                  placeholder="e.g. New Delhi"
-                />
-              </div>
-
+            {/* Action Toolbar */}
+            <div className="flex items-center justify-end gap-2 pt-1">
               <div className="flex items-center gap-2">
                 {rawText && (
                   <Button
