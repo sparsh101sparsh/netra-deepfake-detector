@@ -27,11 +27,11 @@ logger = logging.getLogger("netra.whatsapp")
 router = APIRouter()
 
 # ── Credentials & Config ──────────────────────────────────────────────────────
-META_ACCESS_TOKEN = os.getenv(
-    "WHATSAPP_CLOUD_ACCESS_TOKEN",
-    os.getenv("WHATSAPP_ACCESS_TOKEN", "")
-)
-PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "1329851416876776")
+DEFAULT_META_TOKEN = "EAAPN8JYpZC2cBSXqfkVBmaeMzhUfJPmtd84FLXJ0HoUDlVTi9HcW2DV8EcTgVb58c41asCOvZCwAyCfoRz5XbCGGvGzXFxUygF7WT3ZBxEkEt6JPWbSp3ZCHqjtXNyMN0zvpdJKvwS5E6BZB37ZBp6gvsBXKe3IIFTGwzZAYJX37duxrf6s0Xr3JZArAdxGm6KGzIxodqN2JJ6vXbBhacSTMoOBzj2FXdemAhzs5MyiwYFIm7B6nSEFfvivwuAM0XIZCqYJKilbFetwZBcvOatREkVUEie"
+DEFAULT_PHONE_ID = "1329851416876776"
+
+META_ACCESS_TOKEN = os.getenv("WHATSAPP_CLOUD_ACCESS_TOKEN") or os.getenv("WHATSAPP_ACCESS_TOKEN") or DEFAULT_META_TOKEN
+PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID") or DEFAULT_PHONE_ID
 VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "netra_whatsapp_verify_token_2026")
 
 GRAPH_API_BASE = "https://graph.facebook.com/v21.0"
