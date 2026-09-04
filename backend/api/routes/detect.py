@@ -277,6 +277,140 @@ def run_resilient_video_pipeline(
             pass
 
 
+def run_resilient_image_pipeline(
+    job_id: str,
+    image_bytes: bytes,
+    filename: str,
+    sqs_dispatched: bool
+):
+    """
+    Resilient local image forensics pipeline fallback.
+    If external SQS worker does not advance the job within a short grace period (or if SQS is offline),
+    this background worker runs dual-branch routing, writes progressive stage telemetry to local registry
+    and DynamoDB, and indexes the finished dossier into NETRA Threat Catalog.
+    """
+    if sqs_dispatched:
+        time.sleep(3)
+        current = fetch_job_item(job_id)
+        if current and str(current.get("status", "")).lower() in ("processing", "complete"):
+            logger.info(f"Image job {job_id} already in-flight or completed by external SQS worker.")
+            return
+
+    logger.info(f"Starting resilient local image analysis pipeline for job {job_id} ({filename})")
+    try:
+        # Stage 1 (35%): Scanning dual-branch visual & OCR streams
+        update_local_job(job_id, {
+            "status": "processing",
+            "progress": 35,
+            "current_stage": "Scanning dual-branch visual & OCR streams",
+            "stage_label": "Scanning dual-branch visual & OCR streams",
+        })
+
+        # Stage 2 (65%): Synthesizing facial anomaly maps & IOC threat cross-match
+        update_local_job(job_id, {
+            "progress": 65,
+            "current_stage": "Synthesizing facial anomaly maps & IOC threat cross-match",
+            "stage_label": "Synthesizing facial anomaly maps & IOC threat cross-match",
+        })
+
+        from netra.pipeline.dual_branch_router import process_image_forensics
+        result = process_image_forensics(
+            image_bytes=image_bytes,
+            filename=filename,
+            skip_auto_catalog=True
+        )
+
+        # Stage 3 (90%): Finalizing hybrid forensic dossier
+        update_local_job(job_id, {
+            "progress": 90,
+            "current_stage": "Finalizing hybrid forensic dossier",
+            "stage_label": "Finalizing hybrid forensic dossier",
+        })
+
+        # Upload annotated preview to S3 if available
+        preview_url = result.get("annotated_preview_url")
+        if preview_url:
+            preview_filename = os.path.basename(preview_url.split("?")[0])
+            local_preview = os.path.join(MEDIA_DIR, "images", preview_filename)
+            if os.path.exists(local_preview):
+                try:
+                    s3 = get_boto3_client("s3")
+                    s3_bucket = get_s3_bucket()
+                    s3_ann_key = f"images/{job_id}_annotated.jpg"
+                    s3.upload_file(
+                        local_preview,
+                        s3_bucket,
+                        s3_ann_key,
+                        ExtraArgs={"ContentType": "image/jpeg"}
+                    )
+                    result["annotated_s3_key"] = s3_ann_key
+                    result["annotated_s3_url"] = f"https://{s3_bucket}.s3.amazonaws.com/{s3_ann_key}"
+                except Exception as s3_up_err:
+                    logger.debug(f"S3 upload of annotated preview skipped: {s3_up_err}")
+
+        # Stage 4 (100%): Complete
+        now_iso = datetime.now(timezone.utc).isoformat()
+        complete_record = {
+            "job_id": job_id,
+            "status": "complete",
+            "progress": 100,
+            "current_stage": "Analysis complete",
+            "stage_label": "Analysis complete",
+            "completed_at": now_iso,
+            "updated_at": now_iso,
+            "result": result,
+            "filename": filename,
+        }
+        update_local_job(job_id, complete_record)
+
+        # Best-effort DynamoDB write
+        try:
+            dynamo = get_boto3_client("dynamodb")
+            dynamo.update_item(
+                TableName=get_dynamo_table(),
+                Key={"job_id": {"S": job_id}},
+                UpdateExpression="SET #s = :s, progress = :p, current_stage = :cs, #r = :r, completed_at = :ca",
+                ExpressionAttributeNames={"#s": "status", "#r": "result"},
+                ExpressionAttributeValues={
+                    ":s": {"S": "complete"},
+                    ":p": {"N": "100"},
+                    ":cs": {"S": "Analysis complete"},
+                    ":r": {"S": json.dumps(result)},
+                    ":ca": {"S": now_iso},
+                }
+            )
+        except Exception as dyn_err:
+            logger.debug(f"DynamoDB image completion write skipped/failed: {dyn_err}")
+
+        # Auto-catalog scan into Threat Catalog & Radar
+        try:
+            from netra.services.catalog_hook import auto_catalog_scan
+            auto_catalog_scan(
+                scan_type="image",
+                result=result,
+                file_bytes=image_bytes,
+                filename=filename,
+                explicit_job_id=result.get("scan_id", f"JOB-{job_id[:8].upper()}"),
+                job_uuid=job_id
+            )
+        except Exception as cat_err:
+            logger.debug(f"Resilient image auto_catalog_scan error: {cat_err}")
+
+        logger.info(f"Resilient image pipeline completed {job_id} successfully (verdict={result.get('composite_verdict')})")
+
+    except Exception as pipe_err:
+        logger.error(f"Resilient image pipeline encountered error for {job_id}: {pipe_err}", exc_info=True)
+        try:
+            update_local_job(job_id, {
+                "status": "error",
+                "error": str(pipe_err),
+                "current_stage": "Analysis failed",
+                "stage_label": "Analysis failed",
+            })
+        except Exception:
+            pass
+
+
 @router.post("/detect/full")
 async def detect_full(
     background_tasks: BackgroundTasks,
@@ -431,41 +565,153 @@ async def detect_image_unified(
     if len(contents) > 50 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="Image exceeds maximum size of 50MB.")
 
-    from netra.pipeline.dual_branch_router import process_image_forensics
-    try:
-        result = process_image_forensics(
-            image_bytes=contents,
-            filename=file.filename or "uploaded_image.png",
-            request=request,
-            skip_auto_catalog=True
-        )
-        # Asynchronous Central Auto-Catalog Ingestion Hook for Image Forensics
-        try:
-            from netra.services.catalog_hook import auto_catalog_scan
-            background_tasks.add_task(
-                auto_catalog_scan,
-                scan_type="image",
-                result=result,
-                file_bytes=contents,
-                filename=file.filename or "uploaded_image.png",
-                request=request,
-                explicit_job_id=result.get("scan_id")
-            )
-        except Exception as cat_err:
-            logger.warning(f"Image catalog background auto-index enqueue failed: {cat_err}")
+    filename = file.filename or "uploaded_image.png"
 
-        return result
-    except Exception as e:
-        logger.error(f"Image dual-branch forensics analysis encountered error: {e}", exc_info=True)
+    # Synchronous override option (?sync=true)
+    is_sync = request.query_params.get("sync", "").lower() in ("true", "1")
+    if is_sync:
+        from netra.pipeline.dual_branch_router import process_image_forensics
         try:
-            from netra.pipeline.dual_branch_router import generate_fallback_image_dossier
-            return generate_fallback_image_dossier(
-                filename=file.filename or "uploaded_image.png",
-                error_reason=str(e)
+            result = process_image_forensics(
+                image_bytes=contents,
+                filename=filename,
+                request=request,
+                skip_auto_catalog=True
             )
-        except Exception as fallback_err:
-            logger.critical(f"Critical fallback generation failure: {fallback_err}")
-            raise HTTPException(status_code=500, detail=f"Image forensics analysis failed: {str(e)}")
+            try:
+                from netra.services.catalog_hook import auto_catalog_scan
+                background_tasks.add_task(
+                    auto_catalog_scan,
+                    scan_type="image",
+                    result=result,
+                    file_bytes=contents,
+                    filename=filename,
+                    request=request,
+                    explicit_job_id=result.get("scan_id")
+                )
+            except Exception as cat_err:
+                logger.warning(f"Image catalog background auto-index enqueue failed: {cat_err}")
+            return result
+        except Exception as e:
+            logger.error(f"Sync image forensics error: {e}", exc_info=True)
+            from netra.pipeline.dual_branch_router import generate_fallback_image_dossier
+            return generate_fallback_image_dossier(filename=filename, error_reason=str(e))
+
+    # Asynchronous AWS Dispatch Path (S3 + SQS + DynamoDB + Worker)
+    job_id = str(uuid.uuid4())
+    s3_key = f"images/{job_id}_{filename}"
+    s3_bucket = get_s3_bucket()
+    sqs_url = get_sqs_queue_url()
+    dynamo_table = get_dynamo_table()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    size_mb = len(contents) / (1024 * 1024)
+
+    # Cache image locally in MEDIA_DIR/images and uploads
+    images_dir = os.path.join(MEDIA_DIR, "images")
+    uploads_dir = os.path.join(MEDIA_DIR, "uploads")
+    os.makedirs(images_dir, exist_ok=True)
+    os.makedirs(uploads_dir, exist_ok=True)
+    for p in [
+        os.path.join(images_dir, f"{job_id}_{filename}"),
+        os.path.join(uploads_dir, f"{job_id}_{filename}"),
+        os.path.join(uploads_dir, f"JOB-{job_id[:8].upper()}.png"),
+    ]:
+        try:
+            with open(p, "wb") as f_out:
+                f_out.write(contents)
+        except Exception:
+            pass
+
+    # Save to local fallback registry first
+    job_record = {
+        "job_id": job_id,
+        "status": "queued",
+        "progress": 0,
+        "type": "image",
+        "current_stage": "Queued for processing",
+        "stage_label": "Queued for processing",
+        "s3_key": s3_key,
+        "created_at": now_iso,
+        "file_size_mb": round(size_mb, 2),
+        "result": None,
+        "error": None,
+        "filename": filename,
+    }
+    save_local_job(job_record)
+
+    # 1. AWS S3 Upload
+    try:
+        s3 = get_boto3_client("s3")
+        content_type = file.content_type or "image/png"
+        s3.upload_fileobj(
+            io.BytesIO(contents),
+            s3_bucket,
+            s3_key,
+            ExtraArgs={"ContentType": content_type}
+        )
+        logger.info(f"Uploaded image to S3: s3://{s3_bucket}/{s3_key}")
+    except Exception as s3_err:
+        logger.debug(f"S3 image upload skipped/failed: {s3_err}")
+
+    # 2. DynamoDB Initial Record
+    try:
+        dynamodb = get_boto3_client("dynamodb")
+        dynamodb.put_item(
+            TableName=dynamo_table,
+            Item={
+                "job_id": {"S": job_id},
+                "status": {"S": "queued"},
+                "progress": {"N": "0"},
+                "type": {"S": "image"},
+                "current_stage": {"S": "Queued for processing"},
+                "stage_label": {"S": "Queued for processing"},
+                "s3_key": {"S": s3_key},
+                "created_at": {"S": now_iso},
+                "file_size_mb": {"N": str(round(size_mb, 2))},
+                "filename": {"S": filename},
+            }
+        )
+    except Exception as dyn_err:
+        logger.debug(f"DynamoDB image queue write skipped/failed: {dyn_err}")
+
+    # 3. SQS Message Dispatch
+    sqs_dispatched = False
+    try:
+        sqs = get_boto3_client("sqs")
+        resp = sqs.send_message(
+            QueueUrl=sqs_url,
+            MessageBody=json.dumps({
+                "job_id": job_id,
+                "s3_key": s3_key,
+                "type": "image",
+                "filename": filename,
+                "created_at": now_iso
+            })
+        )
+        if resp and resp.get("MessageId"):
+            sqs_dispatched = True
+            logger.info(f"Dispatched image job {job_id} to SQS {sqs_url} (MessageId={resp.get('MessageId')})")
+    except Exception as sqs_err:
+        logger.debug(f"SQS image dispatch omitted/unavailable: {sqs_err}")
+        sqs_dispatched = False
+
+    # 4. Schedule resilient background processor for zero-wait guarantee
+    background_tasks.add_task(
+        run_resilient_image_pipeline,
+        job_id=job_id,
+        image_bytes=contents,
+        filename=filename,
+        sqs_dispatched=sqs_dispatched
+    )
+
+    return {
+        "job_id": job_id,
+        "status": "queued",
+        "type": "image",
+        "filename": filename,
+        "s3_key": s3_key,
+        "estimated_duration_seconds": 10
+    }
 
 
 @router.get("/detect/health")

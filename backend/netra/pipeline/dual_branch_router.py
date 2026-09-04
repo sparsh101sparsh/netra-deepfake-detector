@@ -24,6 +24,7 @@ Handles:
 import os
 import sys
 import io
+import glob
 import time
 import uuid
 import base64
@@ -305,8 +306,28 @@ class GenDFoundationDetector:
         if not TORCH_AVAILABLE or torch is None:
             return
         try:
-            snap_clip = "/Users/iamsparsh00321/.cache/huggingface/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
-            snap_gend = "/Users/iamsparsh00321/.cache/huggingface/hub/models--yermandy--GenD_CLIP_L_14/snapshots/891ce014a0308386c4d7d25b3dcf436a22db5504"
+            # Dynamically resolve CLIP ViT-L/14 snapshot
+            snap_clip = os.getenv("CLIP_MODEL_PATH")
+            if not snap_clip or not os.path.isdir(snap_clip):
+                clip_hub = Path.home() / ".cache" / "huggingface" / "hub" / "models--openai--clip-vit-large-patch14" / "snapshots"
+                for cand in glob.glob(str(clip_hub / "*")):
+                    if os.path.isdir(cand) and os.path.exists(os.path.join(cand, "config.json")):
+                        snap_clip = cand
+                        break
+            if not snap_clip or not os.path.isdir(snap_clip):
+                snap_clip = "/Users/iamsparsh00321/.cache/huggingface/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
+
+            # Dynamically resolve GenD ViT-L/14 snapshot
+            snap_gend = os.getenv("GEND_MODEL_PATH")
+            if not snap_gend or not os.path.isdir(snap_gend):
+                gend_hub = Path.home() / ".cache" / "huggingface" / "hub" / "models--yermandy--GenD_CLIP_L_14" / "snapshots"
+                for cand in glob.glob(str(gend_hub / "*")):
+                    if os.path.isdir(cand) and (os.path.exists(os.path.join(cand, "model.safetensors")) or os.path.exists(os.path.join(cand, "pytorch_model.bin"))):
+                        snap_gend = cand
+                        break
+            if not snap_gend or not os.path.isdir(snap_gend):
+                snap_gend = "/Users/iamsparsh00321/.cache/huggingface/hub/models--yermandy--GenD_CLIP_L_14/snapshots/891ce014a0308386c4d7d25b3dcf436a22db5504"
+
             if not (os.path.isdir(snap_clip) and os.path.isdir(snap_gend)):
                 return
 
