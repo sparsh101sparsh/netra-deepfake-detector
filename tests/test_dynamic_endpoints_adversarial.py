@@ -24,6 +24,8 @@ import atexit
 # Use isolated temp database for tests to prevent polluting production netra.db
 _test_db_path = tempfile.mktemp(suffix="_test_netra.db")
 os.environ["NETRA_DB_PATH"] = _test_db_path
+init_db()
+
 
 @atexit.register
 def _cleanup_test_db():
