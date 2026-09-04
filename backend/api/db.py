@@ -53,7 +53,9 @@ def is_synthetic_test_threat(item_id: str, title: str) -> bool:
     test_keywords = (
         "[test_fixture]", "adversarial benchmark mock", "stress threat",
         "concurrent threat", "concurrent incident", "null payload", "test payload",
-        "empty str payload", "extreme range",
+        "empty str payload", "extreme range", "adversarial test", "adversarial replay",
+        "null ioc incident", "automated test ingest", "confirmed deepfake video threat",
+        "confirmed deepfake video incident", "confirmed audio clone threat",
         "load threat", "edge case coords", "adversarial image test",
         "concurrency burst", "numerical_audit", "stress incident", "mock incident"
     )
@@ -120,6 +122,12 @@ def purge_synthetic_test_data() -> Dict[str, int]:
        OR title LIKE '%Null Payload%'
        OR title LIKE '%Empty Str Payload%'
        OR title LIKE '%Extreme Range%'
+       OR title LIKE '%Adversarial Test%'
+       OR title LIKE '%Adversarial Replay%'
+       OR title LIKE '%Null IOC Incident%'
+       OR title LIKE '%Automated Test Ingest%'
+       OR title LIKE '%Confirmed Deepfake Video%'
+       OR title LIKE '%Confirmed Audio Clone%'
        OR title LIKE '%Load Threat%'
        OR title LIKE '%Edge Case Coords%'
        OR title LIKE '%Adversarial Image Test%'
@@ -694,6 +702,12 @@ def get_threat_catalog(
                   AND title NOT LIKE '%Null Payload%'
                   AND title NOT LIKE '%Empty Str Payload%'
                   AND title NOT LIKE '%Extreme Range%'
+                  AND title NOT LIKE '%Adversarial Test%'
+                  AND title NOT LIKE '%Adversarial Replay%'
+                  AND title NOT LIKE '%Null IOC Incident%'
+                  AND title NOT LIKE '%Automated Test Ingest%'
+                  AND title NOT LIKE '%Confirmed Deepfake Video%'
+                  AND title NOT LIKE '%Confirmed Audio Clone%'
                    AND title NOT LIKE '%Load Threat%'
                    AND title NOT LIKE '%Edge Case Coords%'
                    AND title NOT LIKE '%Adversarial Image Test%'
@@ -746,6 +760,12 @@ def get_radar_threat_items(limit: int = 100) -> List[Dict]:
                      AND title NOT LIKE '%Null Payload%'
                      AND title NOT LIKE '%Empty Str Payload%'
                      AND title NOT LIKE '%Extreme Range%'
+                     AND title NOT LIKE '%Adversarial Test%'
+                     AND title NOT LIKE '%Adversarial Replay%'
+                     AND title NOT LIKE '%Null IOC Incident%'
+                     AND title NOT LIKE '%Automated Test Ingest%'
+                     AND title NOT LIKE '%Confirmed Deepfake Video%'
+                     AND title NOT LIKE '%Confirmed Audio Clone%'
                      AND title NOT LIKE '%Adversarial Benchmark Mock%'"""
 
     query += " ORDER BY created_at DESC, rowid DESC LIMIT ?"
