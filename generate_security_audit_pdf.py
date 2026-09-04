@@ -359,7 +359,7 @@ def build_audit_pdf(output_filename: str):
             Paragraph("6. Cloud Infrastructure & Secrets Isolation", styles["TableCellBold"]),
             Paragraph("70 / 100", styles["TableCell"]),
             Paragraph("<font color='#DC2626'><b>CRITICAL</b></font>", styles["TableCell"]),
-            Paragraph("Plaintext AWS IAM keys, Twilio keys, Bedrock & Telegram tokens committed in .env.", styles["TableCell"]),
+            Paragraph("Plaintext AWS IAM keys, Twilio keys, Telegram & Hugging Face tokens committed in .env.", styles["TableCell"]),
         ],
     ]
     domain_table = Table(domain_data, colWidths=[140, 50, 60, 290])
@@ -854,13 +854,6 @@ def build_audit_pdf(output_filename: str):
             Paragraph("<code>.env:73-74</code>", styles["TableCellCode"]),
             Paragraph("Full AWS S3, DynamoDB, SQS access. Account compromise.", styles["TableCell"]),
             Paragraph("<font color='#DC2626'><b>ROTATE NOW</b></font>", styles["TableCell"]),
-        ],
-        [
-            Paragraph("<b>AWS Bedrock</b>", styles["TableCellBold"]),
-            Paragraph("<code>AWS_BEARER_TOKEN...</code>", styles["TableCell"]),
-            Paragraph("<code>.env:33</code>", styles["TableCellCode"]),
-            Paragraph("Direct foundation model invocation token.", styles["TableCell"]),
-            Paragraph("<font color='#DC2626'><b>REVOKE</b></font>", styles["TableCell"]),
         ],
         [
             Paragraph("<b>Twilio Messaging</b>", styles["TableCellBold"]),

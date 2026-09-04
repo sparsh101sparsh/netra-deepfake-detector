@@ -516,7 +516,7 @@ def build_pdf(filename: str):
     # Q7.4
     story.append(Paragraph("Q7.4: Who designed the UI/UX? How was the initial animation made?", q_title))
     story.append(Paragraph(
-        "The user interface was designed with an ultra-clean, high-contrast dark aesthetic built on TailwindCSS, MapLibre GL, and Lucide Icons. The initial animation (UltraFrameIntro 60fps landing sequence) was crafted through iterative rapid prompt engineering with cutting-edge AI models (Grok, Claude 3.5 Sonnet, and v0), combined with custom React Canvas frame-interpolation scripts to deliver a cinematic, high-performance user experience.",
+        "The user interface was designed with an ultra-clean, high-contrast dark aesthetic built on TailwindCSS, MapLibre GL, and Lucide Icons. The initial animation (UltraFrameIntro 60fps landing sequence) was crafted through modern generative design tooling and custom React Canvas frame-interpolation scripts to deliver a cinematic, high-performance user experience.",
         body_style
     ))
 

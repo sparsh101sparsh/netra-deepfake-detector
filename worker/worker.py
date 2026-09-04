@@ -979,7 +979,7 @@ def process_job(
             f"Forensic analysis completed for job {job_id}. Verdict: {fusion_result['verdict']} with {fusion_result['confidence']:.1f}% confidence. "
             f"Visual score: {fusion_result['visual_score']:.2f}, Risk level: {fusion_result['risk_level']}."
         )
-        bedrock_result = {
+        forensic_report_payload = {
             "full_report": report_summary,
             "generated_by": "NETRA Neural Forensic Engine v5.0",
         }
@@ -1058,8 +1058,8 @@ def process_job(
             ),
             "metadata_flags": evidence.metadata_flags,
             "metadata": auxiliary_result.get("metadata", {}),
-            "forensic_report": bedrock_result.get("full_report", ""),
-            "report_generated_by": bedrock_result.get(
+            "forensic_report": forensic_report_payload.get("full_report", ""),
+            "report_generated_by": forensic_report_payload.get(
                 "generated_by", "NETRA Neural Forensic Engine v5.0"
             ),
             "manipulation_type": fusion_result["verdict"]

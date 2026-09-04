@@ -16,9 +16,14 @@ services:
       - GENERIC_TIMEZONE=Asia/Kolkata
       - NETRA_API_URL=https://netra-api-pmr7.onrender.com
       - BOT_SECRET_KEY=netra_bot_secret_2026
+      # Meta WhatsApp Cloud API Direct Native Configuration
+      - META_WHATSAPP_PHONE_NUMBER_ID=1329851416876776
+      - META_WHATSAPP_ACCESS_TOKEN=EAAG_META_WHATSAPP_ACCESS_TOKEN_PLACEHOLDER
+      - META_WHATSAPP_VERIFY_TOKEN=netra_whatsapp_verify_token_2026
+      - WHATSAPP_BROADCAST_RECIPIENT=919876543210
     volumes:
       - n8n_data:/home/node/.n8n
 
 volumes:
   n8n_data:
-    driver: local\n
+    driver: local

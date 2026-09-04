@@ -200,7 +200,7 @@ def test_threat_report_null_safety(client):
         "title": f"Null IOC Incident {uuid.uuid4().hex[:6]}",
         "type": "scam_text",
         "threat_category": "JOB_SCAM",
-        "source_platform": "Telegram",
+        "source_platform": "whatsapp",
         "fake_probability": 0.85,
         "city": None,
         "state": None,

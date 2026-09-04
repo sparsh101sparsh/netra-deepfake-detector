@@ -92,6 +92,7 @@ class ScamStorage:
                     cursor.execute("SELECT id FROM scam_reports WHERE id = ? OR url = ?", (report.id, clean_url))
                 else:
                     cursor.execute("SELECT id FROM scam_reports WHERE id = ?", (report.id,))
+                existing = cursor.fetchone()
                 if existing:
                     # If incoming report has an authentic scraped image and existing is missing or unsplash, update it
                     if report.image_url and "unsplash.com" not in report.image_url:

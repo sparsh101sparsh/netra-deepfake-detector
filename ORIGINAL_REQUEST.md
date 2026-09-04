@@ -230,3 +230,38 @@ Integrity mode: development
 - [ ] Publication-ready `SECURITY_AUDIT_REPORT.pdf` generated with executive styling and SHA-256 footer (strictly no Sec 65B/63 BSA citations).
 - [ ] Zero regression or damage to existing 137 passing tests and frontend build stability.
 
+## 2026-09-04T22:04:17Z
+
+Deploy and verify an autonomous, production-ready WhatsApp cybercrime defense bot driven by n8n workflow automation that interfaces directly with Meta WhatsApp Cloud API and NETRA's AI forensic core, operating completely without Twilio.
+
+Working directory: /Users/iamsparsh00321/Desktop/netradecodesih/01_netra_project/netra
+Integrity mode: development
+
+## Requirements
+
+### R1. Direct Meta WhatsApp Cloud API Ingestion in n8n
+- Configure n8n to ingest incoming WhatsApp messages and media directly via Meta WhatsApp Cloud API webhooks, bypassing Twilio completely.
+- Eliminate Twilio sandbox constraints, join codes, and manual provider maintenance so the bot operates natively.
+
+### R2. End-to-End n8n Forensic Orchestration Pipeline
+- Route incoming WhatsApp submissions through n8n to NETRA's AI endpoints (`POST /api/v1/ingest/bot` and `/api/v1/ingest/bot/confirm-report`) authenticated via `X-Bot-Secret`.
+- Support all 4 investigation modalities: Text Scam & Extortion Detection, Image Deepfake OCR & Seam Analysis, Video Face-Swap Inspection, and Audio Voice Clone Verification.
+- When high-risk threats are identified (≥ 70%), automatically register the incident into the live Threat Intelligence Catalog and National Geolocation Radar.
+- Inject statutory legal citations (BNS 2023 Sec 318(4) & IT Act 2000 Sec 66D) and emergency helpline 1930 into the formatted WhatsApp response.
+
+### R3. 24-Hour Autonomous Threat Intelligence Sync
+- Implement an automated n8n schedule trigger executing every 24 hours to invoke NETRA's threat crawler (`POST /api/v1/news/refresh`), format top national cybercrime bulletins, and broadcast updates to subscribed citizens.
+
+### R4. Complete Telegram Decoupling
+- Enforce strict exclusion of Telegram: zero code references, schemas, tokens, or route dependencies.
+
+## Acceptance Criteria
+
+### Live Operation & Functional Verification
+- [ ] Incoming Meta WhatsApp webhook messages trigger n8n workflow executions successfully.
+- [ ] Scam text submissions return institutional crime alert badges with risk percentages, forensic findings, and statutory legal citations.
+- [ ] Confirmed threats are automatically indexed into NETRA's Threat Catalog with a valid `THREAT-...` identifier.
+- [ ] n8n workflow execution history confirms automated orchestration without errors.
+- [ ] Existing backend test suite (`tests/test_whatsapp_and_n8n_e2e.py`) continues passing with 100% success.
+- [ ] No Twilio sandbox join codes or manual setup required for incoming messages.
+

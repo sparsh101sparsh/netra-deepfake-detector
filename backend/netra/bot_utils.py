@@ -1,10 +1,10 @@
 """
 backend/netra/bot_utils.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Shared utilities for Telegram + WhatsApp bots (Phase 8/9).
+Shared utilities for WhatsApp bot.
 
 Handles:
-  - Async video download from Telegram/WhatsApp CDN → temp file
+  - Async video download from WhatsApp CDN → temp file
   - 100MB size enforcement (matches backend hard limit)
   - Forwarding media to the NETRA backend API (POST /detect/full)
   - Polling backend for results (GET /jobs/{job_id})
@@ -99,40 +99,6 @@ async def poll_for_result(job_id: str) -> Tuple[Optional[dict], str]:
                 pass  # Network hiccup — keep polling
 
     return None, f"Timed out after {MAX_POLL_SECS}s — try /status {job_id} later"
-
-
-def format_result_telegram(result: dict, job_id: str) -> str:
-    """Format result dict as Telegram Markdown message."""
-    verdict   = result.get("verdict", "UNKNOWN")
-    conf      = result.get("confidence", 0)
-    risk      = result.get("risk_level", "UNKNOWN")
-    manip     = result.get("manipulation_type", "N/A")
-    report    = result.get("forensic_report", "")
-    model     = result.get("model_used", "NETRA Multi-Modal Forensic Pipeline")
-
-    verdict_emoji = {
-        "AUTHENTIC":  "✅",
-        "SUSPICIOUS": "⚠️",
-        "FACE_SWAP":  "🎭",
-        "VOICE_CLONE":"🎤",
-    }.get(verdict, "❓")
-
-    risk_emoji = {"HIGH": "🔴", "MEDIUM": "🟡", "LOW": "🟢"}.get(risk, "⚪")
-
-    # Extract first 800 chars of forensic report (Telegram 4096 char limit)
-    report_excerpt = report[:800].strip() + ("..." if len(report) > 800 else "")
-
-    return (
-        f"🔍 *NETRA Deepfake Analysis*\n\n"
-        f"{verdict_emoji} *Verdict:* `{verdict}`\n"
-        f"📊 *Confidence:* `{conf}%`\n"
-        f"{risk_emoji} *Risk Level:* `{risk}`\n"
-        f"🎬 *Type:* `{manip}`\n\n"
-        f"*Forensic Report:*\n{report_excerpt}\n\n"
-        f"━━━━━━━━━━━━━━━━━\n"
-        f"🤖 _{model}_\n"
-        f"📋 [Full report](https://netra-deepfake-detector.vercel.app/analyze/{job_id})"
-    )
 
 
 def format_result_whatsapp(result: dict, job_id: str) -> str:

@@ -584,7 +584,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
     const sourcePlatform =
       audio.sourcePlatform ??
       audio.source_platform ??
-      "WhatsApp / Telegram Voice Note";
+      "WhatsApp Voice Note";
 
     // Section 1: Acoustic Signal Telemetry
     y = ensureVerticalSpace(doc, y, 45);

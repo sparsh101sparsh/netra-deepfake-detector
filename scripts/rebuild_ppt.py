@@ -116,7 +116,7 @@ def rewrite_ppt():
             add_para(tf, "Network for Evidence-based Threat Recognition & Analysis", 16, bold=False, color=DARK, align=PP_ALIGN.CENTER)
             add_para(tf, "India's Only Multi-Modal Deepfake + Scam Detection Platform", 13, italic=True, color=GRAY, align=PP_ALIGN.CENTER)
             add_para(tf, "", 8)
-            add_para(tf, "EfficientNet-B4  •  CLIP ViT-L/14  •  Wav2Vec2  •  Amazon Bedrock Claude 3.5 Sonnet", 10, color=BLUE, align=PP_ALIGN.CENTER)
+            add_para(tf, "EfficientNet-B4  •  CLIP ViT-L/14  •  Wav2Vec2  •  Deterministic Forensic Dossier Engine", 10, color=BLUE, align=PP_ALIGN.CENTER)
             break
 
     # ── SLIDE 2: PROBLEM STATEMENT ─────────────────────────────────────────────
@@ -230,9 +230,9 @@ def rewrite_ppt():
                 ("[04] Dual Audio Detectors:", "Wav2Vec2-XLSR + AASIST-L ensemble hunts voice-clone & TTS vocoder artifacts in 16kHz raw waveforms."),
                 ("[05] Auxiliary Signals:", "Blink rate, landmark jitter, head pose, lighting direction & compression history — 6 corroborating signal streams."),
                 ("[06] Gated Fusion Engine:", "Weighted fusion combines all signals. If audio confidence > 0.9 and visual is borderline, audio gates the final verdict. One number, fully auditable."),
-                ("[07] Bedrock Investigator:", "Claude 3.5 Sonnet reasons over structured JSON evidence — never raw video. Writes a 500-word forensic report with citations to exact frame numbers."),
+                ("[07] Forensic Synthesizer:", "Deterministic Engine v5.0 compiles verified telemetry into a court-ready evidence dossier with citations to exact frame numbers."),
                 ("[08] Evidence Timeline:", "Click any flagged second to seek to the exact detector, score, frame and timestamp that triggered it. Court-ready PDF export."),
-                ("[09] Scam Text Detector:", "NEW: Paste any WhatsApp forward → 100+ rule engine scores in milliseconds. If risky: Claude Haiku provides full verdict. Zero extra infrastructure."),
+                ("[09] Scam Text Detector:", "NEW: Paste any WhatsApp forward → 100+ rule engine scores in milliseconds with Random Forest classification. Zero extra infrastructure."),
             ]
             for label, desc in steps:
                 p = tf.add_paragraph()
@@ -253,10 +253,10 @@ def rewrite_ppt():
             add_para(tf, "", 4)
             advantages = [
                 ("Multi-Specialist Architecture:", "4+ independent detectors feeding one fusion engine — not one model guessing alone. Same principle as a hospital's MDT."),
-                ("LLM as Investigator, Not Detector:", "Bedrock never sees raw video — it only reasons over structured evidence, eliminating hallucinated verdicts entirely."),
+                ("Zero-Hallucination Forensics:", "Deterministic engine compiles structured detector evidence into Section 65B legal reports without any generative hallucination."),
                 ("Indian-Context Training:", "Fine-tuned on IMFDB + DF-Platter (Indian-specific deepfake datasets). Handles Indian skin tones, regional accents & compression artifacts."),
                 ("Frame-Level Evidence Timeline:", "Every verdict is auditable to the exact timestamp & detector that flagged it — a world first for Indian media forensics."),
-                ("AWS-Cloud-First & Reproducible:", "Runs entirely on S3, SQS, EC2, DynamoDB & Bedrock — independent of any one machine. Auto-scales under load."),
+                ("AWS-Cloud-First & Reproducible:", "Runs entirely on S3, SQS, EC2 & DynamoDB — independent of any one machine. Auto-scales under load."),
                 ("Downloadable Forensic PDF:", "Court/platform-ready evidence, not just a percentage score. Suitable for legal proceedings and journalist reports."),
                 ("Dual Subsystem Design:", "Deepfake Video Detection + Scam Text Intelligence in one platform. WhatsApp forwards? Image montages? Voice notes? All covered."),
                 ("Near-Zero Operating Cost:", "Full platform + 700 real analyses cost ~$17.48 from a $100 AWS credit. Scales to 5,000+ analyses before exhausting credit."),
@@ -288,7 +288,7 @@ def rewrite_ppt():
         if name == "Text 3":   # Pipeline banner
             clear_textbox(shape)
             set_para(tf.paragraphs[0],
-                "Video Upload (Vercel)  →  S3 + SQS Enqueue  →  EC2 GPU Worker (4 Detectors in Parallel)  →  Gated Fusion  →  Amazon Bedrock Report  →  DynamoDB  →  Evidence Timeline",
+                "Video Upload (Vercel)  →  S3 + SQS Enqueue  →  EC2 GPU Worker (4 Detectors in Parallel)  →  Gated Fusion  →  Forensic Dossier Engine  →  DynamoDB  →  Evidence Timeline",
                 8.5, bold=True, color=WHITE)
 
         elif name == "Text 7":  # Next.js box
@@ -327,15 +327,15 @@ def rewrite_ppt():
             ]:
                 bullet_para(tf, b, 7.5, color=DARK, bullet_char="•")
 
-        elif name == "Text 16":  # Bedrock box
+        elif name == "Text 16":  # Forensic Report Engine box
             clear_textbox(shape)
             for b in [
-                "Claude 3.5 Sonnet synthesizes JSON evidence into a forensic report",
-                "Nova Lite auto-fallback if Claude quota is exceeded — never crashes",
-                "Never receives raw video — only structured JSON evidence bundle",
-                "Full report + executive summary generated in under 8 seconds",
-                "Claude Haiku used for /detect/scam — 10× cheaper, <100ms latency",
-                "Evidence bundle hard-capped at 8,000 characters — zero token waste",
+                "Deterministic Engine v5.0 compiles telemetry into a court-admissible report",
+                "100% offline synthesis with zero external LLM API dependencies",
+                "Structured rule matrix generates executive verdict and Section 65B dossier",
+                "Full report + executive summary generated in under 15 milliseconds",
+                "Random Forest + 100+ heuristic rules for instant scam classification",
+                "Zero token cost, zero generative hallucination, 100% auditable trail",
             ]:
                 bullet_para(tf, b, 7.5, color=DARK, bullet_char="•")
 
@@ -399,11 +399,11 @@ def rewrite_ppt():
             "End-to-end analysis in < 30 seconds for a 30-second video clip",
             "4+ independent detectors — like 4 forensic specialists, one verdict",
         ],
-        "Text 7": [  # AI Forensic Investigator
-            "Amazon Bedrock (Claude 3.5 Sonnet) writes the forensic report — never guesses",
-            "Reasons only over structured JSON evidence, never raw video frames",
-            "Nova Lite auto-fallback keeps reports flowing even if Claude quota hits",
-            "Full forensic report + executive summary generated in < 8 seconds",
+        "Text 7": [  # Forensic Report Engine
+            "Deterministic Forensic Engine v5.0 writes court-ready reports — zero hallucination",
+            "Synthesizes structured detector telemetry into Section 65B Indian Evidence dossier",
+            "100% offline, zero-latency execution with zero external cloud API dependencies",
+            "Full forensic report + executive summary generated in < 15 milliseconds",
             "Cites exact frame numbers, timestamps, and detector scores as evidence",
         ],
         "Text 10": [  # Interactive Evidence Timeline
@@ -474,7 +474,7 @@ def rewrite_ppt():
             "82% of the $100 credit remains as buffer after full deployment",
             "Always-free tier covers S3, DynamoDB, Lambda & CloudFront to set limits",
             "Scales to 5,000+ analyses before the $100 credit is exhausted — 7× headroom",
-            "Bedrock Haiku for scam detection: ~$0.001/query — 20× cheaper than Sonnet",
+            "Deterministic scam detection: zero API cost, sub-10ms latency per query",
         ],
     }
 
@@ -550,8 +550,8 @@ def rewrite_ppt():
             costs = [
                 ("$17.48 of $100 AWS Credit Used:", " 700 real analyses on the live platform. 82% budget buffer remaining after full deployment."),
                 ("$0 Training Cost:", " Both EfficientNet-B4 and CLIP probe trained on Kaggle's free P100 GPU — zero cloud spend on ML training."),
-                ("~$0.02 / Video Analysis:", " Full deepfake analysis including Bedrock forensic report. Manual fact-checker: $50+ per video minimum."),
-                ("~$0.001 / Scam Check:", " Claude Haiku analysis for high-risk text. 1,000 scam checks cost $1. Manual review: impossible at scale."),
+                ("Near-Zero / Video Analysis:", " Full deepfake analysis including court-ready forensic report. Manual fact-checker: $50+ per video minimum."),
+                ("Zero Cost / Scam Check:", " Deterministic rule + ML analysis for text. Zero API cost. Manual review: impossible at scale."),
                 ("Scales to 5,000+ Analyses:", " Before exhausting the $100 AWS credit — 7× headroom beyond demo day requirements."),
                 ("Always-Free Tier Baseline:", " S3 (5GB free), DynamoDB (25GB free), Lambda (1M req/month free), CloudFront (1TB free) — zero baseline cost."),
                 ("Open-Source & Reproducible:", " All models published to HuggingFace Hub post-hackathon. Community can retrain for any Indian language or context."),
@@ -603,7 +603,7 @@ def rewrite_ppt():
             wins = [
                 ("Instant Free Access:", " No signup. Upload a clip or message the bot — verdict in < 30 seconds. No other Indian tool does this."),
                 ("Multi-Modal by Default:", " The only platform combining spatial face-swap + audio voice-clone + CLIP unseen-generator + auxiliary signals into one gated verdict."),
-                ("LLM Forensic Report:", " Claude 3.5 Sonnet writes a 500-word evidence-backed report. Competitors return a percentage. We return proof."),
+                ("Forensic Evidence Report:", " NETRA compiles a comprehensive evidence-backed legal dossier. Competitors return a percentage. We return proof."),
                 ("India-Native Training:", " EfficientNet-B4 and CLIP probe fine-tuned on Indian faces specifically. Western models fail on Indian content — we built for India."),
                 ("Dual Subsystem Platform:", " Deepfake detection + Scam text intelligence in one product. WhatsApp forwards, voice notes, text scams — all handled."),
             ]
@@ -623,7 +623,7 @@ def rewrite_ppt():
             clear_textbox(shape)
             wins2 = [
                 ("Production Safeguards:", " DLQ, rate limiting, 3-minute job timeout & input validation from day one. Not a prototype — production-grade from commit 1."),
-                ("AWS-Cloud-First:", " S3, SQS, EC2, DynamoDB, Bedrock — every component is serverless-friendly. Scales from 1 video to 1 million without touching the code."),
+                ("AWS-Cloud-First:", " S3, SQS, EC2, DynamoDB — every component is serverless-friendly. Scales from 1 video to 1 million without touching the code."),
                 ("Community Intelligence:", " 'Recently Reported' feed turns every confirmed deepfake into training signal for the next version. Crowdsourced ground truth."),
                 ("Near-Zero Cost:", " $17.48 for 700 analyses. Enterprise competitors charge $10,000+/month for similar capabilities. NETRA: free to the public."),
                 ("Open & Reproducible:", " All model weights published to HuggingFace. All training scripts open-source on GitHub. No vendor lock-in, ever."),

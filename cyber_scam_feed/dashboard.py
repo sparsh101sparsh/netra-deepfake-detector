@@ -604,7 +604,7 @@ def generate_html_dashboard(summary: FeedSummary) -> str:
                     <span class="pulse-dot dot-green"></span>
                     Syncs every 24h automatically
                 </div>
-                <div class="sync-note">Daily intelligence sent to WhatsApp & Telegram bots</div>
+                <div class="sync-note">Daily intelligence sent to WhatsApp bot</div>
             </div>
         </div>
 

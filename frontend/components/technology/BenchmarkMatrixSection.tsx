@@ -30,7 +30,7 @@ const BENCHMARK_DATA: BenchmarkRow[] = [
     meanFakeProb: "94.8%",
     falsePositiveRate: "1.2%",
     status: "Primary Multi-Modal",
-    architecture: "EfficientNet-B4 (SBI) + CLIP ViT-L/14 + Wav2Vec 2.0 + Bedrock Claude 3.5",
+    architecture: "EfficientNet-B4 (SBI) + CLIP ViT-L/14 + Wav2Vec 2.0 + Forensic Engine",
     vulnerability: "Resistant to cross-modal manipulation, lossy compression & audio desync",
   },
   {
