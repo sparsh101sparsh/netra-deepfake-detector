@@ -1,0 +1,354 @@
+{
+  "name": "NETRA Institutional Forensic & Cyber Threat Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "netra-community-bot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-trigger",
+      "name": "Citizen Message Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.body.media_type || 'text' }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "text"
+            },
+            {
+              "value2": "image"
+            }
+          ]
+        }
+      },
+      "id": "node-switch-modality",
+      "name": "Modality Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NETRA_API_URL || 'https://netra-api-pmr7.onrender.com' }}/api/v1/ingest/bot",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Bot-Secret",
+              "value": "={{ $env.BOT_SECRET_KEY || 'netra_bot_secret_2026' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"media_type\": \"text\",\n  \"content\": \"{{ $json.body.text || $json.body.content }}\",\n  \"sender_id\": \"{{ $json.body.sender || $json.body.from || 'community_user' }}\",\n  \"source_platform\": \"whatsapp\"\n}",
+        "options": {}
+      },
+      "id": "node-netra-text-eval",
+      "name": "NETRA AI Text Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        700,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NETRA_API_URL || 'https://netra-api-pmr7.onrender.com' }}/api/v1/ingest/bot",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Bot-Secret",
+              "value": "={{ $env.BOT_SECRET_KEY || 'netra_bot_secret_2026' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"media_type\": \"image\",\n  \"content\": \"{{ $json.body.image_url || $json.body.content }}\",\n  \"sender_id\": \"{{ $json.body.sender || $json.body.from || 'community_user' }}\",\n  \"source_platform\": \"whatsapp\"\n}",
+        "options": {}
+      },
+      "id": "node-netra-image-eval",
+      "name": "NETRA RapidOCR & Seam Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        700,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.is_scam }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "node-threat-gate",
+      "name": "High Threat Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        940,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NETRA_API_URL || 'https://netra-api-pmr7.onrender.com' }}/api/v1/ingest/bot/confirm-report",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Bot-Secret",
+              "value": "={{ $env.BOT_SECRET_KEY || 'netra_bot_secret_2026' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"report_token\": \"{{ $json.report_token }}\",\n  \"title\": \"n8n Incident: {{ $json.scam_type }}\",\n  \"source_platform\": \"whatsapp\"\n}",
+        "options": {}
+      },
+      "id": "node-confirm-catalog",
+      "name": "Index in Threat Catalog",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1180,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format Institutional Cybercrime Response\nconst prev = $input.first().json;\nconst isScam = prev.is_scam;\nconst risk = prev.risk_score || 0;\nconst typ = (prev.scam_type || 'Unknown Threat').replace(/_/g, ' ').toUpperCase();\nconst reason = prev.analysis_reason || 'Identified by neural inspection.';\nconst iocs = prev.extracted_iocs || {};\n\nlet msg = '';\nif (isScam) {\n  msg = `\ud83d\udea8 *NETRA CRIME ALERT: ${typ} DETECTED*\\n\\n` +\n        `\u2022 *Verdict:* FRAUD / FINANCIAL SCAM\\n` +\n        `\u2022 *Risk Score:* ${risk}% (CRITICAL THREAT)\\n` +\n        `\u2022 *Findings:* ${reason}\\n` +\n        `\u2022 *Statutory Citations:* BNS 2023 Sec 318(4) & IT Act 2000 Sec 66D\\n`;\n  if (iocs.upis && iocs.upis.length) msg += `\u2022 *Attacker UPI:* ${iocs.upis.join(', ')}\\n`;\n  if (iocs.phones && iocs.phones.length) msg += `\u2022 *Attacker Phone:* ${iocs.phones.join(', ')}\\n`;\n  msg += `\\n\u26a0\ufe0f *Advisory:* Never share OTPs or send money. Report immediately to *1930*.`;\n} else {\n  msg = `\u2705 *NETRA Verification: AUTHENTIC / LOW RISK*\\n\\n` +\n        `\u2022 *Verdict:* AUTHENTIC\\n` +\n        `\u2022 *Risk Score:* ${risk}%\\n` +\n        `\u2022 *Findings:* No malicious patterns identified.`;\n}\n\nreturn {\n  json: {\n    status: \"success\",\n    is_scam: isScam,\n    risk_score: risk,\n    message: msg,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "node-format-response",
+      "name": "Format Forensic Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "node-respond-webhook",
+      "name": "Send Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "node-schedule-sync",
+      "name": "24h Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NETRA_API_URL || 'https://netra-api-pmr7.onrender.com' }}/api/v1/news/refresh",
+        "options": {}
+      },
+      "id": "node-trigger-crawl",
+      "name": "Trigger 24h Threat Refresh",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        480,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.NETRA_API_URL || 'https://netra-api-pmr7.onrender.com' }}/api/v1/news/feed?limit=3",
+        "options": {}
+      },
+      "id": "node-get-bulletin",
+      "name": "Fetch 24h News Bulletin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        720,
+        600
+      ]
+    }
+  ],
+  "connections": {
+    "Citizen Message Webhook": {
+      "main": [
+        [
+          {
+            "node": "Modality Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modality Router": {
+      "main": [
+        [
+          {
+            "node": "NETRA AI Text Engine",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NETRA RapidOCR & Seam Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NETRA AI Text Engine": {
+      "main": [
+        [
+          {
+            "node": "High Threat Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NETRA RapidOCR & Seam Engine": {
+      "main": [
+        [
+          {
+            "node": "High Threat Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "High Threat Gate": {
+      "main": [
+        [
+          {
+            "node": "Index in Threat Catalog",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Forensic Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Index in Threat Catalog": {
+      "main": [
+        [
+          {
+            "node": "Format Forensic Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Forensic Response": {
+      "main": [
+        [
+          {
+            "node": "Send Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "24h Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Trigger 24h Threat Refresh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger 24h Threat Refresh": {
+      "main": [
+        [
+          {
+            "node": "Fetch 24h News Bulletin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
