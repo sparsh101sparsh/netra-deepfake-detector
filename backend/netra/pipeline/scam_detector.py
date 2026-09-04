@@ -42,8 +42,14 @@ class ScamDetector:
                 r"\.(apk|exe|dmg|bat|scr|vbs)\b",
                 r"\b(download\s*app|install\s*support\s*apk|quicksupport|anydesk|teamviewer|rustdesk)\b"
             ],
+            "FINANCIAL_EXTORTION_AND_CARD_THEFT": [
+                r"\b(?:give|send|share|tell|provide|input|enter)\s*(?:me\s*)?(?:ur|your)?\s*(?:credit\s*card|debit\s*card|atm\s*card|card\s*number|cvv|cvv2|expiry|atm\s*pin|net\s*banking\s*password|login\s*credentials|otp)\b",
+                r"\b(?:credit\s*card|debit\s*card|card\s*details|card\s*number|cvv2?|atm\s*pin|card\s*expiry|3-digit\s*code)\b",
+                r"\b(?:send|transfer|wire|pay)\s*(?:me\s*)?(?:urgent\s*)?(?:money|cash|funds|amount|inr|rs\.?|\$)\b",
+                r"\b(?:give\s*me\s*money|urgent\s*transfer|need\s*money\s*urgently|send\s*(?:money|cash)\s*fast)\b"
+            ],
             "BANKING_UPI_PHISHING": [
-                r"\b(kyc\s*(?:expiry|expire|suspended|pending|update|verify|verification)|pan\s*card|aadhaar\s*link|debit\s*card\s*blocked|otp\s*verification|account\s*(?:block|blocked|suspended|frozen|warning))\b",
+                r"\b(kyc\s*(?:expiry|expire|suspended|pending|update|verify|verification)|pan\s*card|aadhaar\s*link|credit\s*card|debit\s*card|card\s*blocked|otp\s*verification|account\s*(?:block|blocked|suspended|frozen|warning))\b",
                 r"\b(?:sbi|hdfc|icici|axis|pnb|bank)\s*(?:account|card)?\s*(?:has\s*been|is)?\s*(?:suspended|blocked|frozen|locked)\b",
                 r"\b(reward\s*points\s*expire|lottery\s*winner|claim\s*refund|income\s*tax\s*refund|kbc\s*lottery|kbcwinner|won\s*rs)\b",
                 r"\bhttps?://[^\s]+(?:kyc|verify|update|bank|sbi|otp)[^\s]*\b",
@@ -91,20 +97,22 @@ class ScamDetector:
 
         # Rule score elevation: if strong heuristic patterns trigger, escalate score
         rule_score_boost = 0
+        if "FINANCIAL_EXTORTION_AND_CARD_THEFT" in matched_rules:
+            rule_score_boost = max(rule_score_boost, 96)
         if "DIGITAL_ARREST" in matched_rules:
-            rule_score_boost = max(rule_score_boost, 88)
+            rule_score_boost = max(rule_score_boost, 95)
         if "APK_MALWARE" in matched_rules:
-            rule_score_boost = max(rule_score_boost, 92)
+            rule_score_boost = max(rule_score_boost, 94)
         if "LOTTERY_PRIZE_FRAUD" in matched_rules:
             rule_score_boost = max(rule_score_boost, 94)
-        if "ELECTRICITY_KYC" in matched_rules:
-            rule_score_boost = max(rule_score_boost, 82)
-        if "STOCK_TRADING_FRAUD" in matched_rules:
-            rule_score_boost = max(rule_score_boost, 80)
         if "BANKING_UPI_PHISHING" in matched_rules:
+            rule_score_boost = max(rule_score_boost, 92)
+        if "ELECTRICITY_KYC" in matched_rules:
+            rule_score_boost = max(rule_score_boost, 88)
+        if "STOCK_TRADING_FRAUD" in matched_rules:
             rule_score_boost = max(rule_score_boost, 85)
         if "JOB_SCAM" in matched_rules:
-            rule_score_boost = max(rule_score_boost, 78)
+            rule_score_boost = max(rule_score_boost, 82)
 
         final_score = max(score, rule_score_boost)
         is_scam = bool(matched_rules) or (final_score > 65)
@@ -112,16 +120,31 @@ class ScamDetector:
         # Normalize confidence for safe messages
         confidence = final_score if is_scam else max(15, 100 - final_score)
 
+        # Statutory legal citations mapping
+        legal_mapping = {
+            "financial_extortion_and_card_theft": "IT Act 2000 Section 66C (Identity Theft), Section 66D (Cheating by Personation) & BNS 2023 Section 318(4) (Cheating)",
+            "digital_arrest": "IT Act 2000 Sec 66D, BNS 2023 Sec 204 (Impersonating Public Servant) & Sec 308(2) (Extortion)",
+            "banking_upi_phishing": "IT Act 2000 Section 66D, BNS 2023 Section 318(4) (Financial Phishing)",
+            "lottery_prize_fraud": "Lotteries Regulation Act 1998, IT Act Sec 66D, BNS Sec 318(4)",
+            "apk_malware": "IT Act 2000 Section 43 & Section 66 (Hacking & Malware)",
+            "stock_trading_fraud": "SEBI Act 1992 Section 12A (Fraudulent Practices), IT Act Sec 66D",
+            "electricity_kyc": "IT Act 2000 Section 66D, BNS 2023 Section 318(4)",
+            "job_scam": "BNS 2023 Section 318(4) & IT Act 2000 Section 66D"
+        }
+
         # Determine primary scam typology and reasoning
         if matched_rules:
             scam_type = matched_rules[0].lower()
             reason = f"Detected high-risk cyber fraud pattern(s): {', '.join(r.replace('_', ' ') for r in matched_rules)}."
+            legal_citations = legal_mapping.get(scam_type, "IT Act 2000 Section 66D, BNS 2023 Section 318(4)")
         elif is_scam:
             scam_type = "suspicious_message"
             reason = "Statistical TF-IDF linguistic patterns strongly correlate with known fraudulent communications."
+            legal_citations = "IT Act 2000 Section 66D, BNS 2023 Section 318(4)"
         else:
             scam_type = "None"
             reason = "No known scam patterns or deceptive linguistic markers detected."
+            legal_citations = None
 
         return {
             "is_scam": is_scam,
@@ -130,6 +153,7 @@ class ScamDetector:
             "scam_type": scam_type,
             "reason": reason,
             "analysis_reason": reason,
+            "legal_citations": legal_citations,
             "matched_rules": matched_rules,
             "analysis_method": "random_forest_ml + heuristic_rule_matrix",
         }

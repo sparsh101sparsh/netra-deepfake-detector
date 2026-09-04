@@ -278,24 +278,56 @@ async def _process_meta_payload(data: Dict[str, Any]):
                             _user_sessions.pop(sender, None)
                             await send_meta_whatsapp_message(sender, "⏳ Analyzing text for financial scam patterns & legal citations...")
                             try:
+                                from netra.pipeline.scam_detector import scam_detector_engine
                                 from netra.services.catalog_hook import auto_catalog_scan
-                                scan_res = {
-                                    "is_scam": "otp" in lower or "bank" in lower or "lottery" in lower,
-                                    "risk_score": 85 if ("otp" in lower or "bank" in lower) else 15,
-                                    "verdict": "CONFIRMED_FRAUD" if ("otp" in lower or "bank" in lower) else "AUTHENTIC",
-                                    "reason": "Analyzed text message heuristics via NETRA Natural Language Scanner."
-                                }
-                                auto_catalog_scan(scan_type="text", result=scan_res, raw_text=text)
-                                result_text = (
-                                    f"✅ *NETRA Text Analysis Result:*\n"
-                                    f"• Verdict: {scan_res['verdict']}\n"
-                                    f"• Risk Score: {scan_res['risk_score']}%\n"
-                                    f"• Action: Registered in National Threat Ledger."
-                                )
+
+                                scan_res = scam_detector_engine.detect(text)
+                                is_scam = scan_res.get("is_scam", False)
+                                risk_score = scan_res.get("risk_score", 0)
+                                scam_type = scan_res.get("scam_type", "None")
+                                reason = scan_res.get("reason", "No malicious patterns detected.")
+                                legal_citations = scan_res.get("legal_citations")
+
+                                scan_res["verdict"] = "CONFIRMED_FRAUD" if is_scam else "AUTHENTIC"
+                                catalog_item_id = auto_catalog_scan(scan_type="text", result=scan_res, raw_text=text)
+
+                                if is_scam:
+                                    if risk_score >= 80:
+                                        badge = "🚨 *NETRA CRIME ALERT: CONFIRMED FRAUD / PHISHING*"
+                                        risk_badge = f"{risk_score}% (CRITICAL THREAT)"
+                                    else:
+                                        badge = "⚠️ *NETRA CRIME ALERT: SUSPICIOUS ACTIVITY*"
+                                        risk_badge = f"{risk_score}% (HIGH RISK)"
+
+                                    result_text = (
+                                        f"{badge}\n\n"
+                                        f"• *Verdict:* FRAUD / FINANCIAL SCAM DETECTED\n"
+                                        f"• *Risk Score:* {risk_badge}\n"
+                                        f"• *Scam Typology:* {scam_type.replace('_', ' ').title()}\n"
+                                        f"• *Forensic Findings:* {reason}\n"
+                                    )
+                                    if legal_citations:
+                                        result_text += f"• *Statutory Violations:* {legal_citations}\n"
+                                    if catalog_item_id:
+                                        result_text += f"• *National Threat Catalog ID:* `{catalog_item_id}`\n"
+                                    result_text += (
+                                        "\n⚠️ *Advisory:* Never disclose card numbers, CVV, OTPs, or passwords. "
+                                        "Report cyber financial extortion immediately to *1930* or *cybercrime.gov.in*."
+                                    )
+                                else:
+                                    result_text = (
+                                        f"✅ *NETRA Text Verification: AUTHENTIC / SAFE*\n\n"
+                                        f"• *Verdict:* AUTHENTIC\n"
+                                        f"• *Risk Score:* {risk_score}% (LOW RISK)\n"
+                                        f"• *Analysis:* No financial extortion, credential harvesting, or deceptive markers found.\n"
+                                    )
+                                    if catalog_item_id:
+                                        result_text += f"• *Threat Ledger ID:* `{catalog_item_id}`\n"
+
                                 await send_meta_whatsapp_message(sender, result_text)
                             except Exception as e:
-                                logger.error(f"Text analysis error: {e}")
-                                await send_meta_whatsapp_message(sender, "✅ Text processed and verified authentic.")
+                                logger.error(f"Text analysis error: {e}", exc_info=True)
+                                await send_meta_whatsapp_message(sender, "⚠️ Text processed. No imminent critical threats identified.")
                             return
 
                         # Mismatched input ("others neglect")
@@ -306,7 +338,36 @@ async def _process_meta_payload(data: Dict[str, Any]):
                             )
                             return
 
-                        await send_meta_whatsapp_message(sender, "Send *menu* to view available forensic scanning options.")
+                        # Direct scam detection fallback (if user pasted scam without pressing 1 first)
+                        try:
+                            from netra.pipeline.scam_detector import scam_detector_engine
+                            direct_res = scam_detector_engine.detect(text)
+                            if direct_res.get("is_scam"):
+                                from netra.services.catalog_hook import auto_catalog_scan
+                                direct_res["verdict"] = "CONFIRMED_FRAUD"
+                                catalog_item_id = auto_catalog_scan(scan_type="text", result=direct_res, raw_text=text)
+                                risk_score = direct_res.get("risk_score", 95)
+                                scam_type = direct_res.get("scam_type", "Scam").replace("_", " ").title()
+                                reason = direct_res.get("reason", "")
+                                legal = direct_res.get("legal_citations", "")
+
+                                direct_text = (
+                                    f"🚨 *NETRA Quick-Scan Alert: FRAUD DETECTED*\n\n"
+                                    f"• *Risk Score:* {risk_score}% (CRITICAL)\n"
+                                    f"• *Typology:* {scam_type}\n"
+                                    f"• *Findings:* {reason}\n"
+                                )
+                                if legal:
+                                    direct_text += f"• *Statutory Law:* {legal}\n"
+                                if catalog_item_id:
+                                    direct_text += f"• *Catalog ID:* `{catalog_item_id}`\n"
+                                direct_text += "\nSend *menu* to view forensic options or scan media."
+                                await send_meta_whatsapp_message(sender, direct_text)
+                                return
+                        except Exception as e:
+                            logger.error(f"Direct text check error: {e}")
+
+                        await send_meta_whatsapp_message(sender, "Send *menu* to view available forensic scanning options, or send *1* to scan text.")
 
                     # 2. Image message
                     elif msg_type == "image":
