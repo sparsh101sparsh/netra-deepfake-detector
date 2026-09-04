@@ -196,6 +196,62 @@ function HybridDossier({ data, onReset }: { data: DualBranchResult; onReset: () 
   );
 }
 
+async function optimizeImageForUpload(file: File, maxDim = 1280, quality = 0.88): Promise<File | Blob> {
+  if (typeof window === "undefined" || !file.type.startsWith("image/") || file.type.includes("svg") || file.type.includes("gif")) {
+    return file;
+  }
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width <= maxDim && height <= maxDim && file.size < 800 * 1024) {
+        resolve(file);
+        return;
+      }
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const optimized = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+              type: "image/jpeg",
+              lastModified: Date.now(),
+            });
+            resolve(optimized);
+          } else {
+            resolve(file);
+          }
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+}
+
 export function MultiModalForensicScanner({ onScanComplete, className }: MultiModalScannerProps) {
   const router = useRouter();
   const [activeModality, setActiveModality] = useState<ScannerModality>("video");
@@ -204,6 +260,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [lastSelectedFile, setLastSelectedFile] = useState<File | null>(null);
 
   // Result States for Non-Redirecting Modalities
   const [imageOcrResult, setImageOcrResult] = useState<DualBranchResult | null>(null);
@@ -254,6 +311,7 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
       setAudioResult(null);
       setIsUploading(true);
       setUploadProgress(0);
+      setLastSelectedFile(file);
 
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => Math.min(prev + 12, 92));
@@ -265,29 +323,63 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
       // ── 1. IMAGE MODALITY: Route to PaddleOCR + Scam Engine ──
       if (activeModality === "image") {
         try {
-          const res = await fetch("/api/backend/api/v1/detect/image-ocr", {
-            method: "POST",
-            body: formData,
-          });
+          const optimizedFile = await optimizeImageForUpload(file);
+          const uploadFormData = new FormData();
+          uploadFormData.append("file", optimizedFile);
+
+          const endpoints = [
+            "/api/backend/api/v1/detect/image-ocr",
+            "/api/v1/detect/image-ocr"
+          ];
+
+          let res: Response | null = null;
+          let lastStatus = 0;
+          let lastErr = "";
+
+          for (let attempt = 0; attempt < 2; attempt++) {
+            for (const ep of endpoints) {
+              try {
+                const r = await fetch(ep, {
+                  method: "POST",
+                  body: uploadFormData,
+                });
+                if (r.ok) {
+                  res = r;
+                  break;
+                }
+                lastStatus = r.status;
+                if (r.status === 502 || r.status === 503 || r.status === 504) {
+                  // Cold start: wait 1.2s and retry
+                  await new Promise((resolve) => setTimeout(resolve, 1200));
+                }
+              } catch (fetchErr: any) {
+                lastErr = fetchErr?.message || "";
+              }
+            }
+            if (res && res.ok) break;
+          }
 
           clearInterval(progressInterval);
           setUploadProgress(100);
 
-          if (res.ok) {
+          if (res && res.ok) {
             const data: OCRDossierResult = await res.json();
             setImageOcrResult(data);
             onScanComplete?.(data);
             return;
           }
-          let errMsg = `OCR endpoint returned status ${res.status}`;
-          try {
-            const errData = await res.json();
-            errMsg = errData.detail || errData.message || errMsg;
-          } catch {
+
+          let errMsg = lastStatus ? `OCR endpoint returned status ${lastStatus}` : (lastErr || "Forensic node unreachable");
+          if (res) {
             try {
-              const txt = await res.text();
-              if (txt && txt.length < 200 && !txt.includes("<html")) errMsg = txt;
-            } catch {}
+              const errData = await res.json();
+              errMsg = errData.detail || errData.message || errMsg;
+            } catch {
+              try {
+                const txt = await res.text();
+                if (txt && txt.length < 200 && !txt.includes("<html")) errMsg = txt;
+              } catch {}
+            }
           }
           throw new Error(errMsg);
         } catch (err: any) {
@@ -841,6 +933,8 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
             uploadProgress={uploadProgress}
             error={uploadError}
             onFileSelect={handleFileSelect}
+            onClearError={() => setUploadError(null)}
+            onRetry={lastSelectedFile ? () => handleFileSelect(lastSelectedFile) : undefined}
           />
         )}
       </div>

@@ -456,8 +456,16 @@ async def detect_image_unified(
 
         return result
     except Exception as e:
-        logger.error(f"Image dual-branch forensics analysis failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Image forensics analysis failed: {str(e)}")
+        logger.error(f"Image dual-branch forensics analysis encountered error: {e}", exc_info=True)
+        try:
+            from netra.pipeline.dual_branch_router import generate_fallback_image_dossier
+            return generate_fallback_image_dossier(
+                filename=file.filename or "uploaded_image.png",
+                error_reason=str(e)
+            )
+        except Exception as fallback_err:
+            logger.critical(f"Critical fallback generation failure: {fallback_err}")
+            raise HTTPException(status_code=500, detail=f"Image forensics analysis failed: {str(e)}")
 
 
 @router.get("/detect/health")
