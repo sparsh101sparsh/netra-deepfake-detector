@@ -154,8 +154,6 @@ export const SystemTopologySection: React.FC = () => {
             </div>
           </div>
         </div>
-          </div>
-        </div>
 
         {/* Forensic Media Verification & Technical Standards */}
         <div className="p-6 rounded-2xl bg-surface border border-line shadow-card space-y-4">
