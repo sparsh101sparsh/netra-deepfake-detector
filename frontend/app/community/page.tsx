@@ -31,15 +31,16 @@ export default function CommunityPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Load user session from localStorage and fetch posts from backend
-  const fetchCommunityPosts = () => {
+  const fetchCommunityPosts = async () => {
     setIsLoading(true);
     setError(null);
     let localPosts: CommunityPost[] = [];
     const isRealPost = (p: any) => {
+      if (!p) return false;
       const id = (p?.id || "").toLowerCase();
       const title = (p?.title || "").toLowerCase();
-      if (id.startsWith("post-") || id.startsWith("stress-post-") || id.startsWith("test-")) return false;
-      if (title.includes("stress post") || title.includes("test")) return false;
+      if (id.startsWith("stress-post-") || id.startsWith("test-fixture-")) return false;
+      if (title.includes("[stress post]") || title.includes("[test_fixture]")) return false;
       return true;
     };
 
@@ -50,29 +51,52 @@ export default function CommunityPage() {
           const parsed = JSON.parse(savedLocalPosts);
           if (Array.isArray(parsed)) {
             localPosts = parsed.filter(isRealPost);
-            localStorage.setItem("netra_community_posts", JSON.stringify(localPosts));
+            if (localPosts.length > 0) {
+              setPosts(localPosts);
+            }
           }
         } catch {}
       }
     }
 
-    fetch("/api/backend/api/v1/community/posts")
-      .then((res) => {
-        if (!res.ok) throw new Error(`Community API returned status ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        const backendPosts: CommunityPost[] = (data?.posts || []).filter(isRealPost);
-        const backendIds = new Set(backendPosts.map((p: any) => p.id));
-        const uniqueLocal = localPosts.filter((p) => !backendIds.has(p.id));
-        setPosts([...uniqueLocal, ...backendPosts]);
-      })
-      .catch((err) => {
-        console.warn("Community fetch error:", err);
-        setError("Community forensic cluster unreachable. Local articles displayed if available.");
-        setPosts(localPosts);
-      })
-      .finally(() => setIsLoading(false));
+    const candidateEndpoints = [
+      "/api/backend/api/v1/community/posts",
+      "/api/v1/community/posts",
+      `${process.env.NEXT_PUBLIC_API_URL || "https://netra-api-pmr7.onrender.com"}/api/v1/community/posts`
+    ];
+
+    let backendPosts: CommunityPost[] = [];
+    let fetchSucceeded = false;
+
+    for (const ep of candidateEndpoints) {
+      try {
+        const res = await fetch(ep);
+        if (res.ok) {
+          const data = await res.json();
+          backendPosts = (data?.posts || []).filter(isRealPost);
+          fetchSucceeded = true;
+          break;
+        }
+      } catch (e) {
+        // Try next candidate
+      }
+    }
+
+    if (fetchSucceeded) {
+      const backendIds = new Set(backendPosts.map((p: any) => p.id));
+      const uniqueLocal = localPosts.filter((p) => !backendIds.has(p.id));
+      const combined = [...uniqueLocal, ...backendPosts];
+      setPosts(combined);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("netra_community_posts", JSON.stringify(combined));
+      }
+    } else {
+      if (localPosts.length === 0) {
+        setError("Community forensic cluster initializing. Local articles displayed if available.");
+      }
+      setPosts(localPosts);
+    }
+    setIsLoading(false);
   };
 
   useEffect(() => {
