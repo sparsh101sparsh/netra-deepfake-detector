@@ -60,6 +60,8 @@ export interface DropZoneProps {
   onFileSelect: (file: File) => void;
   error?: string | null;
   className?: string;
+  onClearError?: () => void;
+  onRetry?: () => void;
 }
 
 export function DropZone({
@@ -69,6 +71,8 @@ export function DropZone({
   onFileSelect,
   error: externalError,
   className,
+  onClearError,
+  onRetry,
 }: DropZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -331,9 +335,21 @@ export function DropZone({
         <div className="flex items-center gap-2 rounded-xl bg-red-tint border-[1.5px] border-red/30 px-3.5 py-2.5 text-xs text-red animate-in fade-up duration-200">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span className="flex-1 font-medium">{activeError}</span>
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="text-[11px] font-bold text-accent hover:underline flex items-center gap-1 ml-2"
+            >
+              <RefreshCw className="w-3 h-3" /> Retry
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => setValidationError(null)}
+            onClick={() => {
+              setValidationError(null);
+              onClearError?.();
+            }}
             className="text-[11px] font-bold text-red underline hover:no-underline ml-2"
           >
             Dismiss

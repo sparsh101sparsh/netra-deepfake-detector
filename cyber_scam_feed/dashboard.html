@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Cyber Scam Feed (Powered By Tavily)</title>
+    <style>
+        :root {
+            --bg-base: #111215;
+            --bg-card: #18191e;
+            --bg-card-hover: #202228;
+            --border-color: #272a33;
+            --border-hover: #3a3f4d;
+            --text-primary: #f0f2f5;
+            --text-secondary: #9da4b3;
+            --text-muted: #6b7280;
+            --accent-red: #ef4444;
+            --accent-red-bg: rgba(239, 68, 68, 0.12);
+            --accent-amber: #f59e0b;
+            --accent-amber-bg: rgba(245, 158, 11, 0.12);
+            --accent-green: #10b981;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            padding: 32px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .feed-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Header section */
+        .feed-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .header-icon-box {
+            width: 52px;
+            height: 52px;
+            background: #1c1e24;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .header-icon-box svg {
+            width: 26px;
+            height: 26px;
+            color: #94a3b8;
+        }
+
+        .header-titles {
+            flex: 1;
+        }
+
+        .header-title-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .header-title-row h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+        }
+
+        .tavily-pill {
+            font-size: 13px;
+            font-weight: 600;
+            background: #242730;
+            color: #cbd5e1;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            border: 1px solid #333846;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+        }
+
+        /* Top control / status bar */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #1c1f27;
+            border: 1px solid #353b49;
+            color: #f1f5f9;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+
+        .badge-count {
+            background: #1c1f27;
+            border: 1px solid #2e3340;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 9999px;
+        }
+
+        .status-right {
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .sync-active {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            color: #10b981;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .sync-note {
+            color: var(--text-muted);
+        }
+
+        /* Pulsing indicator dots */
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-green {
+            background-color: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+
+        .dot-white {
+            background-color: #ffffff;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            animation: pulse-animation 1.5s infinite;
+        }
+
+        .dot-critical {
+            background-color: var(--accent-red);
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.7);
+        }
+
+        .dot-high {
+            background-color: var(--accent-amber);
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(0.95); opacity: 0.6; }
+            50% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.6; }
+        }
+
+        /* Filter Controls */
+        .filter-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-input-wrapper input {
+            width: 100%;
+            background: #181a20;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 14px 10px 40px;
+            color: #ffffff;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .search-input-wrapper input:focus {
+            border-color: #3b82f6;
+            background: #1e2129;
+        }
+
+        .search-input-wrapper input::placeholder {
+            color: #64748b;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .cat-btn {
+            background: #1b1d24;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .cat-btn:hover {
+            background: #232630;
+            color: #ffffff;
+            border-color: var(--border-hover);
+        }
+
+        .cat-btn.active {
+            background: #2d3342;
+            color: #ffffff;
+            border-color: #4b5563;
+            font-weight: 600;
+        }
+
+        .no-results-msg {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+            background: var(--bg-card);
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
+        }
+
+        /* Scam Cards Feed */
+        .cards-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .scam-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            gap: 20px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .scam-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .card-thumb-container {
+            position: relative;
+            width: 130px;
+            height: 120px;
+            border-radius: 10px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #0d0e12;
+        }
+
+        .card-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.85) contrast(1.1);
+        }
+
+        .category-tag {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(15, 17, 21, 0.85);
+            backdrop-filter: blur(4px);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-header-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .source-info, .date-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .meta-icon {
+            width: 14px;
+            height: 14px;
+            color: var(--text-muted);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .card-title a {
+            color: #f8fafc;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .card-title a:hover {
+            color: #38bdf8;
+        }
+
+        .card-summary {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        .card-footer-tags {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .footer-left-tags {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: #232630;
+            border: 1px solid #333846;
+            color: #e2e8f0;
+        }
+
+        .badge-critical {
+            background: var(--accent-red-bg);
+            border-color: rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+        }
+
+        .badge-high {
+            background: var(--accent-amber-bg);
+            border-color: rgba(245, 158, 11, 0.35);
+            color: #fde68a;
+        }
+
+        .pill-loss {
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+
+        .pill-location {
+            font-weight: 400;
+            color: #94a3b8;
+        }
+
+        .loc-icon {
+            width: 12px;
+            height: 12px;
+        }
+
+        .read-news-link {
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.15s;
+        }
+
+        .read-news-link:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .scam-card {
+                flex-direction: column;
+            }
+            .card-thumb-container {
+                width: 100%;
+                height: 140px;
+            }
+            .status-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .status-right {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="feed-container">
+        <!-- Header -->
+        <header class="feed-header">
+            <div class="header-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                </svg>
+            </div>
+            <div class="header-titles">
+                <div class="header-title-row">
+                    <h1>Live Cyber Scam Feed</h1>
+                    <span class="tavily-pill">(Powered By Tavily)</span>
+                </div>
+                <p class="header-subtitle">Real-time alerts and reports aggregated from national cybercrime warnings.</p>
+            </div>
+        </header>
+
+        <!-- Status / Sync Banner -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span class="badge-live">
+                    <span class="pulse-dot dot-white"></span>
+                    LIVE SCAM ALERTS
+                </span>
+                <span class="badge-count">14 Verified Reports</span>
+            </div>
+            <div class="status-right">
+                <div class="sync-active">
+                    <span class="pulse-dot dot-green"></span>
+                    Syncs every 24h automatically
+                </div>
+                <div class="sync-note">Daily intelligence sent to WhatsApp & Telegram bots</div>
+            </div>
+        </div>
+
+        <!-- Interactive Filter & Search Controls -->
+        <div class="filter-controls">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Search by keyword, location, or loss amount..." autocomplete="off">
+            </div>
+            <div class="category-tabs" id="categoryTabs">
+                <button class="cat-btn active" data-cat="ALL">All (14)</button>
+                <button class="cat-btn" data-cat="Digital Arrest">Digital Arrest</button>
+                <button class="cat-btn" data-cat="Apk Trojan">Apk Trojan</button>
+                <button class="cat-btn" data-cat="Deepfake Impersonation">Deepfake</button>
+                <button class="cat-btn" data-cat="Investment Fraud">Investment Fraud</button>
+            </div>
+        </div>
+
+        <!-- Feed Cards -->
+        <section class="cards-feed" id="cardsFeed">
+            
+        <article class="scam-card" data-category="Digital Arrest" data-severity="CRITICAL">
+            <div class="card-thumb-container">
+                <img src="https://images.indianexpress.com/2026/08/digtial-arrest-accused.jpg" alt="Digital Arrest" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Digital Arrest</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">The Indian Express</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-08-30</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://indianexpress.com/article/cities/delhi/how-scammers-used-jet-airways-case-trap-south-delhi-couple-10847140" target="_blank" rel="noopener noreferrer">‘Your account linked to Naresh Goyal’: How Jet Airways case was used to con Delhi couple | Delhi News - The Indian Express</a>
+                </h3>
+
+                <p class="card-summary">Coercive digital arrest scam isolating victims via video calls under guise of law enforcement probe.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-critical">
+                            <span class="pulse-dot dot-critical"></span>
+                            CRITICAL
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: ₹15.5 Lakh
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Maharashtra (Mumbai)
+                        </span>
+                    </div>
+                    <a href="https://indianexpress.com/article/cities/delhi/how-scammers-used-jet-airways-case-trap-south-delhi-couple-10847140" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Digital Arrest" data-severity="CRITICAL">
+            <div class="card-thumb-container">
+                <img src="https://static.toiimg.com/thumb/msid-133636346,width-1280,height-720,resizemode-6,overlay-toi_sw,pt-32,y_pad-600/photo.jpg" alt="Digital Arrest" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Digital Arrest</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">Times of India</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-08-31</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://timesofindia.indiatimes.com/city/goa/goa-cyber-fraud-money-was-converted-into-foreign-currency-ed-finds/articleshow/133636347.cms" target="_blank" rel="noopener noreferrer">Goa cyber fraud money was converted into foreign currency, ED finds</a>
+                </h3>
+
+                <p class="card-summary">Coercive digital arrest scam isolating victims via video calls under guise of law enforcement probe.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-critical">
+                            <span class="pulse-dot dot-critical"></span>
+                            CRITICAL
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: ₹584+ Crore Nationwide
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Pan-India
+                        </span>
+                    </div>
+                    <a href="https://timesofindia.indiatimes.com/city/goa/goa-cyber-fraud-money-was-converted-into-foreign-currency-ed-finds/articleshow/133636347.cms" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Investment Fraud" data-severity="CRITICAL">
+            <div class="card-thumb-container">
+                <img src="https://static.toiimg.com/thumb/msid-131728187,width-1280,height-720,resizemode-6,overlay-toi_sw,pt-32,y_pad-600/photo.jpg" alt="Investment Fraud" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Investment Fraud</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">Times of India</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-08-28</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://timesofindia.indiatimes.com/city/hyderabad/surgeon-duped-of-rs-2-3cr-in-stocks-trading-scam/articleshow/133598112.cms" target="_blank" rel="noopener noreferrer">Surgeon duped of Rs 2.3cr in stocks trading scam | Hyderabad News - The Times of India</a>
+                </h3>
+
+                <p class="card-summary">Multi-layered investment syndicate manipulating fake financial dashboards to steal funds.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-critical">
+                            <span class="pulse-dot dot-critical"></span>
+                            CRITICAL
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: ₹2.3 Crore
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Telangana (Hyderabad)
+                        </span>
+                    </div>
+                    <a href="https://timesofindia.indiatimes.com/city/hyderabad/surgeon-duped-of-rs-2-3cr-in-stocks-trading-scam/articleshow/133598112.cms" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Investment Fraud" data-severity="CRITICAL">
+            <div class="card-thumb-container">
+                <img src="https://static.toiimg.com/thumb/msid-133740956,width-1280,height-720,resizemode-6,overlay-toi_sw,pt-32,y_pad-600/photo.jpg" alt="Investment Fraud" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Investment Fraud</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">Times of India</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-09-03</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://timesofindia.indiatimes.com/city/jaipur/jaipur-police-arrest-two-more-in-rs-6-8-cr-whatsapp-boss-scam-case/articleshow/133740960.cms" target="_blank" rel="noopener noreferrer">Jaipur Police arrest two more in Rs 6.8 cr WhatsApp 'Boss Scam' case</a>
+                </h3>
+
+                <p class="card-summary">Multi-layered investment syndicate manipulating fake financial dashboards to steal funds.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-critical">
+                            <span class="pulse-dot dot-critical"></span>
+                            CRITICAL
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: ₹6.8 Crore
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Maharashtra (Mumbai)
+                        </span>
+                    </div>
+                    <a href="https://timesofindia.indiatimes.com/city/jaipur/jaipur-police-arrest-two-more-in-rs-6-8-cr-whatsapp-boss-scam-case/articleshow/133740960.cms" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Digital Arrest" data-severity="CRITICAL">
+            <div class="card-thumb-container">
+                <img src="https://images.indianexpress.com/2026/07/Income-Tax-Cyber-Crime.jpg" alt="Digital Arrest" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Digital Arrest</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">The Indian Express</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-08-28</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://indianexpress.com/article/cities/mumbai/thane-cybercrime-bank-account-details-fraud-friend-suicide-police-cases-10853449/" target="_blank" rel="noopener noreferrer">She gave her bank account details to ‘friend’. Kills self after multiple police cases - The Indian Express</a>
+                </h3>
+
+                <p class="card-summary">Coercive digital arrest scam isolating victims via video calls under guise of law enforcement probe.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-critical">
+                            <span class="pulse-dot dot-critical"></span>
+                            CRITICAL
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: ₹400+ Crore Nationwide
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Pan-India (NCR, Mumbai, ...)
+                        </span>
+                    </div>
+                    <a href="https://indianexpress.com/article/cities/mumbai/thane-cybercrime-bank-account-details-fraud-friend-suicide-police-cases-10853449/" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Digital Arrest" data-severity="CRITICAL">
+            <div class="card-thumb-container">
+                <img src="https://images.indianexpress.com/2026/08/cyber-crime-3.jpg" alt="Digital Arrest" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Digital Arrest</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">The Indian Express</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-08-30</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://indianexpress.com/article/cities/patna/five-trends-bihar-cybercrime-crisis-10855323" target="_blank" rel="noopener noreferrer">The five trends that explain Bihar’s cybercrime crisis</a>
+                </h3>
+
+                <p class="card-summary">Coercive digital arrest scam isolating victims via video calls under guise of law enforcement probe.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-critical">
+                            <span class="pulse-dot dot-critical"></span>
+                            CRITICAL
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: ₹299+ Crore Nationwide
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Pan-India
+                        </span>
+                    </div>
+                    <a href="https://indianexpress.com/article/cities/patna/five-trends-bihar-cybercrime-crisis-10855323" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Digital Arrest" data-severity="CRITICAL">
+            <div class="card-thumb-container">
+                <img src="https://static.toiimg.com/thumb/msid-133691350,width-1280,height-720,resizemode-6,overlay-toi_sw,pt-32,y_pad-600/photo.jpg" alt="Digital Arrest" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Digital Arrest</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">Times of India</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-09-02</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://timesofindia.indiatimes.com/city/surat/20-year-old-who-let-account-be-used-by-scammers-for-3-cut-held/articleshow/133718969.cms" target="_blank" rel="noopener noreferrer">20-year-old who let account be used by scammers for 3% cut held | Surat News - The Times of India</a>
+                </h3>
+
+                <p class="card-summary">Coercive digital arrest scam isolating victims via video calls under guise of law enforcement probe.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-critical">
+                            <span class="pulse-dot dot-critical"></span>
+                            CRITICAL
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: ₹1.97 Crore
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Pan-India
+                        </span>
+                    </div>
+                    <a href="https://timesofindia.indiatimes.com/city/surat/20-year-old-who-let-account-be-used-by-scammers-for-3-cut-held/articleshow/133718969.cms" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Deepfake Impersonation" data-severity="HIGH">
+            <div class="card-thumb-container">
+                <img src="https://static.toiimg.com/thumb/msid-133714902,width-1280,height-720,imgsize-28964,resizemode-6,overlay-toi_sw,pt-32,y_pad-600/photo.jpg" alt="Deepfake Impersonation" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Deepfake Impersonation</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">Times of India</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-09-02</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://timesofindia.indiatimes.com/videos/spotlight/reimagining-manufacturing-for-an-ai-first-future/videoshow/133714902.cms" target="_blank" rel="noopener noreferrer">Reimagining Manufacturing for an AI-First Future - The Times of India</a>
+                </h3>
+
+                <p class="card-summary">AI-generated synthetic voice and video impersonating high-profile figures for fraud.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-high">
+                            <span class="pulse-dot dot-high"></span>
+                            HIGH
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: Loss Under Investigation
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Delhi NCR
+                        </span>
+                    </div>
+                    <a href="https://timesofindia.indiatimes.com/videos/spotlight/reimagining-manufacturing-for-an-ai-first-future/videoshow/133714902.cms" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Cyber Fraud" data-severity="HIGH">
+            <div class="card-thumb-container">
+                <img src="https://static.toiimg.com/thumb/msid-133164449,width-1280,height-720,resizemode-6,overlay-toi_sw,pt-32,y_pad-600/photo.jpg" alt="Cyber Fraud" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Cyber Fraud</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">Times of India</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-09-02</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://timesofindia.indiatimes.com/city/surat/textile-businessman-loses-rs-6-31-lakh-in-apk-fraud/articleshow/133718939.cms" target="_blank" rel="noopener noreferrer">Textile businessman loses Rs 6.31 lakh in APK fraud | Surat News - The Times of India</a>
+                </h3>
+
+                <p class="card-summary">Surat: A 45-year-old textile businessman from Godadara lost Rs 6.31 lakh after downloading a fake mobile application, or APK file, for a purported bank KYC u....</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-high">
+                            <span class="pulse-dot dot-high"></span>
+                            HIGH
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: ₹6.31 Lakh
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Delhi NCR
+                        </span>
+                    </div>
+                    <a href="https://timesofindia.indiatimes.com/city/surat/textile-businessman-loses-rs-6-31-lakh-in-apk-fraud/articleshow/133718939.cms" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Apk Trojan" data-severity="HIGH">
+            <div class="card-thumb-container">
+                <img src="https://static.toiimg.com/thumb/msid-133738578,width-1280,height-720,resizemode-6,overlay-toi_sw,pt-32,y_pad-600/photo.jpg" alt="Apk Trojan" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Apk Trojan</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">Times of India</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-09-03</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://timesofindia.indiatimes.com/india/eam-jaishankar-meets-zelenskyy-in-kyiv-talks-focus-on-bilateral-cooperation-russia-ukraine-conflict/articleshow/133738318.cms" target="_blank" rel="noopener noreferrer">EAM Jaishankar meets Zelenskyy in Kyiv: Talks focus on bilateral cooperation, Russia-Ukraine conflict - The Times of India</a>
+                </h3>
+
+                <p class="card-summary">Malicious APK deployment disguised as utility app to siphon banking credentials.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-high">
+                            <span class="pulse-dot dot-high"></span>
+                            HIGH
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: Loss Under Investigation
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Maharashtra (Mumbai)
+                        </span>
+                    </div>
+                    <a href="https://timesofindia.indiatimes.com/india/eam-jaishankar-meets-zelenskyy-in-kyiv-talks-focus-on-bilateral-cooperation-russia-ukraine-conflict/articleshow/133738318.cms" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Investment Fraud" data-severity="MEDIUM">
+            <div class="card-thumb-container">
+                <img src="https://th-i.thgim.com/public/incoming/bnkd30/article71418384.ece/alternates/LANDSCAPE_1200/PTI08_05_2025_000172B.jpg" alt="Investment Fraud" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Investment Fraud</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">The Hindu & PTI</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-09-02</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://www.thehindu.com/news/national/ed-raids-payment-companies-cas-in-online-betting-case/article71418317.ece" target="_blank" rel="noopener noreferrer">ED raids payment companies, CAs in online betting case - The Hindu</a>
+                </h3>
+
+                <p class="card-summary">Multi-layered investment syndicate manipulating fake financial dashboards to steal funds.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-high">
+                            <span class="pulse-dot dot-high"></span>
+                            MEDIUM
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: Loss Under Investigation
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Maharashtra (Mumbai)
+                        </span>
+                    </div>
+                    <a href="https://www.thehindu.com/news/national/ed-raids-payment-companies-cas-in-online-betting-case/article71418317.ece" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Digital Arrest" data-severity="MEDIUM">
+            <div class="card-thumb-container">
+                <img src="https://static.toiimg.com/thumb/msid-133696606,width-1280,height-720,resizemode-6,overlay-toi_sw,pt-32,y_pad-600/photo.jpg" alt="Digital Arrest" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Digital Arrest</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">Times of India</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-09-02</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://timesofindia.indiatimes.com/city/indore/video-of-self-styled-aghori-eating-flesh-from-burning-pyre-goes-viral-held/articleshow/133696495.cms" target="_blank" rel="noopener noreferrer">Video of self-styled 'Aghori' eating flesh from burning pyre goes viral, held - timesofindia.indiatimes.com</a>
+                </h3>
+
+                <p class="card-summary">Coercive digital arrest scam isolating victims via video calls under guise of law enforcement probe.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-high">
+                            <span class="pulse-dot dot-high"></span>
+                            MEDIUM
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: Loss Under Investigation
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Delhi NCR
+                        </span>
+                    </div>
+                    <a href="https://timesofindia.indiatimes.com/city/indore/video-of-self-styled-aghori-eating-flesh-from-burning-pyre-goes-viral-held/articleshow/133696495.cms" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Digital Arrest" data-severity="MEDIUM">
+            <div class="card-thumb-container">
+                <img src="https://static.toiimg.com/thumb/msid-133725395,width-1280,height-720,resizemode-6,overlay-toi_sw,pt-32,y_pad-600/photo.jpg" alt="Digital Arrest" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Digital Arrest</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">Times of India</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-09-03</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://timesofindia.indiatimes.com/world/us/after-his-wife-of-43-years-died-a-new-york-widower-looked-for-companionship-online-the-woman-he-met-was-fake-and-took-800000-from-his-retirement-savings/articleshow/133725203.cms" target="_blank" rel="noopener noreferrer">After his wife of 43 years died, a New York widower looked for companionship online; the woman he met was - The Times of India</a>
+                </h3>
+
+                <p class="card-summary">Coercive digital arrest scam isolating victims via video calls under guise of law enforcement probe.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-high">
+                            <span class="pulse-dot dot-high"></span>
+                            MEDIUM
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: Loss Under Investigation
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Delhi NCR
+                        </span>
+                    </div>
+                    <a href="https://timesofindia.indiatimes.com/world/us/after-his-wife-of-43-years-died-a-new-york-widower-looked-for-companionship-online-the-woman-he-met-was-fake-and-took-800000-from-his-retirement-savings/articleshow/133725203.cms" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+
+        <article class="scam-card" data-category="Investment Fraud" data-severity="MEDIUM">
+            <div class="card-thumb-container">
+                <img src="https://th-i.thgim.com/public/incoming/kgg8oc/article71424452.ece/alternates/LANDSCAPE_1200/iStock-2155473878.jpg" alt="Investment Fraud" class="card-thumb" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80'" />
+                <span class="category-tag">Investment Fraud</span>
+            </div>
+            <div class="card-content">
+                <div class="card-header-meta">
+                    <div class="source-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="source-name">The Hindu & PTI</span>
+                    </div>
+                    <div class="date-info">
+                        <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke_width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>2026-09-03</span>
+                    </div>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="https://www.thehindu.com/news/national/uttarakhand/cyberfraud-networks-busted-in-uttarakhand/article71423894.ece" target="_blank" rel="noopener noreferrer">Cyberfraud networks busted in Uttarakhand - The Hindu</a>
+                </h3>
+
+                <p class="card-summary">Multi-layered investment syndicate manipulating fake financial dashboards to steal funds.</p>
+
+                <div class="card-footer-tags">
+                    <div class="footer-left-tags">
+                        <span class="pill-badge badge-high">
+                            <span class="pulse-dot dot-high"></span>
+                            MEDIUM
+                        </span>
+                        <span class="pill-badge pill-loss">
+                            Loss: Loss Under Investigation
+                        </span>
+                        <span class="pill-badge pill-location">
+                            <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Delhi NCR
+                        </span>
+                    </div>
+                    <a href="https://www.thehindu.com/news/national/uttarakhand/cyberfraud-networks-busted-in-uttarakhand/article71423894.ece" target="_blank" rel="noopener noreferrer" class="read-news-link">
+                        Read News ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+        
+        </section>
+        
+        <div id="noResultsMsg" class="no-results-msg" style="display: none;">
+            <p>No cyber scam alerts matching your filter criteria.</p>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const searchInput = document.getElementById('searchInput');
+            const catButtons = document.querySelectorAll('.cat-btn');
+            const cards = document.querySelectorAll('.scam-card');
+            const noResults = document.getElementById('noResultsMsg');
+            let currentCat = 'ALL';
+
+            function filterCards() {
+                const query = searchInput.value.toLowerCase().trim();
+                let visibleCount = 0;
+
+                cards.forEach(card => {
+                    const cardCat = card.getAttribute('data-category') || '';
+                    const text = card.innerText.toLowerCase();
+
+                    const matchesCat = (currentCat === 'ALL' || cardCat.toLowerCase() === currentCat.toLowerCase());
+                    const matchesQuery = (!query || text.includes(query));
+
+                    if (matchesCat && matchesQuery) {
+                        card.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (noResults) {
+                    noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
+            }
+
+            catButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    catButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentCat = btn.getAttribute('data-cat');
+                    filterCards();
+                });
+            });
+
+            if (searchInput) {
+                searchInput.addEventListener('input', filterCards);
+            }
+        })();
+    </script>
+</body>
+</html>

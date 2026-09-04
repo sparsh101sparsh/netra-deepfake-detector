@@ -143,9 +143,14 @@ def purge_synthetic_test_data() -> Dict[str, int]:
 def init_db():
     db_path = os.getenv("NETRA_DB_PATH", DB_PATH)
     conn = sqlite3.connect(db_path, timeout=30.0)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL;")
-    conn.execute("PRAGMA busy_timeout=30000;")
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+    except Exception as e:
+        logger.warning(f"Could not set WAL journal mode: {e}")
+    try:
+        conn.execute("PRAGMA busy_timeout=30000;")
+    except Exception:
+        pass
     cursor = conn.cursor()
     
     # 1. API Keys Table

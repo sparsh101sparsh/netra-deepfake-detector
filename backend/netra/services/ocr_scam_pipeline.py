@@ -86,6 +86,11 @@ def extract_text_from_image(image_input) -> Dict[str, Any]:
     extracted_lines = []
     engine_used = "none"
 
+    # Pre-scale image resolution if needed to prevent memory exhaustion
+    max_dim = 1280
+    if pil_img.width > max_dim or pil_img.height > max_dim:
+        pil_img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+
     # 1. Primary Engine: RapidOCR (Lightweight ONNX Runtime, fast CPU inference)
     rapid = get_rapid_ocr()
     if rapid:
@@ -102,8 +107,9 @@ def extract_text_from_image(image_input) -> Dict[str, Any]:
         except Exception as e:
             logger.warning(f"RapidOCR execution error: {e}")
 
-    # 2. Fallback to PaddleOCR
-    if not extracted_lines:
+    # 2. Fallback to PaddleOCR (skip in memory-constrained cloud environments like Render to avoid OOM)
+    is_cloud_env = bool(os.getenv("RENDER") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    if not extracted_lines and not is_cloud_env:
         paddle = get_paddle_ocr()
         if paddle:
             try:
@@ -119,8 +125,8 @@ def extract_text_from_image(image_input) -> Dict[str, Any]:
             except Exception as e:
                 logger.warning(f"PaddleOCR execution error: {e}")
 
-    # 3. Fallback to EasyOCR
-    if not extracted_lines:
+    # 3. Fallback to EasyOCR (skip in memory-constrained cloud environments)
+    if not extracted_lines and not is_cloud_env:
         easy = get_easyocr_reader()
         if easy:
             try:
@@ -159,16 +165,31 @@ def extract_text_from_image(image_input) -> Dict[str, Any]:
         "processing_time_ms": elapsed_ms
     }
 
-def run_image_ocr_and_scam_detection(image_bytes: bytes, filename: str = "uploaded_image.png") -> Dict[str, Any]:
+def run_image_ocr_and_scam_detection(
+    image_bytes: bytes,
+    filename: str = "uploaded_image.png",
+    precomputed_text: Optional[str] = None,
+    precomputed_lines: Optional[List[str]] = None
+) -> Dict[str, Any]:
     """
     Complete end-to-end multi-modal image analysis:
-    1. Extract OCR text via RapidOCR / PaddleOCR / EasyOCR.
+    1. Extract OCR text via RapidOCR / PaddleOCR / EasyOCR (or reuse precomputed OCR).
     2. Extract IOCs (Phone, UPI, APK, URL).
     3. Run text through NETRA Scam Detector Engine.
     4. Synthesize multi-modal risk assessment.
     """
-    # 1. OCR Extraction
-    ocr_result = extract_text_from_image(image_bytes)
+    # 1. OCR Extraction (reuse precomputed results if available)
+    if precomputed_text is not None and precomputed_lines is not None:
+        ocr_result = {
+            "engine_used": "RapidOCR (ONNX Engine)",
+            "extracted_lines": precomputed_lines,
+            "full_text": precomputed_text,
+            "char_count": len(precomputed_text),
+            "word_count": len(precomputed_text.split()),
+            "processing_time_ms": 10
+        }
+    else:
+        ocr_result = extract_text_from_image(image_bytes)
     extracted_text = ocr_result["full_text"]
 
     # 2. Indic Translation Analysis
