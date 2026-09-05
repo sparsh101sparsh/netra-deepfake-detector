@@ -307,10 +307,10 @@ export function DropZone({
                   <span className="text-[11px] text-accent flex items-center gap-1 font-medium">
                     <RefreshCw className="w-3 h-3 animate-spin" />
                     {modality === "video"
-                      ? "NETRA AI is scanning video frames for deepfakes..."
+                      ? "Scanning video frames for deepfakes (RetinaFace + GenD)..."
                       : modality === "image"
-                      ? "NETRA AI is analyzing image & text..."
-                      : "NETRA AI is analyzing voice recording..."}
+                      ? "Analyzing visual seams & document text (RapidOCR + NPR)..."
+                      : "Analyzing speech biometrics for voice clones (Wav2Vec 2.0)..."}
                   </span>
                 </div>
               </div>

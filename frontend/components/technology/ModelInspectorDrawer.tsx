@@ -68,7 +68,7 @@ async def ingest_media(file: UploadFile = File(...)):
 
   queue_ffmpeg: {
     id: "queue_ffmpeg",
-    name: "NETRA Stream Processing & Queue Engine",
+    name: "Stream Processing & Queue Engine (FFmpeg Demux)",
     category: "Queue & Video Demux",
     tag: "Demux / Resampling",
     hue: "#06b6d4",
@@ -109,7 +109,7 @@ async def ingest_media(file: UploadFile = File(...)):
 
   audio_demux: {
     id: "audio_demux",
-    name: "NETRA Acoustic Voice Splitter",
+    name: "Acoustic Voice Demuxer (FFmpeg/PyAudio)",
     category: "Acoustic Stream Processing",
     tag: "16kHz Linear PCM",
     hue: "#10b981",
@@ -124,9 +124,9 @@ async def ingest_media(file: UploadFile = File(...)):
     aucRoc: "Lossless Resampling",
     description: "Decouples and isolates the acoustic stream from multimedia containers. Converts multi-channel compressed audio formats (AAC from MP4, Opus from WhatsApp voice notes, AMR from telecom recordings) into a standardized single-channel 16kHz linear PCM waveform required by Wav2Vec 2.0 and Librosa DSP spectral analysis.",
     architectureBreakdown: [
-      "Demuxes audio streams from MP4/MOV/WebM/OGG container atoms",
-      "Normalizes sample rate to 16,000 Hz using high-quality polyphase Sinc resampling",
-      "Downmixes stereo/5.1 surround tracks to mono 16-bit signed integer PCM",
+      "Software resampling pipeline ensuring uniform 16kHz sampling rate across all codecs",
+      "Downmixes stereo, 5.1 surround, and ambisonic audio channels to standardized mono track",
+      "Performs volume normalization avoiding spectral clipping before feature extraction",
       "Verifies audio track integrity and handles corrupted packet fallbacks"
     ],
     failureModes: [
@@ -145,7 +145,7 @@ async def ingest_media(file: UploadFile = File(...)):
 
   insightface: {
     id: "insightface",
-    name: "NETRA Face Landmark Tracker (RetinaFace)",
+    name: "RetinaFace 3D Landmark Aligner",
     category: "Facial Landmark Localization",
     tag: "3D Landmark Alignment",
     hue: "#0ea5e9",
@@ -186,11 +186,11 @@ def extract_aligned_faces(frame_rgb):
 
   efficientnet_sbi: {
     id: "efficientnet_sbi",
-    name: "NETRA Spatial Seam Scanner (EfficientNet + SBI)",
+    name: "Spatial Seam Detector (NPR ResNet-50)",
     category: "Spatial Deepfake Detection",
     tag: "Primary Visual Specialist",
     hue: "#f43f5e",
-    parameters: "19.3M Parameters (EfficientNet-B4)",
+    parameters: "19.3M Parameters (NPR / ResNet-50)",
     latency: "14 ms / batch (16 faces)",
     hardware: "NVIDIA T4 Tensor Core (FP16 Optimized)",
     inputShape: "Batch Aligned Faces: [B, 3, 224, 224] RGB (Normalized)",
@@ -199,12 +199,12 @@ def extract_aligned_faces(frame_rgb):
     trainingDataset: "Synthetic Blending Images (SBI) + FaceForensics++ (c23/c40) + DFDC",
     f1Score: "96.8% (FF++ Cross-Dataset)",
     aucRoc: "98.4% (Generalization AUC)",
-    description: "The core visual detection engine of NETRA. Trained using the Synthetic Blending Images (SBI) methodology where synthetic manipulation artifacts (blending seams, frequency mismatch, color temperature gradients, and landmark boundary anomalies) are self-supervised without overfitting to specific GAN or diffusion generators.",
+    description: "The core spatial boundary detection engine. Trained using the Synthetic Blending Images (SBI) and NPR lattice methodologies where synthetic manipulation artifacts (blending seams, frequency mismatch, color temperature gradients, and landmark boundary anomalies) are detected without overfitting to specific GAN or diffusion generators.",
     architectureBreakdown: [
-      "Compound scaling across depth (d=1.8), width (w=1.4), and resolution (r=1.5)",
-      "Mobile Inverted Bottleneck Convolution (MBConv) blocks with Squeeze-and-Excitation (SE)",
+      "Compound scaling across depth, width, and resolution",
+      "Residual bottleneck blocks with high-pass spatial lattice filters",
       "Swish activation function capturing subtle high-frequency spatial gradients",
-      "Global Average Pooling (1792-dim) -> Dropout(p=0.4) -> Linear Binary Classifier",
+      "Global Average Pooling -> Dropout(p=0.4) -> Linear Binary Classifier",
       "Evaluates artifact seams at the boundary of the swapped facial mask"
     ],
     failureModes: [
@@ -228,7 +228,7 @@ def extract_aligned_faces(frame_rgb):
 
   clip_probe: {
     id: "clip_probe",
-    name: "NETRA Generative AI Scanner (CLIP ViT Probe)",
+    name: "Generative Artifact Detector (GenD ViT-L)",
     category: "Foundation Semantic Vision",
     tag: "Generative AI Detector",
     hue: "#a855f7",
@@ -275,7 +275,7 @@ def extract_aligned_faces(frame_rgb):
 
   wav2vec: {
     id: "wav2vec",
-    name: "NETRA Voice Clone Detector (Wav2Vec + DSP)",
+    name: "Voice Clone Detector (Wav2Vec 2.0)",
     category: "Acoustic & Voice Clone Detection",
     tag: "Neural Audio Specialist",
     hue: "#10b981",
@@ -315,7 +315,7 @@ def extract_aligned_faces(frame_rgb):
 
   aux_engine: {
     id: "aux_engine",
-    name: "NETRA Metadata & Jitter Verifier",
+    name: "Container & EXIF Metadata Inspector",
     category: "Metadata & Temporal Forensics",
     tag: "Container & Temporal Jitter",
     hue: "#64748b",
@@ -358,11 +358,11 @@ def extract_aligned_faces(frame_rgb):
 
   scam_nlp: {
     id: "scam_nlp",
-    name: "NETRA Cyber Scam Classifier (OCR + NLP)",
+    name: "Cyber Scam & Threat Classifier (RapidOCR + Threat Engine)",
     category: "NLP & Cyber Scam Intelligence",
     tag: "Scam & Threat Classifier",
     hue: "#eab308",
-    parameters: "Tesseract OCR + Whisper Base (74M) + Random Forest (100 Trees)",
+    parameters: "RapidOCR + Whisper Base (74M) + Threat Classifier",
     latency: "180 ms",
     hardware: "EC2 g4dn.xlarge (CPU + GPU)",
     inputShape: "Video Frames (OCR) + Audio Stream (Whisper) + Raw Text Message",
@@ -371,9 +371,9 @@ def extract_aligned_faces(frame_rgb):
     trainingDataset: "14,500 Multi-Vector Cyber Fraud & Impersonation Cases (2023-2026)",
     f1Score: "97.4%",
     aucRoc: "98.8%",
-    description: "Specialized threat text analysis engine trained on advanced fraud typologies (Digital Impersonation by fake authorities, Stock market pump-and-dump deepfakes, Bank KYC video spoofing, Virtual kidnapping). Extracts text from both visual video overlays (Tesseract) and spoken speech (Whisper STT) before applying TF-IDF and Random Forest classification.",
+    description: "Specialized threat text analysis engine trained on advanced fraud typologies (Digital Impersonation by fake authorities, Stock market pump-and-dump deepfakes, Bank KYC video spoofing, Virtual kidnapping). Extracts text from both visual video overlays (RapidOCR) and spoken speech (Whisper STT) before applying IOC cross-matching and threat pattern classification.",
     architectureBreakdown: [
-      "Tesseract OCR engine scanning onscreen warning banners, bank logos, and extortion phone numbers",
+      "RapidOCR engine scanning onscreen warning banners, bank logos, and extortion phone numbers",
       "OpenAI Whisper Base model transcribing bilingual Hindi/English/Hinglish speech",
       "TF-IDF Vectorizer with 5,000 sub-word n-grams optimized for legal and threat terminology",
       "100-Tree Random Forest Classifier trained on authenticated threat case transcripts",
@@ -396,7 +396,7 @@ def extract_aligned_faces(frame_rgb):
 
   gated_fusion: {
     id: "gated_fusion",
-    name: "NETRA Multi-Modal Fusion Engine",
+    name: "Adaptive Multi-Modal Fusion Engine",
     category: "Mathematical Ensemble",
     tag: "Dynamic Weight Allocation",
     hue: "#f97316",
@@ -409,7 +409,7 @@ def extract_aligned_faces(frame_rgb):
     trainingDataset: "Empirical Multi-Modal Benchmark Calibration Set",
     f1Score: "98.2%",
     aucRoc: "99.1%",
-    description: "The supreme decision arbitrator of NETRA. Rather than relying on any single fragile detector, Gated Fusion balances visual boundary signals, semantic transformer tokens, and acoustic intonation anomalies with dynamic weights conditioned on modality presence.",
+    description: "The central decision arbitrator. Rather than relying on any single fragile detector, Gated Fusion balances visual boundary signals, semantic transformer tokens, and acoustic intonation anomalies with dynamic weights conditioned on modality presence.",
     architectureBreakdown: [
       "Dynamic Condition: If audio stream is present: P_final = 0.50 * P_visual + 0.35 * P_audio + 0.15 * P_clip + Delta_aux",
       "Dynamic Condition: If audio stream is absent: P_final = 0.75 * P_visual + 0.25 * P_clip + Delta_aux",
@@ -436,25 +436,25 @@ def extract_aligned_faces(frame_rgb):
 
   evidence_pack: {
     id: "evidence_pack",
-    name: "NETRA Verified Evidence Bundle",
+    name: "Cryptographic Evidence Packager",
     category: "Telemetry Aggregation",
     tag: "Privacy-Preserving Telemetry",
     hue: "#3b82f6",
     parameters: "Pydantic v2 Schema Validator",
     latency: "< 5 ms",
     hardware: "CPU Execution",
-    inputShape: "Aggregated results from all 6 ML Specialist workers",
+    inputShape: "Aggregated results from all specialist detectors",
     outputFormat: "Structured Evidence JSON Bundle (Forensically Verified)",
     lossFunction: "N/A",
     trainingDataset: "N/A",
     f1Score: "100% Schema Valid",
-    aucRoc: "Deterministic",
-    description: "Core architectural firewall implementing NETRA's primary design principle: 'Detectors Detect, Forensic Engine Verifies'. Compiles an exact mathematical telemetry bundle with timestamped frame anomalies, bounding boxes, and confidence margins with zero external LLM dependencies.",
+    aucRoc: "Deterministic Validation",
+    description: "Sanitizes, validates, and serializes intermediate signals from every specialist detector into a verifiable evidence telemetry bundle before dossier generation.",
     architectureBreakdown: [
-      "Strict Pydantic v2 schema validation enforcing court-admissible formatting",
-      "Timestamped anomaly logging (e.g. Frame 14 at 00:03s flagged with SBI_SEAM_CONFIRMED)",
-      "Zero-pixel privacy architecture: Media content never leaves private AWS VPC",
-      "Computes tamper-evident digest of telemetry bundle for evidence verification"
+      "Strips raw image and audio bytes to guarantee user privacy under the DPDP Act 2023",
+      "Calculates cryptographic SHA-256 digests of input media for legal non-repudiation",
+      "Extracts bounded temporal timestamps for every flagged keyframe anomaly",
+      "Constructs standard JSON schema consumed by court-admissible forensic report generators"
     ],
     failureModes: [
       "Schema mismatches from model version updates are rejected immediately before dossier generation"
@@ -476,7 +476,7 @@ def extract_aligned_faces(frame_rgb):
 
   forensic_dossier: {
     id: "forensic_dossier",
-    name: "NETRA Deterministic Forensic Report Engine",
+    name: "Forensic Dossier Synthesizer",
     category: "Forensic Evidence Synthesis",
     tag: "Forensic Dossier Synthesis",
     hue: "#ec4899",
@@ -522,7 +522,7 @@ def extract_aligned_faces(frame_rgb):
 
   verdict_delivery: {
     id: "verdict_delivery",
-    name: "Verdict Delivery, Radar Telemetry & PDF Dossier",
+    name: "National Threat Radar & Incident Dispatch",
     category: "Output & Real-Time Telemetry",
     tag: "Omnichannel Delivery",
     hue: "#14b8a6",
