@@ -999,33 +999,6 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
               </div>
             </div>
 
-            {/* Tavily Match for Audio Impersonation */}
-            {audioResult.tavily_threat_intel?.verified_threat && (
-              <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5" />
-                    Tavily Live Voice Clone News Advisories
-                  </span>
-                </div>
-                <div className="space-y-1.5">
-                  {audioResult.tavily_threat_intel.articles?.slice(0, 2).map((art, idx) => (
-                    <a
-                      key={idx}
-                      href={art.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block p-2 rounded-lg bg-surface/80 border border-line hover:border-amber-500/40 transition-colors"
-                    >
-                      <div className="text-xs font-semibold text-zinc-200 flex items-center justify-between">
-                        <span>{art.title}</span>
-                        <ExternalLink className="w-3 h-3 text-zinc-400" />
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Action Buttons */}
             <div className="flex items-center justify-between pt-2 border-t border-line">
