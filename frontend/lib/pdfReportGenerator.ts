@@ -562,7 +562,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
   doc.text("Inspection Pipeline:", 18, y + 39);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.text("GenD ViT-L Foundation + Spatial SBI + Acoustic Multi-Detector Engine", 58, y + 39);
+  doc.text("NETRA Multi-Modal Detection Engine (Spatial + Generative + Acoustic)", 58, y + 39);
 
   y += 48;
 
@@ -764,9 +764,9 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
 
     const audioScorecard = [
       {
-        name: "Wav2Vec2 Foundation Model (XLSR-53)",
+        name: "NETRA Voice Clone Detector (Acoustic DSP)",
         score: `${Math.round(wavScore <= 1 ? wavScore * 100 : wavScore)}%`,
-        desc: "Latent acoustic self-supervised feature alignment",
+        desc: "Latent acoustic feature alignment & vocoder inspection",
       },
       {
         name: "Acoustic Spectral DSP Forensics",
@@ -1298,24 +1298,24 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
 
     const scoreRows = [
       {
-        name: "GenD Foundation Model (ViT-L/14)",
+        name: "NETRA Generative AI Scanner",
         score: data.scores?.gendScore,
         desc: "Generative latent diffusion artifact detection",
       },
       {
-        name: "Spatial SBI Detector (EfficientNet-B4)",
+        name: "NETRA Spatial Seam Scanner",
         score: data.scores?.visualScore,
-        desc: "Self-blended boundary & facial artifact forensics",
+        desc: "Facial boundary blending & pixel-level alteration forensics",
       },
       {
-        name: "Audio Deepfake Forensics (Wav2Vec2)",
+        name: "NETRA Voice Clone Detector",
         score: data.scores?.audioScore,
-        desc: "Vocoder artifacts & voice cloning fingerprint",
+        desc: "Vocoder artifacts & voice cloning acoustic fingerprints",
       },
       {
-        name: "Auxiliary Spectral Forensics (2D-DCT)",
+        name: "NETRA Auxiliary Spectral Forensics",
         score: null,
-        desc: "High-frequency boundary continuity (Verified Clean)",
+        desc: "High-frequency boundary continuity & metadata (Clean)",
       },
     ];
 
@@ -1430,7 +1430,7 @@ export async function generateForensicPDF(data: PDFReportData): Promise<jsPDF> {
         const subsystem =
           snap.detector_subsystem ||
           snap.detectorSubsystem ||
-          "GenD Foundation Model ViT-L/14 + Spatial SBI";
+          "NETRA Spatial Seam Scanner + Generative Scanner";
         doc.text(`• Detector Subsystem: ${subsystem}`, textX, y + 27);
         doc.text(
           `• Forensic Finding: Discontinuity in specular reflection & latent boundary.`,

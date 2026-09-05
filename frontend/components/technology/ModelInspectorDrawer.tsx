@@ -68,7 +68,7 @@ async def ingest_media(file: UploadFile = File(...)):
 
   queue_ffmpeg: {
     id: "queue_ffmpeg",
-    name: "Amazon SQS & FFmpeg Preprocessing Engine",
+    name: "NETRA Stream Processing & Queue Engine",
     category: "Queue & Video Demux",
     tag: "Demux / Resampling",
     hue: "#06b6d4",
@@ -109,7 +109,7 @@ async def ingest_media(file: UploadFile = File(...)):
 
   audio_demux: {
     id: "audio_demux",
-    name: "16kHz Mono Audio Resampler & Demuxer",
+    name: "NETRA Acoustic Voice Splitter",
     category: "Acoustic Stream Processing",
     tag: "16kHz Linear PCM",
     hue: "#10b981",
@@ -145,7 +145,7 @@ async def ingest_media(file: UploadFile = File(...)):
 
   insightface: {
     id: "insightface",
-    name: "InsightFace (RetinaFace-ResNet50)",
+    name: "NETRA Face Landmark Tracker (RetinaFace)",
     category: "Facial Landmark Localization",
     tag: "3D Landmark Alignment",
     hue: "#0ea5e9",
@@ -186,7 +186,7 @@ def extract_aligned_faces(frame_rgb):
 
   efficientnet_sbi: {
     id: "efficientnet_sbi",
-    name: "EfficientNet-B4 + Synthetic Blending Images (SBI)",
+    name: "NETRA Spatial Seam Scanner (EfficientNet + SBI)",
     category: "Spatial Deepfake Detection",
     tag: "Primary Visual Specialist",
     hue: "#f43f5e",
@@ -228,7 +228,7 @@ def extract_aligned_faces(frame_rgb):
 
   clip_probe: {
     id: "clip_probe",
-    name: "OpenAI CLIP ViT-L/14 + 3-Layer Neural Probe",
+    name: "NETRA Generative AI Scanner (CLIP ViT Probe)",
     category: "Foundation Semantic Vision",
     tag: "Generative AI Detector",
     hue: "#a855f7",
@@ -275,7 +275,7 @@ def extract_aligned_faces(frame_rgb):
 
   wav2vec: {
     id: "wav2vec",
-    name: "Wav2Vec 2.0 (MelodyMachine Deepfake-V2) + Librosa DSP",
+    name: "NETRA Voice Clone Detector (Wav2Vec + DSP)",
     category: "Acoustic & Voice Clone Detection",
     tag: "Neural Audio Specialist",
     hue: "#10b981",
@@ -315,7 +315,7 @@ def extract_aligned_faces(frame_rgb):
 
   aux_engine: {
     id: "aux_engine",
-    name: "Auxiliary Signal, Container & Jitter Engine",
+    name: "NETRA Metadata & Jitter Verifier",
     category: "Metadata & Temporal Forensics",
     tag: "Container & Temporal Jitter",
     hue: "#64748b",
@@ -358,7 +358,7 @@ def extract_aligned_faces(frame_rgb):
 
   scam_nlp: {
     id: "scam_nlp",
-    name: "Scam NLP & OCR Multi-Modal Threat Classifier",
+    name: "NETRA Cyber Scam Classifier (OCR + NLP)",
     category: "NLP & Cyber Scam Intelligence",
     tag: "Scam & Threat Classifier",
     hue: "#eab308",
@@ -396,7 +396,7 @@ def extract_aligned_faces(frame_rgb):
 
   gated_fusion: {
     id: "gated_fusion",
-    name: "Mathematical Gated Fusion & Scoring Engine",
+    name: "NETRA Multi-Modal Fusion Engine",
     category: "Mathematical Ensemble",
     tag: "Dynamic Weight Allocation",
     hue: "#f97316",
@@ -436,7 +436,7 @@ def extract_aligned_faces(frame_rgb):
 
   evidence_pack: {
     id: "evidence_pack",
-    name: "Zero-Pixel Structured Evidence Pack Assembler",
+    name: "NETRA Verified Evidence Bundle",
     category: "Telemetry Aggregation",
     tag: "Privacy-Preserving Telemetry",
     hue: "#3b82f6",

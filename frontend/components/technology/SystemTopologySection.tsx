@@ -3,7 +3,7 @@
 import React from "react";
 import { 
   Server, Shield, Cpu, Cloud, Database, Lock, 
-  Terminal, ArrowRight, CheckCircle2, Zap, Radio, Layers
+  Terminal, ArrowRight, CheckCircle2, Zap, Radio, Layers, Sparkles
 } from "lucide-react";
 
 export const SystemTopologySection: React.FC = () => {
@@ -29,7 +29,7 @@ export const SystemTopologySection: React.FC = () => {
               1. Detectors Detect
             </h3>
             <p className="text-xs text-ink-2 font-sans leading-relaxed">
-              Never rely on ungrounded generative AI to inspect raw video pixels or audio waveforms. Isolated ML specialist models (EfficientNet-B4, Wav2Vec2, CLIP) independently evaluate physical, spectral, and semantic manipulation vectors.
+              Never rely on ungrounded generative AI to inspect raw video pixels or audio waveforms. Isolated ML specialist models (NETRA Spatial Scanner, NETRA Voice Clone Detector, NETRA Generative Scanner) independently evaluate physical, spectral, and semantic manipulation vectors.
             </p>
             <div className="text-[10px] font-mono text-accent pt-2 border-t border-line">
               Hard Evidence Formulation
@@ -45,7 +45,7 @@ export const SystemTopologySection: React.FC = () => {
               2. Zero-Pixel Evidence Synthesis
             </h3>
             <p className="text-xs text-ink-2 font-sans leading-relaxed">
-              Deterministic forensic engine consumes strictly validated Pydantic JSON evidence packs containing timestamps, bounding boxes, and confidence margins. Media pixels never leave the private AWS VPC, preventing data leakage.
+              Video media never leaves the private environment. Detectors extract mathematical evidence bundles (facial coordinates, anomaly bounding boxes, frequency scores) and hand off structured telemetry directly to the report compiler.
             </p>
             <div className="text-[10px] font-mono text-purple-400 pt-2 border-t border-line">
               Privacy-Preserving Telemetry
@@ -55,7 +55,7 @@ export const SystemTopologySection: React.FC = () => {
           {/* Axiom 3 */}
           <div className="p-6 rounded-2xl bg-surface border border-line shadow-card space-y-3 relative group hover:border-line-strong transition-all">
             <div className="size-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <Cloud size={20} />
+              <Sparkles size={20} />
             </div>
             <h3 className="text-base font-bold text-ink flex items-center gap-1.5">
               3. AWS Decoupled Queues
@@ -86,16 +86,16 @@ export const SystemTopologySection: React.FC = () => {
 
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
-            { step: "01", name: "S3 Stream Download", pct: "5%", time: "80ms" },
-            { step: "02", name: "FFmpeg 1 FPS Demux", pct: "15%", time: "320ms" },
-            { step: "03", name: "InsightFace 3D Align", pct: "30%", time: "220ms" },
-            { step: "04", name: "EfficientNet SBI", pct: "45%", time: "180ms" },
-            { step: "05", name: "CLIP ViT-L/14 Probe", pct: "55%", time: "260ms" },
-            { step: "06", name: "Wav2Vec2 Voice DSP", pct: "68%", time: "140ms" },
-            { step: "07", name: "Auxiliary EXIF & Jitter", pct: "78%", time: "30ms" },
-            { step: "08", name: "Gated Fusion Arbitrator", pct: "85%", time: "5ms" },
-            { step: "09", name: "Forensic Evidence Dossier", pct: "95%", time: "20ms" },
-            { step: "10", name: "DynamoDB & SQS ACK", pct: "100%", time: "40ms" },
+            { step: "01", name: "Cloud Stream Ingest", pct: "5%", time: "80ms" },
+            { step: "02", name: "Frame & Voice Demux", pct: "15%", time: "320ms" },
+            { step: "03", name: "NETRA Face Alignment", pct: "30%", time: "220ms" },
+            { step: "04", name: "NETRA Spatial Scanner", pct: "45%", time: "180ms" },
+            { step: "05", name: "NETRA Generative Probe", pct: "55%", time: "260ms" },
+            { step: "06", name: "NETRA Voice Clone DSP", pct: "68%", time: "140ms" },
+            { step: "07", name: "Metadata & Jitter Verify", pct: "78%", time: "30ms" },
+            { step: "08", name: "Multi-Modal Fusion", pct: "85%", time: "5ms" },
+            { step: "09", name: "Forensic Report Dossier", pct: "95%", time: "20ms" },
+            { step: "10", name: "Threat Radar & Delivery", pct: "100%", time: "40ms" },
           ].map((item) => (
             <div key={item.step} className="p-3 rounded-xl bg-inset border border-line text-left space-y-1">
               <div className="flex items-center justify-between text-[10px] font-mono">
@@ -177,15 +177,15 @@ export const SystemTopologySection: React.FC = () => {
                 Multi-Model Vision & Boundary Telemetry
               </span>
               <span>
-                GenD ViT-L/14 Foundation Model paired with EfficientNet-B4 Spatial Blending Seam Analysis.
+                NETRA Generative Scanner paired with NETRA Spatial Seam Scanner for boundary seam analysis.
               </span>
             </div>
             <div className="p-2.5 rounded-lg bg-inset border border-line/60 text-ink-2">
               <span className="font-mono font-bold text-accent block text-[11px]">
-                Acoustic Prosody & Vocoder Discontinuity
+                Acoustic Prosody & Voice Clone Verification
               </span>
               <span>
-                Dual-layer Wav2Vec2 and spectral prosody variance detecting synthetic voice clones.
+                NETRA Voice Clone Detector and spectral prosody variance detecting synthetic voice clones.
               </span>
             </div>
             <div className="p-2.5 rounded-lg bg-inset border border-line/60 text-ink-2">
