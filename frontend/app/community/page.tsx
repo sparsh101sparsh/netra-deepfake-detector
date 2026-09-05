@@ -39,8 +39,18 @@ export default function CommunityPage() {
       if (!p) return false;
       const id = (p?.id || "").toLowerCase();
       const title = (p?.title || "").toLowerCase();
+      const author = (p?.author?.name || "").toLowerCase();
+      const email = (p?.author?.email || "").toLowerCase();
+      const content = (p?.content || "").toLowerCase();
+
+      // Synthetic & test fixture filters
       if (id.startsWith("stress-post-") || id.startsWith("test-fixture-")) return false;
       if (title.includes("[stress post]") || title.includes("[test_fixture]")) return false;
+      if (title.includes("wal concurrency") || title.includes("concurrency target") || title.includes("master qa")) return false;
+      if (title.includes("concurrency stress") || title.includes("stress subject") || title.includes("load test")) return false;
+      if (author.includes("hammer") || author.includes("load tester") || author.includes("senior qa")) return false;
+      if (email.includes("hammer@netra.security") || email.includes("load@netra.security") || email.includes("qa@netra.security")) return false;
+      if (content.includes("hammer testing") || content.includes("concurrent load testing post")) return false;
       return true;
     };
 
@@ -51,6 +61,8 @@ export default function CommunityPage() {
           const parsed = JSON.parse(savedLocalPosts);
           if (Array.isArray(parsed)) {
             localPosts = parsed.filter(isRealPost);
+            // Immediately overwrite localStorage to purge bad posts permanently
+            localStorage.setItem("netra_community_posts", JSON.stringify(localPosts));
             if (localPosts.length > 0) {
               setPosts(localPosts);
             }
@@ -84,8 +96,8 @@ export default function CommunityPage() {
 
     if (fetchSucceeded) {
       const backendIds = new Set(backendPosts.map((p: any) => p.id));
-      const uniqueLocal = localPosts.filter((p) => !backendIds.has(p.id));
-      const combined = [...uniqueLocal, ...backendPosts];
+      const uniqueLocal = localPosts.filter((p) => !backendIds.has(p.id) && isRealPost(p));
+      const combined = [...uniqueLocal, ...backendPosts].filter(isRealPost);
       setPosts(combined);
       if (typeof window !== "undefined") {
         localStorage.setItem("netra_community_posts", JSON.stringify(combined));
@@ -145,6 +157,41 @@ export default function CommunityPage() {
     fetch(`/api/backend/api/v1/community/posts/${postId}/like`, {
       method: "POST",
     }).catch(() => {});
+  };
+
+  // Delete a post
+  const handleDeletePost = async (postId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!confirm("Are you sure you want to remove this research post?")) return;
+
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    if (selectedPost?.id === postId) {
+      setSelectedPost(null);
+    }
+
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("netra_community_posts");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            const updated = parsed.filter((p: any) => p.id !== postId);
+            localStorage.setItem("netra_community_posts", JSON.stringify(updated));
+          }
+        }
+      } catch {}
+    }
+
+    const candidateEndpoints = [
+      `/api/backend/api/v1/community/posts/${postId}`,
+      `/api/v1/community/posts/${postId}`,
+      `${process.env.NEXT_PUBLIC_API_URL || "https://netra-api-pmr7.onrender.com"}/api/v1/community/posts/${postId}`
+    ];
+    for (const ep of candidateEndpoints) {
+      try {
+        await fetch(ep, { method: "DELETE" });
+      } catch {}
+    }
   };
 
   // Filtered posts
@@ -302,6 +349,7 @@ export default function CommunityPage() {
                 post={post}
                 onOpen={(p) => setSelectedPost(p)}
                 onLike={(id) => handleLikePost(id)}
+                onDelete={(id, e) => handleDeletePost(id, e)}
                 currentUserEmail={user?.email}
                 currentUserId={user?.sub || (user as any)?.id}
               />
@@ -322,6 +370,9 @@ export default function CommunityPage() {
         post={selectedPost}
         onClose={() => setSelectedPost(null)}
         onLike={(id) => handleLikePost(id)}
+        onDelete={(id) => handleDeletePost(id)}
+        currentUserEmail={user?.email}
+        currentUserId={user?.sub || (user as any)?.id}
       />
 
       {/* Write Article Editor Modal */}

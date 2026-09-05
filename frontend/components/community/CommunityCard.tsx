@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { 
   Heart, Eye, Clock, ArrowUpRight, Video, 
-  FileText, Shield, Sparkles, User, ExternalLink 
+  FileText, Shield, Sparkles, User, ExternalLink, Trash2 
 } from "lucide-react";
 import { CommunityPost } from "./types";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ interface CommunityCardProps {
   post: CommunityPost;
   onOpen: (post: CommunityPost) => void;
   onLike?: (postId: string, e: React.MouseEvent) => void;
+  onDelete?: (postId: string, e: React.MouseEvent) => void;
   currentUserEmail?: string;
   currentUserId?: string;
 }
@@ -22,6 +23,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
   post,
   onOpen,
   onLike,
+  onDelete,
   currentUserEmail,
   currentUserId,
 }) => {
@@ -181,6 +183,20 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
               <Heart className="size-3.5 group-hover/like:fill-rose-400 group-hover/like:text-rose-400 transition-colors" />
               <span>{post.likes}</span>
             </button>
+
+            {onDelete && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(post.id, e);
+                }}
+                className="flex items-center text-[11px] text-zinc-500 hover:text-rose-400 transition-colors p-1 rounded-md hover:bg-rose-500/10"
+                title="Remove post"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -45,6 +45,7 @@ def test_system_health_and_root():
 # 2. REAL VIDEO PIPELINE: deepfake_Neeraj_Chopra.mp4 (S3 + SQS + DynamoDB)
 # ══════════════════════════════════════════════════════════════════════════════
 
+@pytest.mark.skipif(not os.path.exists(TEST_VIDEO_PATH), reason=f"Missing test video: {TEST_VIDEO_PATH}")
 def test_real_video_pipeline_end_to_end():
     """Test full async video detection workflow using real deepfake_Neeraj_Chopra.mp4."""
     assert os.path.exists(TEST_VIDEO_PATH), f"Missing test video: {TEST_VIDEO_PATH}"
@@ -145,12 +146,13 @@ def test_bot_ingest_and_confirmation_lifecycle():
     """Verify unified bot ingest returns verdicts without polluting catalog until confirmed."""
     # 1. Ingest scam message
     scam_msg = "Electricity power disconnection notice from electricity office tonight. Call officer at 9876543210."
+    bot_headers = {"X-Bot-Secret": os.getenv("NETRA_BOT_SECRET", "netra_bot_secret_2026")}
     r_ingest = client.post("/api/v1/ingest/bot", json={
         "media_type": "text",
         "content": scam_msg,
         "sender_id": "whatsapp_+919876543210",
         "source_platform": "whatsapp"
-    })
+    }, headers=bot_headers)
     assert r_ingest.status_code == 200
     data = r_ingest.json()
     assert data["status"] == "success"
@@ -169,7 +171,7 @@ def test_bot_ingest_and_confirmation_lifecycle():
         "city": "Pune",
         "state": "Maharashtra",
         "source_platform": "whatsapp"
-    })
+    }, headers=bot_headers)
     assert r_confirm.status_code == 200
     confirm_data = r_confirm.json()
     assert confirm_data["status"] == "reported"
@@ -180,8 +182,8 @@ def test_bot_ingest_and_confirmation_lifecycle():
     assert r_item.status_code == 200
     item = r_item.json()["item"]
     assert item["city"] == "Pune"
-    assert item["lat"] is None
-    assert item["lng"] is None
+    assert item["lat"] is not None and round(item["lat"], 2) == 18.52
+    assert item["lng"] is not None and round(item["lng"], 2) == 73.86
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -355,3 +357,7 @@ def test_community_and_news_endpoints():
     r_news = client.get("/api/v1/news/feed")
     assert r_news.status_code == 200
     assert "feed" in r_news.json()
+
+    # 5. Cleanup test post
+    r_del = client.delete(f"/api/v1/community/posts/{post_id}")
+    assert r_del.status_code == 200

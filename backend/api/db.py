@@ -141,7 +141,16 @@ def purge_synthetic_test_data() -> Dict[str, int]:
     WHERE id LIKE 'stress-post-%'
        OR id LIKE 'test-fixture-%'
        OR LOWER(title) LIKE '%[stress post]%'
-       OR LOWER(title) LIKE '%[test_fixture]%';
+       OR LOWER(title) LIKE '%[test_fixture]%'
+       OR LOWER(title) LIKE '%wal concurrency%'
+       OR LOWER(title) LIKE '%concurrency target%'
+       OR LOWER(title) LIKE '%master qa%'
+       OR LOWER(title) LIKE '%concurrency stress%'
+       OR LOWER(title) LIKE '%load testing post%'
+       OR LOWER(author_name) LIKE '%hammer agent%'
+       OR LOWER(author_name) LIKE '%load tester%'
+       OR LOWER(author_name) LIKE '%senior qa engineer%'
+       OR (LOWER(author_email) LIKE '%@netra.security' AND LOWER(author_name) NOT LIKE '%sparsh%');
     """)
     purged_posts = cursor.rowcount
 
@@ -942,7 +951,16 @@ def get_community_posts(
     query += """ AND id NOT LIKE 'stress-post-%' 
                  AND id NOT LIKE 'test-fixture-%' 
                  AND LOWER(title) NOT LIKE '%[stress post]%' 
-                 AND LOWER(title) NOT LIKE '%[test_fixture]%'"""
+                 AND LOWER(title) NOT LIKE '%[test_fixture]%'
+                 AND LOWER(title) NOT LIKE '%wal concurrency%'
+                 AND LOWER(title) NOT LIKE '%concurrency target%'
+                 AND LOWER(title) NOT LIKE '%master qa%'
+                 AND LOWER(title) NOT LIKE '%concurrency stress%'
+                 AND LOWER(title) NOT LIKE '%load testing post%'
+                 AND LOWER(author_name) NOT LIKE '%hammer agent%'
+                 AND LOWER(author_name) NOT LIKE '%load tester%'
+                 AND LOWER(author_name) NOT LIKE '%senior qa engineer%'
+                 AND NOT (LOWER(author_email) LIKE '%@netra.security' AND LOWER(author_name) NOT LIKE '%sparsh%')"""
 
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
@@ -976,6 +994,15 @@ def like_community_post(post_id: str) -> Optional[int]:
     new_row = conn.execute("SELECT likes FROM community_posts WHERE id = ?", (post_id,)).fetchone()
     conn.close()
     return new_row["likes"] if new_row else None
+
+def delete_community_post(post_id: str) -> bool:
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM community_posts WHERE id = ?", (post_id,))
+    deleted = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return deleted
 
 # Initialize on module load
 init_db()

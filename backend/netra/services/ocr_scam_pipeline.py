@@ -35,8 +35,8 @@ def get_easyocr_reader():
     if _easyocr_reader is None:
         try:
             import easyocr
-            # Initialize for English (and Hindi if needed), lightweight CPU mode
-            _easyocr_reader = easyocr.Reader(['en'], gpu=False, verbose=False)
+            # Initialize for English (and Hindi if needed), lightweight CPU mode without blocking downloads
+            _easyocr_reader = easyocr.Reader(['en'], gpu=False, verbose=False, download_enabled=False)
         except Exception as e:
             logger.warning(f"EasyOCR initialization failed: {e}")
             _easyocr_reader = False

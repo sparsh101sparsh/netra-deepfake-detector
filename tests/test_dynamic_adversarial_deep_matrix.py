@@ -256,6 +256,9 @@ def test_extreme_wal_concurrency_stress():
     # Verify final post state
     final_post = client.get(f"/api/v1/community/posts/{target_post_id}").json()["post"]
     print(f"  Target Post Final Views: {final_post['views']}, Likes: {final_post['likes']}")
+    
+    # Cleanup test post
+    client.delete(f"/api/v1/community/posts/{target_post_id}")
     print("  [PASS] 100% success rate under multi-threaded WAL concurrency, zero lock collisions.")
 
 def test_scam_detection_corpus_calibration():
