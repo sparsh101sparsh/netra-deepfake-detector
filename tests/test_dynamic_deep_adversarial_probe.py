@@ -162,6 +162,9 @@ def test_extreme_concurrency():
     # Check post view and like count
     final_post = client.get(f"/api/v1/community/posts/{post_id}").json()["post"]
     print(f"  Final Post Views: {final_post['views']}, Likes: {final_post['likes']}")
+    
+    # Cleanup test post
+    client.delete(f"/api/v1/community/posts/{post_id}")
     print("  [SUCCESS] Extreme concurrency test passed with 0 database lock errors!")
 
 def test_benign_scam_corpus():

@@ -48,7 +48,9 @@ from ..db import (
     get_community_posts as db_get_community_posts,
     insert_community_post as db_insert_community_post,
     get_community_post_by_id as db_get_community_post_by_id,
-    like_community_post as db_like_community_post
+    like_community_post as db_like_community_post,
+    delete_community_post as db_delete_community_post,
+    purge_synthetic_test_data
 )
 
 @router.get("/posts")
@@ -109,4 +111,24 @@ async def like_community_post(post_id: str):
     if new_likes is None:
         raise HTTPException(status_code=404, detail="Community post not found")
     return {"status": "success", "likes": new_likes}
+
+@router.delete("/posts/{post_id}")
+async def delete_community_post_route(post_id: str):
+    """
+    Deletes a single community forensic post from SQLite database.
+    """
+    deleted = db_delete_community_post(post_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Community post not found")
+    return {"status": "success", "message": f"Post {post_id} successfully deleted"}
+
+@router.post("/posts/purge-synthetic")
+@router.delete("/posts/purge/synthetic")
+async def purge_synthetic_posts():
+    """
+    Purges all test, mock, and stress artifacts from the community store.
+    """
+    result = purge_synthetic_test_data()
+    return {"status": "success", "purged": result}
+
 

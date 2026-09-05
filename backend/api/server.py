@@ -40,6 +40,12 @@ async def lifespan(app: FastAPI):
             scam_detector_engine.predict_scam("Sample verification ping")
         except Exception:
             pass
+        try:
+            from netra.pipeline.dual_branch_router import get_spatial_detector, get_gend_detector
+            get_spatial_detector()
+            get_gend_detector()
+        except Exception:
+            pass
     threading.Thread(target=_warmup_models, daemon=True, name="netra-prewarm").start()
 
     yield

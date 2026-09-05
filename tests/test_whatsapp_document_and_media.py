@@ -215,3 +215,78 @@ def test_whatsapp_image_document_in_awaiting_image_state():
         verdict_msg = sent_calls[1][1]
         assert "Visual Verdict" in verdict_msg or "THREAT DETECTED" in verdict_msg
         assert "suspicious_cheque_seam.png" in verdict_msg
+
+
+def test_whatsapp_portrait_photo_scan_end_to_end():
+    """Verify portrait photo uploaded to WhatsApp returns instant verdict and registers in threat catalog."""
+    sender_phone = "919811223344"
+
+    # Step 1: User selects option 2 (Scan Image)
+    menu_payload = {
+        "object": "whatsapp_business_account",
+        "entry": [{
+            "id": "1329851416876776",
+            "changes": [{
+                "value": {
+                    "messaging_product": "whatsapp",
+                    "messages": [{
+                        "from": sender_phone,
+                        "id": "wamid.portrait.menu2",
+                        "type": "text",
+                        "text": {"body": "2"}
+                    }]
+                },
+                "field": "messages"
+            }]
+        }]
+    }
+    with patch("api.routes.whatsapp_webhook.send_meta_whatsapp_message", new_callable=AsyncMock) as mock_send:
+        mock_send.return_value = True
+        resp = client.post("/api/v1/whatsapp/webhook", json=menu_payload)
+        assert resp.status_code == 200
+
+    # Step 2: User uploads portrait photo
+    img_payload = {
+        "object": "whatsapp_business_account",
+        "entry": [{
+            "id": "1329851416876776",
+            "changes": [{
+                "value": {
+                    "messaging_product": "whatsapp",
+                    "messages": [{
+                        "from": sender_phone,
+                        "id": "wamid.portrait.photo1",
+                        "type": "image",
+                        "image": {
+                            "id": "meta_portrait_media_999",
+                            "mime_type": "image/jpeg"
+                        }
+                    }]
+                },
+                "field": "messages"
+            }]
+        }]
+    }
+
+    img = Image.new("RGB", (128, 128), color=(180, 150, 130))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    dummy_portrait_bytes = buf.getvalue()
+
+    with patch("api.routes.whatsapp_webhook.send_meta_whatsapp_message", new_callable=AsyncMock) as mock_send, \
+         patch("api.routes.whatsapp_webhook.download_meta_media", new_callable=AsyncMock) as mock_download:
+        mock_download.return_value = dummy_portrait_bytes
+        mock_send.return_value = True
+
+        resp2 = client.post("/api/v1/whatsapp/webhook", json=img_payload)
+        assert resp2.status_code == 200
+
+        sent_calls = [call.args for call in mock_send.call_args_list]
+        assert len(sent_calls) >= 2, f"Expected 2 WhatsApp messages, got {len(sent_calls)}"
+
+        ack_msg = sent_calls[0][1]
+        assert "Image received" in ack_msg
+
+        verdict_msg = sent_calls[1][1]
+        assert "Visual Verdict" in verdict_msg or "Threat Score" in verdict_msg or "Forensic" in verdict_msg
+        assert "Threat Catalog ID" in verdict_msg or "Forensic Ledger" in verdict_msg

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { 
   X, Heart, Eye, Clock, Share2, Copy, Check, 
-  ExternalLink, Video, Shield, User, ArrowLeft 
+  ExternalLink, Video, Shield, User, ArrowLeft, Trash2 
 } from "lucide-react";
 import { CommunityPost } from "./types";
 import { cn } from "@/lib/utils";
@@ -13,12 +13,18 @@ interface CommunityArticleModalProps {
   post: CommunityPost | null;
   onClose: () => void;
   onLike?: (postId: string) => void;
+  onDelete?: (postId: string) => void;
+  currentUserEmail?: string;
+  currentUserId?: string;
 }
 
 export const CommunityArticleModal: React.FC<CommunityArticleModalProps> = ({
   post,
   onClose,
   onLike,
+  onDelete,
+  currentUserEmail,
+  currentUserId,
 }) => {
   const [copied, setCopied] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
@@ -126,6 +132,22 @@ export const CommunityArticleModal: React.FC<CommunityArticleModalProps> = ({
             >
               {copied ? <Check className="size-3.5 text-emerald-400" /> : <Share2 className="size-3.5" />}
             </button>
+
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm("Are you sure you want to remove this research post?")) {
+                    onDelete(post.id);
+                    onClose();
+                  }
+                }}
+                className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-colors"
+                title="Remove post"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            )}
 
             <button
               type="button"

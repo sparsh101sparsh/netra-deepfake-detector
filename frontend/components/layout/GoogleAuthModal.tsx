@@ -78,11 +78,28 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
             const raw = localStorage.getItem("netra_community_posts");
             if (raw) {
               const all = JSON.parse(raw);
-              const mine = all.filter(
-                (p: any) =>
-                  (p.author?.email && p.author.email.toLowerCase() === user.email.toLowerCase()) ||
-                  (user.sub && p.author?.id === user.sub)
-              );
+              const isSynthetic = (p: any) => {
+                const id = (p?.id || "").toLowerCase();
+                const title = (p?.title || "").toLowerCase();
+                const author = (p?.author?.name || "").toLowerCase();
+                return (
+                  id.startsWith("stress-post-") ||
+                  id.startsWith("test-fixture-") ||
+                  title.includes("wal concurrency") ||
+                  title.includes("concurrency target") ||
+                  title.includes("master qa") ||
+                  author.includes("hammer") ||
+                  author.includes("load tester") ||
+                  author.includes("senior qa")
+                );
+              };
+              const mine = all
+                .filter((p: any) => !isSynthetic(p))
+                .filter(
+                  (p: any) =>
+                    (p.author?.email && p.author.email.toLowerCase() === user.email.toLowerCase()) ||
+                    (user.sub && p.author?.id === user.sub)
+                );
               setUserPosts(mine);
             }
           } catch {
