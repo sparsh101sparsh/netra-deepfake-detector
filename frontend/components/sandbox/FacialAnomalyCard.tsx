@@ -339,7 +339,7 @@ function FaceScorecard({ face }: { face: FaceEntry }) {
             Neural Forensic Telemetry
           </span>
           {metrics.sbi_artifact_level !== undefined && (
-            <MetricBar label="SBI Blending Artifact Level" value={metrics.sbi_artifact_level} danger />
+            <MetricBar label="NETRA Spatial Seam Artifact Level" value={metrics.sbi_artifact_level} danger />
           )}
           {metrics.ocular_reflection_symmetry !== undefined && (
             <MetricBar label="Ocular Reflection Symmetry" value={metrics.ocular_reflection_symmetry} danger={false} />
@@ -460,7 +460,7 @@ export function FacialAnomalyCard({ data, onReset, className, embedded, clientPr
         timestamp: `Face #${idx + 1} (${f.face_id || `face_${idx + 1}`})`,
         anomaly_region: f.anomaly_region || "Facial ROI",
         anomaly_score: f.fake_probability ?? 0,
-        detector_subsystem: "SpatialSBIDetector + VisualAnomalyLocalizer",
+        detector_subsystem: "NETRA Spatial Seam Scanner + Visual Anomaly Localizer",
         image_base64: facial.annotated_preview_base64 || undefined,
         image_url: facial.annotated_preview_url || undefined,
         bounding_box: f.bbox ?? [0, 0, 0, 0],

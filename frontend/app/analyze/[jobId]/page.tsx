@@ -661,7 +661,7 @@ export default function AnalysisPage({ params }: Props) {
                 </div>
 
                 <div className="pt-4 mt-4 border-t border-line flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-ink-3">
-                  <span>Ensemble: GenD ViT-L/14 + Spatial SBI + Wav2Vec2</span>
+                  <span>Ensemble: NETRA Spatial + NETRA Generative + NETRA Voice Clone</span>
                   <span className="text-accent">Active Cloud Node: ap-south-1</span>
                 </div>
               </div>
@@ -756,7 +756,7 @@ export default function AnalysisPage({ params }: Props) {
                               anomaly_score: f.confidence,
                               image_url: f.annotated_image_url!,
                               annotated_image_url: f.annotated_image_url!,
-                              detector_subsystem: f.detector_subsystem || "GenD Foundation Model ViT-L/14 + Spatial SBI",
+                              detector_subsystem: f.detector_subsystem || "NETRA Spatial Seam + Generative Scanner",
                               bounding_box: f.bounding_box || [0, 0, 0, 0],
                             })) || [];
 
@@ -818,7 +818,7 @@ export default function AnalysisPage({ params }: Props) {
 
               {/* Executive Summary Narrative */}
               <div className="bg-inset/50 rounded-xl p-5 border border-line text-sm text-ink-2 leading-relaxed whitespace-pre-wrap font-sans">
-                {result.forensic_report || `Forensic analysis completed for job ${jobId}. Verified verdict: ${result.verdict} with ${result.confidence}% confidence across GenD ViT-L and Spatial SBI models.`}
+                {result.forensic_report || `Forensic analysis completed for job ${jobId}. Verified verdict: ${result.verdict} with ${result.confidence}% confidence across NETRA Spatial and Generative detection models.`}
               </div>
 
               {/* Forensic Artifacts Breakdown */}

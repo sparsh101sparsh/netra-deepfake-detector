@@ -81,9 +81,9 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     w: 380,
     kind: { label: "Task Queue & Demux", hue: CYAN },
     hue: CYAN,
-    title: "Amazon SQS & FFmpeg Preprocessing",
-    caption: "Decoupled async SQS queue; FFmpeg extracts 1 FPS frames & 16kHz WAV audio",
-    tag: "SQS + FFmpeg",
+    title: "NETRA Stream Processing & Queue",
+    caption: "Decoupled cloud queue extracts 1 FPS video frames & high-fidelity voice tracks",
+    tag: "Queue & Demux",
     latency: "~450 ms",
     icon: Layers,
   },
@@ -95,11 +95,11 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     row: 2,
     x: 0.28,
     w: 330,
-    kind: { label: "Computer Vision", hue: SKY },
+    kind: { label: "Face Tracking", hue: SKY },
     hue: SKY,
-    title: "InsightFace (RetinaFace-ResNet50)",
-    caption: "68/106 3D facial landmarks, affine transformation & 224×224 RGB crop",
-    tag: "CUDA 12 ONNX",
+    title: "NETRA Face Landmark Tracker",
+    caption: "Tracks 3D facial landmarks, head angle alignment & standardized facial crops",
+    tag: "Face Alignment",
     latency: "18 ms/f",
     icon: Eye,
   },
@@ -109,11 +109,11 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     row: 2,
     x: 0.72,
     w: 330,
-    kind: { label: "Acoustic Demux", hue: EMERALD },
+    kind: { label: "Voice Demux", hue: EMERALD },
     hue: EMERALD,
-    title: "16kHz Mono Audio Resampler",
-    caption: "16-bit linear PCM audio stream buffer preparation for spectral DSP",
-    tag: "Acoustic Stream",
+    title: "NETRA Acoustic Voice Splitter",
+    caption: "Isolates clean speech channels and prepares audio for voice clone detection",
+    tag: "Voice Stream",
     latency: "42 ms",
     icon: Radio,
   },
@@ -125,11 +125,11 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     row: 3,
     x: 0.12,
     w: 280,
-    kind: { label: "Visual SBI", hue: ROSE },
+    kind: { label: "Visual Seams", hue: ROSE },
     hue: ROSE,
-    title: "EfficientNet-B4 + SBI",
-    caption: "19.3M params CNN scanning blending seams & frequency boundaries",
-    tag: "P_visual (W: 0.50)",
+    title: "NETRA Spatial Seam Scanner",
+    caption: "Neural vision model scanning face-swap blending seams and boundary artifacts",
+    tag: "Face Swap (W: 0.50)",
     latency: "14 ms/batch",
     icon: Cpu,
   },
@@ -139,11 +139,11 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     row: 3,
     x: 0.37,
     w: 280,
-    kind: { label: "CLIP Probe", hue: VIOLET },
+    kind: { label: "AI Imagery", hue: VIOLET },
     hue: VIOLET,
-    title: "OpenAI CLIP ViT-L/14 Probe",
-    caption: "24-layer ViT, 768-d CLS token + 3-layer MLP for Sora/Midjourney artifacts",
-    tag: "P_clip (W: 0.15)",
+    title: "NETRA Generative AI Scanner",
+    caption: "Semantic visual probe detecting full-frame diffusion and generative synthetic textures",
+    tag: "AI Gen (W: 0.15)",
     latency: "22 ms/batch",
     icon: Sparkles,
   },
@@ -153,11 +153,11 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     row: 3,
     x: 0.63,
     w: 280,
-    kind: { label: "Wav2Vec Audio", hue: EMERALD },
+    kind: { label: "Voice Clone", hue: EMERALD },
     hue: EMERALD,
-    title: "Wav2Vec 2.0 + Librosa DSP",
-    caption: "MelodyMachine Deepfake-V2 + 40-MFCC & F0 pitch jitter analysis",
-    tag: "P_audio (W: 0.35)",
+    title: "NETRA Voice Clone Detector",
+    caption: "Speech acoustics scanner detecting synthetic speech, robotic pitch & cloned voices",
+    tag: "Voice Clone (W: 0.35)",
     latency: "65 ms",
     icon: Activity,
   },
@@ -169,9 +169,9 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     w: 280,
     kind: { label: "Auxiliary Forensics", hue: CYAN },
     hue: CYAN,
-    title: "EXIF, Codec & Jitter Engine",
-    caption: "MP4 atom parser, inter-frame lighting jitter & A/V sync temporal lag",
-    tag: "Delta_aux (0-0.10)",
+    title: "NETRA Metadata & Jitter Verifier",
+    caption: "Verifies file container integrity, frame lighting consistency & A/V lip-sync",
+    tag: "Aux Forensics",
     latency: "8 ms",
     icon: Shield,
   },
@@ -183,11 +183,11 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     row: 4,
     x: 0.22,
     w: 320,
-    kind: { label: "Scam NLP", hue: AMBER },
+    kind: { label: "Scam Intelligence", hue: AMBER },
     hue: AMBER,
-    title: "OCR + Whisper + Random Forest",
-    caption: "Tesseract onscreen scan + Whisper speech transcription + 5000 TF-IDF n-grams",
-    tag: "Cyber Scam NLP",
+    title: "NETRA Cyber Scam Classifier",
+    caption: "Screen text OCR + speech transcription + threat language pattern intelligence",
+    tag: "Scam Intelligence",
     latency: "180 ms",
     icon: Terminal,
   },
@@ -197,9 +197,9 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     row: 4,
     x: 0.68,
     w: 480,
-    kind: { label: "If / Else", hue: AMBER },
+    kind: { label: "Fusion Engine", hue: AMBER },
     hue: AMBER,
-    title: "Mathematical Gated Fusion Engine",
+    title: "NETRA Multi-Modal Fusion Engine",
     caption: "Dynamic weighting algorithm conditioned on modality presence",
     icon: Sliders,
     condition: true,
@@ -212,11 +212,11 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     row: 5,
     x: 0.32,
     w: 340,
-    kind: { label: "Telemetry", hue: BLUE },
+    kind: { label: "Evidence Pack", hue: BLUE },
     hue: BLUE,
-    title: "Zero-Pixel Evidence Bundle",
-    caption: "Structured JSON telemetry: frame timestamps, anomaly bounding boxes & confidence",
-    tag: "Pydantic v2 JSON",
+    title: "NETRA Verified Evidence Bundle",
+    caption: "Structured telemetry: frame timestamps, anomaly bounding boxes & confidence scores",
+    tag: "Evidence Telemetry",
     latency: "< 5 ms",
     icon: Database,
   },
@@ -228,9 +228,9 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     w: 360,
     kind: { label: "Dossier Engine", hue: PURPLE },
     hue: PURPLE,
-    title: "Forensic Dossier Synthesizer",
-    caption: "Compiles 4-section technical forensic dossier from verified multi-detector telemetry",
-    tag: "Deterministic Engine",
+    title: "NETRA Forensic Report Generator",
+    caption: "Compiles formal 4-part forensic dossier from verified multi-detector telemetry",
+    tag: "Forensic Report",
     latency: "< 10 ms",
     icon: Sparkles,
   },
@@ -242,11 +242,11 @@ export const ARCHITECTURE_NODES: FlowNode[] = [
     row: 6,
     x: 0.5,
     w: 400,
-    kind: { label: "Verdict Dossier", hue: EMERALD },
+    kind: { label: "Verdict & Radar", hue: EMERALD },
     hue: EMERALD,
-    title: "Verdict Dossier & Live Radar",
+    title: "NETRA Threat Radar & Verdict Dispatch",
     caption: "Updates India Cyber Threat Radar, delivers WhatsApp verdict & generates signed PDF",
-    tag: "Final Delivery",
+    tag: "Live Delivery",
     latency: "< 250 ms",
     icon: ShieldCheck,
   },
@@ -905,23 +905,23 @@ export default function ArchitectureFlowchart({ onSelectModel }: ArchitectureFlo
         <div className="flex flex-wrap items-center gap-6">
           <span className="flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ background: PURPLE }} />
-            Trigger & Ingestion
+            Multi-Modal Ingestion
           </span>
           <span className="flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ background: SKY }} />
-            Computer Vision (InsightFace)
+            Facial Tracking & Demux
           </span>
           <span className="flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ background: ROSE }} />
-            Deepfake Specialist (SBI)
+            NETRA Spatial Seam Scanner
           </span>
           <span className="flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ background: AMBER }} />
-            Gated Fusion Arbitrator
+            Multi-Modal Fusion Engine
           </span>
           <span className="flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ background: EMERALD }} />
-            Verdict & Radar Delivery
+            Threat Radar & Verdict
           </span>
         </div>
         <div className="text-ink-3">

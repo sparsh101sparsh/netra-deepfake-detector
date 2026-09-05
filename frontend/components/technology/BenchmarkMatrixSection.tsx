@@ -30,11 +30,11 @@ const BENCHMARK_DATA: BenchmarkRow[] = [
     meanFakeProb: "94.8%",
     falsePositiveRate: "1.2%",
     status: "Primary Multi-Modal",
-    architecture: "EfficientNet-B4 (SBI) + CLIP ViT-L/14 + Wav2Vec 2.0 + Forensic Engine",
+    architecture: "NETRA Spatial Seam + NETRA Generative AI + NETRA Voice Clone",
     vulnerability: "Resistant to cross-modal manipulation, lossy compression & audio desync",
   },
   {
-    model: "Vision Model V3 (CLIP + Fine-Tuning)",
+    model: "NETRA Generative AI Scanner (Vision Probe)",
     category: "Visual Only",
     detectionRate: 91.6,
     aucRoc: 94.5,
@@ -46,7 +46,7 @@ const BENCHMARK_DATA: BenchmarkRow[] = [
     vulnerability: "Blind to audio-only voice clones and synthetic acoustic tampering",
   },
   {
-    model: "EfficientNet-B4 (SBI Only)",
+    model: "NETRA Spatial Seam Scanner (SBI)",
     category: "Visual Only",
     detectionRate: 92.4,
     aucRoc: 95.1,
@@ -58,7 +58,7 @@ const BENCHMARK_DATA: BenchmarkRow[] = [
     vulnerability: "Fails on diffusion-generated non-blended faces without seams",
   },
   {
-    model: "Wav2Vec 2.0 (MelodyMachine)",
+    model: "NETRA Voice Clone Detector (Audio)",
     category: "Audio Only",
     detectionRate: 94.6,
     aucRoc: 96.8,
@@ -79,7 +79,7 @@ const BENCHMARK_DATA: BenchmarkRow[] = [
     falsePositiveRate: "9.4%",
     status: "Baseline Competitor",
     architecture: "Dual-Stream Spatial & Frequency Network",
-    vulnerability: "Severe degradation on compressed WhatsApp/Telegram video (c40)",
+    vulnerability: "Severe degradation on compressed social media / messaging video (c40)",
   },
   {
     model: "MesoInception-4",
