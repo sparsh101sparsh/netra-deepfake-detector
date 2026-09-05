@@ -66,7 +66,8 @@ def resolve_snapshot_image_path(snap: dict) -> Optional[str]:
 
 from ..db import (
     get_threat_catalog, get_threat_by_id, upvote_threat_item, insert_threat_item,
-    get_radar_threat_items, create_api_key, list_api_keys, delete_api_key, purge_synthetic_test_data
+    get_radar_threat_items, create_api_key, list_api_keys, delete_api_key, purge_synthetic_test_data,
+    delete_threat_item
 )
 
 router = APIRouter()
@@ -180,6 +181,18 @@ async def sanitize_threat_data():
         "status": "success",
         "message": "Synthetic test, prototype, and demo records purged successfully.",
         "details": stats
+    }
+
+
+@router.delete("/threat-intelligence/{threat_id}")
+async def delete_threat(threat_id: str):
+    """Delete a threat incident from catalog and DynamoDB."""
+    deleted = delete_threat_item(threat_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Threat incident not found")
+    return {
+        "status": "success",
+        "message": f"Threat {threat_id} successfully deleted from catalog"
     }
 
 

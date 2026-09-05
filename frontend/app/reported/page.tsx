@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { 
   ShieldAlert, Search, Download, ThumbsUp, MapPin, 
   Phone, CreditCard, FileText, X, Video, Mic, Image as ImageIcon,
-  MessageSquare, Play, Volume2, ArrowUpRight
+  MessageSquare, Play, Volume2, ArrowUpRight, Trash2
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -67,10 +67,11 @@ export default function ThreatCatalogPage() {
       })
       .then((data) => {
         const rawItems: ThreatItem[] = data?.results || data?.items || [];
-        // Filter out only synthetic unit-test runner artifacts
+        // Filter out synthetic unit-test runner artifacts and direct upload authentic video tests
         const fetchedItems = rawItems.filter((it) => {
           const id = (it.id || "").toUpperCase();
           const title = (it.title || "").toLowerCase();
+          const verdict = (it.verdict || "").toUpperCase();
           if (
             id.startsWith("TEST-") ||
             id.startsWith("DEMO-") ||
@@ -79,7 +80,9 @@ export default function ThreatCatalogPage() {
             id.startsWith("CHALLENGE-") ||
             id.startsWith("THREAT-CONCUR-") ||
             id.startsWith("THREAT-ADV-") ||
-            id.startsWith("THREAT-SPECIAL-")
+            id.startsWith("THREAT-SPECIAL-") ||
+            id.includes("93CC") ||
+            (title.includes("direct upload") && (title.includes("authentic") || verdict === "AUTHENTIC"))
           ) {
             return false;
           }
@@ -120,6 +123,17 @@ export default function ThreatCatalogPage() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     fetchItems();
+  };
+
+  const handleDeleteItem = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      setItems((prev) => prev.filter((it) => it.id !== id));
+      if (activeItem?.id === id) setActiveItem(null);
+      await fetch(`/api/backend/api/v1/threat-intelligence/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.warn("Delete incident error:", err);
+    }
   };
 
   const handleUpvote = (id: string, e: React.MouseEvent) => {
@@ -263,16 +277,26 @@ export default function ThreatCatalogPage() {
                           <span>{badge.label}</span>
                         </span>
 
-                        <span
-                          className={cn(
-                            "px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border",
-                            isCritical
-                              ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                              : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                          )}
-                        >
-                          {item.risk_level || "LOW"}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={cn(
+                              "px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border",
+                              isCritical
+                                ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            )}
+                          >
+                            {item.risk_level || "LOW"}
+                          </span>
+                          <button
+                            type="button"
+                            title="Remove from Threat Catalog"
+                            onClick={(e) => handleDeleteItem(item.id, e)}
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                          >
+                            <Trash2 className="size-3" />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Title */}
@@ -411,12 +435,21 @@ export default function ThreatCatalogPage() {
                   <div className="text-[10.5px] font-mono text-zinc-400 mb-1">{activeItem.id}</div>
                   <h3 className="text-lg font-bold text-white leading-snug">{activeItem.title}</h3>
                 </div>
-                <button
-                  onClick={() => setActiveItem(null)}
-                  className="p-1.5 rounded-lg hover:bg-hover text-zinc-400 hover:text-white transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => activeItem && handleDeleteItem(activeItem.id, e)}
+                    title="Remove from Threat Catalog"
+                    className="p-1.5 rounded-lg hover:bg-rose-500/10 text-zinc-400 hover:text-rose-400 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setActiveItem(null)}
+                    className="p-1.5 rounded-lg hover:bg-hover text-zinc-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Playable Media Section */}
