@@ -350,6 +350,11 @@ def auto_catalog_scan(
         "created_at": now_str
     }
 
+    # Do not auto-catalog authentic media or non-threat scans into the public Threat Catalog
+    if verdict in ("AUTHENTIC", "VERIFIED_AUTHENTIC") or (scan_type == "video" and (verdict == "AUTHENTIC" or fake_prob < 0.50)):
+        logger.info(f"Skipping threat catalog insertion for authentic non-threat media: {clean_title} (verdict={verdict})")
+        return item_id
+
     insert_threat_item(catalog_entry)
     logger.info(f"Auto-cataloged {item_id} [{media_type}] in {city}, {state} (lat={lat}, lng={lng})")
     return item_id

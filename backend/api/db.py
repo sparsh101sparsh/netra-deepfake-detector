@@ -62,6 +62,9 @@ def is_synthetic_test_threat(item_id: str, title: str) -> bool:
     if any(kw in t for kw in test_keywords):
         return True
         
+    if "93cc" in iid.lower() or ("direct upload" in t and "authentic" in t):
+        return True
+
     return False
 
 def purge_synthetic_test_data() -> Dict[str, int]:
@@ -132,7 +135,9 @@ def purge_synthetic_test_data() -> Dict[str, int]:
        OR title LIKE '%Edge Case Coords%'
        OR title LIKE '%Adversarial Image Test%'
        OR title LIKE '%Concurrency Burst%'
-       OR title LIKE '%numerical_audit%';
+       OR title LIKE '%numerical_audit%'
+       OR id LIKE '%93CC%'
+       OR (title LIKE '%Direct Upload%' AND (title LIKE '%AUTHENTIC%' OR verdict = 'AUTHENTIC'));
     """)
     purged_threats = cursor.rowcount
     
@@ -622,6 +627,35 @@ def sync_catalog_from_dynamodb():
     except Exception:
         pass
 
+def delete_threat_item(threat_id: str) -> bool:
+    """Deletes a threat record from local SQLite and AWS DynamoDB."""
+    conn = get_db()
+    cursor = conn.execute("DELETE FROM threat_catalog WHERE id = ?", (threat_id,))
+    conn.commit()
+    deleted = cursor.rowcount > 0
+    conn.close()
+
+    try:
+        table_name = os.getenv("DYNAMO_TABLE_JOBS", "netra-jobs")
+        region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
+        ak = os.getenv("AWS_ACCESS_KEY_ID")
+        sk = os.getenv("AWS_SECRET_ACCESS_KEY")
+        kwargs = {"region_name": region}
+        if ak and sk:
+            kwargs["aws_access_key_id"] = ak.strip()
+            kwargs["aws_secret_access_key"] = sk.strip()
+        import boto3
+        dynamo = boto3.client("dynamodb", **kwargs)
+        for key_candidate in [f"CATALOG#{threat_id}", threat_id]:
+            try:
+                dynamo.delete_item(TableName=table_name, Key={"job_id": {"S": key_candidate}})
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    return deleted
+
 def get_threat_catalog(
     search: Optional[str] = None,
     category: Optional[str] = None,
@@ -720,8 +754,10 @@ def get_threat_catalog(
                    AND title NOT LIKE '%Load Threat%'
                    AND title NOT LIKE '%Edge Case Coords%'
                    AND title NOT LIKE '%Adversarial Image Test%'
-                   AND title NOT LIKE '%Concurrency Burst%'
-                   AND title NOT LIKE '%numerical_audit%'"""
+                    AND title NOT LIKE '%Concurrency Burst%'
+                    AND title NOT LIKE '%numerical_audit%'
+                    AND id NOT LIKE '%93CC%'
+                    AND title NOT LIKE '%Direct Upload%(AUTHENTIC%'"""
 
     query += " ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
