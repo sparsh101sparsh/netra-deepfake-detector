@@ -9,7 +9,6 @@ import {
 
 
 import { cn } from "@/lib/utils";
-import { GlidingFilterTabs } from "@/components/atoms/GlidingFilterTabs";
 import { GlideMenu } from "@/components/atoms/GlideMenu";
 
 export interface ThreatMarker {
@@ -304,21 +303,6 @@ export function LiveThreatRadar() {
           </div>
         </div>
 
-        {/* Right Toolbar: Category Filter Pills */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <GlidingFilterTabs
-            tabs={[
-              { id: "ALL", label: "All Incidents" },
-              { id: "DEEPFAKE", label: "Deepfakes" },
-              { id: "DIGITAL_ARREST", label: "Digital Arrest" },
-              { id: "STOCK_FRAUD", label: "Trading Scams" },
-            ]}
-            activeId={activeFilter}
-            onChange={setActiveFilter}
-            pillVariant="pill"
-            className="p-0.5 rounded-lg bg-[#18181B] border border-white/10"
-          />
-        </div>
       </div>
 
       {/* ── 2. SPLIT WORKSPACE: MAP OVERVIEW (LEFT) + RECENT LOCATIONS (RIGHT) ── */}
