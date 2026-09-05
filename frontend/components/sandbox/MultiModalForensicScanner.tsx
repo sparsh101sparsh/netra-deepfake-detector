@@ -371,8 +371,12 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
       }
 
       const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 12, 92));
-      }, 140);
+        setUploadProgress((prev) => {
+          if (prev < 88) return prev + 12;
+          if (prev < 98) return prev + 1;
+          return 98;
+        });
+      }, 150);
 
       const formData = new FormData();
       formData.append("file", file);
@@ -548,30 +552,62 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
 
       // ── 3. VIDEO MODALITY: Route to /detect/full (GPU Queue) ──
       try {
-        const res = await fetch("/api/backend/api/v1/detect/full", {
-          method: "POST",
-          body: formData,
-        });
+        const candidateEndpoints = [
+          "/api/backend/api/v1/detect/full",
+          "/api/v1/detect/full",
+          `${process.env.NEXT_PUBLIC_API_URL || "https://netra-api-pmr7.onrender.com"}/api/v1/detect/full`
+        ];
+
+        let res: Response | null = null;
+        let lastStatus = 0;
+        let lastErr = "";
+
+        for (const ep of candidateEndpoints) {
+          try {
+            const r = await fetch(ep, {
+              method: "POST",
+              body: formData,
+            });
+            if (r.ok) {
+              res = r;
+              break;
+            }
+            lastStatus = r.status;
+            if (r.status === 502 || r.status === 503 || r.status === 504) {
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          } catch (fetchErr: any) {
+            lastErr = fetchErr?.message || "";
+          }
+        }
 
         clearInterval(progressInterval);
         setUploadProgress(100);
 
-        if (res.ok) {
+        if (res && res.ok) {
           const data = await res.json();
           if (data.job_id) {
-            router.push(`/analyze/${data.job_id}`);
+            setIsUploading(false);
+            if (typeof window !== "undefined") {
+              window.location.href = `/analyze/${data.job_id}`;
+            } else {
+              router.push(`/analyze/${data.job_id}`);
+            }
             return;
           }
         }
-        let errMsg = `Detection engine returned status ${res.status}`;
-        try {
-          const errData = await res.json();
-          errMsg = errData.detail || errData.message || errMsg;
-        } catch {
+
+        let errMsg = lastStatus ? `Detection engine returned status ${lastStatus}` : (lastErr || "Forensic pipeline node unreachable");
+        if (res) {
           try {
-            const txt = await res.text();
-            if (txt && txt.length < 200 && !txt.includes("<html")) errMsg = txt;
-          } catch {}
+            const errData = await res.json();
+            errMsg = errData.detail || errData.message || errMsg;
+          } catch {
+            try {
+              const txt = await res.text();
+              if (txt && txt.length < 200 && !txt.includes("<html")) errMsg = txt;
+            } catch {}
+          }
         }
         throw new Error(errMsg);
       } catch (err: any) {

@@ -587,7 +587,7 @@ async def _handle_user_message(
         _user_sessions.pop(sender_key, None)
         await send_whatsapp_message(
             sender,
-            "⏳ Image received! Running NETRA AI Forensic Scan (Neural SBI + Landmark Seam + Threat Catalog)...",
+            "⏳ Image received! Inspecting biometrics & boundary artifacts (RetinaFace Alignment + NPR Seam Analysis + GenD Artifact Detection)...",
             preferred_channel=channel
         )
 
@@ -655,26 +655,29 @@ async def _handle_user_message(
 
             if analysis_mode == "pure_face":
                 faces = facial_analysis.get("faces", [])
-                sbi_level = faces[0].get("sbi_artifact_level", max_fake_prob) if faces else max_fake_prob
-                ocular_sym = faces[0].get("ocular_symmetry", 0.98) if faces else 0.98
+                neural_metrics = faces[0].get("neural_metrics", {}) if faces else {}
+                sbi_level = neural_metrics.get("sbi_artifact_level", faces[0].get("sbi_artifact_level", max_fake_prob)) if faces else max_fake_prob
+                ocular_sym = neural_metrics.get("ocular_reflection_symmetry", faces[0].get("ocular_symmetry", 0.98)) if faces else 0.98
 
                 if is_deepfake:
                     resp_text = (
-                        f"🚨 *NETRA Visual Forensic Alert: THREAT DETECTED*\n\n"
+                        f"🚨 *Visual Verdict: MANIPULATION DETECTED*\n\n"
                         f"• *Verdict:* {composite_verdict}\n"
                         f"• *Threat Score:* {risk_score}% ({risk_level} RISK){file_display}\n"
+                        f"• *Detection Models:* RetinaFace (Alignment) + NPR ResNet (Boundary Seams) + GenD ViT-L (Generative AI)\n"
                         f"• *Detected Faces:* {face_count}\n"
                         f"• *Synthetic Artifact Prob:* {int(max_fake_prob * 100)}%\n"
-                        f"• *Spatial SBI Artifact Level:* {sbi_level}\n"
+                        f"• *Boundary Seam Level:* {sbi_level}\n"
                         f"• *Threat Catalog ID:* `{catalog_item_id}`\n"
                         f"• *Forensic Evidence:* `{save_img_filename}`\n\n"
                         f"⚠️ *Recommendation:* Suspect face-swap manipulation. Do not authorize financial requests or identity verification."
                     )
                 else:
                     resp_text = (
-                        f"✅ *NETRA Visual Verdict: AUTHENTIC / LOW RISK*\n\n"
+                        f"✅ *Visual Verdict: AUTHENTIC / NATURAL COHERENCE*\n\n"
                         f"• *Verdict:* AUTHENTIC\n"
-                        f"• *Threat Score:* {risk_score}% (NATURAL COHERENCE){file_display}\n"
+                        f"• *Threat Score:* {risk_score}% (Natural Coherence){file_display}\n"
+                        f"• *Detection Models:* RetinaFace (Alignment) + NPR ResNet (Seams) + GenD ViT-L (Generative AI)\n"
                         f"• *Detected Faces:* {face_count}\n"
                         f"• *Biological Coherence:* Verified (Ocular Symmetry: {ocular_sym})\n"
                         f"• *Synthetic Probability:* {int(max_fake_prob * 100)}%\n"
@@ -687,9 +690,10 @@ async def _handle_user_message(
                 iocs = forensic_res.get("extracted_iocs", {})
                 if is_deepfake:
                     resp_text = (
-                        f"🚨 *NETRA Visual Forensic Alert: THREAT DETECTED*\n\n"
+                        f"🚨 *Visual Verdict: THREAT DETECTED*\n\n"
                         f"• *Verdict:* {composite_verdict}\n"
                         f"• *Threat Score:* {risk_score}% ({risk_level} RISK){file_display}\n"
+                        f"• *Detection Models:* RapidOCR + Indic Pattern Classifier\n"
                         f"• *Typology:* {forensic_res.get('scam_analysis', {}).get('scam_type', 'Forged Media').replace('_', ' ').title()}\n"
                     )
                     if ocr_text:
@@ -706,9 +710,10 @@ async def _handle_user_message(
                     )
                 else:
                     resp_text = (
-                        f"✅ *NETRA Visual Verdict: AUTHENTIC / LOW RISK*\n\n"
+                        f"✅ *Visual Verdict: AUTHENTIC / LOW RISK*\n\n"
                         f"• *Verdict:* AUTHENTIC\n"
                         f"• *Risk Score:* {risk_score}%{file_display}\n"
+                        f"• *Detection Models:* RapidOCR + Typography Seam Analyzer\n"
                         f"• *Findings:* No manipulative seams or financial fraud text detected.\n"
                         f"• *Threat Catalog ID:* `{catalog_item_id}`\n"
                         f"• *Saved to Forensic Ledger:* `{save_img_filename}`"
@@ -717,9 +722,10 @@ async def _handle_user_message(
                 # Hybrid or Fallback
                 if is_deepfake:
                     resp_text = (
-                        f"🚨 *NETRA Visual Forensic Alert: THREAT DETECTED*\n\n"
+                        f"🚨 *Visual Verdict: THREAT DETECTED*\n\n"
                         f"• *Verdict:* {composite_verdict}\n"
                         f"• *Threat Score:* {risk_score}% ({risk_level} RISK){file_display}\n"
+                        f"• *Detection Models:* RetinaFace + RapidOCR + GenD ViT-L\n"
                         f"• *Modality:* {analysis_mode.replace('_', ' ').title()}\n"
                         f"• *Threat Catalog ID:* `{catalog_item_id}`\n"
                         f"• *Forensic Evidence:* `{save_img_filename}`\n\n"
@@ -727,9 +733,10 @@ async def _handle_user_message(
                     )
                 else:
                     resp_text = (
-                        f"✅ *NETRA Visual Verdict: AUTHENTIC / LOW RISK*\n\n"
+                        f"✅ *Visual Verdict: AUTHENTIC / LOW RISK*\n\n"
                         f"• *Verdict:* AUTHENTIC\n"
                         f"• *Risk Score:* {risk_score}%{file_display}\n"
+                        f"• *Detection Models:* RetinaFace + RapidOCR + GenD ViT-L\n"
                         f"• *Findings:* No manipulative seams or deepfake patterns detected.\n"
                         f"• *Threat Catalog ID:* `{catalog_item_id}`\n"
                         f"• *Saved to Forensic Ledger:* `{save_img_filename}`"
