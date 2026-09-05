@@ -132,30 +132,17 @@ function HybridDossier({
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
       {/* ── Unified Hero Verdict Header ── */}
-      <div className="rounded-xl border border-line bg-inset/50 p-4 space-y-2">
+      <div className="rounded-xl border border-line bg-surface/60 p-3.5 space-y-2">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div
-              className={cn(
-                "w-8 h-8 rounded-lg border flex items-center justify-center shrink-0",
-                compositeScore >= 75
-                  ? "text-red-400 border-red-500/30 bg-red-500/10"
-                  : compositeScore >= 40
-                  ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
-                  : "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
-              )}
-            >
-              {compositeScore >= 75 ? (
-                <AlertTriangle className="w-4 h-4" />
-              ) : (
-                <ShieldAlert className="w-4 h-4" />
-              )}
+            <div className="w-7 h-7 rounded-lg border border-line bg-inset flex items-center justify-center shrink-0 text-ink-2">
+              <ShieldAlert className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wide text-ink">
+              <h3 className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-ink">
                 {data.composite_verdict || "Hybrid Multi-Vector Threat Detected"}
               </h3>
-              <div className="text-[11px] text-ink-3 font-mono mt-0.5">
+              <div className="text-[10.5px] text-ink-3 font-mono mt-0.5">
                 Dual-Branch Pipeline: {faceCount} Subject(s) · {totalIOCs} Threat IOC(s)
                 {data.scan_id && <span> · {data.scan_id}</span>}
               </div>
@@ -163,21 +150,27 @@ function HybridDossier({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <StatusPill tone={scoreTone} size="sm" pulse={compositeScore >= 75}>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono border border-line bg-inset text-ink-2 font-medium">
+              <span
+                className={cn(
+                  "w-1.5 h-1.5 rounded-full",
+                  compositeScore >= 75 ? "bg-red-400" : "bg-zinc-400"
+                )}
+              />
               {compositeScore}% Risk · {compositeLevel}
-            </StatusPill>
+            </span>
           </div>
         </div>
 
         {data.recommendation && (
-          <p className="text-[11.5px] text-ink-2 leading-relaxed pt-2 border-t border-line/60">
+          <p className="text-[11px] text-ink-3 leading-relaxed pt-2 border-t border-line/50">
             {data.recommendation}
           </p>
         )}
       </div>
 
       {/* ── Segmented Tab Switcher ── */}
-      <div className="flex items-center gap-1 bg-inset rounded-xl p-1 border border-line">
+      <div className="flex items-center gap-1 bg-inset/80 rounded-xl p-1 border border-line">
         <button
           type="button"
           onClick={() => setActiveTab("face")}
@@ -189,10 +182,10 @@ function HybridDossier({
           )}
         >
           <span className="flex items-center gap-1.5">
-            <Eye className="w-3.5 h-3.5 text-accent" />
+            <Eye className="w-3.5 h-3.5 text-ink-2" />
             <span>Facial Deepfake Analysis</span>
           </span>
-          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white/5 text-ink-2">
+          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white/5 text-ink-3">
             {faceCount} Face{faceCount !== 1 ? "s" : ""}
           </span>
         </button>
@@ -208,10 +201,10 @@ function HybridDossier({
           )}
         >
           <span className="flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-accent" />
+            <FileText className="w-3.5 h-3.5 text-ink-2" />
             <span>Text Scam Intelligence</span>
           </span>
-          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white/5 text-ink-2">
+          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white/5 text-ink-3">
             {totalIOCs} IOC{totalIOCs !== 1 ? "s" : ""}
           </span>
         </button>

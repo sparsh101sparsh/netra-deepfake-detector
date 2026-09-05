@@ -126,18 +126,19 @@ function riskTone(verdict: string): "critical" | "orange" | "active" | "neutral"
 
 function MetricBar({ label, value, danger }: { label: string; value: number; danger?: boolean }) {
   const barPct = Math.min(100, Math.max(0, Math.round(value * 100)));
-  const barColor = danger
-    ? barPct >= 75 ? "bg-red-500" : barPct >= 50 ? "bg-amber-500" : "bg-emerald-500"
-    : barPct >= 75 ? "bg-emerald-500" : barPct >= 50 ? "bg-amber-500" : "bg-red-500";
+  const isHighDanger = danger && barPct >= 80;
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-[11px]">
         <span className="text-zinc-400 font-medium">{label}</span>
-        <span className="font-mono font-bold text-zinc-200">{barPct}%</span>
+        <span className="font-mono text-zinc-300 font-semibold">{barPct}%</span>
       </div>
-      <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+      <div className="h-1.5 w-full rounded-full bg-white/5 border border-line/40 overflow-hidden">
         <div
-          className={cn("h-full rounded-full transition-all duration-500", barColor)}
+          className={cn(
+            "h-full rounded-full transition-all duration-500",
+            isHighDanger ? "bg-red-400/80" : "bg-zinc-400"
+          )}
           style={{ width: `${barPct}%` }}
         />
       </div>
@@ -200,10 +201,10 @@ function InteractiveAnnotatedPreview({
   }
 
   return (
-    <div className="rounded-xl overflow-hidden border border-line bg-canvas">
+    <div className="rounded-xl overflow-hidden border-[1.5px] border-line bg-canvas">
       <div className="flex items-center justify-between px-3.5 py-2 border-b border-line bg-inset/40">
         <span className="text-[11px] font-semibold text-ink-2 uppercase tracking-wider flex items-center gap-1.5">
-          <Eye className="w-3.5 h-3.5 text-accent" />
+          <Eye className="w-3.5 h-3.5 text-ink-3" />
           Interactive Forensic Face Inspector
         </span>
         <span className="text-[10.5px] font-mono text-ink-3">
@@ -228,10 +229,13 @@ function InteractiveAnnotatedPreview({
             const [normX, normY, normW, normH] = face.normalized_bbox;
             const isActive = idx === activeFaceIdx;
             const isDeepfake = face.verdict === "DEEPFAKE";
-            const isSynthetic = face.verdict !== "AUTHENTIC";
 
-            // Red for DEEPFAKE, amber for other synthetic, emerald for AUTHENTIC
-            const borderColor = isDeepfake ? "#ef4444" : isSynthetic ? "#f59e0b" : "#10b981";
+            // Clean, minimal forensic boundary
+            const borderColor = isActive
+              ? "rgba(255, 255, 255, 0.9)"
+              : isDeepfake
+              ? "rgba(239, 68, 68, 0.7)"
+              : "rgba(255, 255, 255, 0.4)";
 
             return (
               <button
@@ -241,25 +245,24 @@ function InteractiveAnnotatedPreview({
                 className={cn(
                   "absolute cursor-pointer transition-all duration-150 rounded-sm focus:outline-none group",
                   isActive
-                    ? "ring-2 ring-white shadow-lg z-20"
-                    : "hover:ring-1 hover:ring-white/80 opacity-85 hover:opacity-100 z-10"
+                    ? "ring-1 ring-white/80 shadow-md z-20"
+                    : "hover:ring-1 hover:ring-white/50 opacity-80 hover:opacity-100 z-10"
                 )}
                 style={{
                   left: `${normX * 100}%`,
                   top: `${normY * 100}%`,
                   width: `${normW * 100}%`,
                   height: `${normH * 100}%`,
-                  border: `2px solid ${borderColor}`,
-                  backgroundColor: isActive ? `${borderColor}25` : "transparent",
+                  border: `1.5px solid ${borderColor}`,
+                  backgroundColor: isActive ? "rgba(255, 255, 255, 0.08)" : "transparent",
                 }}
                 title={`Click to inspect Face #${idx + 1} (${face.verdict} - ${Math.round((face.fake_probability ?? 0) * 100)}%)`}
               >
                 <span
                   className={cn(
-                    "absolute -top-5 left-0 px-1.5 py-0.5 text-[9px] font-mono font-bold text-white rounded shadow-sm whitespace-nowrap pointer-events-none transition-opacity",
+                    "absolute -top-5 left-0 px-1.5 py-0.5 text-[9px] font-mono text-white rounded bg-black/85 border border-white/20 shadow-sm whitespace-nowrap pointer-events-none transition-opacity",
                     isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                   )}
-                  style={{ backgroundColor: borderColor }}
                 >
                   Face #{idx + 1}: {Math.round((face.fake_probability ?? 0) * 100)}%
                 </span>
@@ -281,46 +284,35 @@ function FaceScorecard({ face }: { face: FaceEntry }) {
   const isSynthetic = face.verdict !== "AUTHENTIC";
   const isDeepfake = face.verdict === "DEEPFAKE";
 
-  const accentColor =
-    isDeepfake ? "text-red-400" : isSynthetic ? "text-amber-400" : "text-emerald-400";
-
   const metrics = face.neural_metrics || {};
   const [x = 0, y = 0, w = 0, h = 0] = face.bbox ?? [0, 0, 0, 0];
 
   return (
-    <div className="rounded-xl border border-line bg-inset/50 p-4 space-y-3.5">
+    <div className="rounded-xl border-[1.5px] border-line bg-surface/50 p-4 space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-line/60 pb-2.5">
+      <div className="flex items-center justify-between border-b border-line/50 pb-2.5">
         <div className="flex items-center gap-2">
-          {isSynthetic ? (
-            <XCircle className={cn("w-4 h-4", accentColor)} />
-          ) : (
-            <CheckCircle2 className={cn("w-4 h-4", accentColor)} />
-          )}
+          <Shield className="w-3.5 h-3.5 text-ink-3" />
           <span className="font-mono font-bold text-xs uppercase text-ink">
             {String(face.face_id || "face").replace(/_/g, " ").toUpperCase()}
           </span>
         </div>
-        <StatusPill
-          tone={riskTone(face.verdict)}
-          size="sm"
-          pulse={isDeepfake}
-        >
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium border border-line bg-inset text-ink-2">
           {face.verdict}
-        </StatusPill>
+        </span>
       </div>
 
       {/* Fake Probability Meter */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs">
           <span className="text-ink-3 font-medium">Synthetic Manipulation Probability</span>
-          <span className={cn("font-mono font-bold", accentColor)}>{pct(prob)}%</span>
+          <span className="font-mono font-bold text-ink">{pct(prob)}%</span>
         </div>
-        <div className="h-2 w-full rounded-full bg-canvas border border-line overflow-hidden">
+        <div className="h-1.5 w-full rounded-full bg-canvas border border-line/60 overflow-hidden">
           <div
             className={cn(
               "h-full rounded-full transition-all duration-700",
-              isDeepfake ? "bg-red-500" : isSynthetic ? "bg-amber-500" : "bg-emerald-500"
+              isDeepfake && prob >= 0.75 ? "bg-red-400/90" : "bg-zinc-300"
             )}
             style={{ width: `${pct(prob)}%` }}
           />
@@ -333,25 +325,25 @@ function FaceScorecard({ face }: { face: FaceEntry }) {
 
       {/* Neural Metrics */}
       {Object.keys(metrics).length > 0 && (
-        <div className="space-y-2 pt-2 border-t border-line/60">
+        <div className="space-y-2 pt-2 border-t border-line/50">
           <span className="text-[10.5px] font-semibold text-ink-3 uppercase tracking-wider flex items-center gap-1.5">
-            <Activity className="w-3 h-3 text-accent" />
+            <Activity className="w-3 h-3 text-ink-3" />
             Neural Forensic Telemetry
           </span>
           {metrics.sbi_artifact_level !== undefined && (
-            <MetricBar label="NETRA Spatial Seam Artifact Level" value={metrics.sbi_artifact_level} danger />
+            <MetricBar label="NETRA Spatial Seam (SBI Artifact Level)" value={metrics.sbi_artifact_level} danger />
           )}
           {metrics.ocular_reflection_symmetry !== undefined && (
             <MetricBar label="Ocular Reflection Symmetry" value={metrics.ocular_reflection_symmetry} danger={false} />
           )}
           {metrics.eyewear_specular_score !== undefined && (
-            <MetricBar label="Eyewear Specular Coherence" value={metrics.eyewear_specular_score / 100} danger />
+            <MetricBar label="Eyewear Specular Coherence" value={metrics.eyewear_specular_score / 100} danger={false} />
           )}
         </div>
       )}
 
       {/* Evidence Code + Details */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-line/60">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-line/50">
         {face.evidence_code && (
           <div>
             <div className="text-[9.5px] uppercase tracking-widest text-ink-3 mb-0.5">Evidence Code</div>
@@ -370,19 +362,19 @@ function FaceScorecard({ face }: { face: FaceEntry }) {
         </div>
         <div>
           <div className="text-[9.5px] uppercase tracking-widest text-ink-3 mb-0.5">Risk Level</div>
-          <div className={cn("font-mono text-[10.5px] font-bold", accentColor)}>{face.risk_level}</div>
+          <div className="font-mono text-[10.5px] font-bold text-ink-2">{face.risk_level}</div>
         </div>
       </div>
 
       {/* Flags */}
       {face.flags && face.flags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-line/60">
+        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-line/50">
           {face.flags.map((flag, i) => (
             <span
               key={i}
               className="inline-flex items-center gap-1 rounded-md bg-canvas border border-line px-2 py-0.5 text-[10px] font-mono text-ink-2"
             >
-              <Zap className="w-2.5 h-2.5 text-accent" />
+              <Zap className="w-2.5 h-2.5 text-ink-3" />
               {typeof flag === "string" ? flag.replace(/_/g, " ") : String(flag)}
             </span>
           ))}
@@ -514,7 +506,6 @@ export function FacialAnomalyCard({ data, onReset, className, embedded, clientPr
             <div className="flex flex-wrap gap-1.5">
               {faces.map((f, i) => {
                 const isSynth = f.verdict !== "AUTHENTIC";
-                const isDf = f.verdict === "DEEPFAKE";
                 const prob = Math.round((f.fake_probability ?? 0) * 100);
                 const isActive = i === activeFaceIdx;
 
@@ -524,20 +515,16 @@ export function FacialAnomalyCard({ data, onReset, className, embedded, clientPr
                     type="button"
                     onClick={() => setActiveFaceIdx(i)}
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-mono font-semibold transition-all border",
+                      "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-mono transition-all border",
                       isActive
-                        ? isDf
-                          ? "bg-red-500/20 border-red-500 text-red-300 ring-1 ring-red-500"
-                          : isSynth
-                          ? "bg-amber-500/20 border-amber-500 text-amber-300 ring-1 ring-amber-500"
-                          : "bg-emerald-500/20 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500"
-                        : "bg-inset border-line text-ink-3 hover:text-ink hover:border-white/20"
+                        ? "bg-surface text-ink border-white/30 font-semibold shadow-sm"
+                        : "bg-transparent border-transparent text-ink-3 hover:text-ink hover:bg-white/5"
                     )}
                   >
                     <span
                       className={cn(
-                        "w-2 h-2 rounded-full",
-                        isDf ? "bg-red-500" : isSynth ? "bg-amber-500" : "bg-emerald-500"
+                        "w-1.5 h-1.5 rounded-full",
+                        isActive ? "bg-white" : "bg-ink-3"
                       )}
                     />
                     <span>Face #{i + 1}: {prob}% {isSynth ? "Synthetic" : "Authentic"}</span>
@@ -565,14 +552,8 @@ export function FacialAnomalyCard({ data, onReset, className, embedded, clientPr
       {/* ── Header ── */}
       <div className="flex items-start justify-between border-b border-line pb-3">
         <div className="flex items-center gap-2.5">
-          <div className={cn("w-7 h-7 rounded-lg border-[1.5px] flex items-center justify-center", accentClass)}>
-            {isDeepfake ? (
-              <XCircle className="w-4 h-4" />
-            ) : isSynthetic ? (
-              <ShieldAlert className="w-4 h-4" />
-            ) : (
-              <Shield className="w-4 h-4" />
-            )}
+          <div className="w-7 h-7 rounded-lg border-[1.5px] border-line bg-inset flex items-center justify-center text-ink-2">
+            <Shield className="w-3.5 h-3.5" />
           </div>
           <div>
             <span className="font-mono uppercase font-bold text-xs text-ink block">
@@ -591,13 +572,13 @@ export function FacialAnomalyCard({ data, onReset, className, embedded, clientPr
             onClick={handleDownloadPDF}
             className="gap-1 font-mono text-[11px]"
           >
-            <Download className="w-3 h-3 text-accent" />
+            <Download className="w-3 h-3 text-ink-2" />
             Evidence PDF
           </Button>
           <StatusPill
             tone={riskTone(compositeVerdict)}
             size="sm"
-            pulse={isDeepfake}
+            pulse={false}
           >
             {pct(maxProb)}% SYNTHETIC
           </StatusPill>
@@ -605,12 +586,12 @@ export function FacialAnomalyCard({ data, onReset, className, embedded, clientPr
       </div>
 
       {/* ── Composite Verdict ── */}
-      <div className={cn("rounded-xl border px-4 py-3 space-y-0.5", accentClass)}>
-        <div className="text-xs font-bold uppercase tracking-wide">
+      <div className="rounded-xl border-[1.5px] border-line bg-surface/60 px-4 py-2.5 space-y-0.5">
+        <div className="text-xs font-bold uppercase tracking-wide text-ink">
           {data.composite_verdict || (isDeepfake ? "CRITICAL FACIAL DEEPFAKE DETECTED" : "FACIAL ANALYSIS COMPLETE")}
         </div>
         {data.recommendation && (
-          <div className="text-[11.5px] text-ink-2 leading-relaxed pt-1">{data.recommendation}</div>
+          <div className="text-[11px] text-ink-3 leading-relaxed pt-1">{data.recommendation}</div>
         )}
       </div>
 
@@ -656,7 +637,6 @@ export function FacialAnomalyCard({ data, onReset, className, embedded, clientPr
           <div className="flex flex-wrap gap-1.5">
             {faces.map((f, i) => {
               const isSynth = f.verdict !== "AUTHENTIC";
-              const isDf = f.verdict === "DEEPFAKE";
               const prob = Math.round((f.fake_probability ?? 0) * 100);
               const isActive = i === activeFaceIdx;
 
@@ -666,20 +646,16 @@ export function FacialAnomalyCard({ data, onReset, className, embedded, clientPr
                   type="button"
                   onClick={() => setActiveFaceIdx(i)}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-mono font-semibold transition-all border",
+                    "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-mono transition-all border",
                     isActive
-                      ? isDf
-                        ? "bg-red-500/20 border-red-500 text-red-300 ring-1 ring-red-500"
-                        : isSynth
-                        ? "bg-amber-500/20 border-amber-500 text-amber-300 ring-1 ring-amber-500"
-                        : "bg-emerald-500/20 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500"
-                      : "bg-inset border-line text-ink-3 hover:text-ink hover:border-white/20"
+                      ? "bg-surface text-ink border-white/30 font-semibold shadow-sm"
+                      : "bg-transparent border-transparent text-ink-3 hover:text-ink hover:bg-white/5"
                   )}
                 >
                   <span
                     className={cn(
-                      "w-2 h-2 rounded-full",
-                      isDf ? "bg-red-500" : isSynth ? "bg-amber-500" : "bg-emerald-500"
+                      "w-1.5 h-1.5 rounded-full",
+                      isActive ? "bg-white" : "bg-ink-3"
                     )}
                   />
                   <span>Face #{i + 1}: {prob}% {isSynth ? "Synthetic" : "Authentic"}</span>
