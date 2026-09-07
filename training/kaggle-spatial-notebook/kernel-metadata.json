@@ -1,5 +1,5 @@
 {
-  "id": "sudikshas47/netra-spatial-training",
+  "id": "sparsh101sparsh/netra-spatial-training",
   "title": "netra-spatial-training",
   "code_file": "script.py",
   "language": "python",
@@ -9,7 +9,7 @@
   "enable_internet": "true",
   "dataset_sources": [
     "aryankashyapnaveen/indian-face-dataset",
-    "sudikshas47/spatial-checkpoint"
+    "sparsh101sparsh/spatial-checkpoint"
   ],
   "competition_sources": [],
   "kernel_sources": [],

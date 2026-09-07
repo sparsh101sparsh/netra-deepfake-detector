@@ -526,17 +526,14 @@ NETRA is strategically designed to solve the critical gap in India's national fr
 
 > *मायातीतं सत्यस्य चक्षुः* — *Eye of truth beyond illusion.*
 
-### Core Team & Roles
+### Author & Architecture
 - **Sparsh**: Lead Architect & Systems Engineering
-- **Sudiksha**: UI/UX & Frontend Architecture
-- **Ranjan**: ML & Neural Forensics Researcher
-- **Swastika**: Cybercrime Typology & Legal Framework Lead
-- **Sumit**: ML Training & Data Pipeline Engineer
 
 ### Synchronized Git Repositories
 - **Primary Repo**: [https://github.com/sparsh101sparsh/netra-deepfake-detector](https://github.com/sparsh101sparsh/netra-deepfake-detector)
 - **Mirror Repo 2**: [https://github.com/sparsh101sparsh/netra_ai2](https://github.com/sparsh101sparsh/netra_ai2)
 - **Mirror Repo 3**: [https://github.com/sparsh101sparsh/netra-v4](https://github.com/sparsh101sparsh/netra-v4)
+- **Mirror Repo 4**: [https://github.com/sparsh101sparsh/netra-v5](https://github.com/sparsh101sparsh/netra-v5)
 
 ### Production Deployments
 - **Web Command Center**: [https://netra-deepfake-detector.vercel.app](https://netra-deepfake-detector.vercel.app)
