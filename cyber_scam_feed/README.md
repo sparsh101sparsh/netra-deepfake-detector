@@ -72,7 +72,7 @@ cyber_scam_feed/
 ├── tavily_engine.py          # Tavily search client with retries & thread pool
 ├── nlp_extractor.py          # Loss, location, severity, and MO extractors
 ├── storage.py                # SQLite persistence and deduplication engine
-├── notifications.py          # Telegram & WhatsApp broadcast message formatters
+├── notifications.py          # WhatsApp broadcast message formatters
 ├── dashboard.py              # Dark-mode HTML visual feed generator
 ├── pipeline.py               # Ingestion orchestrator
 ├── main.py                   # Unified CLI entrypoint
