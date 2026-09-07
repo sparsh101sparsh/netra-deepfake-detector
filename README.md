@@ -37,7 +37,7 @@
 14. [Performance & Hardware Guidelines](#-performance--hardware-guidelines)
 15. [Institutional Alignment (RBIH & I4C)](#-institutional-alignment-rbih--i4c)
 16. [Engineering Roadmap](#-engineering-roadmap)
-17. [Team, Repositories & License](#-team-repositories--license)
+17. [Author, Deployments & License](#-author-deployments--license)
 
 ---
 
@@ -522,21 +522,17 @@ NETRA is strategically designed to solve the critical gap in India's national fr
 
 ---
 
-## 🤝 Team, Repositories & License
+## 📜 Author, Deployments & License
 
 > *मायातीतं सत्यस्य चक्षुः* — *Eye of truth beyond illusion.*
 
 ### Author & Architecture
 - **Sparsh**: Lead Architect & Systems Engineering
-
-### Synchronized Git Repositories
-- **Primary Repo**: [https://github.com/sparsh101sparsh/netra-deepfake-detector](https://github.com/sparsh101sparsh/netra-deepfake-detector)
-- **Mirror Repo 2**: [https://github.com/sparsh101sparsh/netra_ai2](https://github.com/sparsh101sparsh/netra_ai2)
-- **Mirror Repo 3**: [https://github.com/sparsh101sparsh/netra-v4](https://github.com/sparsh101sparsh/netra-v4)
-- **Mirror Repo 4**: [https://github.com/sparsh101sparsh/netra-v5](https://github.com/sparsh101sparsh/netra-v5)
+- **GitHub**: [@sparsh101sparsh](https://github.com/sparsh101sparsh)
+- **Repository**: [https://github.com/sparsh101sparsh/netra-deepfake-detector](https://github.com/sparsh101sparsh/netra-deepfake-detector)
 
 ### Production Deployments
 - **Web Command Center**: [https://netra-deepfake-detector.vercel.app](https://netra-deepfake-detector.vercel.app)
 - **FastAPI Core Engine**: [https://netra-api-pmr7.onrender.com](https://netra-api-pmr7.onrender.com)
 
-**License**: MIT License\n
+**License**: Licensed under the [MIT License](LICENSE).
