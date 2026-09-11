@@ -192,12 +192,12 @@ Analyzed query: "${text}"
                   ONLINE
                 </span>
               </div>
-              <p className="text-[11px] font-mono text-slate-400">+1 415 523 8886 (Twilio + Meta Cloud API)</p>
+              <p className="text-[11px] font-mono text-slate-400">+1 555 201 3457 (Official Meta Cloud API)</p>
             </div>
           </div>
 
           <a
-            href="https://wa.me/14155238886?text=menu"
+            href="https://wa.me/15552013457?text=menu"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 text-xs font-bold rounded-lg transition-colors"

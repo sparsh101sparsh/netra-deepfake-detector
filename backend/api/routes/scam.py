@@ -30,7 +30,7 @@ async def detect_scam(request: ScamRequest, http_request: Request = None):
     text = request.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
-    if len(text) < 5:
+    if len(text) < 2:
         raise HTTPException(status_code=400, detail="Text too short to analyze.")
 
     t0 = time.time()

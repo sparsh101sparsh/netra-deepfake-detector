@@ -49,13 +49,13 @@ export default function CorsairPage() {
 
         <div className="flex items-center gap-4">
           <a
-            href="https://wa.me/14155238886?text=menu"
+            href="https://wa.me/15552013457?text=menu"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-[#25D366] hover:text-white font-semibold transition-colors"
           >
             <Smartphone className="w-3.5 h-3.5" />
-            <span>WhatsApp Bot: +1 415 523 8886</span>
+            <span>WhatsApp Bot: +1 555 201 3457</span>
             <ExternalLink className="w-3 h-3" />
           </a>
           <span className="text-slate-600">|</span>

@@ -209,7 +209,7 @@ export function executeMCPAgent(prompt: string): MCPAgentResponse {
       }
     });
 
-    responseText = 'The **NETRA WhatsApp Forensic Bot** is fully operational (+1 415 523 8886). It supports 4 modalities (Text, Image, Video, Audio), real-time Tavily search, and automatic failover. Citizens can connect directly via wa.me/14155238886.';
+    responseText = 'The **NETRA WhatsApp Forensic Bot** is fully operational (+1 555 201 3457). It supports 4 modalities (Text, Image, Video, Audio), real-time Tavily search, and automatic failover. Citizens can connect directly via wa.me/15552013457.';
   } else {
     toolCalls.push({
       tool: 'search_threat_catalog',

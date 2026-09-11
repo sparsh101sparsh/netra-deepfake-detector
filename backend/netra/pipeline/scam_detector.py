@@ -26,8 +26,13 @@ class ScamDetector:
 
         # Comprehensive pattern rules for Indian cyber crime typologies
         self.rules = {
+            "EXPLICIT_SCAM_AND_FRAUD_MARKERS": [
+                r"\b(?:scam|scams|scammer|scammers|scamming|fraud|frauds|fraudulent|phishing|phish|spoof|spoofing|extort|extortion|blackmail|blackmailing|ransom|ransomware|cheating|cheated|impersonat\w+|cyber\s*fraud|online\s*fraud|fake\s*(?:police|cbi|call|sms|message|notice|bill|bank|govt|order)|suspicious\s*(?:link|message|call|activity)|unauthorized\s*(?:access|transaction|charge|transfer))\b",
+                r"^(?:scam|fraud|phishing|fake|extortion|hacked|scam\s*alert|check\s*scam)$",
+                r"\b(?:is\s*this\s*(?:a\s*)?scam|check\s*(?:this\s*)?(?:scam|fraud))\b"
+            ],
             "DIGITAL_ARREST": [
-                r"\b(digital\s*arrest|cbi|ed\s*officer|police\s*hq|supreme\s*court|warrant\s*issued|cyber\s*cell|customs\s*parcel|narcotics\s*control)\b",
+                r"\b(digital\s*arrest|cbi|ed\s*officer|police\s*hq|supreme\s*court|warrant\s*issued|cyber\s*cell|customs\s*parcel|narcotics\s*control|nia\s*officer|crime\s*branch|mumbai\s*police|delhi\s*police|telecom\s*dept|dot\s*notice|sim\s*block\w*|non-bailable\s*warrant|arrest\s*warrant|money\s*laundering\s*case|terror\s*funding)\b",
                 r"\b(skype\s*call|video\s*hearing|do\s*not\s*disconnect|house\s*arrest|stay\s*on\s*video|mumbai\s*customs)\b"
             ],
             "ELECTRICITY_KYC": [
@@ -40,7 +45,7 @@ class ScamDetector:
             ],
             "APK_MALWARE": [
                 r"\.(apk|exe|dmg|bat|scr|vbs)\b",
-                r"\b(download\s*app|install\s*support\s*apk|quicksupport|anydesk|teamviewer|rustdesk)\b"
+                r"\b(download\s*app|install\s*(?:support\s*)?apk|whatsapp\s*pink|quicksupport|anydesk|teamviewer|rustdesk)\b"
             ],
             "FINANCIAL_EXTORTION_AND_CARD_THEFT": [
                 r"\b(?:give|send|share|tell|provide|input|enter)\s*(?:me\s*)?(?:ur|your)?\s*(?:credit\s*card|debit\s*card|atm\s*card|card\s*number|cvv|cvv2|expiry|atm\s*pin|net\s*banking\s*password|login\s*credentials|otp)\b",
@@ -49,19 +54,19 @@ class ScamDetector:
                 r"\b(?:give\s*me\s*money|urgent\s*transfer|need\s*money\s*urgently|send\s*(?:money|cash)\s*fast)\b"
             ],
             "BANKING_UPI_PHISHING": [
-                r"\b(kyc\s*(?:expiry|expire|suspended|pending|update|verify|verification)|pan\s*card|aadhaar\s*link|credit\s*card|debit\s*card|card\s*blocked|otp\s*verification|account\s*(?:block|blocked|suspended|frozen|warning))\b",
+                r"\b(kyc\s*(?:expiry|expire|suspended|pending|update|verify|verification)|pan\s*card|aadhaar\s*link|credit\s*card|debit\s*card|card\s*blocked|otp\s*verification|account\s*(?:block|blocked|suspended|frozen|warning)|net\s*banking|yono|sbi\s*yono|upi\s*pin|income\s*tax\s*refund|claim\s*refund|reward\s*points)\b",
                 r"\b(?:sbi|hdfc|icici|axis|pnb|bank)\s*(?:account|card)?\s*(?:has\s*been|is)?\s*(?:suspended|blocked|frozen|locked)\b",
                 r"\b(reward\s*points\s*expire|lottery\s*winner|claim\s*refund|income\s*tax\s*refund|kbc\s*lottery|kbcwinner|won\s*rs)\b",
-                r"\bhttps?://[^\s]+(?:kyc|verify|update|bank|sbi|otp)[^\s]*\b",
+                r"\bhttps?://[^\s]+(?:kyc|verify|update|bank|sbi|otp|login|secure)[^\s]*\b",
                 r"\b(?:upi\s*[:\s]*|@)[a-zA-Z0-9_\.\-]+@(?:paytm|okaxis|okhdfcbank|upi|ybl|apl)\b"
             ],
             "JOB_SCAM": [
-                r"\b(part\s*time\s*job|lik(?:e|ing)\s*(?:youtube|\w+\s*videos?)|telegram\s*(?:\w+\s*)?tasks?|earn\s*(?:rs\.?|inr|\$)?\s*[\d,]+|work\s*from\s*home|youtube\s*like)\b",
+                r"\b(part\s*time\s*job|lik(?:e|ing)\s*(?:youtube|\w+\s*videos?)|telegram\s*(?:\w+\s*)?tasks?|earn\s*(?:rs\.?|inr|\$)?\s*[\d,]+|work\s*from\s*home|wfh\s*job|youtube\s*like)\b",
                 r"\b(prepaid\s*task|rating\s*hotel|google\s*review\s*job)\b"
             ],
             "LOTTERY_PRIZE_FRAUD": [
                 r"\b(lucky\s*draw|sim\s*card\s*lucky\s*draw|for\s*all\s*sim\s*cards|lottery|lucky\s*lottery|kbc|kaun\s*banega\s*crorepati|crorepati)\b",
-                r"\b(won\s*(?:the|a)?\s*(?:prize|lottery|car|amount|cash)|prize\s*(?:of|money|amount)|collect\s*(?:your)?\s*prize|claim\s*(?:your)?\s*prize)\b",
+                r"\b(won\s*(?:the|a)?\s*(?:prize|lottery|car|amount|cash)|prize\s*(?:of|money|amount)|collect\s*(?:your)?\s*prize|claim\s*(?:your)?\s*prize|free\s*recharge|cash\s*reward)\b",
                 r"\b(only\s*whatsapp\s*call|whatsapp\s*call|kbc\s*(?:department|head\s*office|officer|winner|no|number)?|contact\s*only\s*(?:the\s*)?following\s*number)\b",
                 r"(25[,\s]*00[,\s]*000|25\s*lakh|50\s*lakh|1\s*crore|cash\s*prize)",
                 r"\b(state\s*bank\s*of\s*india|congratulations\s*(?:you)?\s*(?:have|heve|got)?\s*(?:won)?)\b",
@@ -107,6 +112,8 @@ class ScamDetector:
             rule_score_boost = max(rule_score_boost, 94)
         if "BANKING_UPI_PHISHING" in matched_rules:
             rule_score_boost = max(rule_score_boost, 92)
+        if "EXPLICIT_SCAM_AND_FRAUD_MARKERS" in matched_rules:
+            rule_score_boost = max(rule_score_boost, 88)
         if "ELECTRICITY_KYC" in matched_rules:
             rule_score_boost = max(rule_score_boost, 88)
         if "STOCK_TRADING_FRAUD" in matched_rules:
@@ -129,7 +136,8 @@ class ScamDetector:
             "apk_malware": "IT Act 2000 Section 43 & Section 66 (Hacking & Malware)",
             "stock_trading_fraud": "SEBI Act 1992 Section 12A (Fraudulent Practices), IT Act Sec 66D",
             "electricity_kyc": "IT Act 2000 Section 66D, BNS 2023 Section 318(4)",
-            "job_scam": "BNS 2023 Section 318(4) & IT Act 2000 Section 66D"
+            "job_scam": "BNS 2023 Section 318(4) & IT Act 2000 Section 66D",
+            "explicit_scam_and_fraud_markers": "IT Act 2000 Section 66D, Section 66C & BNS 2023 Section 318(4) (Cyber Fraud & Cheating)"
         }
 
         # Determine primary scam typology and reasoning
