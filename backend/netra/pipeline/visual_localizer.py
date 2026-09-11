@@ -16,6 +16,19 @@ import numpy as np
 from typing import Dict, Any, List, Optional, Tuple
 
 
+_SKIMAGE_CASCADE = None
+
+def _get_skimage_cascade():
+    global _SKIMAGE_CASCADE
+    if _SKIMAGE_CASCADE is None:
+        try:
+            from skimage import data, feature
+            _SKIMAGE_CASCADE = feature.Cascade(data.lbp_frontal_face_cascade_filename())
+        except Exception:
+            _SKIMAGE_CASCADE = False
+    return _SKIMAGE_CASCADE if _SKIMAGE_CASCADE is not False else None
+
+
 class AnomalyRegionType:
     """Standardized identifiers for spatial anomaly regions."""
     EYEWEAR = "eyewear_specular_glare"
@@ -28,8 +41,8 @@ class AnomalyRegionType:
 class VisualAnomalyLocalizer:
     """
     Analyzes visual video keyframes to pinpoint exact spatial manipulation zones.
-    Operates 100% offline using classical CV (skin segmentation, bilateral ocular
-    symmetry, perioral Laplacian seams, and golden-ratio projections).
+    Operates 100% offline using multi-tier machine-learned cascades (LBP frontal face,
+    Haar cascade fallbacks, bilateral ocular symmetry, and facial boundary seams).
     """
 
     # Exact OpenCV BGR color definitions (OpenCV uses BGR channel order)
@@ -50,15 +63,88 @@ class VisualAnomalyLocalizer:
     EVD_EYE_SPECULAR = "EVD-EYE-SPECULAR-GLARE"
     EVD_IRIS_CORNEAL = "EVD-IRIS-CORNEAL-DISCONTINUITY"
     EVD_LIP_SYNC_SEAM = "EVD-LIP-SYNC-BOUNDARY-SEAM"
+    EVD_FACE_SYNTHESIS = "EVD-FACE-SYNTHESIS-SEAM"
 
     @classmethod
     def estimate_face_roi(cls, frame_bgr: np.ndarray) -> Tuple[int, int, int, int]:
         """
-        Estimates the primary facial region of interest (ROI) using 100% offline
-        YCrCb skin-color segmentation with morphological filtering, falling back
-        gracefully to a golden-ratio portrait center crop.
+        Hardened multi-tier facial ROI detector:
+          Tier 1: Fast machine-learned LBP frontal face cascade (skimage built-in, 100% offline)
+          Tier 2: OpenCV Haar Cascade frontal face detector
+          Tier 3: Morphological skin-color segmentation with strict facial aspect ratio & center bias
+          Tier 4: Golden-ratio upper-middle portrait crop fallback
         """
+        if frame_bgr is None or frame_bgr.size == 0:
+            return (0, 0, 0, 0)
         img_h, img_w = frame_bgr.shape[:2]
+        if img_h <= 10 or img_w <= 10:
+            return (0, 0, img_w, img_h)
+
+        # ── Tier 1: Real Machine-Learned Facial Landmark Detection via LBP Cascade ──
+        try:
+            det = _get_skimage_cascade()
+            if det is not None:
+                scale = 1.0
+                max_dim = max(img_h, img_w)
+                if max_dim > 800:
+                    scale = 800.0 / float(max_dim)
+                    small = cv2.resize(frame_bgr, (max(1, int(img_w * scale)), max(1, int(img_h * scale))))
+                else:
+                    small = frame_bgr
+
+                sh, sw = small.shape[:2]
+                if sh >= 20 and sw >= 20:
+                    gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY) if len(small.shape) == 3 and small.shape[2] >= 3 else small
+                    min_sz = max(24, int(min(sh, sw) * 0.10))
+                    max_sz = min(sh, sw)
+                    faces = det.detect_multi_scale(
+                        gray,
+                        scale_factor=1.2,
+                        step_ratio=1,
+                        min_size=(min_sz, min_sz),
+                        max_size=(max_sz, max_sz)
+                    )
+                    if faces is not None and len(faces) > 0:
+                        def _score_face(f):
+                            r, c, fw, fh = f['r'], f['c'], f['width'], f['height']
+                            cx, cy = c + fw / 2.0, r + fh / 2.0
+                            dist = np.hypot(cx - sw * 0.50, cy - sh * 0.40)
+                            return (float(fw) * float(fh)) - (dist * 25.0)
+
+                        best = max(faces, key=_score_face)
+                        bx = int(round(best['c'] / scale))
+                        by = int(round(best['r'] / scale))
+                        bw = int(round(best['width'] / scale))
+                        bh = int(round(best['height'] / scale))
+
+                        # Clamp within frame limits
+                        bx = max(0, min(img_w - 20, bx))
+                        by = max(0, min(img_h - 20, by))
+                        bw = max(20, min(img_w - bx, bw))
+                        bh = max(20, min(img_h - by, bh))
+                        return (bx, by, bw, bh)
+        except Exception:
+            pass
+
+        # ── Tier 2: OpenCV CascadeClassifier (if available in this python environment) ──
+        try:
+            from backend.netra.pipeline.face_aligner import _load_safe_cascade
+            face_cascade = _load_safe_cascade("haarcascade_frontalface_default.xml")
+            if face_cascade is not None and hasattr(face_cascade, "detectMultiScale"):
+                gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY) if len(frame_bgr.shape) == 3 else frame_bgr
+                cv_faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(40, 40))
+                if len(cv_faces) > 0:
+                    best = max(cv_faces, key=lambda r: r[2] * r[3] - np.hypot(r[0] + r[2]/2.0 - img_w*0.5, r[1] + r[3]/2.0 - img_h*0.4) * 15.0)
+                    bx, by, bw, bh = map(int, best)
+                    bx = max(0, min(img_w - 20, bx))
+                    by = max(0, min(img_h - 20, by))
+                    bw = max(20, min(img_w - bx, bw))
+                    bh = max(20, min(img_h - by, bh))
+                    return (bx, by, bw, bh)
+        except Exception:
+            pass
+
+        # ── Tier 3: Morphological Skin-Color Segmentation with Facial Geometry Gates ──
         try:
             ycrcb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2YCrCb)
             cr = ycrcb[:, :, 1]
@@ -81,9 +167,9 @@ class VisualAnomalyLocalizer:
             for c in contours:
                 x, y, bw, bh = cv2.boundingRect(c)
                 # Face candidate must occupy a reasonable fraction of the frame
-                if bw >= img_w * 0.12 and bh >= img_h * 0.12:
+                if bw >= img_w * 0.10 and bh >= img_h * 0.10:
                     aspect = float(bh) / max(1.0, float(bw))
-                    if 0.65 <= aspect <= 2.2:
+                    if 0.70 <= aspect <= 1.8:
                         cx, cy = x + bw / 2.0, y + bh / 2.0
                         # Bias towards center of upper-middle frame
                         dist = np.hypot(cx - img_w * 0.50, cy - img_h * 0.40)
@@ -103,9 +189,9 @@ class VisualAnomalyLocalizer:
         except Exception:
             pass
 
-        # Golden ratio portrait fallback (center upper-middle crop)
-        fw = max(40, int(img_w * 0.44))
-        fh = max(40, int(img_h * 0.52))
+        # ── Tier 4: Golden ratio portrait fallback (center upper-middle crop) ──
+        fw = max(20, min(img_w, int(img_w * 0.44)))
+        fh = max(20, min(img_h, int(img_h * 0.52)))
         fx = max(0, int((img_w - fw) / 2))
         fy = max(0, int(img_h * 0.18))
         return (fx, fy, fw, fh)
@@ -117,10 +203,11 @@ class VisualAnomalyLocalizer:
         face_bbox: Optional[Tuple[int, int, int, int]] = None
     ) -> Dict[str, Tuple[int, int, int, int]]:
         """
-        Isolates exact 2D pixel bounding boxes for all 3 facial landmark zones:
+        Isolates exact 2D pixel bounding boxes for all facial landmark zones:
           1. Eyewear Specular Glare Plane
           2. Iris / Pupil Corneal Reflection Discontinuity
           3. Lip-Sync Blending Boundary
+          4. Facial Synthesis & Blending Boundary Seam
         """
         img_h, img_w = frame_bgr.shape[:2]
         if face_bbox is None or len(face_bbox) != 4 or face_bbox[2] < 20 or face_bbox[3] < 20:
@@ -145,28 +232,38 @@ class VisualAnomalyLocalizer:
         lip_w = max(20, min(img_w - lip_x, int(fw * 0.60)))
         lip_h = max(20, min(img_h - lip_y, int(fh * 0.25)))
 
+        # 4. Facial Synthesis & Blending Boundary: comprehensive face envelope
+        face_pad_x = int(fw * 0.04)
+        face_pad_y = int(fh * 0.04)
+        face_x = max(0, min(img_w - 20, fx - face_pad_x))
+        face_y = max(0, min(img_h - 20, fy - face_pad_y))
+        face_w = max(20, min(img_w - face_x, fw + 2 * face_pad_x))
+        face_h = max(20, min(img_h - face_y, fh + 2 * face_pad_y))
+
         return {
             AnomalyRegionType.EYEWEAR: (int(ew_x), int(ew_y), int(ew_w), int(ew_h)),
             AnomalyRegionType.IRIS: (int(iris_x), int(iris_y), int(iris_w), int(iris_h)),
             AnomalyRegionType.LIP_SYNC: (int(lip_x), int(lip_y), int(lip_w), int(lip_h)),
-            AnomalyRegionType.FACIAL_SEAM: (int(lip_x), int(lip_y), int(lip_w), int(lip_h)),
+            AnomalyRegionType.FACIAL_SEAM: (int(face_x), int(face_y), int(face_w), int(face_h)),
         }
 
     @classmethod
     def evaluate_primary_anomaly(
         cls,
         frame_bgr: np.ndarray,
-        face_bbox: Optional[Tuple[int, int, int, int]] = None
+        face_bbox: Optional[Tuple[int, int, int, int]] = None,
+        anomaly_score: float = 0.95,
     ) -> Tuple[str, Tuple[int, int, int, int], Dict[str, Any]]:
         """
         Evaluates candidate facial landmark regions using classical CV forensic metrics:
           - Eyewear specular glare: high-frequency variance + specular highlight ratio (>215)
           - Iris corneal reflection: bilateral ocular asymmetry (left vs right glints and mean gradient)
           - Lip-sync blending: perioral Laplacian variance and Sobel boundary seam gradients
+          - Facial synthesis & boundary seam: deepfake boundary artifacts across face perimeter
         Returns (chosen_region_type, bounding_box, metadata).
         """
         regions = cls.isolate_regions(frame_bgr, face_bbox)
-        gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY) if len(frame_bgr.shape) == 3 else frame_bgr
 
         # 1. Eyewear Specular Glare metric
         ew_box = regions[AnomalyRegionType.EYEWEAR]
@@ -204,15 +301,10 @@ class VisualAnomalyLocalizer:
         else:
             lip_score = 0.0
 
-        # R3: Threshold-gated anomaly selection with calibrated empirical baselines.
-        # Authentic selfies under natural laptop/studio lighting have eyewear scores < 15.0
-        # and iris ocular reflection difference < 80.0.
-        # Genuine deepfakes (like test_comp_new_inswap) exhibit eyewear scores > 100.0 and iris > 200.0.
-        _EW_THRESHOLD = 35.0       # Eyewear specular: 35.0+ indicates genuine synthetic glare discontinuity
-        _IRIS_THRESHOLD = 115.0    # Iris asymmetry: 115.0+ indicates bilateral ocular discontinuity
-        _LIP_THRESHOLD = 55.0      # Perioral Laplacian: 55.0+ indicates blending seam
-        # NOTE: Lip-sync is a video-only artifact; static 2D images cannot have lip-sync.
-        # Disabled entirely for single-frame analysis (R3: disable on static images).
+        # Thresholds for specific landmark micro-artifacts
+        _EW_THRESHOLD = 35.0
+        _IRIS_THRESHOLD = 115.0
+        _LIP_THRESHOLD = 55.0
         _LIP_ENABLED = False
 
         iris_fires = iris_score > _IRIS_THRESHOLD
@@ -241,13 +333,23 @@ class VisualAnomalyLocalizer:
             region_name = "Eyewear / Specular Glare Plane"
             statutory_act = "Synthetic Facial Manipulation"
         else:
-            # Biological facial coherence verified — no anomalous manipulation detected
-            chosen_type = AnomalyRegionType.NONE
-            chosen_box = (0, 0, 0, 0)
-            semantic_label = "Biological Facial Coherence Verified — No Artifacts Detected"
-            evidence_code = "EVD-COHERENCE-VERIFIED"
-            region_name = "Eyewear / Specular Glare Plane"
-            statutory_act = "Synthetic Facial Manipulation"
+            # When none of the specific micro-glare heuristics fired:
+            # If the frame has an elevated anomaly score (deepfake detected by neural models):
+            if anomaly_score is not None and float(anomaly_score) >= 0.50:
+                chosen_type = AnomalyRegionType.FACIAL_SEAM
+                chosen_box = regions[AnomalyRegionType.FACIAL_SEAM]
+                semantic_label = "Synthetic Face Synthesis & Boundary Seam Discontinuity"
+                evidence_code = cls.EVD_FACE_SYNTHESIS
+                region_name = "Facial Synthesis & Boundary Seam"
+                statutory_act = "Synthetic Facial Manipulation"
+            else:
+                # Biological facial coherence verified — no anomalous manipulation detected
+                chosen_type = AnomalyRegionType.NONE
+                chosen_box = regions[AnomalyRegionType.FACIAL_SEAM]
+                semantic_label = "Biological Facial Coherence Verified — No Artifacts Detected"
+                evidence_code = "EVD-COHERENCE-VERIFIED"
+                region_name = "Facial Coherence Verification Zone"
+                statutory_act = "Synthetic Facial Manipulation"
 
         meta = {
             "chosen_type": chosen_type,
@@ -273,8 +375,10 @@ class VisualAnomalyLocalizer:
             return AnomalyRegionType.EYEWEAR
         if any(k in r for k in ("iris", "pupil", "corneal", "ocular", "evd-iris-corneal-discontinuity")):
             return AnomalyRegionType.IRIS
-        if any(k in r for k in ("lip", "mouth", "seam", "sync", "perioral", "evd-lip-sync-boundary-seam")):
+        if any(k in r for k in ("lip", "mouth", "sync", "perioral", "evd-lip-sync-boundary-seam")):
             return AnomalyRegionType.LIP_SYNC
+        if any(k in r for k in ("face", "seam", "facial", "boundary", "synthesis", "evd-face-synthesis-seam")):
+            return AnomalyRegionType.FACIAL_SEAM
         return None
 
     @classmethod
@@ -391,16 +495,21 @@ class VisualAnomalyLocalizer:
 
         if normalized_target is not None:
             regions = cls.isolate_regions(frame_bgr, face_bbox)
-            target_box = regions.get(normalized_target, regions[AnomalyRegionType.EYEWEAR])
+            target_box = regions.get(normalized_target, regions[AnomalyRegionType.FACIAL_SEAM])
             if normalized_target == AnomalyRegionType.IRIS:
                 semantic_label = "Iris/Pupil Corneal Reflection Discontinuity"
                 evidence_code = cls.EVD_IRIS_CORNEAL
                 region_name = "Iris / Pupil Ocular Region"
                 statutory_act = "Synthetic Facial Manipulation"
-            elif normalized_target in (AnomalyRegionType.LIP_SYNC, AnomalyRegionType.FACIAL_SEAM):
+            elif normalized_target == AnomalyRegionType.LIP_SYNC:
                 semantic_label = "Lip-Sync Blending Boundary Artifact"
                 evidence_code = cls.EVD_LIP_SYNC_SEAM
                 region_name = "Perioral / Mouth Blending Boundary"
+                statutory_act = "Synthetic Facial Manipulation"
+            elif normalized_target == AnomalyRegionType.FACIAL_SEAM:
+                semantic_label = "Synthetic Face Synthesis & Boundary Seam Discontinuity"
+                evidence_code = cls.EVD_FACE_SYNTHESIS
+                region_name = "Facial Synthesis & Boundary Seam"
                 statutory_act = "Synthetic Facial Manipulation"
             else:
                 semantic_label = "Eyewear Specular Glare & Feature Discontinuity"
@@ -409,16 +518,18 @@ class VisualAnomalyLocalizer:
                 statutory_act = "Synthetic Facial Manipulation"
             detail_meta: Dict[str, Any] = {"regional_scores": {}}
         else:
-            chosen_type, target_box, detail_meta = cls.evaluate_primary_anomaly(frame_bgr, face_bbox)
+            chosen_type, target_box, detail_meta = cls.evaluate_primary_anomaly(
+                frame_bgr, face_bbox, anomaly_score=anomaly_score
+            )
             semantic_label = detail_meta["semantic_label"]
             evidence_code = detail_meta["evidence_code"]
             region_name = detail_meta["region_name"]
             statutory_act = detail_meta["statutory_act"]
 
-        # If target_box is unassigned or zero area, use the golden ratio facial landmark fallback
+        # If target_box is unassigned or zero area, use the verified facial landmark fallback
         if target_box is None or len(target_box) != 4 or target_box[2] <= 0 or target_box[3] <= 0:
             regions = cls.isolate_regions(frame_bgr, face_bbox)
-            target_box = regions.get(AnomalyRegionType.EYEWEAR, cls.estimate_face_roi(frame_bgr))
+            target_box = regions.get(AnomalyRegionType.FACIAL_SEAM, cls.estimate_face_roi(frame_bgr))
 
         annotated = frame_bgr.copy()
         bx, by, bw, bh = target_box

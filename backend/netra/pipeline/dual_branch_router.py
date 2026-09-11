@@ -494,7 +494,7 @@ def score_individual_faces(
         # 3. Visual Anomaly Localization (Eyewear, Iris, Lip-Sync)
         try:
             chosen_type, target_box, meta = VisualAnomalyLocalizer.evaluate_primary_anomaly(
-                img_bgr, (x, y, w, h)
+                img_bgr, (x, y, w, h), anomaly_score=fake_prob
             )
             regional_scores = meta.get("regional_scores", {})
             semantic_label = meta.get("semantic_label", "Facial Manipulation Artifact")

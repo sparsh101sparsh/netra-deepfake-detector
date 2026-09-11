@@ -121,7 +121,8 @@ class TestAdversarialPixelDistributions(unittest.TestCase):
         self.assertIn(meta["anomaly_region"], [
             "Eyewear / Specular Glare Plane",
             "Iris / Pupil Ocular Region",
-            "Perioral / Mouth Blending Boundary"
+            "Perioral / Mouth Blending Boundary",
+            "Facial Synthesis & Boundary Seam",
         ])
         for k, v in meta["diagnostics"].items():
             self.assertFalse(math.isnan(v), f"Diagnostic metric {k} was NaN on solid black frame")
