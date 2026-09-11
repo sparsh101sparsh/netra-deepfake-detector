@@ -97,7 +97,7 @@ def _format_scam_updates() -> str:
         from netra.services.tavily_crawler import get_latest_scam_news
         reports = get_latest_scam_news(limit=3)
         if reports:
-            msg = "📢 *NETRA 24h National Cyber Threat Bulletin (Powered by Tavily)*\n\n"
+            msg = "📢 *NETRA 24h National Cyber Threat Bulletin*\n\n"
             for idx, rep in enumerate(reports, 1):
                 title = rep.get("title", "Cyber Alert").strip()
                 summary = (rep.get("summary") or "").strip()
@@ -112,7 +112,7 @@ def _format_scam_updates() -> str:
         logger.warning(f"Error fetching Tavily scam news: {err}")
 
     return (
-        "📢 *NETRA 24h National Cyber Threat Bulletin (Powered by Tavily)*\n\n"
+        "📢 *NETRA 24h National Cyber Threat Bulletin*\n\n"
         "1️⃣ *Digital Arrest Cyber Extortion Ring Active*\n"
         "• Modus: Impersonation of CBI / Enforcement Directorate officers via video calls.\n"
         "• Advisory: Law enforcement agencies NEVER conduct judicial arrests over WhatsApp/Skype.\n\n"

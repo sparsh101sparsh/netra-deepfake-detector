@@ -92,7 +92,7 @@ def generate_html_dashboard(summary: FeedSummary) -> str:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Cyber Scam Feed (Powered By Tavily)</title>
+    <title>Live Cyber Scam Feed</title>
     <style>
         :root {{
             --bg-base: #111215;
@@ -584,7 +584,6 @@ def generate_html_dashboard(summary: FeedSummary) -> str:
             <div class="header-titles">
                 <div class="header-title-row">
                     <h1>Live Cyber Scam Feed</h1>
-                    <span class="tavily-pill">(Powered By Tavily)</span>
                 </div>
                 <p class="header-subtitle">Real-time alerts and reports aggregated from national cybercrime warnings.</p>
             </div>

@@ -217,7 +217,7 @@ export function LiveCyberScamNewsFeed({
 
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-zinc-400 bg-white/[0.04] border border-white/10 shrink-0">
             <span className="size-1.5 rounded-full bg-accent" />
-            Powered by Tavily
+            Live Threat Intel
           </span>
         </div>
 

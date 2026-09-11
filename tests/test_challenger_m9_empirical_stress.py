@@ -475,7 +475,7 @@ class TestChallengerParameterBoundaries:
         ("eyewear", "Eyewear"),
         ("iris", "Iris"),
         ("lip_sync", "Lip-Sync"),
-        ("facial_seam", "Lip-Sync"),
+        ("facial_seam", "Synthesis"),
     ])
     def test_forced_region_overrides(self, region_key, expected_substring):
         """Verifies that forced_region correctly routes to requested landmark region."""

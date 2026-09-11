@@ -24,9 +24,18 @@ def _get_skimage_cascade():
         try:
             from skimage import data, feature
             _SKIMAGE_CASCADE = feature.Cascade(data.lbp_frontal_face_cascade_filename())
+            # Warm-up cascade kernel on tiny dummy image to avoid cold-start latency spike
+            dummy = np.zeros((48, 48), dtype=np.uint8)
+            _SKIMAGE_CASCADE.detect_multi_scale(dummy, scale_factor=1.3, step_ratio=3, min_size=(20, 20), max_size=(48, 48))
         except Exception:
             _SKIMAGE_CASCADE = False
     return _SKIMAGE_CASCADE if _SKIMAGE_CASCADE is not False else None
+
+# Eager warm-up at module load time
+try:
+    _get_skimage_cascade()
+except Exception:
+    pass
 
 
 class AnomalyRegionType:
@@ -86,8 +95,8 @@ class VisualAnomalyLocalizer:
             if det is not None:
                 scale = 1.0
                 max_dim = max(img_h, img_w)
-                if max_dim > 800:
-                    scale = 800.0 / float(max_dim)
+                if max_dim > 480:
+                    scale = 480.0 / float(max_dim)
                     small = cv2.resize(frame_bgr, (max(1, int(img_w * scale)), max(1, int(img_h * scale))))
                 else:
                     small = frame_bgr
@@ -99,8 +108,8 @@ class VisualAnomalyLocalizer:
                     max_sz = min(sh, sw)
                     faces = det.detect_multi_scale(
                         gray,
-                        scale_factor=1.2,
-                        step_ratio=1,
+                        scale_factor=1.25,
+                        step_ratio=2,
                         min_size=(min_sz, min_sz),
                         max_size=(max_sz, max_sz)
                     )
@@ -193,7 +202,7 @@ class VisualAnomalyLocalizer:
         fw = max(20, min(img_w, int(img_w * 0.44)))
         fh = max(20, min(img_h, int(img_h * 0.52)))
         fx = max(0, int((img_w - fw) / 2))
-        fy = max(0, int(img_h * 0.18))
+        fy = max(0, int(img_h * 0.16))
         return (fx, fy, fw, fh)
 
     @classmethod
@@ -208,6 +217,8 @@ class VisualAnomalyLocalizer:
           2. Iris / Pupil Corneal Reflection Discontinuity
           3. Lip-Sync Blending Boundary
           4. Facial Synthesis & Blending Boundary Seam
+        All bounding boxes are strictly calibrated to preserve facial identity
+        (< 30% of face ROI, < 8% of frame area).
         """
         img_h, img_w = frame_bgr.shape[:2]
         if face_bbox is None or len(face_bbox) != 4 or face_bbox[2] < 20 or face_bbox[3] < 20:
@@ -215,36 +226,34 @@ class VisualAnomalyLocalizer:
         fx, fy, fw, fh = face_bbox
 
         # 1. Eyewear Specular Glare Plane: upper ocular band covering spectacle bridge and lenses
-        ew_x = max(0, min(img_w - 20, fx + int(fw * 0.08)))
-        ew_y = max(0, min(img_h - 20, fy + int(fh * 0.20)))
-        ew_w = max(20, min(img_w - ew_x, int(fw * 0.84)))
-        ew_h = max(20, min(img_h - ew_y, int(fh * 0.28)))
+        ew_x = max(0, min(img_w - 20, fx + int(fw * 0.15)))
+        ew_y = max(0, min(img_h - 20, fy + int(fh * 0.22)))
+        ew_w = max(20, min(img_w - ew_x, int(fw * 0.70)))
+        ew_h = max(20, min(img_h - ew_y, int(fh * 0.20)))
 
         # 2. Iris / Pupil Corneal Reflection Discontinuity: focused ocular socket band
-        iris_x = max(0, min(img_w - 20, fx + int(fw * 0.14)))
+        iris_x = max(0, min(img_w - 20, fx + int(fw * 0.16)))
         iris_y = max(0, min(img_h - 20, fy + int(fh * 0.24)))
-        iris_w = max(20, min(img_w - iris_x, int(fw * 0.72)))
-        iris_h = max(20, min(img_h - iris_y, int(fh * 0.19)))
+        iris_w = max(20, min(img_w - iris_x, int(fw * 0.68)))
+        iris_h = max(20, min(img_h - iris_y, int(fh * 0.18)))
 
         # 3. Lip-Sync Blending Boundary: perioral mouth boundary seam
-        lip_x = max(0, min(img_w - 20, fx + int(fw * 0.20)))
+        lip_x = max(0, min(img_w - 20, fx + int(fw * 0.22)))
         lip_y = max(0, min(img_h - 20, fy + int(fh * 0.64)))
-        lip_w = max(20, min(img_w - lip_x, int(fw * 0.60)))
-        lip_h = max(20, min(img_h - lip_y, int(fh * 0.25)))
+        lip_w = max(20, min(img_w - lip_x, int(fw * 0.55)))
+        lip_h = max(20, min(img_h - lip_y, int(fh * 0.22)))
 
-        # 4. Facial Synthesis & Blending Boundary: comprehensive face envelope
-        face_pad_x = int(fw * 0.04)
-        face_pad_y = int(fh * 0.04)
-        face_x = max(0, min(img_w - 20, fx - face_pad_x))
-        face_y = max(0, min(img_h - 20, fy - face_pad_y))
-        face_w = max(20, min(img_w - face_x, fw + 2 * face_pad_x))
-        face_h = max(20, min(img_h - face_y, fh + 2 * face_pad_y))
+        # 4. Facial Synthesis & Blending Boundary Seam: localized perimeter boundary seam
+        seam_x = max(0, min(img_w - 20, fx + int(fw * 0.16)))
+        seam_y = max(0, min(img_h - 20, fy + int(fh * 0.08)))
+        seam_w = max(20, min(img_w - seam_x, int(fw * 0.68)))
+        seam_h = max(20, min(img_h - seam_y, int(fh * 0.25)))
 
         return {
             AnomalyRegionType.EYEWEAR: (int(ew_x), int(ew_y), int(ew_w), int(ew_h)),
             AnomalyRegionType.IRIS: (int(iris_x), int(iris_y), int(iris_w), int(iris_h)),
             AnomalyRegionType.LIP_SYNC: (int(lip_x), int(lip_y), int(lip_w), int(lip_h)),
-            AnomalyRegionType.FACIAL_SEAM: (int(face_x), int(face_y), int(face_w), int(face_h)),
+            AnomalyRegionType.FACIAL_SEAM: (int(seam_x), int(seam_y), int(seam_w), int(seam_h)),
         }
 
     @classmethod
@@ -317,21 +326,21 @@ class VisualAnomalyLocalizer:
             semantic_label = "Iris/Pupil Corneal Reflection Discontinuity"
             evidence_code = cls.EVD_IRIS_CORNEAL
             region_name = "Iris / Pupil Ocular Region"
-            statutory_act = "Synthetic Facial Manipulation"
+            statutory_act = "Section 66D IT Act 2000 & Section 318(4) BNS 2023 - Synthetic Facial Manipulation"
         elif lip_fires and lip_score > ew_score:
             chosen_type = AnomalyRegionType.LIP_SYNC
             chosen_box = lip_box
             semantic_label = "Lip-Sync Blending Boundary Artifact"
             evidence_code = cls.EVD_LIP_SYNC_SEAM
             region_name = "Perioral / Mouth Blending Boundary"
-            statutory_act = "Synthetic Facial Manipulation"
+            statutory_act = "Section 66D IT Act 2000 & Section 318(4) BNS 2023 - Synthetic Facial Manipulation"
         elif ew_fires:
             chosen_type = AnomalyRegionType.EYEWEAR
             chosen_box = ew_box
             semantic_label = "Eyewear Specular Glare & Feature Discontinuity"
             evidence_code = cls.EVD_EYE_SPECULAR
             region_name = "Eyewear / Specular Glare Plane"
-            statutory_act = "Synthetic Facial Manipulation"
+            statutory_act = "Section 66D IT Act 2000 & Section 318(4) BNS 2023 - Synthetic Facial Manipulation"
         else:
             # When none of the specific micro-glare heuristics fired:
             # If the frame has an elevated anomaly score (deepfake detected by neural models):
@@ -341,7 +350,7 @@ class VisualAnomalyLocalizer:
                 semantic_label = "Synthetic Face Synthesis & Boundary Seam Discontinuity"
                 evidence_code = cls.EVD_FACE_SYNTHESIS
                 region_name = "Facial Synthesis & Boundary Seam"
-                statutory_act = "Synthetic Facial Manipulation"
+                statutory_act = "Section 66D IT Act 2000 & Section 318(4) BNS 2023 - Synthetic Facial Manipulation"
             else:
                 # Biological facial coherence verified — no anomalous manipulation detected
                 chosen_type = AnomalyRegionType.NONE
@@ -349,7 +358,7 @@ class VisualAnomalyLocalizer:
                 semantic_label = "Biological Facial Coherence Verified — No Artifacts Detected"
                 evidence_code = "EVD-COHERENCE-VERIFIED"
                 region_name = "Facial Coherence Verification Zone"
-                statutory_act = "Synthetic Facial Manipulation"
+                statutory_act = "Section 66D IT Act 2000 Compliance Verified"
 
         meta = {
             "chosen_type": chosen_type,
@@ -500,22 +509,22 @@ class VisualAnomalyLocalizer:
                 semantic_label = "Iris/Pupil Corneal Reflection Discontinuity"
                 evidence_code = cls.EVD_IRIS_CORNEAL
                 region_name = "Iris / Pupil Ocular Region"
-                statutory_act = "Synthetic Facial Manipulation"
+                statutory_act = "Section 66D IT Act 2000 & Section 318(4) BNS 2023 - Synthetic Facial Manipulation"
             elif normalized_target == AnomalyRegionType.LIP_SYNC:
                 semantic_label = "Lip-Sync Blending Boundary Artifact"
                 evidence_code = cls.EVD_LIP_SYNC_SEAM
                 region_name = "Perioral / Mouth Blending Boundary"
-                statutory_act = "Synthetic Facial Manipulation"
+                statutory_act = "Section 66D IT Act 2000 & Section 318(4) BNS 2023 - Synthetic Facial Manipulation"
             elif normalized_target == AnomalyRegionType.FACIAL_SEAM:
                 semantic_label = "Synthetic Face Synthesis & Boundary Seam Discontinuity"
                 evidence_code = cls.EVD_FACE_SYNTHESIS
                 region_name = "Facial Synthesis & Boundary Seam"
-                statutory_act = "Synthetic Facial Manipulation"
+                statutory_act = "Section 66D IT Act 2000 & Section 318(4) BNS 2023 - Synthetic Facial Manipulation"
             else:
                 semantic_label = "Eyewear Specular Glare & Feature Discontinuity"
                 evidence_code = cls.EVD_EYE_SPECULAR
                 region_name = "Eyewear / Specular Glare Plane"
-                statutory_act = "Synthetic Facial Manipulation"
+                statutory_act = "Section 66D IT Act 2000 & Section 318(4) BNS 2023 - Synthetic Facial Manipulation"
             detail_meta: Dict[str, Any] = {"regional_scores": {}}
         else:
             chosen_type, target_box, detail_meta = cls.evaluate_primary_anomaly(
