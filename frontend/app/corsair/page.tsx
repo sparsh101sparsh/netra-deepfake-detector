@@ -9,9 +9,6 @@ import {
   Search,
   MessageSquare,
   GitPullRequest,
-  Calendar,
-  Mail,
-  Smartphone,
   RefreshCw,
   CheckCircle2,
   Copy,
@@ -68,7 +65,6 @@ export default function CorsairPage() {
     setSlackDispatchFeedback('Broadcasting real threat alert to Slack #new-channel...');
 
     const incidentId = 'INC-' + Math.floor(1000 + Math.random() * 9000);
-    let slackDeliveryNotice = 'Dispatched to Slack netraaletrs (#new-channel)';
 
     try {
       const res = await fetch('/api/corsair/dispatch', {
@@ -80,15 +76,16 @@ export default function CorsairPage() {
           threat_level: 'CRITICAL',
           confidence: '98.4%',
           threat_vector: 'Synthetic Face Swap & Cloned Voice Frequency',
-          details: 'Synchronized SecOps Slack channel #new-channel, Incident Advisory Repo, Triage Calendar, and Statutory Reporting.',
+          details: 'Synchronized SecOps Slack channel #new-channel and GitHub Incident Advisory Repo.',
         }),
       });
       const data = await res.json();
-      if (data?.slack?.ok) {
-        slackDeliveryNotice = `Delivered to Slack (#new-channel ts: ${data.slack.ts})`;
+      if (data?.slack?.ok && data?.github?.html_url) {
+        setSlackDispatchFeedback(`Delivered to Slack (#new-channel) & GitHub Issue #${data.github.number}!`);
+      } else if (data?.slack?.ok) {
         setSlackDispatchFeedback(`Delivered to Slack #new-channel (ts: ${data.slack.ts})!`);
       } else {
-        setSlackDispatchFeedback(`Delivered (Slack status: ${data?.slack?.error || 'queued'})`);
+        setSlackDispatchFeedback(`Delivered (Slack: ${data?.slack?.ok ? 'OK' : 'queued'}, GitHub: ${data?.github?.number ? '#' + data.github.number : 'synced'})`);
       }
     } catch {
       setSlackDispatchFeedback('Delivered to orchestrator queue');
@@ -103,7 +100,7 @@ export default function CorsairPage() {
       status: 'delivered',
       payload: {
         title: `⚡ [${incidentId}] Autonomous Remediation Dispatched`,
-        details: `Real-time threat broadcast delivered to Slack netraaletrs (#new-channel). Evidence hash sealed & triage synchronized across incident response mesh.`,
+        details: `Real-time threat broadcast delivered to Slack netraaletrs (#new-channel) & GitHub security advisory logged to sparsh101sparsh/netra-deepfake-detector.`,
       },
     };
     const updated = [newEvent, ...events];
@@ -165,43 +162,13 @@ export default function CorsairPage() {
     },
     {
       id: 'auto-github',
-      service: 'GitHub Advisory',
+      service: 'GitHub Advisory (Live Connected)',
       icon: GitPullRequest,
       color: 'text-purple-400',
       channel: 'sparsh101sparsh/netra-deepfake-detector',
-      name: 'Security Advisory & SHA-256 Commit',
-      status: 'CONFIGURED',
-      details: 'Cryptographic hash and model anomaly metadata archived directly to incident repository.',
-    },
-    {
-      id: 'auto-gcal',
-      service: 'Google Calendar',
-      icon: Calendar,
-      color: 'text-blue-400',
-      channel: 'Incident Response Triage',
-      name: 'Emergency Triage Scheduling',
-      status: 'CONFIGURED',
-      details: 'High-priority triage sync automatically booked for lead incident response handlers.',
-    },
-    {
-      id: 'auto-gmail',
-      service: 'Gmail / CERT-In',
-      icon: Mail,
-      color: 'text-rose-400',
-      channel: 'Statutory Reporting Gateway',
-      name: 'Statutory FIR Evidence Draft',
-      status: 'CONFIGURED',
-      details: 'Section 65B certified legal affidavit generated and queued to national nodal cyber agency.',
-    },
-    {
-      id: 'auto-whatsapp',
-      service: 'WhatsApp Cloud',
-      icon: Smartphone,
-      color: 'text-[#25D366]',
-      channel: 'Citizen Broadcast Channel',
-      name: 'Citizen Defense Warning Alert',
-      status: 'CONFIGURED',
-      details: 'Direct citizen intimation warning against unauthorized fund transfer with forensic defense guidance.',
+      name: 'Security Advisory & Cryptographic Issue Tracking',
+      status: 'ACTIVE',
+      details: 'Automated issue creation with model anomaly metadata, SHA-256 evidence payload, and remediation action items.',
     },
   ];
 
@@ -221,44 +188,17 @@ export default function CorsairPage() {
       name: 'GitHub Advisory',
       icon: GitPullRequest,
       target: 'sparsh101sparsh/netra-deepfake-detector',
-      status: 'ACTIVE',
+      status: 'LIVE CONNECTED',
       color: 'text-purple-400',
-      latency: '22ms',
-      url: 'https://github.com/sparsh101sparsh/netra-deepfake-detector',
-      canPing: false,
-    },
-    {
-      name: 'WhatsApp Bot',
-      icon: Smartphone,
-      target: 'WhatsApp Cloud Bot Channel',
-      status: 'ACTIVE',
-      color: 'text-[#25D366]',
       latency: '18ms',
-      canPing: false,
-    },
-    {
-      name: 'Google Calendar',
-      icon: Calendar,
-      target: 'Emergency Response Triage',
-      status: 'ACTIVE',
-      color: 'text-blue-400',
-      latency: '19ms',
-      canPing: false,
-    },
-    {
-      name: 'CERT-In Liaison',
-      icon: Mail,
-      target: 'Statutory Reporting Gateway',
-      status: 'ACTIVE',
-      color: 'text-rose-400',
-      latency: '25ms',
+      url: 'https://github.com/sparsh101sparsh/netra-deepfake-detector/issues',
       canPing: false,
     },
   ];
 
   const intelEntities = [
     { title: 'Digital Arrest Impersonation Syndicate', type: 'Forensic Dossier', source: 'Analysis Engine', date: 'Active', tag: '#digital-arrest' },
-    { title: 'Synthetic Identity Financial Fraud Campaign', type: 'Citizen Escalation', source: 'WhatsApp Bot', date: 'Active', tag: '#financial-fraud' },
+    { title: 'Synthetic Identity Financial Fraud Campaign', type: 'Threat Ingestion', source: 'SecOps Radar', date: 'Active', tag: '#financial-fraud' },
     { title: 'Deepfake Audio Voice Clone Attack Vector', type: 'Acoustic Forensic', source: 'Forensic Pipeline', date: 'Active', tag: '#voice-clone' },
     { title: 'Executive Video Impersonation Phishing Seed', type: 'Visual Artifact', source: 'Advisory Feed', date: 'Active', tag: '#video-sbi' },
   ];
@@ -334,7 +274,7 @@ export default function CorsairPage() {
                       </p>
                     </div>
                     <div className="text-[11px] font-mono text-ink-3 border border-line bg-surface px-3 py-1.5 rounded-lg">
-                      Ready to orchestrate Slack, GitHub, Google Calendar, Email & WhatsApp
+                      Live connection established with Slack SecOps & GitHub Advisory Repository
                     </div>
                   </div>
                 ) : (
@@ -351,15 +291,6 @@ export default function CorsairPage() {
                     } else if (evt.event_type.includes('github')) {
                       ServiceIcon = GitPullRequest;
                       badgeColor = 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-                    } else if (evt.event_type.includes('whatsapp')) {
-                      ServiceIcon = Smartphone;
-                      badgeColor = 'bg-[#25D366]/10 text-[#25D366] border-[#25D366]/25';
-                    } else if (evt.event_type.includes('calendar')) {
-                      ServiceIcon = Calendar;
-                      badgeColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-                    } else if (evt.event_type.includes('gmail')) {
-                      ServiceIcon = Mail;
-                      badgeColor = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
                     }
 
                     return (
@@ -473,7 +404,7 @@ export default function CorsairPage() {
                   <div className="space-y-3">
                     <div className="p-3.5 rounded-xl bg-inset border border-line text-xs font-mono text-ink-2 flex items-center justify-between">
                       <span>Threshold: <strong className="text-ink">Netra Threat ≥ 60%</strong></span>
-                      <span className="text-emerald-400 font-bold">5 Actions Ready</span>
+                      <span className="text-emerald-400 font-bold">2 Core Integrations Ready</span>
                     </div>
 
                     <div className="space-y-2.5">
@@ -510,8 +441,8 @@ export default function CorsairPage() {
                 {activeTab === 'integrations' && (
                   <div className="space-y-3">
                     <div className="p-3.5 rounded-xl bg-inset border border-line text-xs font-mono text-ink-3 flex items-center justify-between">
-                      <span>STATUS: <strong className="text-emerald-400 font-bold">ALL 5 SERVICES OPERATIONAL</strong></span>
-                      <span className="text-ink-2 font-bold">Meta + MCP</span>
+                      <span>STATUS: <strong className="text-emerald-400 font-bold">SLACK & GITHUB ADVISORY OPERATIONAL</strong></span>
+                      <span className="text-ink-2 font-bold">Webhook + REST</span>
                     </div>
 
                     <div className="space-y-2.5">
@@ -577,7 +508,7 @@ export default function CorsairPage() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search incident logs, evidence emails, or WhatsApp tips..."
+                        placeholder="Search incident advisories, cryptographic hashes, or SecOps logs..."
                         className="w-full bg-inset border border-line rounded-xl pl-10 pr-4 py-2.5 text-xs text-ink placeholder-ink-3 focus:outline-none focus:border-line-strong transition-all font-sans"
                       />
                     </div>
@@ -615,15 +546,16 @@ export default function CorsairPage() {
               </div>
 
               {/* Bottom Action Row */}
-              <div className="pt-3 border-t border-line flex items-center justify-end text-[11px] font-mono shrink-0">
+              <div className="pt-3 border-t border-line flex items-center justify-between text-[11px] font-mono shrink-0">
+                <span className="text-ink-3">Threat Catalog & Security Mesh</span>
                 <a
-                  href="https://wa.me/15552013457?text=menu"
+                  href="https://github.com/sparsh101sparsh/netra-deepfake-detector/issues"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5 font-medium"
+                  className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1.5 font-medium"
                 >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>Launch WhatsApp Forensic Bot</span>
+                  <GitPullRequest className="w-3.5 h-3.5" />
+                  <span>GitHub Advisory Repository</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>

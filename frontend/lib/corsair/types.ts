@@ -35,7 +35,7 @@ export interface ForensicResult {
 }
 
 export interface WorkflowAction {
-  service: 'slack' | 'github' | 'googlecalendar' | 'gmail' | 'whatsapp';
+  service: 'slack' | 'github';
   action: string;
   status: 'SUCCESS' | 'QUEUED' | 'DELIVERED' | 'SYNCED' | 'DISPATCHED';
   details: string;

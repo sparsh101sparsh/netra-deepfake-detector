@@ -33,8 +33,8 @@ export function dispatchWorkflow(scan: ForensicResult): WorkflowDispatchResult {
       name: 'Slack Incident Broadcast',
       action: 'broadcast_threat_card',
       status: 'DELIVERED',
-      details: 'Alert card posted to Security Operations Channel with ' + scan.riskScore + '% risk score and indicators',
-      target: 'Security Operations Channel',
+      details: 'Alert card posted to Security Operations Channel (#new-channel) with ' + scan.riskScore + '% risk score and indicators',
+      target: 'netraaletrs.slack.com (#new-channel)',
       color: 'border-[#4A154B] bg-[#4A154B]/10 text-pink-400',
       externalId: 'evt_slack_' + Date.now()
     },
@@ -44,39 +44,9 @@ export function dispatchWorkflow(scan: ForensicResult): WorkflowDispatchResult {
       action: 'create_security_advisory',
       status: 'DELIVERED',
       details: 'Created cryptographically verified incident tracking issue with SHA-256 evidence payload in Advisory Repository',
-      target: 'Advisory Repository',
+      target: 'sparsh101sparsh/netra-deepfake-detector',
       color: 'border-purple-500/40 bg-purple-950/20 text-purple-400',
       externalId: 'evt_gh_' + Date.now()
-    },
-    {
-      service: 'googlecalendar',
-      name: 'Google Calendar Emergency Triage',
-      action: 'schedule_emergency_sync',
-      status: 'SYNCED',
-      details: '30-minute forensic debrief scheduled for Incident Response Crew with lead investigator',
-      target: 'Incident Response Calendar',
-      color: 'border-blue-500/40 bg-blue-950/20 text-blue-400',
-      externalId: 'evt_gcal_' + Date.now()
-    },
-    {
-      service: 'gmail',
-      name: 'Gmail Evidence Intimation',
-      action: 'dispatch_certin_evidence_notice',
-      status: 'DISPATCHED',
-      details: 'Official legal evidence notice prepared and routed to statutory liaison endpoint',
-      target: 'Statutory Reporting Gateway',
-      color: 'border-red-500/40 bg-red-950/20 text-red-400',
-      externalId: 'evt_gmail_' + Date.now()
-    },
-    {
-      service: 'whatsapp',
-      name: 'WhatsApp Citizen Forensic Broadcast',
-      action: 'dispatch_whatsapp_citizen_alert',
-      status: 'DELIVERED',
-      details: 'Dispatched automated multi-lingual warning bulletin via WhatsApp Cloud API',
-      target: 'WhatsApp Broadcast Channel',
-      color: 'border-[#25D366]/40 bg-[#25D366]/10 text-[#25D366]',
-      externalId: 'evt_wa_' + Date.now()
     }
   ];
 

@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const DEFAULT_SLACK_TOKEN = Buffer.from(
-  'eG94Yi0xMjAyOTc4MTYyMzMwMy0xMjA0MzIzMTQ1Njk5OC1RQ2F5RnZSRlAxaGVpZUdsTXRPNHU3cDg=',
-  'base64'
-).toString('utf-8');
-
-const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN || DEFAULT_SLACK_TOKEN;
+const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN || '';
 const SLACK_CHANNEL_ID = process.env.SLACK_CHANNEL_ID || 'C0C1D2LMY81';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 const GITHUB_REPO = process.env.GITHUB_REPO || 'sparsh101sparsh/netra-deepfake-detector';
@@ -35,62 +30,66 @@ export async function POST(req: Request) {
 
     // 1. Dispatch Real Alert to Slack
     let slackResult: any = null;
-    try {
-      const blocks = [
-        {
-          type: 'header',
-          text: {
-            type: 'plain_text',
-            text: `🚨 [NETRA AI] ${title}`,
-            emoji: true,
-          },
-        },
-        {
-          type: 'section',
-          fields: [
-            { type: 'mrkdwn', text: `*Incident ID:*\n\`${incidentId}\`` },
-            { type: 'mrkdwn', text: `*Severity / Confidence:*\n🔥 ${threatLevel} (${confidence})` },
-            { type: 'mrkdwn', text: `*Threat Vector:*\n${threatVector}` },
-            { type: 'mrkdwn', text: '*Orchestrator:*\nNETRA Corsair Autonomous Engine' },
-          ],
-        },
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `*Actions Executed Across Security Mesh:*\n• ✅ Real-time high-priority broadcast to \`#new-channel\`\n• 🛡️ SHA-256 evidence integrity signature sealed\n• ⚡ CERT-In statutory compliance affidavit queued\n• 📋 Incident response advisory synced to operations log`,
-          },
-        },
-        {
-          type: 'context',
-          elements: [
-            {
-              type: 'mrkdwn',
-              text: `🌐 *Web Console:* <https://netraai-i1pl.onrender.com/corsair|netraai-i1pl.onrender.com/corsair> | *Workspace:* netraaletrs.slack.com | *Dispatched:* ${nowIso}`,
+    if (SLACK_BOT_TOKEN) {
+      try {
+        const blocks = [
+          {
+            type: 'header',
+            text: {
+              type: 'plain_text',
+              text: `🚨 [NETRA AI] ${title}`,
+              emoji: true,
             },
-          ],
-        },
-      ];
+          },
+          {
+            type: 'section',
+            fields: [
+              { type: 'mrkdwn', text: `*Incident ID:*\n\`${incidentId}\`` },
+              { type: 'mrkdwn', text: `*Severity / Confidence:*\n🔥 ${threatLevel} (${confidence})` },
+              { type: 'mrkdwn', text: `*Threat Vector:*\n${threatVector}` },
+              { type: 'mrkdwn', text: '*Orchestrator:*\nNETRA Corsair Autonomous Engine' },
+            ],
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `*Actions Executed Across Security Mesh:*\n• ✅ Real-time threat broadcast to \`#new-channel\` on \`netraaletrs.slack.com\`\n• 🛡️ SHA-256 evidence integrity signature sealed\n• 📋 Security advisory created in GitHub repo \`${GITHUB_REPO}\``,
+            },
+          },
+          {
+            type: 'context',
+            elements: [
+              {
+                type: 'mrkdwn',
+                text: `🌐 *Web Console:* <https://netraai-i1pl.onrender.com/corsair|netraai-i1pl.onrender.com/corsair> | *Workspace:* netraaletrs.slack.com | *Dispatched:* ${nowIso}`,
+              },
+            ],
+          },
+        ];
 
-      const slackRes = await fetch('https://slack.com/api/chat.postMessage', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          channel,
-          text: `🚨 [NETRA AI] ${title} - Incident ${incidentId}`,
-          blocks,
-        }),
-      });
+        const slackRes = await fetch('https://slack.com/api/chat.postMessage', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            channel,
+            text: `🚨 [NETRA AI] ${title} - Incident ${incidentId}`,
+            blocks,
+          }),
+        });
 
-      slackResult = await slackRes.json();
-    } catch (err: any) {
-      slackResult = { ok: false, error: err?.message || 'Failed to dispatch to Slack' };
+        slackResult = await slackRes.json();
+      } catch (err: any) {
+        slackResult = { ok: false, error: err?.message || 'Failed to dispatch to Slack' };
+      }
+    } else {
+      slackResult = { ok: false, error: 'SLACK_BOT_TOKEN not configured' };
     }
 
-    // 2. Optional GitHub Issue Creation if Token is present
+    // 2. Real GitHub Issue Creation using User's Token
     let githubResult: any = null;
     if (GITHUB_TOKEN) {
       try {
@@ -104,7 +103,7 @@ export async function POST(req: Request) {
           },
           body: JSON.stringify({
             title: `[SECURITY ADVISORY] ${incidentId}: ${threatVector} (${threatLevel})`,
-            body: `## 🛡️ NETRA Autonomous Incident Remediation\n\n- **Incident ID:** \`${incidentId}\`\n- **Threat Level:** ${threatLevel}\n- **Confidence:** ${confidence}\n- **Vector:** ${threatVector}\n- **Dispatched:** ${nowIso}\n- **Slack Broadcast:** Delivered to \`#new-channel\` (\`${channel}\`)\n\n### Remediation Actions\n1. Real-time Slack broadcast dispatched to SecOps.\n2. Cryptographic forensic signature archived.\n3. Statutory compliance packet prepared.`,
+            body: `## 🛡️ NETRA Autonomous Incident Remediation\n\n- **Incident ID:** \`${incidentId}\`\n- **Threat Level:** ${threatLevel}\n- **Confidence:** ${confidence}\n- **Vector:** ${threatVector}\n- **Dispatched:** ${nowIso}\n- **Slack Broadcast:** Delivered to \`#new-channel\` (\`${channel}\`) in \`netraaletrs.slack.com\`\n\n### Remediation Actions\n1. Real-time Slack broadcast dispatched to SecOps.\n2. Cryptographic forensic signature archived.\n3. Automated security tracking advisory registered in repository.`,
             labels: ['security-advisory', 'incident-response', 'corsair-engine'],
           }),
         });
@@ -113,7 +112,7 @@ export async function POST(req: Request) {
         githubResult = { ok: false, error: ghErr?.message || 'Failed to create GitHub issue' };
       }
     } else {
-      githubResult = { status: 'awaiting_token', repo: GITHUB_REPO };
+      githubResult = { status: 'token_missing', repo: GITHUB_REPO };
     }
 
     return NextResponse.json({
@@ -126,6 +125,7 @@ export async function POST(req: Request) {
         workspace: 'netraaletrs.slack.com',
         channel: '#new-channel',
         channel_id: channel,
+        github_repo: GITHUB_REPO,
       },
     });
   } catch (error: any) {
