@@ -60,3 +60,13 @@ export interface CorsairEvent {
   status: string;
   payload: any;
 }
+
+export interface MCPAgentResponse {
+  message: string;
+  toolCalls: Array<{
+    tool: string;
+    args: any;
+    result: any;
+  }>;
+}
+
