@@ -106,7 +106,7 @@ def _format_scam_updates() -> str:
                 source = rep.get("source_name") or "CERT-In / I4C"
                 msg += f"{idx}️⃣ *{title}*\n• {summary}\n• _Source: {source}_\n\n"
             msg += f"🌐 *Web Console:* {NETRA_CORSAIR_WEB_URL}/corsair\n"
-            msg += "⚠️ *Advisory:* Never share OTPs, CVVs, or UPI PINs. In case of fraud, dial *1930* immediately."
+            msg += "⚠️ *Advisory:* Never share OTPs, CVVs, or UPI PINs. In case of fraud, report immediately to official cyber crime authorities."
             return msg
     except Exception as err:
         logger.warning(f"Error fetching Tavily scam news: {err}")
@@ -122,7 +122,7 @@ def _format_scam_updates() -> str:
         "3️⃣ *PM-KUSUM Solar Agricultural Phishing*\n"
         "• Modus: Fraudulent APKs distributed via WhatsApp harvesting banking credentials.\n\n"
         f"🌐 *Web Console:* {NETRA_CORSAIR_WEB_URL}/corsair\n"
-        "⚠️ Report cyber financial extortion immediately to *1930* or *cybercrime.gov.in*."
+        "⚠️ Report cyber financial extortion immediately to *cybercrime.gov.in*."
     )
 
 
@@ -599,7 +599,7 @@ async def _handle_user_message(
                 search_msg = f"🌐 *Tavily Live Threat Intelligence for: \"{query}\"*\n\n"
                 for idx, a in enumerate(articles[:3], 1):
                     search_msg += f"{idx}️⃣ *{a.get('title')}*\n• {a.get('snippet')}\n• _Source: {a.get('url')}_\n\n"
-                search_msg += "⚠️ In case of cyber extortion or fraud, call *1930* or visit *cybercrime.gov.in*."
+                search_msg += "⚠️ In case of cyber extortion or fraud, visit *cybercrime.gov.in*."
             else:
                 search_msg = f"🌐 *Tavily Cyber Intelligence:* No active press alerts found for \"{query}\". Verify suspicious messages with option *1*."
             await send_whatsapp_message(sender, search_msg, preferred_channel=channel)
@@ -725,7 +725,7 @@ async def _handle_user_message(
                     result_text += f"\n📁 *National Threat Catalog ID:* `{catalog_item_id}`\n"
                 result_text += (
                     "\n⚠️ *Advisory:* Never disclose card details, OTPs, or passwords. "
-                    "Report immediately to *1930* or *cybercrime.gov.in*."
+                    "Report immediately to official cyber crime authorities or *cybercrime.gov.in*."
                 )
             else:
                 result_text = (
@@ -880,7 +880,7 @@ async def _handle_user_message(
                     resp_text += (
                         f"• *Threat Catalog ID:* `{catalog_item_id}`\n"
                         f"• *Forensic Evidence:* `{save_img_filename}`\n\n"
-                        f"⚠️ *Recommendation:* Isolate communication and report to *1930*."
+                        f"⚠️ *Recommendation:* Isolate communication and report suspicious activity to cyber defense authorities."
                     )
                 else:
                     resp_text = (
@@ -903,7 +903,7 @@ async def _handle_user_message(
                         f"• *Modality:* {analysis_mode.replace('_', ' ').title()}\n"
                         f"• *Threat Catalog ID:* `{catalog_item_id}`\n"
                         f"• *Forensic Evidence:* `{save_img_filename}`\n\n"
-                        f"⚠️ *Recommendation:* Isolate communication and report to *1930*."
+                        f"⚠️ *Recommendation:* Isolate communication and report suspicious activity to cyber defense authorities."
                     )
                 else:
                     resp_text = (

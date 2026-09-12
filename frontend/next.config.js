@@ -28,6 +28,19 @@ const nextConfig = {
         destination: `${BACKEND_URL}/api/v1/media/:path*`
       }
     ];
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, max-age=0, must-revalidate',
+          },
+        ],
+      },
+    ];
   }
 };
 
