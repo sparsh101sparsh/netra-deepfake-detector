@@ -175,24 +175,24 @@ Analyzed query: "${text}"
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Left 2 Cols: WhatsApp Chat Interface */}
-      <div className="lg:col-span-2 bg-surface border-[1.5px] border-line rounded-2xl shadow-card overflow-hidden flex flex-col h-[680px]">
+      <div className="lg:col-span-2 bg-[#090e17] border border-slate-800 rounded-xl overflow-hidden flex flex-col h-[680px]">
         {/* WhatsApp Style Header */}
-        <div className="bg-canvas border-b border-line p-4 flex items-center justify-between">
+        <div className="bg-[#0b1220] border-b border-slate-800 p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-inset border border-line flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-[#25D366]/20 border border-[#25D366]/50 flex items-center justify-center">
                 <Smartphone className="w-5 h-5 text-[#25D366]" />
               </div>
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-surface rounded-full animate-pulse"></span>
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#090e17] rounded-full animate-pulse"></span>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-ink">NETRA Forensic Intelligence Bot</h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-inset text-emerald-400 border border-emerald-500/30 font-semibold">
+                <h3 className="text-sm font-bold text-white">NETRA Forensic Intelligence Bot</h3>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
                   ONLINE
                 </span>
               </div>
-              <p className="text-[11px] font-mono text-ink-3">+1 555 201 3457 (Official Meta Cloud API)</p>
+              <p className="text-[11px] font-mono text-slate-400">+1 555 201 3457 (Official Meta Cloud API)</p>
             </div>
           </div>
 
@@ -200,16 +200,15 @@ Analyzed query: "${text}"
             href="https://wa.me/15552013457?text=menu"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-inset hover:bg-hover border border-line hover:border-line-strong text-ink text-xs font-semibold rounded-xl transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 text-xs font-bold rounded-lg transition-colors"
           >
-            <Smartphone className="w-3.5 h-3.5 text-[#25D366]" />
             <span>Open in WhatsApp</span>
-            <ExternalLink className="w-3.5 h-3.5 text-ink-3" />
+            <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
 
         {/* Message Feed */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-field/60">
+        <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#060910]">
           {messages.map((m) => (
             <div
               key={m.id}
@@ -218,14 +217,14 @@ Analyzed query: "${text}"
               <div
                 className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 py-3 text-xs leading-relaxed whitespace-pre-wrap ${
                   m.sender === 'user'
-                    ? 'bg-[#005c4b] text-white rounded-tr-none shadow-sm'
-                    : 'bg-surface text-ink rounded-tl-none border border-line font-sans shadow-sm'
+                    ? 'bg-[#005c4b] text-white rounded-tr-none'
+                    : 'bg-[#202c33] text-slate-200 rounded-tl-none border border-slate-700/60 font-sans'
                 }`}
               >
                 {m.text}
                 <div
                   className={`mt-1 flex items-center justify-end gap-1.5 text-[10px] font-mono ${
-                    m.sender === 'user' ? 'text-emerald-200/70' : 'text-ink-3'
+                    m.sender === 'user' ? 'text-emerald-200/70' : 'text-slate-400'
                   }`}
                 >
                   {m.channel && <span className="opacity-80">via {m.channel} •</span>}
@@ -236,7 +235,7 @@ Analyzed query: "${text}"
             </div>
           ))}
           {loading && (
-            <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 bg-inset p-3 rounded-xl border border-line w-fit">
+            <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 bg-slate-900/60 p-3 rounded-lg border border-slate-800 w-fit">
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
               <span>Querying NETRA Dual-Branch Neural Engine & Tavily OSINT...</span>
             </div>
@@ -245,13 +244,13 @@ Analyzed query: "${text}"
         </div>
 
         {/* Quick Prompts Bar */}
-        <div className="px-3.5 py-2.5 bg-canvas border-t border-line flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono">
-          <span className="text-ink-3 shrink-0">Quick ask:</span>
+        <div className="px-3 py-2 bg-[#090e17] border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono">
+          <span className="text-slate-500 shrink-0">Quick ask:</span>
           {samplePrompts.map((prompt) => (
             <button
               key={prompt}
               onClick={() => handleSendMessage(prompt)}
-              className="bg-inset hover:bg-hover border border-line hover:border-line-strong px-2.5 py-1 rounded-lg text-ink-2 hover:text-ink whitespace-nowrap transition-colors"
+              className="bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 px-2 py-1 rounded text-slate-300 whitespace-nowrap transition-colors"
             >
               {prompt}
             </button>
@@ -264,19 +263,19 @@ Analyzed query: "${text}"
             e.preventDefault();
             handleSendMessage();
           }}
-          className="p-3.5 bg-surface border-t border-line flex gap-2"
+          className="p-3 bg-[#0b1220] border-t border-slate-800 flex gap-2"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type a message (e.g. 'menu', news claim, or suspect number)..."
-            className="flex-1 bg-inset border border-line rounded-xl px-4 py-2 text-xs text-ink placeholder-ink-3 focus:outline-none focus:border-line-strong transition-all"
+            className="flex-1 bg-[#080d17] border border-slate-700/80 rounded-lg px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="px-4 py-2 bg-ink text-page hover:bg-white/90 disabled:opacity-40 font-semibold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-btn active:scale-[0.99]"
+            className="px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] disabled:opacity-50 text-slate-950 font-bold text-xs rounded-lg flex items-center gap-1.5 transition-colors"
           >
             <span>Send</span>
             <Send className="w-3.5 h-3.5" />
@@ -285,51 +284,51 @@ Analyzed query: "${text}"
       </div>
 
       {/* Right Col: Bot Status & Architecture Card */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Status Card */}
-        <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card space-y-4">
-          <div className="flex items-center gap-2 text-ink font-bold text-sm">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+        <div className="bg-[#090e17] border border-slate-800 rounded-xl p-5 space-y-4">
+          <div className="flex items-center gap-2 text-white font-bold text-sm">
+            <ShieldCheck className="w-4 h-4 text-[#25D366]" />
             <span>BOT CONNECTION STATUS</span>
           </div>
 
           <div className="space-y-2.5 font-mono text-xs">
-            <div className="flex items-center justify-between p-3 bg-inset rounded-xl border border-line">
-              <span className="text-ink-3">Primary Channel</span>
+            <div className="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-lg border border-slate-800">
+              <span className="text-slate-400">Primary Channel</span>
               <span className="text-emerald-400 font-bold">Meta Cloud API</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-inset rounded-xl border border-line">
-              <span className="text-ink-3">Failover Channel</span>
+            <div className="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-lg border border-slate-800">
+              <span className="text-slate-400">Failover Channel</span>
               <span className="text-emerald-400 font-bold">Twilio Sandbox</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-inset rounded-xl border border-line">
-              <span className="text-ink-3">Bot WhatsApp #</span>
-              <span className="text-ink font-bold">+1 555 201 3457</span>
+            <div className="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-lg border border-slate-800">
+              <span className="text-slate-400">Bot WhatsApp #</span>
+              <span className="text-cyan-400 font-bold">+1 415 523 8886</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-inset rounded-xl border border-line">
-              <span className="text-ink-3">Connected Site</span>
-              <span className="text-ink-2 truncate max-w-[140px]">netraai-i1pl.onrender.com</span>
+            <div className="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-lg border border-slate-800">
+              <span className="text-slate-400">Connected Site</span>
+              <span className="text-slate-200 truncate max-w-[140px]">netraai-i1pl.onrender.com</span>
             </div>
           </div>
 
-          <div className="p-3.5 bg-inset border border-line rounded-xl text-[11px] text-ink-2 leading-relaxed">
+          <div className="p-3 bg-cyan-950/20 border border-cyan-800/40 rounded-lg text-[11px] text-cyan-300">
             💡 <strong>Multi-Channel Architecture:</strong> If Meta API access token is restricted or expired, NETRA instantly routes outbound forensics through the Twilio channel and records to the outbound queue without dropping citizen messages.
           </div>
         </div>
 
         {/* Legal & Emergency Card */}
-        <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card space-y-3">
-          <div className="flex items-center gap-2 text-ink font-bold text-sm">
+        <div className="bg-[#090e17] border border-slate-800 rounded-xl p-5 space-y-3">
+          <div className="flex items-center gap-2 text-white font-bold text-sm">
             <AlertTriangle className="w-4 h-4 text-amber-400" />
             <span>INDIAN STATUTORY NOTICES</span>
           </div>
-          <p className="text-xs text-ink-3 leading-relaxed">
+          <p className="text-xs text-slate-400 leading-relaxed">
             All WhatsApp forensic outputs include Section 65B Indian Evidence Act compliant hashing and cite applicable penal sections:
           </p>
-          <ul className="text-xs space-y-2 text-ink-2 font-mono">
-            <li className="p-2.5 bg-inset rounded-xl border border-line">• <strong className="text-ink">IT Act 2000 Sec 66D</strong> (Cheating by personation using computer resource)</li>
-            <li className="p-2.5 bg-inset rounded-xl border border-line">• <strong className="text-ink">BNS 2023 Sec 318(4)</strong> (Cheating & fraudulently dishonestly inducing delivery of property)</li>
-            <li className="p-2.5 bg-inset rounded-xl border border-line">• <strong className="text-amber-400">National Cyber Crime Helpline:</strong> Dial 1930</li>
+          <ul className="text-xs space-y-1.5 text-slate-300 font-mono">
+            <li>• <strong className="text-white">IT Act 2000 Sec 66D</strong> (Cheating by personation using computer resource)</li>
+            <li>• <strong className="text-white">BNS 2023 Sec 318(4)</strong> (Cheating & fraudulently dishonestly inducing delivery of property)</li>
+            <li>• <strong className="text-white">National Cyber Crime Helpline:</strong> Dial 1930</li>
           </ul>
         </div>
       </div>

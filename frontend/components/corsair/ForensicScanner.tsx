@@ -53,34 +53,34 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
   return (
     <div className="space-y-6">
       {/* Top Banner / Engine Status */}
-      <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-card">
+      <div className="bg-[#0c121e] border border-cyan-900/40 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-lg shadow-cyan-950/20">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <h2 className="text-base sm:text-lg font-bold text-ink tracking-tight">NETRA MULTI-MODAL FORENSICS ENGINE</h2>
-            <span className="text-[10px] uppercase font-mono px-2.5 py-0.5 rounded-full bg-inset text-cyan-400 border border-cyan-500/30 font-semibold tracking-wider">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            <h2 className="text-lg font-bold text-white tracking-wide">NETRA MULTI-MODAL FORENSICS ENGINE</h2>
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800 font-semibold">
               DUAL-BRANCH ROUTER ACTIVE
             </span>
           </div>
-          <p className="text-xs text-ink-3 mt-1.5 font-sans leading-relaxed">
+          <p className="text-xs text-slate-400 mt-1">
             Real-time deepfake waveform & spatial anomaly detection coupled with RapidOCR fraud catalog indexing.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs text-ink-3 font-mono">Corsair Incident Engine:</span>
-          <span className="text-xs font-mono font-semibold text-emerald-400 bg-inset border border-emerald-500/30 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-            <Zap className="w-3.5 h-3.5 text-emerald-400" /> AUTO-DISPATCH ENABLED
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400">Corsair Incident Engine:</span>
+          <span className="text-xs font-mono font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2.5 py-1 rounded-md flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5" /> AUTO-DISPATCH ENABLED
           </span>
         </div>
       </div>
 
       {/* Preset Selection Deck */}
-      <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card">
-        <h3 className="text-xs font-semibold uppercase font-mono text-ink-3 mb-4 tracking-wider">
+      <div className="bg-[#090e17] border border-slate-800 rounded-xl p-5">
+        <h3 className="text-xs font-semibold uppercase font-mono text-slate-400 mb-3 tracking-wider">
           SELECT FORENSIC TEST CASE / THREAT SAMPLE:
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {presetsList.map((p) => {
             const isSelected = selectedPreset === p.key;
             const isCrit = p.verdict === 'CRITICAL_THREAT';
@@ -93,40 +93,35 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
                   setSelectedPreset(p.key);
                   handleRunScan(p.key);
                 }}
-                className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                className={`p-3.5 rounded-lg border text-left transition-all flex flex-col justify-between ${
                   isSelected
-                    ? 'border-[1.5px] border-line-strong bg-hover shadow-card ring-1 ring-white/10'
-                    : 'border border-line bg-inset hover:border-line-strong hover:bg-hover'
+                    ? 'border-cyan-500 bg-cyan-950/30 shadow-md shadow-cyan-950/50 ring-1 ring-cyan-500/50'
+                    : 'border-slate-800 bg-[#0c121e]/60 hover:border-slate-700 hover:bg-slate-900/40'
                 }`}
               >
                 <div>
-                  <div className="flex items-center justify-between text-xs mb-2 font-mono">
-                    <span className="text-ink-3 truncate max-w-[130px]">{p.type}</span>
+                  <div className="flex items-center justify-between text-xs mb-1.5 font-mono">
+                    <span className="text-slate-400 truncate max-w-[140px]">{p.type}</span>
                     <span
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                         isCrit
-                          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                          ? 'bg-red-950/80 text-red-400 border border-red-800/60'
                           : isClean
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60'
+                          : 'bg-amber-950/80 text-amber-400 border border-amber-800/60'
                       }`}
                     >
                       {p.risk}% RISK
                     </span>
                   </div>
-                  <div className="text-xs font-semibold text-ink line-clamp-2 leading-snug">
+                  <div className="text-xs font-medium text-slate-200 line-clamp-2 leading-snug">
                     {p.name}
                   </div>
                 </div>
 
-                <div className="mt-3.5 pt-2.5 border-t border-line-soft flex items-center justify-between text-[11px] font-mono text-ink-3">
+                <div className="mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] font-mono text-slate-400">
                   <span>{isCrit ? '🚨 Threat Detected' : isClean ? '✅ Clean Audio/Video' : '⚠️ Elevated Risk'}</span>
-                  {isSelected && (
-                    <span className="text-ink font-semibold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                      Active
-                    </span>
-                  )}
+                  {isSelected && <span className="text-cyan-400">● Active</span>}
                 </div>
               </button>
             );
@@ -136,9 +131,9 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
 
       {/* Loading Indicator */}
       {loading && (
-        <div className="bg-surface border-[1.5px] border-line rounded-2xl p-10 text-center space-y-3 shadow-card">
-          <div className="inline-block w-8 h-8 border-2 border-line-strong border-t-white rounded-full animate-spin"></div>
-          <div className="text-xs font-mono text-ink-2 tracking-wider">
+        <div className="bg-[#090e17] border border-cyan-900/50 rounded-xl p-8 text-center space-y-3">
+          <div className="inline-block w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-xs font-mono text-cyan-400 tracking-wider">
             ROUTING MEDIA THROUGH DUAL-BRANCH SBI NEURAL NETWORK...
           </div>
         </div>
@@ -150,32 +145,32 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
           {/* Main Inspection Panel */}
           <div className="lg:col-span-2 space-y-6">
             {/* Target Card Header */}
-            <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card space-y-6">
-              <div className="flex flex-wrap justify-between items-center gap-2 pb-4 border-b border-line font-mono text-xs text-ink-3">
+            <div className="bg-[#090e17] border border-slate-800 rounded-xl p-5">
+              <div className="flex flex-wrap justify-between items-center gap-2 pb-4 border-b border-slate-800/80 font-mono text-xs">
                 <div>
-                  <span className="text-ink-3">JOB ID: </span>
-                  <span className="text-ink font-bold">{activeScan.jobId}</span>
+                  <span className="text-slate-500">JOB ID: </span>
+                  <span className="text-cyan-400 font-bold">{activeScan.jobId}</span>
                 </div>
                 <div>
-                  <span className="text-ink-3">MEDIA: </span>
-                  <span className="text-ink font-medium">{activeScan.filename}</span>
+                  <span className="text-slate-500">MEDIA: </span>
+                  <span className="text-slate-300 font-medium">{activeScan.filename}</span>
                 </div>
                 <div>
-                  <span className="text-ink-3">TIMESTAMP: </span>
-                  <span className="text-ink-2">{new Date(activeScan.analyzedAt).toLocaleTimeString()}</span>
+                  <span className="text-slate-500">TIMESTAMP: </span>
+                  <span className="text-slate-400">{new Date(activeScan.analyzedAt).toLocaleTimeString()}</span>
                 </div>
               </div>
 
               {/* Branch Verdict Card */}
-              <div className="p-5 rounded-xl bg-inset border border-line flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-lg bg-slate-900/40 border border-slate-800">
                 <div className="flex items-center gap-4">
                   <div
                     className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                       activeScan.riskScore >= 75
-                        ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                        ? 'bg-red-500/10 text-red-400 border border-red-500/30'
                         : activeScan.riskScore >= 40
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                        : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                        : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                     }`}
                   >
                     {activeScan.riskScore >= 75 ? (
@@ -187,11 +182,11 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
                     )}
                   </div>
                   <div>
-                    <div className="text-xs font-mono uppercase text-ink-3 tracking-wider">Composite Verdict</div>
+                    <div className="text-xs font-mono uppercase text-slate-400">Composite Verdict</div>
                     <div
                       className={`text-xl font-bold font-mono tracking-wide ${
                         activeScan.riskScore >= 75
-                          ? 'text-rose-400'
+                          ? 'text-red-400'
                           : activeScan.riskScore >= 40
                           ? 'text-amber-400'
                           : 'text-emerald-400'
@@ -203,37 +198,37 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
                 </div>
 
                 <div className="text-right font-mono">
-                  <div className="text-3xl font-black tracking-tight text-ink">
+                  <div className="text-3xl font-black tracking-tight text-white">
                     {activeScan.riskScore}
-                    <span className="text-sm font-normal text-ink-3">/100</span>
+                    <span className="text-sm font-normal text-slate-500">/100</span>
                   </div>
-                  <div className="text-[11px] uppercase tracking-wider text-ink-3">NETRA THREAT INDEX</div>
+                  <div className="text-[11px] text-slate-400">NETRA THREAT INDEX</div>
                 </div>
               </div>
 
               {/* Branch A: Facial Deepfake Analysis */}
               {activeScan.faceAnalysis && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-xs font-mono font-semibold text-ink uppercase tracking-wider">
-                    <Eye className="w-4 h-4 text-cyan-400" />
+                <div className="mt-5 space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-mono font-semibold text-cyan-400 uppercase tracking-wider">
+                    <Eye className="w-4 h-4" />
                     <span>Branch A: Facial SBI & Ocular Discontinuity Analysis</span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3 font-mono text-center text-xs">
-                    <div className="p-3.5 bg-inset rounded-xl border border-line">
-                      <div className="text-ink-3 text-[10px] uppercase tracking-wider">Faces Tracked</div>
-                      <div className="text-lg font-bold text-ink mt-1">
+                    <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800">
+                      <div className="text-slate-400 text-[10px] uppercase">Faces Tracked</div>
+                      <div className="text-lg font-bold text-white mt-1">
                         {activeScan.faceAnalysis.facesDetected}
                       </div>
                     </div>
-                    <div className="p-3.5 bg-inset rounded-xl border border-line">
-                      <div className="text-ink-3 text-[10px] uppercase tracking-wider">Synth Probability</div>
-                      <div className="text-lg font-bold text-rose-400 mt-1">
+                    <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800">
+                      <div className="text-slate-400 text-[10px] uppercase">Synth Probability</div>
+                      <div className="text-lg font-bold text-red-400 mt-1">
                         {(activeScan.faceAnalysis.fakeProbability * 100).toFixed(1)}%
                       </div>
                     </div>
-                    <div className="p-3.5 bg-inset rounded-xl border border-line">
-                      <div className="text-ink-3 text-[10px] uppercase tracking-wider">Spatial SBI Score</div>
+                    <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800">
+                      <div className="text-slate-400 text-[10px] uppercase">Spatial SBI Score</div>
                       <div className="text-lg font-bold text-cyan-400 mt-1">
                         {activeScan.faceAnalysis.spatialSBIModelScore}
                       </div>
@@ -242,27 +237,27 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
 
                   {/* Anomaly Bounding Box Items */}
                   {activeScan.faceAnalysis.anomalies.length > 0 && (
-                    <div className="space-y-2.5">
-                      <div className="text-[11px] font-mono text-ink-3 uppercase tracking-wider">
+                    <div className="space-y-2">
+                      <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wide">
                         Localized Spatial Anomaly Boundaries:
                       </div>
                       <div className="space-y-2">
                         {activeScan.faceAnalysis.anomalies.map((anom, idx) => (
                           <div
                             key={idx}
-                            className="p-3.5 rounded-xl border border-line bg-inset flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 text-xs"
+                            className="p-3 rounded-lg border border-slate-800 bg-[#0c121e] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs"
                           >
                             <div className="space-y-1">
-                              <div className="font-mono font-semibold text-ink flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                              <div className="font-mono font-semibold text-slate-200 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-red-400"></span>
                                 {anom.region}
                               </div>
-                              <div className="text-ink-2 text-xs leading-relaxed">
+                              <div className="text-slate-400 text-[11px] leading-relaxed">
                                 {anom.description}
                               </div>
                             </div>
                             <div className="font-mono text-right shrink-0">
-                              <span className="text-[10px] bg-rose-500/10 text-rose-300 border border-rose-500/20 px-2.5 py-1 rounded-md font-mono">
+                              <span className="text-[10px] bg-red-950 text-red-300 border border-red-800 px-2 py-0.5 rounded">
                                 BBOX [{anom.bbox.join(', ')}]
                               </span>
                             </div>
@@ -276,26 +271,26 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
 
               {/* Branch B: Document OCR & IOC Parsing */}
               {activeScan.ocrAnalysis && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-xs font-mono font-semibold text-ink uppercase tracking-wider">
-                    <FileText className="w-4 h-4 text-amber-400" />
+                <div className="mt-5 space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-mono font-semibold text-amber-400 uppercase tracking-wider">
+                    <FileText className="w-4 h-4" />
                     <span>Branch B: RapidOCR Threat & IOC Extractor</span>
                   </div>
 
-                  <div className="p-3.5 rounded-xl border border-line bg-inset text-xs font-mono text-ink-2 leading-relaxed max-h-28 overflow-y-auto">
-                    <div className="text-[10px] text-ink-3 uppercase tracking-wider mb-1">Raw Extracted Text:</div>
+                  <div className="p-3 rounded-lg border border-slate-800 bg-[#0c121e] text-xs font-mono text-slate-300 leading-relaxed max-h-28 overflow-y-auto">
+                    <div className="text-[10px] text-slate-500 uppercase mb-1">Raw Extracted Text:</div>
                     {activeScan.ocrAnalysis.extractedText}
                   </div>
 
                   {/* IOC Pills */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="p-3.5 bg-inset rounded-xl border border-line space-y-2">
-                      <div className="text-[11px] font-mono uppercase text-ink-3 tracking-wider">Flagged UPI Addresses:</div>
+                    <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800 space-y-2">
+                      <div className="text-[11px] font-mono uppercase text-slate-400">Flagged UPI Addresses:</div>
                       <div className="flex flex-wrap gap-1.5">
                         {activeScan.ocrAnalysis.iocs.upiIds.map((u, i) => (
                           <span
                             key={i}
-                            className="font-mono text-xs bg-rose-500/10 text-rose-300 border border-rose-500/20 px-2.5 py-0.5 rounded-md"
+                            className="font-mono text-xs bg-red-950/60 text-red-300 border border-red-800/80 px-2 py-0.5 rounded"
                           >
                             {u}
                           </span>
@@ -303,13 +298,13 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
                       </div>
                     </div>
 
-                    <div className="p-3.5 bg-inset rounded-xl border border-line space-y-2">
-                      <div className="text-[11px] font-mono uppercase text-ink-3 tracking-wider">Suspect Phone Numbers:</div>
+                    <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800 space-y-2">
+                      <div className="text-[11px] font-mono uppercase text-slate-400">Suspect Phone Numbers:</div>
                       <div className="flex flex-wrap gap-1.5">
                         {activeScan.ocrAnalysis.iocs.phoneNumbers.map((ph, i) => (
                           <span
                             key={i}
-                            className="font-mono text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2.5 py-0.5 rounded-md"
+                            className="font-mono text-xs bg-amber-950/60 text-amber-300 border border-amber-800/80 px-2 py-0.5 rounded"
                           >
                             {ph}
                           </span>
@@ -323,18 +318,18 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
 
             {/* Applicable Indian Law Statues */}
             {activeScan.legalClausesApplicable.length > 0 && (
-              <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card">
-                <div className="flex items-center gap-2 text-xs font-mono uppercase text-ink-3 mb-3 tracking-wider">
-                  <Lock className="w-4 h-4 text-ink-2" />
+              <div className="bg-[#090e17] border border-slate-800 rounded-xl p-5">
+                <div className="flex items-center gap-2 text-xs font-mono uppercase text-slate-400 mb-3 tracking-wider">
+                  <Lock className="w-4 h-4 text-cyan-400" />
                   <span>Statutory Indian Cyber Law Citations Applicable:</span>
                 </div>
                 <div className="space-y-2">
                   {activeScan.legalClausesApplicable.map((clause, idx) => (
                     <div
                       key={idx}
-                      className="text-xs font-mono p-3 rounded-xl bg-inset border border-line text-ink-2 flex items-center gap-2.5"
+                      className="text-xs font-mono p-2.5 rounded bg-[#0c121e] border border-slate-800/80 text-slate-300 flex items-center gap-2.5"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0"></span>
                       <span>{clause}</span>
                     </div>
                   ))}
@@ -345,36 +340,36 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
 
           {/* Right Rail: Corsair Automations Trigger Card */}
           <div className="space-y-6">
-            <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card space-y-5">
+            <div className="bg-gradient-to-b from-[#0c1626] to-[#090e17] border border-cyan-900/60 rounded-xl p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-amber-400" />
-                <h3 className="text-sm font-bold font-mono text-ink tracking-wide">
+                <h3 className="text-sm font-bold font-mono text-white tracking-wide">
                   CORSAIR AUTONOMOUS DISPATCH
                 </h3>
               </div>
 
-              <p className="text-xs text-ink-2 leading-relaxed">
-                When NETRA flags an incident exceeding the <strong className="text-ink font-semibold px-1.5 py-0.5 rounded bg-inset border border-line">60% Threat Threshold</strong>, Corsair autonomously orchestrates multi-platform remediation:
+              <p className="text-xs text-slate-300 leading-relaxed">
+                When NETRA flags an incident exceeding the <strong className="text-cyan-400">60% Threat Threshold</strong>, Corsair autonomously orchestrates multi-platform remediation:
               </p>
 
-              <div className="space-y-2 font-mono">
-                <div className="p-2.5 rounded-xl bg-inset border border-line flex items-center gap-2.5 text-xs text-ink-2">
+              <div className="space-y-2.5 text-xs font-mono">
+                <div className="flex items-center gap-2 text-slate-300">
                   <CheckCircle2 className="w-4 h-4 text-pink-400 shrink-0" />
                   <span>Slack Broadcast (#cyber-threat-desk)</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-inset border border-line flex items-center gap-2.5 text-xs text-ink-2">
+                <div className="flex items-center gap-2 text-slate-300">
                   <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" />
                   <span>GitHub Security Advisory with SHA-256</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-inset border border-line flex items-center gap-2.5 text-xs text-ink-2">
+                <div className="flex items-center gap-2 text-slate-300">
                   <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
                   <span>Emergency Triage on Google Calendar</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-inset border border-line flex items-center gap-2.5 text-xs text-ink-2">
-                  <CheckCircle2 className="w-4 h-4 text-rose-400 shrink-0" />
+                <div className="flex items-center gap-2 text-slate-300">
+                  <CheckCircle2 className="w-4 h-4 text-red-400 shrink-0" />
                   <span>CERT-In Legal Evidence FIR via Gmail</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-inset border border-line flex items-center gap-2.5 text-xs text-ink-2">
+                <div className="flex items-center gap-2 text-slate-300">
                   <CheckCircle2 className="w-4 h-4 text-[#25D366] shrink-0" />
                   <span>WhatsApp Citizen Security Alert</span>
                 </div>
@@ -383,13 +378,13 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
               <div className="pt-2">
                 {workflowResult ? (
                   <div className="space-y-3">
-                    <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs font-mono text-emerald-300 flex items-center justify-between">
+                    <div className="p-3 bg-emerald-950/60 border border-emerald-800 rounded-lg text-xs font-mono text-emerald-300 flex items-center justify-between">
                       <span>✓ 5 Incident Actions Executed</span>
                       <span className="text-[10px] text-emerald-400 font-bold">{workflowResult.workflowId}</span>
                     </div>
                     <button
                       onClick={onNavigateToAutomations}
-                      className="w-full py-2.5 px-4 rounded-xl bg-surface border border-line-strong hover:bg-hover text-ink font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-btn"
+                      className="w-full py-2.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-cyan-900/40"
                     >
                       <span>View Corsair Orchestration</span>
                       <ArrowRight className="w-4 h-4" />
@@ -403,13 +398,13 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
                       onScanComplete(activeScan, wf);
                       onNavigateToAutomations();
                     }}
-                    className="w-full py-3 px-4 rounded-xl bg-ink text-page hover:bg-white/90 active:scale-[0.99] font-sans text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-btn"
+                    className="w-full py-2.5 px-4 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-900/40"
                   >
-                    <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <Zap className="w-4 h-4" />
                     <span>Trigger Corsair Response</span>
                   </button>
                 ) : (
-                  <div className="p-3.5 bg-inset border border-line rounded-xl text-xs font-mono text-ink-3 text-center">
+                  <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-400 text-center">
                     Media verified authentic. Incident threshold (60%) not triggered.
                   </div>
                 )}
@@ -417,9 +412,9 @@ export const ForensicScanner: React.FC<ForensicScannerProps> = ({ onScanComplete
             </div>
 
             {/* Cryptographic SHA-256 Proof Card */}
-            <div className="bg-surface border-[1.5px] border-line rounded-2xl p-5 shadow-card space-y-2.5 font-mono text-xs">
-              <div className="text-[11px] text-ink-3 uppercase tracking-wider">SHA-256 Evidence Signature:</div>
-              <div className="p-3 bg-inset rounded-xl border border-line text-[11px] text-ink-2 break-all select-all leading-relaxed font-mono">
+            <div className="bg-[#090e17] border border-slate-800 rounded-xl p-4 space-y-2 font-mono text-xs">
+              <div className="text-[11px] text-slate-500 uppercase tracking-wider">SHA-256 Evidence Signature:</div>
+              <div className="p-2.5 bg-slate-950 rounded border border-slate-800/80 text-[11px] text-cyan-400 break-all select-all">
                 {activeScan.sha256}
               </div>
             </div>
