@@ -11,32 +11,7 @@ export function getStoredEvents(): CorsairEvent[] {
   } catch (e) {
     console.error('Failed to parse corsair events', e);
   }
-  // Initial seed events
-  return [
-    {
-      id: 'evt_init_slack_01',
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      event_type: 'slack.threat_broadcast_sent',
-      account_id: 'acc_slack_01',
-      status: 'delivered',
-      payload: {
-        channel: '#cyber-threat-desk',
-        title: '🚨 Initialized NETRA Forensic Incident Channel',
-        urgency: 'HIGH'
-      }
-    },
-    {
-      id: 'evt_init_gh_02',
-      created_at: new Date(Date.now() - 7200000).toISOString(),
-      event_type: 'github.security_advisory_created',
-      account_id: 'acc_github_01',
-      status: 'delivered',
-      payload: {
-        repo: 'corsairdev/corsair',
-        title: 'Security Advisory Engine Linked to NETRA SBI'
-      }
-    }
-  ];
+  return [];
 }
 
 export function saveStoredEvents(events: CorsairEvent[]) {
@@ -58,8 +33,8 @@ export function dispatchWorkflow(scan: ForensicResult): WorkflowDispatchResult {
       name: 'Slack Incident Broadcast',
       action: 'broadcast_threat_card',
       status: 'DELIVERED',
-      details: 'Alert card posted to #cyber-threat-desk with ' + scan.riskScore + '% risk score and indicators',
-      target: '#cyber-threat-desk',
+      details: 'Alert card posted to Security Operations Channel with ' + scan.riskScore + '% risk score and indicators',
+      target: 'Security Operations Channel',
       color: 'border-[#4A154B] bg-[#4A154B]/10 text-pink-400',
       externalId: 'evt_slack_' + Date.now()
     },
@@ -68,8 +43,8 @@ export function dispatchWorkflow(scan: ForensicResult): WorkflowDispatchResult {
       name: 'GitHub Security Advisory Issue',
       action: 'create_security_advisory',
       status: 'DELIVERED',
-      details: 'Created cryptographically verified incident tracking issue with SHA-256 evidence payload in corsairdev/corsair',
-      target: 'corsairdev/corsair #advisories',
+      details: 'Created cryptographically verified incident tracking issue with SHA-256 evidence payload in Advisory Repository',
+      target: 'Advisory Repository',
       color: 'border-purple-500/40 bg-purple-950/20 text-purple-400',
       externalId: 'evt_gh_' + Date.now()
     },
@@ -88,8 +63,8 @@ export function dispatchWorkflow(scan: ForensicResult): WorkflowDispatchResult {
       name: 'Gmail Evidence Intimation',
       action: 'dispatch_certin_evidence_notice',
       status: 'DISPATCHED',
-      details: 'Official FIR legal evidence notice prepared and routed to CERT-In / Nodal Officer',
-      target: 'cybercrime-nodal@cert-in.org.in',
+      details: 'Official legal evidence notice prepared and routed to statutory liaison endpoint',
+      target: 'Statutory Reporting Gateway',
       color: 'border-red-500/40 bg-red-950/20 text-red-400',
       externalId: 'evt_gmail_' + Date.now()
     },
@@ -98,8 +73,8 @@ export function dispatchWorkflow(scan: ForensicResult): WorkflowDispatchResult {
       name: 'WhatsApp Citizen Forensic Broadcast',
       action: 'dispatch_whatsapp_citizen_alert',
       status: 'DELIVERED',
-      details: 'Dispatched automated multi-lingual warning bulletin via WhatsApp Cloud API (+1 415 523 8886)',
-      target: 'WhatsApp Bot Subscribers',
+      details: 'Dispatched automated multi-lingual warning bulletin via WhatsApp Cloud API',
+      target: 'WhatsApp Broadcast Channel',
       color: 'border-[#25D366]/40 bg-[#25D366]/10 text-[#25D366]',
       externalId: 'evt_wa_' + Date.now()
     }
@@ -168,16 +143,16 @@ export function executeMCPAgent(prompt: string): MCPAgentResponse {
 
     toolCalls.push({
       tool: 'slack_post_broadcast',
-      args: { channel: '#cyber-threat-desk', message: 'Investigator queried deepfake evidence for ' + scan.jobId },
+      args: { channel: 'security-operations', message: 'Investigator queried deepfake evidence for ' + scan.jobId },
       result: { status: 'posted', timestamp: new Date().toISOString() }
     });
 
-    responseText = 'I analyzed the speech forensic dossier (**' + scan.jobId + '**). The sample exhibits a **' + scan.riskScore + '% Critical Threat** index with Non-Lambertian ocular specular reflection discontinuity (42° angular disparity) and perioral Wav2Lip boundary artifacts. Violates **IT Act Sec 66D** and **BNS Sec 318(4)**. A security broadcast has been posted to Slack #cyber-threat-desk.';
+    responseText = 'I analyzed the speech forensic dossier (**' + scan.jobId + '**). The sample exhibits a **' + scan.riskScore + '% Critical Threat** index with Non-Lambertian ocular specular reflection discontinuity (42° angular disparity) and perioral Wav2Lip boundary artifacts. Violates **IT Act Sec 66D** and **BNS Sec 318(4)**. A security broadcast has been posted to the Security Operations Channel.';
   } else if (lower.includes('fir') || lower.includes('arrest') || lower.includes('document')) {
     const scan = FORENSIC_PRESETS['preset_digital_arrest_fir'];
     toolCalls.push({
       tool: 'search_threat_catalog',
-      args: { query: 'digital arrest notice', type: 'document' },
+      args: { query: 'incident advisory notice', type: 'document' },
       result: {
         matchesFound: 1,
         records: [
@@ -192,24 +167,24 @@ export function executeMCPAgent(prompt: string): MCPAgentResponse {
 
     toolCalls.push({
       tool: 'github_list_security_issues',
-      args: { repo: 'corsairdev/corsair', state: 'open' },
+      args: { repo: 'advisory-catalog', state: 'open' },
       result: { issues: [{ id: 409, title: '[Security Advisory] Netra Flagged Incident ' + scan.jobId }] }
     });
 
-    responseText = 'Extracted fraudulent IOCs from Digital Arrest FIR (**' + scan.jobId + '**): Extortion UPI handles `cbi.cybercell.mumbai@okaxis` and phone numbers `+91 98710 20905`. Linked to GitHub Security Advisory #409.';
+    responseText = 'Extracted extortion and impersonation indicators from flagged incident dossier (**' + scan.jobId + '**). Linked to Security Advisory #409 in the advisory catalog.';
   } else if (lower.includes('whatsapp') || lower.includes('bot') || lower.includes('phone')) {
     toolCalls.push({
       tool: 'whatsapp_bot_dispatch',
-      args: { action: 'query_status', phone_number: '+1 415 523 8886' },
+      args: { action: 'query_status', channel: 'whatsapp_cloud_api' },
       result: {
         botStatus: 'ONLINE',
-        channels: ['Meta WhatsApp Cloud API', 'Twilio Failover Sandbox'],
+        channels: ['Meta WhatsApp Cloud API', 'Twilio Failover Gateway'],
         activeSessions: 14,
         connectedWebsite: 'https://netraai-i1pl.onrender.com/corsair'
       }
     });
 
-    responseText = 'The **NETRA WhatsApp Forensic Bot** is fully operational (+1 555 201 3457). It supports 4 modalities (Text, Image, Video, Audio), real-time Tavily search, and automatic failover. Citizens can connect directly via wa.me/15552013457.';
+    responseText = 'The **NETRA WhatsApp Forensic Bot** is fully operational. It supports 4 modalities (Text, Image, Video, Audio), real-time search verification, and automatic failover. Citizens can connect directly via the WhatsApp launch button.';
   } else {
     toolCalls.push({
       tool: 'search_threat_catalog',

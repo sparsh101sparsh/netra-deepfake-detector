@@ -64,80 +64,16 @@ export default function CorsairPage() {
     const loaded = getStoredEvents();
     if (loaded && loaded.length > 0) {
       setEvents(loaded);
-    } else {
-      const defaultEvents: CorsairEvent[] = [
-        {
-          id: 'evt_slack_901',
-          created_at: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
-          event_type: 'slack.threat_broadcast',
-          account_id: 'acc_slack_netra',
-          status: 'delivered',
-          payload: {
-            channel: '#cyber-threat-desk',
-            title: '🚨 CRITICAL: Deepfake Impersonation of Public Official Detected',
-            details: 'Composite Netra Threat Index: 94/100 (BNS Sec 318(4) & IT Act 66D). Evidence logged.',
-          },
-        },
-        {
-          id: 'evt_gh_902',
-          created_at: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
-          event_type: 'github.security_advisory',
-          account_id: 'acc_gh_corsair',
-          status: 'delivered',
-          payload: {
-            repo: 'corsairdev/corsair',
-            title: 'SHA-256 Forensic Evidence Record Committed to Advisory Catalog',
-            details: 'Advisory GHSA-netra-9081 issued with cryptographic evidence proof.',
-          },
-        },
-        {
-          id: 'evt_cal_903',
-          created_at: new Date(Date.now() - 1000 * 60 * 32).toISOString(),
-          event_type: 'calendar.triage_created',
-          account_id: 'acc_gcal_triage',
-          status: 'delivered',
-          payload: {
-            calendar: 'Cyber Incident Response Team',
-            title: 'Emergency Forensic Debrief: Impersonation Attack Triage',
-            details: '30-minute debrief scheduled on Google Calendar with lead investigator.',
-          },
-        },
-        {
-          id: 'evt_cert_904',
-          created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-          event_type: 'gmail.certin_evidence_draft',
-          account_id: 'acc_gmail_legal',
-          status: 'dispatched',
-          payload: {
-            recipient: 'cybercrime-nodal@cert-in.org.in',
-            title: 'CERT-In Statutory Legal Evidence Notice (Sec 65B Certified)',
-            details: 'Formal legal evidence bundle intimation prepared and queued for delivery.',
-          },
-        },
-        {
-          id: 'evt_wa_905',
-          created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-          event_type: 'whatsapp.citizen_alert',
-          account_id: 'acc_meta_cloud',
-          status: 'delivered',
-          payload: {
-            recipient: '+1 555 201 3457 (Meta Cloud API)',
-            title: 'WhatsApp Citizen Forensic Security Alert & Advisory',
-            details: 'Broadcasted direct crime warning and 1930 reporting steps to citizen.',
-          },
-        },
-      ];
-      setEvents(defaultEvents);
-      saveStoredEvents(defaultEvents);
     }
   }, []);
 
   const handleRefreshEvents = () => {
     setIsRefreshing(true);
     setTimeout(() => {
-      setEvents((prev) => [...prev]);
+      const loaded = getStoredEvents();
+      setEvents(loaded || []);
       setIsRefreshing(false);
-    }, 600);
+    }, 400);
   };
 
   const handleTriggerAutonomousWorkflow = () => {
@@ -152,7 +88,7 @@ export default function CorsairPage() {
         status: 'delivered',
         payload: {
           title: '⚡ Autonomous Remediation Dispatched Across 5 Platforms',
-          details: 'Synchronized Slack (#cyber-threat-desk), GitHub Advisory, GCal Triage, CERT-In Gmail, and WhatsApp (+1 555 201 3457).',
+          details: 'Synchronized Security Operations, Incident Advisory Repo, Triage Calendar, Statutory Liaison, and Citizen WhatsApp Channel.',
         },
       };
       const updated = [newEvent, ...events];
@@ -201,9 +137,9 @@ export default function CorsairPage() {
       service: 'Slack',
       icon: MessageSquare,
       color: 'text-pink-400',
-      channel: '#cyber-threat-desk',
+      channel: 'Security Operations',
       name: 'Real-Time Threat Broadcast',
-      status: 'DELIVERED',
+      status: 'CONFIGURED',
       details: 'Instant incident notification pushed to security operations center with forensic waveform evidence.',
     },
     {
@@ -211,9 +147,9 @@ export default function CorsairPage() {
       service: 'GitHub',
       icon: GitPullRequest,
       color: 'text-purple-400',
-      channel: 'corsairdev/corsair',
+      channel: 'Advisory Repository',
       name: 'Security Advisory & SHA-256 Commit',
-      status: 'DELIVERED',
+      status: 'CONFIGURED',
       details: 'Cryptographic hash and model anomaly metadata archived directly to incident repository.',
     },
     {
@@ -221,19 +157,19 @@ export default function CorsairPage() {
       service: 'Google Calendar',
       icon: Calendar,
       color: 'text-blue-400',
-      channel: 'Cyber Incident Response',
+      channel: 'Incident Response Triage',
       name: 'Emergency Triage Scheduling',
-      status: 'DELIVERED',
-      details: '30-minute high-priority triage sync automatically booked for lead incident response handlers.',
+      status: 'CONFIGURED',
+      details: 'High-priority triage sync automatically booked for lead incident response handlers.',
     },
     {
       id: 'auto-gmail',
       service: 'Gmail / CERT-In',
       icon: Mail,
       color: 'text-rose-400',
-      channel: 'cybercrime-nodal@cert-in.org.in',
+      channel: 'Statutory Reporting Gateway',
       name: 'Statutory FIR Evidence Draft',
-      status: 'DISPATCHED',
+      status: 'CONFIGURED',
       details: 'Section 65B certified legal affidavit generated and queued to national nodal cyber agency.',
     },
     {
@@ -241,26 +177,26 @@ export default function CorsairPage() {
       service: 'WhatsApp Cloud',
       icon: Smartphone,
       color: 'text-[#25D366]',
-      channel: '+1 555 201 3457',
+      channel: 'Citizen Broadcast Channel',
       name: 'Citizen Defense Warning Alert',
-      status: 'DELIVERED',
-      details: 'Direct citizen intimation warning against fund transfer with 1930 reporting assistance.',
+      status: 'CONFIGURED',
+      details: 'Direct citizen intimation warning against unauthorized fund transfer with forensic defense guidance.',
     },
   ];
 
   const integrationsList = [
-    { name: 'Slack', icon: MessageSquare, target: '#cyber-threat-desk', status: 'ACTIVE', color: 'text-pink-400', latency: '14ms' },
-    { name: 'GitHub', icon: GitPullRequest, target: 'corsairdev/corsair', status: 'ACTIVE', color: 'text-purple-400', latency: '22ms' },
-    { name: 'WhatsApp Bot', icon: Smartphone, target: '+1 555 201 3457 (Meta API)', status: 'ACTIVE', color: 'text-[#25D366]', latency: '18ms' },
+    { name: 'Slack', icon: MessageSquare, target: 'Security Operations Channel', status: 'ACTIVE', color: 'text-pink-400', latency: '14ms' },
+    { name: 'GitHub', icon: GitPullRequest, target: 'Incident Advisory Repository', status: 'ACTIVE', color: 'text-purple-400', latency: '22ms' },
+    { name: 'WhatsApp Bot', icon: Smartphone, target: 'WhatsApp Cloud Bot Channel', status: 'ACTIVE', color: 'text-[#25D366]', latency: '18ms' },
     { name: 'Google Calendar', icon: Calendar, target: 'Emergency Response Triage', status: 'ACTIVE', color: 'text-blue-400', latency: '19ms' },
-    { name: 'CERT-In Gmail', icon: Mail, target: 'cybercrime-nodal@cert-in.org.in', status: 'ACTIVE', color: 'text-rose-400', latency: '25ms' },
+    { name: 'CERT-In Liaison', icon: Mail, target: 'Statutory Reporting Gateway', status: 'ACTIVE', color: 'text-rose-400', latency: '25ms' },
   ];
 
   const intelEntities = [
-    { title: 'Digital Arrest Impersonation Syndicate', type: 'FIR Evidence', source: 'Gmail', date: 'Today', tag: '#digital-arrest' },
-    { title: 'WhatsApp Lottery Phishing Seed (KBC ₹25L)', type: 'Citizen Tip', source: 'WhatsApp', date: 'Today', tag: '#lottery' },
-    { title: 'Deepfake Audio Voice Clone of Senior Executive', type: 'Incident #9081', source: 'Slack', date: 'Yesterday', tag: '#voice-clone' },
-    { title: 'Electricity Disconnection Bill Scam IOCs', type: 'Advisory GHSA-77', source: 'GitHub', date: '2 days ago', tag: '#electricity-kyc' },
+    { title: 'Digital Arrest Impersonation Syndicate', type: 'Forensic Dossier', source: 'Analysis Engine', date: 'Active', tag: '#digital-arrest' },
+    { title: 'Synthetic Identity Financial Fraud Campaign', type: 'Citizen Escalation', source: 'WhatsApp Bot', date: 'Active', tag: '#financial-fraud' },
+    { title: 'Deepfake Audio Voice Clone Attack Vector', type: 'Acoustic Forensic', source: 'Forensic Pipeline', date: 'Active', tag: '#voice-clone' },
+    { title: 'Executive Video Impersonation Phishing Seed', type: 'Visual Artifact', source: 'Advisory Feed', date: 'Active', tag: '#video-sbi' },
   ];
 
   return (
@@ -322,71 +258,88 @@ export default function CorsairPage() {
 
               {/* Event Stream List */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
-                {events.map((evt) => {
-                  const title = evt.payload?.title || evt.event_type;
-                  const details = evt.payload?.details || '';
-                  const recipient = evt.payload?.channel || evt.payload?.recipient || evt.payload?.repo || '';
+                {events.length === 0 ? (
+                  <div className="h-full min-h-[380px] flex flex-col items-center justify-center text-center p-8 text-ink-3 space-y-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-inset border border-line flex items-center justify-center text-emerald-400">
+                      <Radio className="w-6 h-6 animate-pulse" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-sm font-semibold text-ink">Autonomous Event Bus Active</div>
+                      <p className="text-xs text-ink-3 max-w-sm">
+                        Standing by for real-time forensic escalations (Threat Score ≥ 60%). No unhandled incidents in current session.
+                      </p>
+                    </div>
+                    <div className="text-[11px] font-mono text-ink-3 border border-line bg-surface px-3 py-1.5 rounded-lg">
+                      Ready to orchestrate Slack, GitHub, Google Calendar, Email & WhatsApp
+                    </div>
+                  </div>
+                ) : (
+                  events.map((evt) => {
+                    const title = evt.payload?.title || evt.event_type;
+                    const details = evt.payload?.details || '';
+                    const recipient = evt.payload?.channel || evt.payload?.recipient || evt.payload?.repo || '';
 
-                  let ServiceIcon = Zap;
-                  let badgeColor = 'bg-accent-tint text-ink border-line';
-                  if (evt.event_type.includes('slack')) {
-                    ServiceIcon = MessageSquare;
-                    badgeColor = 'bg-pink-500/10 text-pink-400 border-pink-500/20';
-                  } else if (evt.event_type.includes('github')) {
-                    ServiceIcon = GitPullRequest;
-                    badgeColor = 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-                  } else if (evt.event_type.includes('whatsapp')) {
-                    ServiceIcon = Smartphone;
-                    badgeColor = 'bg-[#25D366]/10 text-[#25D366] border-[#25D366]/25';
-                  } else if (evt.event_type.includes('calendar')) {
-                    ServiceIcon = Calendar;
-                    badgeColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-                  } else if (evt.event_type.includes('gmail')) {
-                    ServiceIcon = Mail;
-                    badgeColor = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-                  }
+                    let ServiceIcon = Zap;
+                    let badgeColor = 'bg-accent-tint text-ink border-line';
+                    if (evt.event_type.includes('slack')) {
+                      ServiceIcon = MessageSquare;
+                      badgeColor = 'bg-pink-500/10 text-pink-400 border-pink-500/20';
+                    } else if (evt.event_type.includes('github')) {
+                      ServiceIcon = GitPullRequest;
+                      badgeColor = 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+                    } else if (evt.event_type.includes('whatsapp')) {
+                      ServiceIcon = Smartphone;
+                      badgeColor = 'bg-[#25D366]/10 text-[#25D366] border-[#25D366]/25';
+                    } else if (evt.event_type.includes('calendar')) {
+                      ServiceIcon = Calendar;
+                      badgeColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                    } else if (evt.event_type.includes('gmail')) {
+                      ServiceIcon = Mail;
+                      badgeColor = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+                    }
 
-                  return (
-                    <div
-                      key={evt.id}
-                      className="p-4 rounded-xl bg-inset border border-line hover:border-line-strong transition-all space-y-2.5"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className={cn('p-1.5 rounded-lg border shrink-0', badgeColor)}>
-                            <ServiceIcon className="w-3.5 h-3.5" />
-                          </div>
-                          <div className="min-w-0">
-                            <h4 className="text-xs font-semibold text-ink leading-snug truncate">
-                              {title}
-                            </h4>
-                            <div className="flex items-center gap-2 text-[10px] font-mono text-ink-3">
-                              <span>{evt.id}</span>
-                              {recipient && <span>• {recipient}</span>}
+                    return (
+                      <div
+                        key={evt.id}
+                        className="p-4 rounded-xl bg-inset border border-line hover:border-line-strong transition-all space-y-2.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className={cn('p-1.5 rounded-lg border shrink-0', badgeColor)}>
+                              <ServiceIcon className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-semibold text-ink leading-snug truncate">
+                                {title}
+                              </h4>
+                              <div className="flex items-center gap-2 text-[10px] font-mono text-ink-3">
+                                <span>{evt.id}</span>
+                                {recipient && <span>• {recipient}</span>}
+                              </div>
                             </div>
                           </div>
+
+                          <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-surface text-emerald-400 border border-line shrink-0">
+                            {evt.status.toUpperCase()}
+                          </span>
                         </div>
 
-                        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-surface text-emerald-400 border border-line shrink-0">
-                          {evt.status.toUpperCase()}
-                        </span>
-                      </div>
+                        {details && (
+                          <p className="text-xs text-ink-2 leading-relaxed font-sans line-clamp-2">
+                            {details}
+                          </p>
+                        )}
 
-                      {details && (
-                        <p className="text-xs text-ink-2 leading-relaxed font-sans line-clamp-2">
-                          {details}
-                        </p>
-                      )}
-
-                      <div className="flex items-center justify-between text-[10px] font-mono text-ink-3 pt-2 border-t border-line-soft">
-                        <span>{new Date(evt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-                        <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" /> Handled via MCP Webhook
-                        </span>
+                        <div className="flex items-center justify-between text-[10px] font-mono text-ink-3 pt-2 border-t border-line-soft">
+                          <span>{new Date(evt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                          <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> Handled via MCP Webhook
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
 
               {/* Bottom Action Drawer */}
@@ -644,17 +597,16 @@ export default function CorsairPage() {
                 )}
               </div>
 
-              {/* Static Bottom Row */}
-              <div className="pt-3 border-t border-line flex items-center justify-between text-[11px] font-mono text-ink-3 shrink-0">
-                <span>Official Hotline: 📞 1930</span>
+              {/* Bottom Action Row */}
+              <div className="pt-3 border-t border-line flex items-center justify-end text-[11px] font-mono shrink-0">
                 <a
                   href="https://wa.me/15552013457?text=menu"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1 font-semibold"
+                  className="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5 font-medium"
                 >
                   <Smartphone className="w-3.5 h-3.5" />
-                  <span>WhatsApp Bot (+1 555-201-3457)</span>
+                  <span>Launch WhatsApp Forensic Bot</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>

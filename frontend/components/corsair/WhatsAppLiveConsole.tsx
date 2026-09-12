@@ -28,7 +28,6 @@ Hello! I am your 24/7 AI Deepfake & Cyber Crime Forensic Assistant (+1 415 523 8
 • Send any suspicious claim, video description, or news headline to verify with Tavily OSINT
 • Forward suspicious media (Images, Audios, Videos) for neural artifact inspection
 
-*Emergency Helpline:* 📞 Call 1930 | https://cybercrime.gov.in
 *Statutory Compliance:* IT Act 2000 Sec 66D | BNS 2023 Sec 318(4)`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       channel: 'Twilio / Meta Cloud'
@@ -118,8 +117,7 @@ Hello! I am your 24/7 AI Deepfake & Cyber Crime Forensic Assistant (+1 415 523 8
 5️⃣ *Download Forensic Case PDF* — Full Section 65B legal certificate
 6️⃣ *Track Case Status* — Type "status <CASE_ID>"
 
-Connected to Corsair Platform: https://netraai-i1pl.onrender.com/corsair
-Emergency Helpline: 📞 1930`;
+Connected to Corsair Platform: https://netraai-i1pl.onrender.com/corsair`;
         } else if (lower.includes('modi') || lower.includes('speech')) {
           simulatedReply = `🚨 *NETRA FORENSIC ALERT: HIGH RISK DEEPFAKE DETECTED*
 
@@ -130,7 +128,7 @@ Emergency Helpline: 📞 1930`;
 *Statutory Violations:* IT Act 2000 Sec 66D, BNS 2023 Sec 318(4)
 
 *Advisory:* Do not circulate. Official verified statement is archived in Corsair Threat DB.
-Report immediately to Cyber Crime Portal (1930).`;
+Report immediately to Cyber Crime Portal.`;
         } else if (lower.includes('arrest') || lower.includes('cbi') || lower.includes('fir')) {
           simulatedReply = `⚠️ *DIGITAL ARREST SCAM WARNING*
 
@@ -138,7 +136,7 @@ Indian Law Enforcement agencies (CBI, ED, Police, Courts) *NEVER* conduct arrest
 
 • *Legal Fact:* "Digital Arrest" has NO existence in the Indian Criminal Procedure Code (CrPC) or BNSS.
 • *Action:* Disconnect immediately. Do not transfer funds.
-• *Report:* File formal complaint at https://cybercrime.gov.in or dial 1930.`;
+• *Report:* File formal complaint at https://cybercrime.gov.in.`;
         } else {
           simulatedReply = `🔍 *NETRA Threat Investigation*
 
@@ -169,7 +167,7 @@ Analyzed query: "${text}"
     'Is Modi speech deepfake real?',
     'Digital arrest notice from CBI',
     'KBC lottery prize WhatsApp message',
-    'Helpline 1930'
+    'Verify CBI summons notice'
   ];
 
   return (
@@ -328,7 +326,6 @@ Analyzed query: "${text}"
           <ul className="text-xs space-y-1.5 text-slate-300 font-mono">
             <li>• <strong className="text-white">IT Act 2000 Sec 66D</strong> (Cheating by personation using computer resource)</li>
             <li>• <strong className="text-white">BNS 2023 Sec 318(4)</strong> (Cheating & fraudulently dishonestly inducing delivery of property)</li>
-            <li>• <strong className="text-white">National Cyber Crime Helpline:</strong> Dial 1930</li>
           </ul>
         </div>
       </div>
