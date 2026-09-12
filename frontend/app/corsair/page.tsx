@@ -28,10 +28,10 @@ import {
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { cn } from '@/lib/utils';
-import { getStoredEvents, saveStoredEvents, executeMCPAgent } from '@/lib/corsair/engine';
-import { CorsairEvent, MCPAgentResponse } from '@/lib/corsair/types';
+import { getStoredEvents, saveStoredEvents } from '@/lib/corsair/engine';
+import { CorsairEvent } from '@/lib/corsair/types';
 
-type CorsairHubTab = 'workflows' | 'copilot' | 'integrations' | 'intel';
+type CorsairHubTab = 'workflows' | 'integrations' | 'intel';
 
 export default function CorsairPage() {
   const [activeTab, setActiveTab] = useState<CorsairHubTab>('workflows');
@@ -39,22 +39,6 @@ export default function CorsairPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDispatching, setIsDispatching] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  // Copilot Chat State
-  const [chatMessages, setChatMessages] = useState<Array<{
-    role: 'user' | 'agent';
-    content: string;
-    timestamp: string;
-    toolCalls?: Array<{ tool: string; args: any }>;
-  }>>([
-    {
-      role: 'agent',
-      content: '👋 Welcome to **Corsair Autonomous Incident Copilot**.\nI continuously monitor NETRA neural forensic flags. If an incident exceeds the **60% threat threshold**, I trigger simultaneous remediation across Slack, GitHub, Google Calendar, CERT-In, and WhatsApp.',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    },
-  ]);
-  const [chatInput, setChatInput] = useState('');
-  const [isCopilotThinking, setIsCopilotThinking] = useState(false);
 
   // Search Intel State
   const [searchQuery, setSearchQuery] = useState('');
@@ -104,32 +88,7 @@ export default function CorsairPage() {
     setTimeout(() => setCopiedId(null), 1500);
   };
 
-  const handleSendCopilot = (textToSend?: string) => {
-    const query = (textToSend || chatInput).trim();
-    if (!query) return;
 
-    const userMsg = {
-      role: 'user' as const,
-      content: query,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setChatMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setChatInput('');
-    setIsCopilotThinking(true);
-
-    setTimeout(() => {
-      const resp: MCPAgentResponse = executeMCPAgent(query);
-      const agentMsg = {
-        role: 'agent' as const,
-        content: resp.message,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        toolCalls: resp.toolCalls,
-      };
-      setChatMessages((prev) => [...prev, agentMsg]);
-      setIsCopilotThinking(false);
-    }, 650);
-  };
 
   const automationsList = [
     {
@@ -373,14 +332,14 @@ export default function CorsairPage() {
                       Corsair Automation Hub
                     </h2>
                     <p className="text-xs text-ink-3">
-                      Multi-service remediations, MCP agent chat & tool telemetry
+                      Multi-service remediations, connected protocols & threat intel telemetry
                     </p>
                   </div>
                 </div>
 
-                {/* Segmented Selector Matching VIDEO | IMAGE | AUDIO | TEXT */}
+                {/* Segmented Selector Matching WORKFLOWS | INTEGRATIONS | INTEL */}
                 <div className="self-start sm:self-auto bg-inset p-1 rounded-xl border border-line flex items-center gap-1 text-xs font-mono">
-                  {(['workflows', 'copilot', 'integrations', 'intel'] as const).map((tab) => (
+                  {(['workflows', 'integrations', 'intel'] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -433,84 +392,6 @@ export default function CorsairPage() {
                           </p>
                         </div>
                       ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── TAB 2: COPILOT (MCP Agent) ── */}
-                {activeTab === 'copilot' && (
-                  <div className="flex flex-col h-[480px]">
-                    <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-                      {chatMessages.map((m, i) => (
-                        <div
-                          key={i}
-                          className={cn('flex flex-col space-y-1', m.role === 'user' ? 'items-end' : 'items-start')}
-                        >
-                          <span className="text-[10px] font-mono text-ink-3">
-                            {m.role === 'user' ? 'Investigator' : 'Corsair Copilot'} • {m.timestamp}
-                          </span>
-                          <div
-                            className={cn(
-                              'max-w-[85%] rounded-xl p-3.5 text-xs leading-relaxed',
-                              m.role === 'user'
-                                ? 'bg-ink text-page font-medium shadow-sm'
-                                : 'bg-inset border border-line text-ink whitespace-pre-wrap'
-                            )}
-                          >
-                            {m.content}
-
-                            {m.toolCalls && m.toolCalls.length > 0 && (
-                              <div className="mt-2.5 pt-2 border-t border-line space-y-1.5 font-mono text-[10px]">
-                                {m.toolCalls.map((tc, idx) => (
-                                  <div key={idx} className="p-2 rounded-lg bg-surface border border-line flex items-center justify-between">
-                                    <span className="text-cyan-400 font-bold">⚡ {tc.tool}</span>
-                                    <span className="text-emerald-400">✓ EXECUTED</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-
-                      {isCopilotThinking && (
-                        <div className="p-3 bg-inset border border-line rounded-xl text-xs font-mono text-ink-2 flex items-center gap-2 w-fit">
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-400" />
-                          <span>Corsair MCP reasoning across connected tools...</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Quick Prompts */}
-                    <div className="pt-2 flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono pb-2">
-                      {['Check WhatsApp status', 'Dispatch Slack alert', 'Verify SHA-256 evidence'].map((q) => (
-                        <button
-                          key={q}
-                          onClick={() => handleSendCopilot(q)}
-                          className="bg-inset hover:bg-hover border border-line px-2.5 py-1 rounded-lg text-ink-2 hover:text-ink whitespace-nowrap transition-colors"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Chat Input */}
-                    <div className="pt-2 border-t border-line flex gap-2">
-                      <input
-                        type="text"
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSendCopilot()}
-                        placeholder="Ask Corsair Copilot to inspect threats or dispatch alerts..."
-                        className="flex-1 bg-inset border border-line rounded-xl px-4 py-2 text-xs text-ink placeholder-ink-3 focus:outline-none focus:border-line-strong font-sans"
-                      />
-                      <button
-                        onClick={() => handleSendCopilot()}
-                        disabled={isCopilotThinking || !chatInput.trim()}
-                        className="px-3.5 py-2 bg-ink text-page hover:bg-white/90 font-semibold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-btn disabled:opacity-40"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                      </button>
                     </div>
                   </div>
                 )}
