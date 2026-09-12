@@ -45,13 +45,13 @@ export const IncidentDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-[#0b1220] border border-slate-800 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-card">
         <div>
           <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-cyan-400" />
-            <h2 className="text-lg font-bold text-white tracking-wide">CORSAIR INCIDENT & SYNC DASHBOARD</h2>
+            <Activity className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-base sm:text-lg font-bold text-ink tracking-tight">CORSAIR INCIDENT & SYNC DASHBOARD</h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-ink-3 mt-1.5 leading-relaxed font-sans">
             Real-time telemetry from Corsair SQLite DB & automated webhook dispatches (<code>corsair_events</code>, <code>corsair_entities</code>)
           </p>
         </div>
@@ -59,7 +59,7 @@ export const IncidentDashboard: React.FC = () => {
         <button
           onClick={fetchDashboardData}
           disabled={loading}
-          className="text-xs font-mono font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-lg flex items-center gap-2 transition-colors self-end sm:self-auto"
+          className="text-xs font-mono font-semibold bg-inset hover:bg-hover text-ink border border-line hover:border-line-strong px-3.5 py-2 rounded-xl flex items-center gap-2 transition-all self-end sm:self-auto shadow-sm"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh Feed
         </button>
@@ -67,106 +67,106 @@ export const IncidentDashboard: React.FC = () => {
 
       {/* Metrics Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-[#090e17] border border-slate-800 rounded-xl p-4">
-          <div className="text-[11px] font-mono text-slate-400 uppercase">Corsair Events Logged</div>
-          <div className="text-2xl font-mono font-black text-cyan-400 mt-1">
+        <div className="bg-surface border-[1.5px] border-line rounded-2xl p-5 shadow-card">
+          <div className="text-[11px] font-mono text-ink-3 uppercase tracking-wider">Corsair Events Logged</div>
+          <div className="text-2xl font-mono font-black text-ink mt-1">
             {totalEvents}
           </div>
-          <div className="text-[10px] text-slate-500 mt-1">Stored in corsair_events table</div>
+          <div className="text-[10px] text-ink-3 mt-1 font-mono">Stored in corsair_events table</div>
         </div>
 
-        <div className="bg-[#090e17] border border-slate-800 rounded-xl p-4">
-          <div className="text-[11px] font-mono text-slate-400 uppercase">Synced Entities</div>
+        <div className="bg-surface border-[1.5px] border-line rounded-2xl p-5 shadow-card">
+          <div className="text-[11px] font-mono text-ink-3 uppercase tracking-wider">Synced Entities</div>
           <div className="text-2xl font-mono font-black text-purple-400 mt-1">
             12
           </div>
-          <div className="text-[10px] text-slate-500 mt-1">GitHub, Slack, WhatsApp & Calendar</div>
+          <div className="text-[10px] text-ink-3 mt-1 font-mono">GitHub, Slack, WhatsApp & Calendar</div>
         </div>
 
-        <div className="bg-[#090e17] border border-slate-800 rounded-xl p-4">
-          <div className="text-[11px] font-mono text-slate-400 uppercase">Netra Threats Analyzed</div>
+        <div className="bg-surface border-[1.5px] border-line rounded-2xl p-5 shadow-card">
+          <div className="text-[11px] font-mono text-ink-3 uppercase tracking-wider">Netra Threats Analyzed</div>
           <div className="text-2xl font-mono font-black text-amber-400 mt-1">
             28
           </div>
-          <div className="text-[10px] text-slate-500 mt-1">Deepfake, Audio & OCR cases scanned</div>
+          <div className="text-[10px] text-ink-3 mt-1 font-mono">Deepfake, Audio & OCR cases scanned</div>
         </div>
 
-        <div className="bg-[#090e17] border border-slate-800 rounded-xl p-4">
-          <div className="text-[11px] font-mono text-slate-400 uppercase">Active Integrations</div>
+        <div className="bg-surface border-[1.5px] border-line rounded-2xl p-5 shadow-card">
+          <div className="text-[11px] font-mono text-ink-3 uppercase tracking-wider">Active Integrations</div>
           <div className="text-2xl font-mono font-black text-emerald-400 mt-1">
             5 / 5
           </div>
-          <div className="text-[10px] text-slate-500 mt-1">Slack, GitHub, GCal, Gmail, WhatsApp</div>
+          <div className="text-[10px] text-ink-3 mt-1 font-mono">Slack, GitHub, GCal, Gmail, WhatsApp</div>
         </div>
       </div>
 
       {/* Connected Services Grid */}
-      <div className="bg-[#090e17] border border-slate-800 rounded-xl p-5">
-        <h3 className="text-xs font-mono font-bold uppercase text-slate-400 mb-3 tracking-wider">
+      <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card">
+        <h3 className="text-xs font-mono font-bold uppercase text-ink-3 mb-4 tracking-wider">
           CONNECTED INTEGRATION STATUS
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 flex items-center justify-between">
+          <div className="bg-inset border border-line rounded-xl p-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <MessageSquare className="w-4 h-4 text-pink-400" />
               <div>
-                <div className="text-xs font-bold text-slate-200">Slack</div>
-                <div className="text-[10px] font-mono text-slate-500">#cyber-threat-desk</div>
+                <div className="text-xs font-bold text-ink">Slack</div>
+                <div className="text-[10px] font-mono text-ink-3">#cyber-threat-desk</div>
               </div>
             </div>
-            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-inset px-2 py-0.5 rounded-full border border-emerald-500/30">
               ACTIVE
             </span>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 flex items-center justify-between">
+          <div className="bg-inset border border-line rounded-xl p-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <GitPullRequest className="w-4 h-4 text-purple-400" />
               <div>
-                <div className="text-xs font-bold text-slate-200">GitHub</div>
-                <div className="text-[10px] font-mono text-slate-500">corsairdev/corsair</div>
+                <div className="text-xs font-bold text-ink">GitHub</div>
+                <div className="text-[10px] font-mono text-ink-3">corsairdev/corsair</div>
               </div>
             </div>
-            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-inset px-2 py-0.5 rounded-full border border-emerald-500/30">
               ACTIVE
             </span>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 flex items-center justify-between">
+          <div className="bg-inset border border-line rounded-xl p-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <Smartphone className="w-4 h-4 text-[#25D366]" />
               <div>
-                <div className="text-xs font-bold text-slate-200">WhatsApp Bot</div>
-                <div className="text-[10px] font-mono text-slate-500">+1 415 523 8886</div>
+                <div className="text-xs font-bold text-ink">WhatsApp Bot</div>
+                <div className="text-[10px] font-mono text-ink-3">+1 555 201 3457</div>
               </div>
             </div>
-            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-inset px-2 py-0.5 rounded-full border border-emerald-500/30">
               CONNECTED
             </span>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 flex items-center justify-between">
+          <div className="bg-inset border border-line rounded-xl p-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <Calendar className="w-4 h-4 text-blue-400" />
               <div>
-                <div className="text-xs font-bold text-slate-200">Google Calendar</div>
-                <div className="text-[10px] font-mono text-slate-500">Incident Triage</div>
+                <div className="text-xs font-bold text-ink">Google Calendar</div>
+                <div className="text-[10px] font-mono text-ink-3">Incident Triage</div>
               </div>
             </div>
-            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-inset px-2 py-0.5 rounded-full border border-emerald-500/30">
               ACTIVE
             </span>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 flex items-center justify-between">
+          <div className="bg-inset border border-line rounded-xl p-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <Mail className="w-4 h-4 text-red-400" />
+              <Mail className="w-4 h-4 text-rose-400" />
               <div>
-                <div className="text-xs font-bold text-slate-200">Gmail</div>
-                <div className="text-[10px] font-mono text-slate-500">CERT-In Notice</div>
+                <div className="text-xs font-bold text-ink">Gmail</div>
+                <div className="text-[10px] font-mono text-ink-3">CERT-In Notice</div>
               </div>
             </div>
-            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-inset px-2 py-0.5 rounded-full border border-emerald-500/30">
               ACTIVE
             </span>
           </div>
@@ -174,15 +174,15 @@ export const IncidentDashboard: React.FC = () => {
       </div>
 
       {/* Live Event Stream Table */}
-      <div className="bg-[#090e17] border border-slate-800 rounded-xl p-5">
-        <h3 className="text-xs font-mono font-bold uppercase text-slate-400 mb-3 tracking-wider">
+      <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card">
+        <h3 className="text-xs font-mono font-bold uppercase text-ink-3 mb-4 tracking-wider">
           LIVE CORSAIR EVENT STREAM (CORSAIR_EVENTS)
         </h3>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 font-mono text-slate-500 text-[11px]">
+              <tr className="border-b border-line font-mono text-ink-3 text-[11px]">
                 <th className="pb-3 font-semibold">EVENT ID</th>
                 <th className="pb-3 font-semibold">TYPE</th>
                 <th className="pb-3 font-semibold">PAYLOAD SUMMARY</th>
@@ -190,33 +190,33 @@ export const IncidentDashboard: React.FC = () => {
                 <th className="pb-3 font-semibold text-right">STATUS</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono">
+            <tbody className="divide-y divide-line-soft font-mono">
               {events.map((evt) => {
                 const summary = evt.payload?.title || evt.payload?.details || evt.payload?.summary || evt.payload?.subject || evt.payload?.message || JSON.stringify(evt.payload || '').slice(0, 50);
 
-                let badgeColor = 'text-cyan-400 bg-cyan-950 border-cyan-800';
-                if (evt.event_type.startsWith('slack')) badgeColor = 'text-pink-400 bg-pink-950 border-pink-800';
-                else if (evt.event_type.startsWith('github')) badgeColor = 'text-purple-400 bg-purple-950 border-purple-800';
-                else if (evt.event_type.startsWith('whatsapp')) badgeColor = 'text-[#25D366] bg-[#25D366]/20 border-[#25D366]/50';
-                else if (evt.event_type.startsWith('calendar') || evt.event_type.startsWith('googlecalendar')) badgeColor = 'text-blue-400 bg-blue-950 border-blue-800';
-                else if (evt.event_type.startsWith('gmail')) badgeColor = 'text-red-400 bg-red-950 border-red-800';
+                let badgeColor = 'text-cyan-400 bg-inset border border-cyan-500/30';
+                if (evt.event_type.startsWith('slack')) badgeColor = 'text-pink-400 bg-inset border border-pink-500/30';
+                else if (evt.event_type.startsWith('github')) badgeColor = 'text-purple-400 bg-inset border border-purple-500/30';
+                else if (evt.event_type.startsWith('whatsapp')) badgeColor = 'text-[#25D366] bg-inset border border-[#25D366]/40';
+                else if (evt.event_type.startsWith('calendar') || evt.event_type.startsWith('googlecalendar')) badgeColor = 'text-blue-400 bg-inset border border-blue-500/30';
+                else if (evt.event_type.startsWith('gmail')) badgeColor = 'text-rose-400 bg-inset border border-rose-500/30';
 
                 return (
-                  <tr key={evt.id} className="hover:bg-slate-900/40 transition-colors">
-                    <td className="py-3 text-slate-400 font-bold">{evt.id}</td>
+                  <tr key={evt.id} className="hover:bg-hover transition-colors">
+                    <td className="py-3 text-ink font-bold">{evt.id}</td>
                     <td className="py-3">
-                      <span className={`text-[10px] px-2 py-0.5 rounded border ${badgeColor}`}>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${badgeColor}`}>
                         {evt.event_type}
                       </span>
                     </td>
-                    <td className="py-3 text-slate-300 font-sans max-w-[340px] truncate" title={summary}>
+                    <td className="py-3 text-ink-2 font-sans max-w-[340px] truncate" title={summary}>
                       {summary}
                     </td>
-                    <td className="py-3 text-slate-500 text-[11px]">
+                    <td className="py-3 text-ink-3 text-[11px]">
                       {new Date(evt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </td>
                     <td className="py-3 text-right">
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/80">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-inset text-emerald-400 border border-emerald-500/30 font-semibold">
                         {evt.status.toUpperCase()}
                       </span>
                     </td>

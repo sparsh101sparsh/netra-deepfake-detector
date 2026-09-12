@@ -118,41 +118,43 @@ export const ThreatKnowledgeBase: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-[#0b1220] border border-slate-800 rounded-xl p-5">
-        <div className="flex items-center gap-2 mb-1">
-          <Search className="w-5 h-5 text-cyan-400" />
-          <h2 className="text-lg font-bold text-white tracking-wide">
-            CROSS-SERVICE THREAT KNOWLEDGE BASE
-          </h2>
+      <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card space-y-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Search className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-base sm:text-lg font-bold text-ink tracking-tight">
+              CROSS-SERVICE THREAT KNOWLEDGE BASE
+            </h2>
+          </div>
+          <p className="text-xs text-ink-3 font-sans leading-relaxed">
+            Unified semantic search across past Netra forensic investigations, WhatsApp citizen tips, Slack threat cards, GitHub advisories, and evidence emails.
+          </p>
         </div>
-        <p className="text-xs text-slate-400">
-          Unified semantic search across past Netra forensic investigations, WhatsApp citizen tips, Slack threat cards, GitHub advisories, and evidence emails.
-        </p>
 
         {/* Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="mt-4 flex gap-2">
+        <form onSubmit={handleSearchSubmit} className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-ink-3 absolute left-3.5 top-3" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search across all connected tools (e.g. UPI, suspect phone number, deepfake case...)"
-              className="w-full bg-[#080d17] border border-slate-700/80 rounded-lg pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+              className="w-full bg-inset border border-line rounded-xl pl-10 pr-4 py-2.5 text-xs text-ink placeholder-ink-3 focus:outline-none focus:border-line-strong transition-all font-sans"
             />
           </div>
           <button
             type="submit"
-            className="bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-lg text-xs font-semibold transition-colors"
+            className="bg-ink text-page hover:bg-white/90 active:scale-[0.99] px-5 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-btn"
           >
             Search
           </button>
         </form>
 
         {/* Suggested Keywords */}
-        <div className="flex items-center gap-2 mt-3 text-[11px] font-mono text-slate-400">
-          <span className="flex items-center gap-1 text-slate-500">
-            <Sparkles className="w-3 h-3 text-cyan-400" /> Quick tags:
+        <div className="flex items-center gap-2 text-[11px] font-mono text-ink-3 pt-1">
+          <span className="flex items-center gap-1 text-ink-3">
+            <Sparkles className="w-3 h-3 text-amber-400" /> Quick tags:
           </span>
           <div className="flex flex-wrap gap-1.5">
             {sampleKeywords.map((k) => (
@@ -162,7 +164,7 @@ export const ThreatKnowledgeBase: React.FC = () => {
                   setQuery(k);
                   performSearch(k);
                 }}
-                className="bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-cyan-800 px-2.5 py-0.5 rounded text-cyan-300 transition-colors"
+                className="bg-inset hover:bg-hover border border-line hover:border-line-strong px-2.5 py-0.5 rounded-lg text-ink-2 hover:text-ink transition-colors"
               >
                 #{k}
               </button>
@@ -172,8 +174,8 @@ export const ThreatKnowledgeBase: React.FC = () => {
       </div>
 
       {/* Results Feed */}
-      <div className="bg-[#090e17] border border-slate-800 rounded-xl p-5 space-y-3">
-        <div className="flex justify-between items-center text-xs font-mono text-slate-400 pb-2 border-b border-slate-800">
+      <div className="bg-surface border-[1.5px] border-line rounded-2xl p-6 shadow-card space-y-4">
+        <div className="flex justify-between items-center text-xs font-mono text-ink-3 pb-3 border-b border-line">
           <span>RESULTS FOUND: {results.length}</span>
           <span>QUERY: &ldquo;{query || 'ALL RECENT ENTITIES'}&rdquo;</span>
         </div>
@@ -183,49 +185,49 @@ export const ThreatKnowledgeBase: React.FC = () => {
             Querying Corsair database & cross-referencing entities...
           </div>
         ) : results.length === 0 ? (
-          <div className="py-12 text-center text-xs text-slate-500 font-mono">
+          <div className="py-12 text-center text-xs text-ink-3 font-mono">
             No entities matched your search query in Corsair DB.
           </div>
         ) : (
           <div className="space-y-3">
             {results.map((item) => {
               let Icon = ShieldAlert;
-              let iconColor = 'text-cyan-400 bg-cyan-950 border-cyan-800';
+              let iconColor = 'text-cyan-400 bg-inset border border-cyan-500/30';
 
               if (item.source === 'slack') {
                 Icon = MessageSquare;
-                iconColor = 'text-pink-400 bg-pink-950 border-pink-800';
+                iconColor = 'text-pink-400 bg-inset border border-pink-500/30';
               } else if (item.source === 'github') {
                 Icon = GitPullRequest;
-                iconColor = 'text-purple-400 bg-purple-950 border-purple-800';
+                iconColor = 'text-purple-400 bg-inset border border-purple-500/30';
               } else if (item.source === 'googlecalendar') {
                 Icon = Calendar;
-                iconColor = 'text-blue-400 bg-blue-950 border-blue-800';
+                iconColor = 'text-blue-400 bg-inset border border-blue-500/30';
               } else if (item.source === 'gmail') {
                 Icon = Mail;
-                iconColor = 'text-red-400 bg-red-950 border-red-800';
+                iconColor = 'text-rose-400 bg-inset border border-rose-500/30';
               } else if (item.source === 'whatsapp') {
                 Icon = Smartphone;
-                iconColor = 'text-[#25D366] bg-[#25D366]/20 border-[#25D366]/60';
+                iconColor = 'text-[#25D366] bg-inset border border-[#25D366]/40';
               }
 
               return (
                 <div
                   key={item.id}
-                  className="bg-[#0b1220] border border-slate-800/80 hover:border-slate-700 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-colors"
+                  className="bg-inset border border-line hover:border-line-strong rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-all"
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg border shrink-0 mt-0.5 ${iconColor}`}>
+                    <div className={`p-2 rounded-xl border shrink-0 mt-0.5 ${iconColor}`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-200">{item.title}</span>
-                        <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-400">
+                        <span className="text-xs font-bold text-ink">{item.title}</span>
+                        <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-surface border border-line text-ink-2 font-semibold">
                           {item.source}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-1">{item.subtitle}</p>
+                      <p className="text-xs text-ink-3 mt-1 font-sans">{item.subtitle}</p>
                     </div>
                   </div>
 

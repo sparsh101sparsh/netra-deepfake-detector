@@ -33,16 +33,16 @@ export default function CorsairPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#060910] text-slate-100 font-sans pb-20">
+    <div className="min-h-screen bg-page text-ink font-sans pb-20">
       {/* Top Ticker Banner */}
-      <div className="bg-[#0b1322] border-b border-slate-800 text-[11px] font-mono py-2 px-4 flex flex-wrap items-center justify-between text-slate-400 gap-2">
+      <div className="bg-canvas border-b border-line text-[11px] font-mono py-2.5 px-4 flex flex-wrap items-center justify-between text-ink-3 gap-2">
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 text-cyan-400 font-semibold">
-            <Radio className="w-3.5 h-3.5 animate-pulse text-cyan-400" />
+          <span className="flex items-center gap-1.5 text-ink font-semibold">
+            <Radio className="w-3.5 h-3.5 animate-pulse text-emerald-400" />
             CORSAIR FORENSIC ENGINE v2.4
           </span>
-          <span className="hidden sm:inline text-slate-600">|</span>
-          <span className="hidden sm:inline text-slate-300">
+          <span className="hidden sm:inline text-line-strong">|</span>
+          <span className="hidden sm:inline text-ink-3">
             Unified Threat Orchestration • Dual-Branch Neural Architecture • MCP Autonomous Multi-Service Workflows
           </span>
         </div>
@@ -52,13 +52,13 @@ export default function CorsairPage() {
             href="https://wa.me/15552013457?text=menu"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-[#25D366] hover:text-white font-semibold transition-colors"
+            className="flex items-center gap-1.5 text-ink-2 hover:text-ink font-medium transition-colors"
           >
-            <Smartphone className="w-3.5 h-3.5" />
+            <Smartphone className="w-3.5 h-3.5 text-[#25D366]" />
             <span>WhatsApp Bot: +1 555 201 3457</span>
-            <ExternalLink className="w-3 h-3" />
+            <ExternalLink className="w-3 h-3 text-ink-3" />
           </a>
-          <span className="text-slate-600">|</span>
+          <span className="text-line-strong">|</span>
           <span className="text-amber-400 font-semibold">Emergency: 📞 1930</span>
         </div>
       </div>
@@ -66,77 +66,77 @@ export default function CorsairPage() {
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
         {/* Navigation Tabs Bar */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3 mb-6">
+        <div className="bg-inset p-1.5 rounded-2xl border border-line flex flex-wrap items-center gap-1.5 mb-8 shadow-sm">
           <button
             onClick={() => setActiveTab('scanner')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-all ${
               activeTab === 'scanner'
-                ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 shadow-sm shadow-cyan-500/10'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                ? 'bg-surface text-ink shadow-sm border border-line font-semibold'
+                : 'text-ink-2 hover:text-ink hover:bg-hover border border-transparent font-medium'
             }`}
           >
-            <ShieldAlert className="w-4 h-4" />
+            <ShieldAlert className="w-4 h-4 text-cyan-400" />
             <span>Forensic Scanner</span>
           </button>
 
           <button
             onClick={() => setActiveTab('whatsapp')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-all ${
               activeTab === 'whatsapp'
-                ? 'bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/40 shadow-sm shadow-[#25D366]/10'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                ? 'bg-surface text-ink shadow-sm border border-line font-semibold'
+                : 'text-ink-2 hover:text-ink hover:bg-hover border border-transparent font-medium'
             }`}
           >
             <Smartphone className="w-4 h-4 text-[#25D366]" />
             <span>WhatsApp Bot Console</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           </button>
 
           <button
             onClick={() => setActiveTab('automations')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-all ${
               activeTab === 'automations'
-                ? 'bg-purple-500/10 text-purple-400 border border-purple-500/40 shadow-sm shadow-purple-500/10'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                ? 'bg-surface text-ink shadow-sm border border-line font-semibold'
+                : 'text-ink-2 hover:text-ink hover:bg-hover border border-transparent font-medium'
             }`}
           >
-            <Layers className="w-4 h-4" />
+            <Layers className="w-4 h-4 text-purple-400" />
             <span>Multi-Service Automations</span>
           </button>
 
           <button
             onClick={() => setActiveTab('agent')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-all ${
               activeTab === 'agent'
-                ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/40 shadow-sm shadow-indigo-500/10'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                ? 'bg-surface text-ink shadow-sm border border-line font-semibold'
+                : 'text-ink-2 hover:text-ink hover:bg-hover border border-transparent font-medium'
             }`}
           >
-            <Bot className="w-4 h-4" />
+            <Bot className="w-4 h-4 text-indigo-400" />
             <span>MCP Agent Chat</span>
           </button>
 
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-all ${
               activeTab === 'dashboard'
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-500/10'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                ? 'bg-surface text-ink shadow-sm border border-line font-semibold'
+                : 'text-ink-2 hover:text-ink hover:bg-hover border border-transparent font-medium'
             }`}
           >
-            <Activity className="w-4 h-4" />
+            <Activity className="w-4 h-4 text-emerald-400" />
             <span>Incident Dashboard</span>
           </button>
 
           <button
             onClick={() => setActiveTab('kb')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-all ${
               activeTab === 'kb'
-                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/40 shadow-sm shadow-amber-500/10'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                ? 'bg-surface text-ink shadow-sm border border-line font-semibold'
+                : 'text-ink-2 hover:text-ink hover:bg-hover border border-transparent font-medium'
             }`}
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-4 h-4 text-amber-400" />
             <span>Threat Knowledge Base</span>
           </button>
         </div>
