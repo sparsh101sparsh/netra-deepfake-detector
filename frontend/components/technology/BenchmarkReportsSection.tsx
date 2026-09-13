@@ -26,6 +26,24 @@ interface ReportConfig {
 
 const REPORTS: ReportConfig[] = [
   {
+    id: "rvf10k_dataset",
+    title: "10,000-Image Kaggle rvf10k Forensic Evaluation Ledger",
+    shortTitle: "10,000 Faces Ledger (287 Pages • 20.0 MB)",
+    subtitle: "Complete Per-Sample Empirical Forensic Evaluation across 10,000 Real vs. AI-Generated Faces",
+    pages: 287,
+    size: "20.0 MB",
+    pdfUrl: "/benchmarks/NETRA_vs_MesoNet_rvf10k_Exact_Ledger.pdf",
+    badge: "Kaggle rvf10k (10,000 Faces)",
+    summary: "Complete 287-page per-sample empirical evaluation ledger spanning 10,000 balanced faces (5,000 Authentic FFHQ, 5,000 AI-Synthesized StyleGAN) from Kaggle rvf10k. Benchmarks NETRA Merged Architecture against Meso-4 and MesoInception-4 with exact confidence scores.",
+    stats: {
+      datasetSize: "10,000 Faces",
+      netraAccuracy: "100.0%",
+      mesonetAccuracy: "49.5%",
+      aucScore: "1.000",
+      fpr: "0.0%",
+    },
+  },
+  {
     id: "2520_videos",
     title: "3X Massive 2,520-Video Comprehensive Evaluation",
     shortTitle: "2,520 Video Ledger (74 Pages • 5.0 MB)",
@@ -64,7 +82,7 @@ const REPORTS: ReportConfig[] = [
 ];
 
 export default function BenchmarkReportsSection() {
-  const [selectedReportId, setSelectedReportId] = useState<string>("2520_videos");
+  const [selectedReportId, setSelectedReportId] = useState<string>("rvf10k_dataset");
 
   const currentReport = REPORTS.find((r) => r.id === selectedReportId) || REPORTS[0];
 

@@ -13,7 +13,7 @@ type TechnologyTab = "pipeline" | "dataset" | "benchmarks";
 const TECH_TABS = [
   { id: "pipeline", label: "Multi-Modal Pipeline" },
   { id: "dataset", label: "Datasets", count: 100 },
-  { id: "benchmarks", label: "Benchmark Reports", count: 2 },
+  { id: "benchmarks", label: "Benchmark Reports", count: 3 },
 ] as const;
 
 export default function TechnologyPage() {
