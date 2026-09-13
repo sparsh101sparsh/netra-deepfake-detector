@@ -1044,7 +1044,7 @@ async def _handle_user_message(
         _user_sessions.pop(sender_key, None)
         await send_whatsapp_message(
             sender,
-            "⏳ Voice note received! Running Wav2Vec2 spectral clone and biometric cadence analysis...",
+            "⏳ Voice note received! Transcribing via *Gnani.ai Prisma v2.5* and running *NETRA Scam Interceptor*...",
             preferred_channel=channel
         )
 
@@ -1076,17 +1076,37 @@ async def _handle_user_message(
             f.write(aud_bytes)
 
         try:
+            from netra.services.gnani_stt import transcribe_with_gnani
+            from netra.services.voice_scam_lexicon import analyze_voice_scam_lexicon
             from netra.services.catalog_hook import auto_catalog_scan
 
+            # 1. Transcribe Indic / WhatsApp voice note via Gnani.ai Prisma v2.5
+            gnani_res = await asyncio.to_thread(transcribe_with_gnani, save_path, filename=save_aud_filename)
+            transcript = gnani_res.get("transcript", "").strip()
+
+            # 2. Analyze transcript against NETRA Voice Scam Lexicon
+            lex_res = analyze_voice_scam_lexicon(transcript)
+            is_scam = lex_res.get("is_scam", False)
+            verdict = lex_res.get("verdict", "AUTHENTIC")
+            risk_level = lex_res.get("risk_level", "LOW")
+            scam_type = lex_res.get("scam_type", "None")
+            threat_score = lex_res.get("threat_score", 14)
+            legal_citations = lex_res.get("legal_citations", "")
+
+            # 3. Catalog into NETRA Threat Radar
             scan_res = {
-                "fake_probability": 0.14,
-                "verdict": "AUTHENTIC",
-                "risk_level": "LOW",
-                "threat_category": "AUTHENTIC_VOICE",
-                "analysis_reason": "Biological breathing cadence and natural acoustic formant variance confirmed."
+                "fake_probability": round(threat_score / 100.0, 2),
+                "verdict": verdict,
+                "risk_level": risk_level,
+                "threat_category": scam_type if is_scam else "AUTHENTIC_VOICE",
+                "analysis_reason": lex_res.get("analysis_reason", "Acoustic and lexical forensics complete."),
+                "transcript": transcript,
+                "gnani_model": gnani_res.get("model", "gnani-prisma-v2.5"),
+                "gnani_latency_ms": gnani_res.get("latency_ms", 0),
+                "extracted_iocs": lex_res.get("extracted_iocs", {})
             }
             if clean_aud_fn:
-                scan_res["title"] = f"Audio Verification: {clean_aud_fn}"
+                scan_res["title"] = f"Voice Intercept: {clean_aud_fn}"
 
             item_id = auto_catalog_scan(
                 scan_type="audio",
@@ -1095,15 +1115,48 @@ async def _handle_user_message(
                 filename=save_aud_filename
             )
 
-            file_display = f"\n• *Analyzed Media:* `{clean_aud_fn}`" if clean_aud_fn else ""
-            result_msg = (
-                f"✅ *NETRA Spectral Audio Verdict: AUTHENTIC*\n\n"
-                f"• *Biometric Integrity:* 86% Natural Biological Voice{file_display}\n"
-                f"• *Pitch Variance:* Natural human formant shifts observed\n"
-                f"• *Synthetic Probability:* 14% (LOW RISK)\n"
-                f"• *Threat Ledger ID:* `{item_id}`\n"
-                f"• *Evidence Saved:* `{save_aud_filename}`"
-            )
+            # 4. Formulate Actionable WhatsApp Alert
+            disp_transcript = (f"_{transcript[:180]}..._" if len(transcript) > 180 else f"_{transcript}_") if transcript else "_[Acoustic waveform analyzed without spoken speech tokens]_"
+            
+            # Format trigger tokens
+            matched_details = lex_res.get("triggered_pack_details", {})
+            flat_tokens = []
+            for pack_id, t_list in matched_details.items():
+                flat_tokens.extend(t_list[:2])
+            trigger_str = ", ".join(f"`{t}`" for t in flat_tokens[:5]) if flat_tokens else "None"
+
+            # Format extracted phone numbers
+            extracted_phones = lex_res.get("extracted_iocs", {}).get("phones", [])
+            phones_str = ", ".join(f"`{p}`" for p in extracted_phones) if extracted_phones else "None detected in audio"
+
+            if is_scam:
+                result_msg = (
+                    f"🚨 *NETRA VOICE SHIELD: {verdict}*\n"
+                    f"_Powered by Gnani.ai Prisma STT v2.5_\n\n"
+                    f"• *Threat Level:* 🔴 {risk_level} ({threat_score}% Threat Index)\n"
+                    f"• *Scam Typology:* {scam_type}\n"
+                    f"• *Indic Transcript:* {disp_transcript}\n"
+                    f"• *Trigger Tokens:* {trigger_str}\n"
+                    f"• *Suspect Callers/Numbers:* {phones_str}\n"
+                    f"• *Statutory Violations:* {legal_citations}\n\n"
+                    f"🛑 *CITIZEN ADVISORY:*\n"
+                    f"1. *Do NOT send money or OTPs.*\n"
+                    f"2. Indian Law Enforcement (Police/CBI/ED) *NEVER* arrests or interrogates citizens over WhatsApp/Skype.\n"
+                    f"3. Call National Cyber Crime Helpline *1930* or file complaint on *cybercrime.gov.in*.\n\n"
+                    f"• *Threat Ledger ID:* `{item_id}`\n"
+                    f"• *Forensic Evidence:* `{save_aud_filename}`"
+                )
+            else:
+                result_msg = (
+                    f"✅ *NETRA Voice Shield Verdict: AUTHENTIC SPEECH*\n"
+                    f"_Powered by Gnani.ai Prisma STT v2.5_\n\n"
+                    f"• *Threat Level:* 🟢 LOW RISK ({threat_score}% Threat Index)\n"
+                    f"• *Indic Transcript:* {disp_transcript}\n"
+                    f"• *Analysis:* No coercive legal threats, extortion phrases, or digital arrest scripts detected.\n"
+                    f"• *Threat Ledger ID:* `{item_id}`\n"
+                    f"• *Evidence Saved:* `{save_aud_filename}`"
+                )
+
             await send_whatsapp_message(sender, result_msg, preferred_channel=channel)
         except Exception as e:
             logger.error(f"Audio catalog error: {e}", exc_info=True)

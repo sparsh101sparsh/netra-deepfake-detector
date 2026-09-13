@@ -53,6 +53,10 @@ class AudioDetectResponse(BaseModel):
     processing_time_ms: int
     source_platform: str
     tavily_threat_intel: Optional[Dict[str, Any]] = None
+    gnani_transcript: Optional[str] = None
+    gnani_model: Optional[str] = "gnani-prisma-v2.5"
+    gnani_latency_ms: Optional[int] = None
+    scam_analysis: Optional[Dict[str, Any]] = None
 
 
 def detect_audio_codec(contents: bytes, filename: str) -> str:
@@ -311,10 +315,36 @@ async def detect_audio(file: UploadFile = File(...), request: Request = None):
         "temporal_inconsistency": round(temporal_inconsistency, 4),
     }
 
-    # 5. Classification logic
-    is_fake = score >= 0.50
+    # 5. Gnani.ai Prisma STT & NETRA Voice Scam Lexicon Analysis
+    gnani_transcript = None
+    gnani_model = "gnani-prisma-v2.5"
+    gnani_latency_ms = None
+    scam_analysis = None
+
+    try:
+        from netra.services.gnani_stt import transcribe_with_gnani
+        from netra.services.voice_scam_lexicon import analyze_voice_scam_lexicon
+
+        gnani_res = transcribe_with_gnani(contents, filename=filename)
+        if gnani_res.get("success") and gnani_res.get("transcript"):
+            gnani_transcript = gnani_res.get("transcript")
+            gnani_model = gnani_res.get("model", "gnani-prisma-v2.5")
+            gnani_latency_ms = gnani_res.get("latency_ms")
+
+            scam_analysis = analyze_voice_scam_lexicon(gnani_transcript)
+            if scam_analysis.get("is_scam"):
+                flags.append("lexicon_scam_match")
+    except Exception as e:
+        logger.warning(f"Gnani STT / Lexicon analysis warning: {e}")
+
+    # 6. Composite Classification logic
+    is_fake = score >= 0.50 or (scam_analysis is not None and scam_analysis.get("is_scam", False))
     confidence = int(round(score * 100))
-    if is_fake:
+    if scam_analysis and scam_analysis.get("is_scam"):
+        confidence = max(confidence, scam_analysis.get("threat_score", 90))
+        verdict = f"CONFIRMED_SCAM: {scam_analysis.get('scam_type', 'Digital Arrest')}"
+        risk_level = "CRITICAL" if scam_analysis.get("risk_level") == "HIGH" else "HIGH"
+    elif score >= 0.50:
         verdict = "VOICE_CLONE_DETECTED" if score >= 0.70 else "SUSPICIOUS_ACOUSTIC_SIGNATURE"
         risk_level = "CRITICAL" if score >= 0.75 else "HIGH"
     else:
@@ -333,8 +363,9 @@ async def detect_audio(file: UploadFile = File(...), request: Request = None):
     tavily_intel = None
     try:
         from netra.services.tavily_cross_check import cross_check_scam_with_tavily
+        search_query = gnani_transcript if gnani_transcript else "deepfake voice clone impersonation scam police India"
         tavily_intel = cross_check_scam_with_tavily(
-            text="deepfake voice clone impersonation scam police India",
+            text=search_query[:120],
             timeout_sec=2.5
         )
     except Exception:
@@ -355,6 +386,8 @@ async def detect_audio(file: UploadFile = File(...), request: Request = None):
                 "sha256_hash": sha256_hash,
                 "acoustic_metrics": acoustic_metrics_dict,
                 "scorecard": scorecard_dict,
+                "transcript": gnani_transcript,
+                "scam_analysis": scam_analysis,
                 "extracted_iocs": {
                     "duration_seconds": round(duration, 2),
                     "sample_rate_hz": 16000,
@@ -364,10 +397,12 @@ async def detect_audio(file: UploadFile = File(...), request: Request = None):
                     "acoustic_metrics": acoustic_metrics_dict,
                     "scorecard": scorecard_dict,
                     "tavily_threat_intel": tavily_intel,
+                    "transcript": gnani_transcript,
+                    "scam_iocs": scam_analysis.get("extracted_iocs", {}) if scam_analysis else {}
                 },
-                "incident_summary": f"Voice recording ({round(duration, 1)}s, {codec}) analyzed for synthetic speech vocoder artifacts. Result: {verdict} ({confidence}% index, SHA-256: {sha256_hash[:12]}...)."
+                "incident_summary": f"Voice recording ({round(duration, 1)}s, {codec}) analyzed. Result: {verdict} ({confidence}% index, SHA-256: {sha256_hash[:12]}...)."
             },
-            file_bytes=contents,  # FIXED: was audio_bytes (NameError)
+            file_bytes=contents,
             filename=file.filename or "uploaded_audio.wav",
             request=request
         )
@@ -390,4 +425,8 @@ async def detect_audio(file: UploadFile = File(...), request: Request = None):
         processing_time_ms=elapsed_ms,
         source_platform=source_platform,
         tavily_threat_intel=tavily_intel,
+        gnani_transcript=gnani_transcript,
+        gnani_model=gnani_model,
+        gnani_latency_ms=gnani_latency_ms,
+        scam_analysis=scam_analysis,
     )

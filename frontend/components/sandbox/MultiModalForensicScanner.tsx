@@ -33,6 +33,21 @@ export interface AudioDossierResult {
   flags: string[];
   processing_time_ms: number;
   source_platform: string;
+  gnani_transcript?: string | null;
+  gnani_model?: string | null;
+  gnani_latency_ms?: number | null;
+  scam_analysis?: {
+    verdict: string;
+    is_scam: boolean;
+    risk_level: string;
+    threat_score: number;
+    scam_type: string;
+    analysis_reason: string;
+    triggered_packs?: string[];
+    triggered_pack_details?: Record<string, string[]>;
+    extracted_iocs?: { phones: string[]; upis: string[]; urls: string[] };
+    legal_citations?: string;
+  } | null;
   tavily_threat_intel?: {
     verified_threat: boolean;
     query_used?: string;
@@ -1011,6 +1026,66 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                 {audioResult.confidence}% Voice Clone Anomaly
               </StatusPill>
             </div>
+
+            {/* Gnani.ai Voice AI Indic Transcript Section */}
+            {audioResult.gnani_transcript && (
+              <div className="rounded-lg bg-inset border border-line p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink">
+                      <Sparkles className="w-3.5 h-3.5 text-accent" />
+                      Indic Speech Transcription
+                    </span>
+                    <span className="text-[10px] text-ink-3">({audioResult.gnani_latency_ms ? `${audioResult.gnani_latency_ms}ms` : "Sub-second"})</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent">
+                    Powered by Gnani.ai Prisma v2.5
+                  </span>
+                </div>
+                <p className="text-xs text-ink-2 italic bg-canvas/60 p-2.5 rounded border border-line/60 leading-relaxed font-sans">
+                  "{audioResult.gnani_transcript}"
+                </p>
+              </div>
+            )}
+
+            {/* NETRA Scam Interceptor Threat Dossier (if scam detected) */}
+            {audioResult.scam_analysis && audioResult.scam_analysis.is_scam && (
+              <div className="rounded-lg bg-critical/5 border border-critical/30 p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-critical font-bold text-xs">
+                    <ShieldAlert className="w-4 h-4" />
+                    SCAM INTERCEPTOR: {audioResult.scam_analysis.scam_type}
+                  </div>
+                  <StatusPill tone="critical" size="sm" pulse>
+                    {audioResult.scam_analysis.threat_score}% Threat Index
+                  </StatusPill>
+                </div>
+
+                <div className="text-[11.5px] text-ink-2">
+                  <span className="font-semibold text-ink">Forensic Finding: </span>
+                  {audioResult.scam_analysis.analysis_reason}
+                </div>
+
+                {audioResult.scam_analysis.legal_citations && (
+                  <div className="text-[11px] font-mono text-critical bg-critical/10 p-2 rounded border border-critical/20">
+                    <span className="font-bold block mb-0.5">Statutory Citations:</span>
+                    {audioResult.scam_analysis.legal_citations}
+                  </div>
+                )}
+
+                {audioResult.scam_analysis.extracted_iocs?.phones && audioResult.scam_analysis.extracted_iocs.phones.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-[11px] text-ink-2">
+                    <Phone className="w-3.5 h-3.5 text-critical" />
+                    <span className="font-semibold">Suspect Callers:</span>
+                    {audioResult.scam_analysis.extracted_iocs.phones.map((p, idx) => (
+                      <span key={idx} className="font-mono bg-inset px-1.5 py-0.5 rounded border border-line text-ink">
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Neural Acoustic Flags */}
             <div className="space-y-1.5">
