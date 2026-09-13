@@ -1137,7 +1137,6 @@ async def _handle_user_message(
                     f"• *Scam Typology:* {scam_type}\n"
                     f"• *Indic Transcript:* {disp_transcript}\n"
                     f"• *Trigger Tokens:* {trigger_str}\n"
-                    f"• *Suspect Callers/Numbers:* {phones_str}\n"
                     f"• *Statutory Violations:* {legal_citations}\n\n"
                     f"🛑 *CITIZEN ADVISORY:*\n"
                     f"1. *Do NOT send money or OTPs.*\n"

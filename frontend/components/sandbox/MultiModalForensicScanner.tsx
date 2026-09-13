@@ -1072,18 +1072,6 @@ export function MultiModalForensicScanner({ onScanComplete, className }: MultiMo
                     {audioResult.scam_analysis.legal_citations}
                   </div>
                 )}
-
-                {audioResult.scam_analysis.extracted_iocs?.phones && audioResult.scam_analysis.extracted_iocs.phones.length > 0 && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-ink-2">
-                    <Phone className="w-3.5 h-3.5 text-critical" />
-                    <span className="font-semibold">Suspect Callers:</span>
-                    {audioResult.scam_analysis.extracted_iocs.phones.map((p, idx) => (
-                      <span key={idx} className="font-mono bg-inset px-1.5 py-0.5 rounded border border-line text-ink">
-                        {p}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
 
