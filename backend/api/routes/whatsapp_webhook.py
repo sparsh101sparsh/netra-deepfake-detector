@@ -49,8 +49,8 @@ TWILIO_API_KEY_SID = os.getenv("TWILIO_API_KEY_SID", "")
 TWILIO_API_KEY_SECRET = os.getenv("TWILIO_API_KEY_SECRET", "")
 TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")
 
-# NETRA Corsair Website URL Connection
-NETRA_CORSAIR_WEB_URL = os.getenv(
+# NETRA Web Portal URL Connection
+NETRA_WEB_URL = os.getenv(
     "NETRA_WEB_URL",
     os.getenv("NEXT_PUBLIC_APP_URL", "https://netraai-i1pl.onrender.com")
 )
@@ -105,7 +105,7 @@ def _format_scam_updates() -> str:
                     summary = summary[:127] + "..."
                 source = rep.get("source_name") or "CERT-In / I4C"
                 msg += f"{idx}️⃣ *{title}*\n• {summary}\n• _Source: {source}_\n\n"
-            msg += f"🌐 *Web Console:* {NETRA_CORSAIR_WEB_URL}/corsair\n"
+            msg += f"🌐 *Web Portal:* {NETRA_WEB_URL}\n"
             msg += "⚠️ *Advisory:* Never share OTPs, CVVs, or UPI PINs. In case of fraud, report immediately to official cyber crime authorities."
             return msg
     except Exception as err:
@@ -121,7 +121,7 @@ def _format_scam_updates() -> str:
         "• Advisory: Always call back the relative directly on their trusted phone number.\n\n"
         "3️⃣ *PM-KUSUM Solar Agricultural Phishing*\n"
         "• Modus: Fraudulent APKs distributed via WhatsApp harvesting banking credentials.\n\n"
-        f"🌐 *Web Console:* {NETRA_CORSAIR_WEB_URL}/corsair\n"
+        f"🌐 *Web Portal:* {NETRA_WEB_URL}\n"
         "⚠️ Report cyber financial extortion immediately to *cybercrime.gov.in*."
     )
 
@@ -339,9 +339,8 @@ async def whatsapp_status():
     twilio_ready = bool(TWILIO_ACCOUNT_SID and TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET)
     return {
         "status": "online",
-        "platform": "NETRA + CORSAIR WhatsApp Forensic Bot",
-        "website_url": NETRA_CORSAIR_WEB_URL,
-        "corsair_console": f"{NETRA_CORSAIR_WEB_URL}/corsair",
+        "platform": "NETRA WhatsApp Forensic Bot",
+        "website_url": NETRA_WEB_URL,
         "channels": {
             "meta_cloud_api": {
                 "configured": meta_ready,
@@ -409,7 +408,7 @@ async def test_whatsapp_chat(request: Request):
         "input": text,
         "responses": [m["text"] for m in new_messages] if new_messages else ["Command processed successfully."],
         "session_state": _user_sessions.get(clean_sender, "IDLE"),
-        "website_console": f"{NETRA_CORSAIR_WEB_URL}/corsair"
+        "website_portal": NETRA_WEB_URL
     }
 
 
@@ -561,7 +560,7 @@ async def _handle_user_message(
     if lower_text in ("menu", "hi", "hello", "start", "/start", "help", "helo", "hey"):
         _user_sessions.pop(sender_key, None)
         menu_msg = (
-            "🛡️ *NETRA Institutional Threat Intelligence & Forensic Scanner (CORSAIR Engine)*\n\n"
+            "🛡️ *NETRA Institutional Threat Intelligence & Forensic Scanner*\n\n"
             "Select an investigation modality by replying with a number:\n\n"
             "1️⃣ *1* or */scan_text* — Financial Scam & Phishing Detection\n"
             "2️⃣ *2* or */scan_image* — Image Deepfake & Synthetic Seam Analysis\n"
@@ -569,7 +568,7 @@ async def _handle_user_message(
             "4️⃣ *4* or */scan_audio* — Synthetic Voice Clone & Spectral Verification\n"
             "🔍 */search <query>* — Tavily Live Cyber Threat Search\n"
             "📢 */updates* — 24h Tavily Cyber Threat Bulletin\n\n"
-            f"🌐 *Web Console:* {NETRA_CORSAIR_WEB_URL}/corsair\n"
+            f"🌐 *Web Portal:* {NETRA_WEB_URL}\n"
             "Reply with *1*, *2*, *3*, *4*, */search <term>*, or */updates*."
         )
         await send_whatsapp_message(sender, menu_msg, preferred_channel=channel)

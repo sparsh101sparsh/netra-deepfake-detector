@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
   Scan, Globe, Database, Cpu, Terminal, Users,
-  Menu, X, Shield, Activity, Sparkles, ChevronDown, Zap
+  Menu, X, Shield, Activity, Sparkles, ChevronDown
 } from "lucide-react";
 import { NetraBrandLogo } from "@/components/NetraBrandLogo";
 import { NetraUserAvatar, NETRA_AVATARS } from "@/components/NetraUserAvatar";
@@ -23,7 +23,6 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Live Scanner", icon: Scan, id: "scanner" },
-  { href: "/corsair", label: "Corsair Engine", icon: Zap, id: "corsair" },
   { href: "/reported", label: "Catalog", icon: Database, id: "reported" },
   { href: "/radar", label: "Netra Radar", icon: Globe, id: "radar" },
   { href: "/community", label: "Community", icon: Users, id: "community" },
@@ -272,7 +271,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               href="https://wa.me/15552013457?text=menu"
               target="_blank"
               rel="noopener noreferrer"
-              title="Open Official NETRA × CORSAIR WhatsApp Forensic Bot (+1 555-201-3457)"
+              title="Open Official NETRA WhatsApp Forensic Bot (+1 555-201-3457)"
               className="group flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-inset hover:bg-hover text-ink border-[1.5px] border-line hover:border-line-strong transition-all shadow-sm focus-visible:outline-none select-none"
             >
               <div className="size-4 flex items-center justify-center shrink-0">
